@@ -1,0 +1,190 @@
+{
+  "info": {
+    "name": "SICE — ITSMT",
+    "description": "API REST del Sistema Integral de Control Escolar del ITSMT.\n\n**Uso:** Importa en Postman. Variables: `base_url` y `token`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api" },
+    { "key": "token",    "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Sprint 0 — Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const r = pm.response.json();",
+            "if (r.data && r.data.token) { pm.collectionVariables.set('token', r.data.token); }"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@itsmt.edu.mx\",\n  \"password\": \"Password123!\"\n}" }
+          }
+        },
+        {
+          "name": "Me (usuario autenticado)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/auth/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/logout",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sprint 1 — Admisión (Públicos)",
+      "item": [
+        {
+          "name": "Listar carreras activas",
+          "request": { "method": "GET", "url": "{{base_url}}/carreras" }
+        },
+        {
+          "name": "Periodo de inscripción activo",
+          "request": { "method": "GET", "url": "{{base_url}}/periodos/activo" }
+        },
+        {
+          "name": "Registrar aspirante (S1-01)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/aspirantes",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombres\": \"Juan Carlos\",\n  \"apellido_paterno\": \"Ramírez\",\n  \"apellido_materno\": \"Vega\",\n  \"curp\": \"RAVJ990101HVZGRA04\",\n  \"fecha_nacimiento\": \"1999-01-01\",\n  \"sexo\": \"masculino\",\n  \"municipio_procedencia\": \"Martínez de la Torre\",\n  \"escuela_bachillerato\": \"CBTis 76 Martínez de la Torre\",\n  \"promedio_bachillerato\": 8.5,\n  \"turno_preferido\": \"matutino\",\n  \"email\": \"juan.ramirez@gmail.com\",\n  \"telefono\": \"7841234567\",\n  \"folio_preinscripcion_tecnm\": \"PRE-2026-00123\",\n  \"folio_exani\": \"EX-2026-99887\",\n  \"puntaje_exani\": 1050.5,\n  \"carrera_id\": \"<uuid-carrera>\",\n  \"periodo_id\": \"<uuid-periodo>\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sprint 1 — Admisión (Admin)",
+      "item": [
+        {
+          "name": "Listar aspirantes (S1-03)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/aspirantes?estatus=pendiente&page=1",
+              "query": [
+                { "key": "estatus",     "value": "pendiente",  "description": "pendiente | aceptado | rechazado" },
+                { "key": "carrera_id",  "value": "",           "description": "UUID de carrera (opcional)" },
+                { "key": "puntaje_min", "value": "",           "description": "Puntaje mínimo EXANI-II (opcional)" },
+                { "key": "page",        "value": "1" }
+              ]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Ver detalle de aspirante",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/aspirantes/:id",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Actualizar estatus (S1-03)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/aspirantes/:id/estatus",
+            "header": [
+              { "key": "Authorization",  "value": "Bearer {{token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"estatus\": \"aceptado\",\n  \"observaciones\": \"Documentación completa. Puntaje EXANI-II verificado.\"\n}" }
+          }
+        },
+        {
+          "name": "Rechazar aspirante con motivo",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/aspirantes/:id/estatus",
+            "header": [
+              { "key": "Authorization",  "value": "Bearer {{token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"estatus\": \"rechazado\",\n  \"motivo_rechazo\": \"Puntaje EXANI-II por debajo del mínimo requerido (900 pts).\"\n}" }
+          }
+        },
+        {
+          "name": "Inscribir aspirante (S1-04)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const r = pm.response.json();",
+            "if (r.data && r.data.id) { pm.collectionVariables.set('inscripcion_id', r.data.id); }"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/inscripciones",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"aspirante_id\": \"<uuid-aspirante>\",\n  \"tipo_ingreso\": \"nuevo_ingreso\"\n}" }
+          }
+        },
+        {
+          "name": "PDF — Solicitud de Inscripción (S1-07)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/inscripciones/{{inscripcion_id}}/solicitud-inscripcion/pdf",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "PDF — Carta Compromiso (S1-05)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/inscripciones/{{inscripcion_id}}/carta-compromiso/pdf",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "PDF — Contrato con el Estudiante (S1-08)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/inscripciones/{{inscripcion_id}}/contrato-estudiante/pdf",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "PDF — Carta Compromiso Documentos (S1-10)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/inscripciones/{{inscripcion_id}}/carta-compromiso-docs/pdf",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Ver autorización de expediente (S1-09)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/alumnos/:alumno_id/autorizacion-expediente",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Actualizar autorización de expediente (S1-09)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/alumnos/:alumno_id/autorizacion-expediente",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"autorizacion_consulta_expediente\": \"madre\"\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}

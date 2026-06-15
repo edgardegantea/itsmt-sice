@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Http\Controllers\Permanencia;
+
+use App\Domains\Academico\Models\Alumno;
+use App\Domains\Permanencia\Models\Constancia;
+use App\Domains\Permanencia\Services\ConstanciaService;
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class ConstanciaController extends Controller
+{
+    public function __construct(private ConstanciaService $service) {}
+
+    // POST /api/constancias  (alumno solicita)
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'tipo' => ['required', 'in:estudios,inscripcion,calificaciones'],
+        ]);
+
+        $alumno = Alumno::where('user_id', $request->user()->id)->firstOrFail();
+
+        $constancia = $this->service->solicitar($alumno, $data['tipo'], $request->user());
+
+        return ApiResponse::success($constancia->load(['alumno']), 'Constancia solicitada. Control Escolar la emitirá a la brevedad.', 201);
+    }
+
+    // GET /api/alumnos/{alumno}/constancias
+    public function porAlumno(Alumno $alumno): JsonResponse
+    {
+        $constancias = Constancia::with(['solicitadaPor', 'emitidaPor'])
+            ->where('alumno_id', $alumno->id)
+            ->latest()
+            ->get();
+
+        return ApiResponse::success($constancias);
+    }
+
+    // GET /api/constancias  (admin lista todas)
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Constancia::class);
+
+        return ApiResponse::success(
+            $this->service->listar($request->only(['estatus', 'tipo', 'alumno_id']))
+        );
+    }
+
+    // POST /api/constancias/{constancia}/emitir  (admin emite y genera PDF)
+    public function emitir(Request $request, Constancia $constancia): JsonResponse
+    {
+        $this->authorize('update', $constancia);
+
+        try {
+            $c = $this->service->emitir($constancia, $request->user());
+        } catch (\DomainException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        return ApiResponse::success($c, 'Constancia emitida.');
+    }
+}
