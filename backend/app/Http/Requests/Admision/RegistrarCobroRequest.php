@@ -8,7 +8,7 @@ class RegistrarCobroRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasAnyRole(['admin', 'personal_administrativo']) ?? false;
+        return $this->user()?->hasAnyRole(['superadmin', 'admin', 'personal_administrativo']) ?? false;
     }
 
     public function rules(): array

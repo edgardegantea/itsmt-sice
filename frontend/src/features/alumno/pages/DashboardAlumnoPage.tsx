@@ -59,12 +59,8 @@ export default function DashboardAlumnoPage() {
 
   const handleCredencial = async () => {
     if (!me?.alumno_id) return
-    try {
-      const alumno = await admisionApi.getAlumno(me.alumno_id)
-      await descargarCredencial(alumno)
-    } catch {
-      alert('No se pudo generar la credencial. Intenta más tarde.')
-    }
+    const alumno = await admisionApi.getAlumno(me.alumno_id)
+    await descargarCredencial(alumno)
   }
 
   if (isLoading && !me) {

@@ -5,11 +5,9 @@ namespace App\Domains\Admision\Services;
 use App\Domains\Academico\Models\Alumno;
 use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
-use App\Mail\ConfirmacionSolicitudMail;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 class AspiranteService
@@ -34,8 +32,6 @@ class AspiranteService
     {
         $aspirante = Aspirante::create(array_merge(['estatus' => 'pendiente'], $datos));
         $aspirante->load(['carrera', 'periodo']);
-
-        Mail::to($aspirante->email)->send(new ConfirmacionSolicitudMail($aspirante));
 
         return $aspirante;
     }

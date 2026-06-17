@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\CatalogoAdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PeriodoAdminController;
+use App\Http\Controllers\Admin\PermisosController;
 use App\Http\Controllers\Academico\AlumnoController;
 use App\Http\Controllers\Academico\CarreraController;
 use App\Http\Controllers\Academico\PeriodoController;
@@ -104,7 +105,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/inscripciones/{inscripcion}/credencial/pdf',[InscripcionPdfController::class, 'credencial']);
 
     // Libro Registro NC — S1-13
-    Route::get('/libro-registro-nc',                         [InscripcionPdfController::class, 'libroRegistroNc']);
+    Route::get('/libro-registro-nc',                                          [InscripcionPdfController::class, 'libroRegistroNc']);
+    Route::get('/alumnos/{alumno}/carga-academica/{periodo}/pdf',             [InscripcionPdfController::class, 'cargaAcademica']);
 
     // ── Gestión Académica (superadmin / admin) ────────────────────────────────
 
@@ -175,6 +177,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/admin/usuarios/{usuario}',   [UsuarioController::class, 'update']);
     Route::delete('/admin/usuarios/{usuario}',  [UsuarioController::class, 'destroy']);
     Route::get('/admin/roles',                  [UsuarioController::class, 'roles']);
+
+    // Admin — Gestión de permisos
+    Route::get('/admin/permisos/catalogo',                  [PermisosController::class, 'catalogo']);
+    Route::get('/admin/permisos/roles',                     [PermisosController::class, 'roles']);
+    Route::put('/admin/permisos/roles/{rol}',               [PermisosController::class, 'updateRol']);
+    Route::get('/admin/permisos/usuarios/{usuario}',        [PermisosController::class, 'showUsuario']);
+    Route::put('/admin/permisos/usuarios/{usuario}',        [PermisosController::class, 'updateUsuario']);
 
     // Admin — Configuración institucional
     Route::get('/admin/configuracion',              [ConfiguracionController::class, 'show']);
@@ -255,6 +264,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/constancias',                                           [ConstanciaController::class, 'store']);
     Route::get('/alumnos/{alumno}/constancias',                           [ConstanciaController::class, 'porAlumno']);
     Route::post('/constancias/{constancia}/emitir',                       [ConstanciaController::class, 'emitir']);
+    Route::get('/constancias/{constancia}/pdf',                           [ConstanciaController::class, 'pdf']);
 
     // Encuesta Socioeconómica — alumno
     Route::get('/encuestas-socioeconomicas/mi-encuesta',                  [EncuestaSocioeconomicaController::class, 'miEncuesta']);

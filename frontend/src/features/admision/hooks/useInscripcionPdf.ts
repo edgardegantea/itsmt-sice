@@ -1,43 +1,36 @@
-import { useState, createElement } from 'react'
-import { pdf } from '@react-pdf/renderer'
-import { admisionApi } from '../services/admision'
-import { configuracionApi } from '../../admin/services/configuracion'
-import SolicitudInscripcionPdf    from '../pdf/SolicitudInscripcionPdf'
-import CartaCompromisoPdf         from '../pdf/CartaCompromisoPdf'
-import CartaCompromisoDocsPdf     from '../pdf/CartaCompromisoDocsPdf'
-import ContratoEstudiantePdf      from '../pdf/ContratoEstudiantePdf'
+import { useState } from 'react'
+import apiClient from '../../../config/apiClient'
 import { openPdfPreview } from '../../../utils/pdfHelpers'
+import { useToastStore } from '../../../store/toastStore'
 
 export type TipoInscripcionPdf = 'solicitud' | 'carta-compromiso' | 'carta-compromiso-docs' | 'contrato'
 
-const CONFIG: Record<TipoInscripcionPdf, { component: any; sufijo: string }> = {
-  'solicitud':              { component: SolicitudInscripcionPdf,  sufijo: 'SI'  },
-  'carta-compromiso':       { component: CartaCompromisoPdf,        sufijo: 'CC'  },
-  'carta-compromiso-docs':  { component: CartaCompromisoDocsPdf,    sufijo: 'CCD' },
-  'contrato':               { component: ContratoEstudiantePdf,     sufijo: 'CT'  },
+const CONFIG: Record<TipoInscripcionPdf, { endpoint: string; label: string }> = {
+  'solicitud':             { endpoint: 'solicitud-inscripcion', label: 'Solicitud de inscripción' },
+  'carta-compromiso':      { endpoint: 'carta-compromiso',      label: 'Carta compromiso' },
+  'carta-compromiso-docs': { endpoint: 'carta-compromiso-docs', label: 'Carta compromiso documentos' },
+  'contrato':              { endpoint: 'contrato-estudiante',   label: 'Contrato estudiantil' },
 }
 
 export function useInscripcionPdf() {
   const [generando, setGenerando] = useState<TipoInscripcionPdf | null>(null)
+  const { toast } = useToastStore()
 
   const descargar = async (inscripcionId: string, tipo: TipoInscripcionPdf) => {
+    const { endpoint, label } = CONFIG[tipo]
     setGenerando(tipo)
+    toast(`Generando ${label}…`, 'info')
     try {
-      const [inscripcion, cfg] = await Promise.all([
-        admisionApi.getInscripcion(inscripcionId),
-        configuracionApi.get(),
-      ])
-
-      const cfgPdf = { ...cfg, logoBase64: cfg.logo_base64 ?? null }
-
-      const { component, sufijo } = CONFIG[tipo]
-      const doc = createElement(component, { inscripcion, cfg: cfgPdf })
-
-      const blob = await pdf(doc as any).toBlob()
-      openPdfPreview(blob, `${inscripcion.numero_control}-${sufijo}.pdf`)
+      const response = await apiClient.get(
+        `/inscripciones/${inscripcionId}/${endpoint}/pdf`,
+        { responseType: 'blob' }
+      )
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      openPdfPreview(blob, `${tipo}-${inscripcionId}.pdf`)
+      toast(`${label} generada correctamente.`, 'success')
     } catch (err) {
       console.error('Error generando PDF:', err)
-      alert('No se pudo generar el documento. Revisa la consola.')
+      toast('No se pudo generar el documento. Intenta de nuevo.', 'error')
     } finally {
       setGenerando(null)
     }

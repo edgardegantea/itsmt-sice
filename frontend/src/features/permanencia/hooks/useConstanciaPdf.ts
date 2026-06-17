@@ -1,38 +1,29 @@
-import { useState, createElement } from 'react'
-import { pdf } from '@react-pdf/renderer'
-import { permanenciaApi, type Constancia } from '../services/permanencia'
-import { configuracionApi } from '../../admin/services/configuracion'
-import ConstanciaPdf from '../pdf/ConstanciaPdf'
+import { useState } from 'react'
+import type { Constancia } from '../services/permanencia'
+import apiClient from '../../../config/apiClient'
 import { openPdfPreview } from '../../../utils/pdfHelpers'
+import { useToastStore } from '../../../store/toastStore'
 
 export function useConstanciaPdf() {
   const [generando, setGenerando] = useState<string | null>(null)
+  const { toast } = useToastStore()
 
   const descargar = async (constancia: Constancia) => {
     setGenerando(constancia.id)
+    toast('Generando constancia PDF…', 'info')
     try {
-      const [constanciaDetalle, cfg] = await Promise.all([
-        permanenciaApi.getConstanciasAlumno(constancia.alumno_id).then(cs => cs.find(c => c.id === constancia.id) ?? constancia),
-        configuracionApi.get(),
-      ])
-
-      const doc = createElement(ConstanciaPdf, {
-        constancia: constanciaDetalle as any,
-        cfg: {
-          nombre_institucion: cfg.nombre_institucion,
-          nombre_corto:       cfg.nombre_corto,
-          dependencia:        cfg.dependencia,
-          clave_tecnm:        cfg.clave_tecnm,
-          logoBase64:         cfg.logo_base64 ?? null,
-        },
-      })
-
-      const blob = await pdf(doc as any).toBlob()
-      const folio = (constanciaDetalle as any).folio_unico ?? 'constancia'
+      const response = await apiClient.get(
+        `/constancias/${constancia.id}/pdf`,
+        { responseType: 'blob' }
+      )
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const folio = (constancia as any).folio_unico ?? 'constancia'
       openPdfPreview(blob, `${folio}.pdf`)
-    } catch (err) {
+      toast('Constancia generada correctamente.', 'success')
+    } catch (err: any) {
       console.error('Error generando constancia:', err)
-      alert('No se pudo generar el PDF.')
+      const msg = err?.response?.data?.message ?? 'No se pudo generar el PDF. Intenta de nuevo.'
+      toast(msg, 'error')
     } finally {
       setGenerando(null)
     }

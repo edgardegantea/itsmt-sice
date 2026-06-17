@@ -7,12 +7,17 @@ use App\Domains\Permanencia\Models\Constancia;
 use App\Domains\Permanencia\Services\ConstanciaService;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Services\GotenbergService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class ConstanciaController extends Controller
 {
-    public function __construct(private ConstanciaService $service) {}
+    public function __construct(
+        private ConstanciaService $service,
+        private GotenbergService  $gotenberg,
+    ) {}
 
     // POST /api/constancias  (alumno solicita)
     public function store(Request $request): JsonResponse
@@ -66,5 +71,25 @@ class ConstanciaController extends Controller
         }
 
         return ApiResponse::success($c, 'Constancia emitida.');
+    }
+
+    // GET /api/constancias/{constancia}/pdf
+    public function pdf(Constancia $constancia): Response
+    {
+        $this->authorize('viewAny', Constancia::class);
+
+        abort_if($constancia->estatus !== 'emitida', 422, 'La constancia aún no ha sido emitida.');
+
+        $constancia->load(['alumno.inscripcion.carrera', 'alumno.periodoIngreso', 'emitidaPor']);
+
+        $cfg  = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
+        $html = view('pdfs.constancia', compact('constancia', 'cfg'))->render();
+        $pdf  = $this->gotenberg->htmlToPdf($html);
+
+        $folio = $constancia->folio_unico ?? 'constancia';
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"{$folio}.pdf\"",
+        ]);
     }
 }

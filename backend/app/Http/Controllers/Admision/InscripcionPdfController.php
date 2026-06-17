@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admision;
 
 use App\Domains\Academico\Models\Alumno;
+use App\Domains\Academico\Models\CargaAcademica;
+use App\Domains\Academico\Models\Horario;
 use App\Domains\Academico\Models\Periodo;
 use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
@@ -169,6 +171,30 @@ class InscripcionPdfController extends Controller
         $pdf  = $this->gotenberg->htmlToPdfLandscape($html);
 
         return response($pdf, 200, $this->headers('libro-registro-nc-' . now()->format('Ymd') . '.pdf'));
+    }
+
+    // GET /api/alumnos/{alumno}/carga-academica/{periodo}/pdf
+    public function cargaAcademica(Alumno $alumno, Periodo $periodo): Response
+    {
+        $this->authorize('view', $alumno);
+
+        $alumno->load(['carrera', 'periodoIngreso', 'inscripcion.aspirante']);
+        $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
+
+        // Grupos del alumno en el periodo
+        $grupoIds = \App\Domains\Academico\Models\Grupo::whereHas('alumnos', fn($q) => $q->where('alumnos.id', $alumno->id))
+            ->where('periodo_id', $periodo->id)
+            ->pluck('id');
+
+        $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
+            ->whereIn('grupo_id', $grupoIds)
+            ->where('periodo_id', $periodo->id)
+            ->get();
+
+        $html = view('pdfs.carga_academica', compact('alumno', 'periodo', 'cargas', 'cfg'))->render();
+        $pdf  = $this->gotenberg->htmlToPdf($html);
+
+        return response($pdf, 200, $this->headers("carga-academica-{$alumno->numero_control}.pdf"));
     }
 
     private function headers(string $filename): array
