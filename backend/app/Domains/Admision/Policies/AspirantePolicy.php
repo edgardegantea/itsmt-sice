@@ -9,11 +9,12 @@ class AspirantePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'director_academico', 'jefe_carrera', 'personal_administrativo']);
+        return $user->hasAnyRole(['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo']);
     }
 
     public function view(User $user, Aspirante $aspirante): bool
     {
+        if ($user->hasRole('superadmin')) return true;
         if ($user->hasRole('jefe_carrera')) {
             return $user->carrera_id && $user->carrera_id === $aspirante->carrera_id;
         }
@@ -22,6 +23,7 @@ class AspirantePolicy
 
     public function update(User $user, Aspirante $aspirante): bool
     {
+        if ($user->hasRole('superadmin')) return true;
         if ($user->hasRole('jefe_carrera')) {
             return $user->carrera_id && $user->carrera_id === $aspirante->carrera_id;
         }
@@ -30,6 +32,6 @@ class AspirantePolicy
 
     public function inscribir(User $user, Aspirante $aspirante): bool
     {
-        return $user->hasAnyRole(['admin', 'personal_administrativo']);
+        return $user->hasAnyRole(['superadmin', 'admin', 'personal_administrativo']);
     }
 }

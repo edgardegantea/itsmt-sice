@@ -54,6 +54,22 @@ class PeriodoAdminController extends Controller
         );
     }
 
+    // DELETE /api/admin/periodos/{periodo}
+    public function destroy(Request $request, Periodo $periodo): JsonResponse
+    {
+        if (! $request->user()?->hasRole('superadmin')) {
+            return ApiResponse::error('Solo el superadministrador puede eliminar periodos.', 403);
+        }
+
+        if ($periodo->activo) {
+            return ApiResponse::error('No se puede eliminar el periodo activo.', 422);
+        }
+
+        $periodo->delete();
+
+        return ApiResponse::success(null, 'Periodo eliminado correctamente.');
+    }
+
     // PATCH /api/admin/periodos/{periodo}/activar
     public function activar(Request $request, Periodo $periodo): JsonResponse
     {

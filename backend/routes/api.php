@@ -196,6 +196,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/periodos',                   [PeriodoAdminController::class, 'store']);
     Route::patch('/admin/periodos/{periodo}',         [PeriodoAdminController::class, 'update']);
     Route::patch('/admin/periodos/{periodo}/activar', [PeriodoAdminController::class, 'activar']);
+    Route::delete('/admin/periodos/{periodo}',        [PeriodoAdminController::class, 'destroy']);
 
     // Admin — Catálogos CRUD
     Route::prefix('admin/catalogos')->group(function () {

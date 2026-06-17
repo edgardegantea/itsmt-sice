@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import Modal from '../../../components/ui/Modal'
 import { useToastStore } from '../../../store/toastStore'
+import { useAuthStore } from '../../../store/authStore'
 
 interface Periodo {
   id: string
@@ -21,7 +22,8 @@ const API = {
   list:    () => apiClient.get('/admin/periodos').then(r => r.data.data as Periodo[]),
   create:  (d: Partial<Periodo>) => apiClient.post('/admin/periodos', d).then(r => r.data.data as Periodo),
   update:  (id: string, d: Partial<Periodo>) => apiClient.patch(`/admin/periodos/${id}`, d).then(r => r.data.data as Periodo),
-  activar: (id: string) => apiClient.patch(`/admin/periodos/${id}/activar`).then(r => r.data.data as Periodo),
+  activar:  (id: string) => apiClient.patch(`/admin/periodos/${id}/activar`).then(r => r.data.data as Periodo),
+  eliminar: (id: string) => apiClient.delete(`/admin/periodos/${id}`).then(r => r.data),
 }
 
 const fmtFecha = (s: string | null) => s ? new Date(s + 'T12:00:00').toLocaleDateString('es-MX') : '—'
@@ -108,6 +110,8 @@ export default function PeriodosPage() {
   const qc = useQueryClient()
   const [modal, setModal] = useState<'nuevo' | Periodo | null>(null)
   const { success, error: toastError } = useToastStore()
+  const { user } = useAuthStore()
+  const esSuperadmin = user?.roles?.includes('superadmin') ?? false
 
   const { data: periodos = [], isLoading } = useQuery({ queryKey: ['admin-periodos'], queryFn: API.list })
 
@@ -129,6 +133,15 @@ export default function PeriodosPage() {
       success(`Periodo "${data.nombre}" activado correctamente.`)
     },
     onError: () => toastError('Error al activar el periodo.'),
+  })
+
+  const eliminar = useMutation({
+    mutationFn: (id: string) => API.eliminar(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-periodos'] })
+      success('Periodo eliminado correctamente.')
+    },
+    onError: (err: any) => toastError(err?.response?.data?.message ?? 'Error al eliminar el periodo.'),
   })
 
   return (
@@ -191,6 +204,15 @@ export default function PeriodosPage() {
                 >
                   Editar
                 </button>
+                {esSuperadmin && !p.activo && (
+                  <button
+                    onClick={() => window.confirm(`¿Eliminar el periodo "${p.nombre}"? Esta acción no se puede deshacer.`) && eliminar.mutate(p.id)}
+                    disabled={eliminar.isPending}
+                    className="px-3 py-1.5 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-60"
+                  >
+                    Eliminar
+                  </button>
+                )}
               </div>
             </div>
           </div>

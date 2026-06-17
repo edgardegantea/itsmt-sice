@@ -8,11 +8,11 @@ class ConstanciaPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'personal_administrativo', 'director_academico', 'jefe_carrera']);
+        return $user->hasAnyRole(['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'jefe_carrera']);
     }
 
     public function update(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'personal_administrativo']);
+        return $user->hasAnyRole(['superadmin', 'admin', 'personal_administrativo']);
     }
 }
