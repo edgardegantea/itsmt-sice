@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CatalogoAdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PeriodoAdminController;
 use App\Http\Controllers\Admin\PermisosController;
+use App\Http\Controllers\Admin\DirectorioController;
 use App\Http\Controllers\Academico\AlumnoController;
 use App\Http\Controllers\Academico\CarreraController;
 use App\Http\Controllers\Academico\PeriodoController;
@@ -199,6 +200,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/carreras',                          [CarreraAdminController::class, 'store']);
     Route::patch('/admin/carreras/{carrera}',               [CarreraAdminController::class, 'update']);
     Route::patch('/admin/carreras/{carrera}/toggle-activa', [CarreraAdminController::class, 'toggleActiva']);
+
+    // Admin — Directorio institucional
+    Route::get('/admin/directorio',                  [DirectorioController::class, 'index']);
+    Route::post('/admin/directorio',                 [DirectorioController::class, 'store']);
+    Route::patch('/admin/directorio/{directorio}',   [DirectorioController::class, 'update']);
+    Route::delete('/admin/directorio/{directorio}',  [DirectorioController::class, 'destroy']);
 
     // Admin — Periodos CRUD
     Route::get('/admin/periodos',                    [PeriodoAdminController::class, 'index']);

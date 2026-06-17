@@ -25,6 +25,7 @@ const ConstanciasAdminPage            = lazy(() => import('../features/permanenc
 const EncuestaSocioeconomicaPage      = lazy(() => import('../features/permanencia/pages/EncuestaSocioeconomicaPage'))
 const EncuestasAdminPage              = lazy(() => import('../features/permanencia/pages/EncuestasAdminPage'))
 const UsuariosPage                    = lazy(() => import('../features/admin/pages/UsuariosPage'))
+const DirectorioPage                  = lazy(() => import('../features/admin/pages/DirectorioPage'))
 const PermisosPage                    = lazy(() => import('../features/admin/pages/PermisosPage'))
 const GestionAcademicaPage            = lazy(() => import('../features/academico/pages/GestionAcademicaPage'))
 const CargaAcademicaAdminPage         = lazy(() => import('../features/academico/pages/CargaAcademicaAdminPage'))
@@ -73,6 +74,7 @@ export default function AppRoutes() {
         <Route path="/admin/constancias"             element={<AdminLayout><ConstanciasAdminPage /></AdminLayout>} />
         <Route path="/admin/encuestas-socioeconomicas" element={<AdminLayout><EncuestasAdminPage /></AdminLayout>} />
         <Route path="/admin/usuarios"                  element={<AdminLayout><UsuariosPage /></AdminLayout>} />
+        <Route path="/admin/directorio"               element={<AdminLayout><DirectorioPage /></AdminLayout>} />
         <Route path="/admin/permisos"                  element={<AdminLayout><PermisosPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica"         element={<AdminLayout><GestionAcademicaPage /></AdminLayout>} />
         <Route path="/admin/carga-academica"           element={<AdminLayout><CargaAcademicaAdminPage /></AdminLayout>} />
