@@ -148,7 +148,13 @@ export default function ConfiguracionPage() {
     if (data) {
       const { id, logo_principal, logo_secundario, login_imagen_fondo,
         url_logo_principal, url_logo_secundario, url_login_imagen_fondo, logo_base64, ...rest } = data as any
-      setForm({ ...rest, login_opacidad_fondo: rest.login_opacidad_fondo ?? 0.70 })
+      const toDate = (s: string | null | undefined) => s ? s.slice(0, 10) : ''
+      setForm({
+        ...rest,
+        login_opacidad_fondo: rest.login_opacidad_fondo ?? 0.70,
+        fecha_inicio_actualizacion_datos: toDate(rest.fecha_inicio_actualizacion_datos),
+        fecha_fin_actualizacion_datos:    toDate(rest.fecha_fin_actualizacion_datos),
+      })
     }
   }, [data])
 

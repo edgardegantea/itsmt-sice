@@ -190,7 +190,7 @@ export default function TramitesAlumnoPage() {
               )}
               {reinscripcionActual.resello_registrado && (
                 <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-xs text-green-800">
-                  Reinscripción completa — credencial resellada el {reinscripcionActual.fecha_resello}.
+                  Reinscripción completa — credencial resellada el {reinscripcionActual.fecha_resello ? new Date(reinscripcionActual.fecha_resello + 'T12:00:00').toLocaleDateString('es-MX') : ''}.
                 </div>
               )}
             </div>

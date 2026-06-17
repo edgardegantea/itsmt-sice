@@ -101,7 +101,7 @@ export default function FuncionesTab() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right space-x-2">
-                  <button onClick={() => setModal(f)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                  <button onClick={() => setModal({ ...f, fecha_inicio: f.fecha_inicio?.slice(0, 10) ?? '', fecha_fin: f.fecha_fin?.slice(0, 10) ?? '' })} className="text-xs text-blue-600 hover:underline">Editar</button>
                   <button onClick={() => window.confirm('¿Eliminar función?') && del.mutate(f.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
                 </td>
               </tr>

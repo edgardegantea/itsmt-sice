@@ -170,7 +170,7 @@ function TabReinscripciones() {
                   </td>
                   <td className="px-4 py-3">
                     {r.resello_registrado
-                      ? <span className="text-xs text-green-700">✓ {r.fecha_resello}</span>
+                      ? <span className="text-xs text-green-700">✓ {r.fecha_resello ? new Date(r.fecha_resello + 'T12:00:00').toLocaleDateString('es-MX') : ''}</span>
                       : r.estatus === 'aprobada'
                         ? <button onClick={() => mutResello.mutate(r.id)} disabled={mutResello.isPending}
                             className="text-xs text-[#1a3a5c] hover:underline disabled:opacity-50">Registrar</button>
@@ -309,8 +309,8 @@ function TabOrdenReinscripcion() {
                 <tr key={o.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                   <td className="py-2.5 pr-4 text-slate-700">{o.carrera?.nombre ?? o.carrera_id}</td>
                   <td className="py-2.5 pr-4 text-slate-600">{o.semestre}°</td>
-                  <td className="py-2.5 pr-4 text-slate-600">{o.fecha_inicio_reinscripcion}</td>
-                  <td className="py-2.5 text-slate-600">{o.fecha_fin_reinscripcion}</td>
+                  <td className="py-2.5 pr-4 text-slate-600">{o.fecha_inicio_reinscripcion ? new Date(o.fecha_inicio_reinscripcion + 'T12:00:00').toLocaleDateString('es-MX') : '—'}</td>
+                  <td className="py-2.5 text-slate-600">{o.fecha_fin_reinscripcion ? new Date(o.fecha_fin_reinscripcion + 'T12:00:00').toLocaleDateString('es-MX') : '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -638,7 +638,7 @@ function TabBajas() {
                     <Badge label={b.tipo_baja} color={TIPO_BAJA_COLOR[b.tipo_baja]} />
                   </td>
                   <td className="px-4 py-3 text-slate-600">{b.periodo?.nombre}</td>
-                  <td className="px-4 py-3 text-slate-600">{b.fecha_solicitud}</td>
+                  <td className="px-4 py-3 text-slate-600">{b.fecha_solicitud ? new Date(b.fecha_solicitud + 'T12:00:00').toLocaleDateString('es-MX') : '—'}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`text-xs font-medium ${b.reingreso_posible ? 'text-green-700' : 'text-slate-400'}`}>
                       {b.reingreso_posible ? 'Sí' : 'No'}

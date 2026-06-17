@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { permanenciaApi, type EncuestaSocioeconomica, type GastosMensuales, type Vehiculo } from '../services/permanencia'
 import { useConfiguracion } from '../../../hooks/useConfiguracion'
+import { useAuthStore } from '../../../store/authStore'
 
 // ── Estilos base ──────────────────────────────────────────────────────────────
 
@@ -297,6 +298,7 @@ function SaveStatus({ isPending, isSuccess, isError, lastSaved }: {
 export default function EncuestaSocioeconomicaPage() {
   const qc = useQueryClient()
   const { config } = useConfiguracion()
+  const { user: authUser } = useAuthStore()
 
   const { data, isLoading } = useQuery({
     queryKey: ['mi-encuesta'],
@@ -325,11 +327,14 @@ export default function EncuestaSocioeconomicaPage() {
   })
 
   useEffect(() => {
+    const toDate = (s: string | null | undefined) => s ? s.slice(0, 10) : ''
+
     if (data?.encuesta) {
       setForm({
         ...data.encuesta,
-        vehiculos:       data.encuesta.vehiculos       ?? [],
-        gastos_mensuales: data.encuesta.gastos_mensuales ?? {},
+        dp_fecha_nacimiento:  toDate(data.encuesta.dp_fecha_nacimiento),
+        vehiculos:            data.encuesta.vehiculos       ?? [],
+        gastos_mensuales:     data.encuesta.gastos_mensuales ?? {},
       })
     } else if (data?.alumno) {
       setForm(f => ({
@@ -337,7 +342,7 @@ export default function EncuestaSocioeconomicaPage() {
         semestre:                 alumno?.inscripcion?.semestre_actual ?? 1,
         periodo_id:               periodo?.id ?? '',
         dp_curp:                  aspirante?.curp               ?? '',
-        dp_fecha_nacimiento:      aspirante?.fecha_nacimiento    ?? '',
+        dp_fecha_nacimiento:      toDate(aspirante?.fecha_nacimiento),
         dp_sexo:                  aspirante?.sexo                ?? '',
         dp_estado_civil:          aspirante?.estado_civil        ?? '',
         dp_telefono:              aspirante?.telefono            ?? '',
@@ -457,7 +462,7 @@ export default function EncuestaSocioeconomicaPage() {
         <>
           {/* I. Identificación (solo lectura) */}
           <Section icon="🎓" title="I. Datos de Identificación" cols={4}>
-            <ReadonlyField label="Nombre completo" value={alumno?.user?.name ?? ''} />
+            <ReadonlyField label="Nombre completo" value={authUser?.name ?? alumno?.user?.name ?? ''} />
             <ReadonlyField label="Número de control" value={alumno?.numero_control ?? ''} />
             <ReadonlyField label="Carrera" value={alumno?.inscripcion?.carrera?.nombre ?? ''} />
             <Field label="Semestre actual">
