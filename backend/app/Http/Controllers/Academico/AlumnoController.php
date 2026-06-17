@@ -19,7 +19,7 @@ class AlumnoController extends Controller
 
         $carreraForzada = $request->user()->carreraRestringida();
 
-        $alumnos = Alumno::with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])
+        $alumnos = Alumno::with(['carrera', 'periodoIngreso', 'inscripcion.aspirante', 'user'])
             ->when($carreraForzada,                                     fn($q, $v) => $q->where('carrera_id', $v))
             ->when(! $carreraForzada && $request->carrera_id,           fn($q) => $q->where('carrera_id', $request->carrera_id))
             ->when($request->estatus,    fn($q, $v) => $q->where('estatus', $v))

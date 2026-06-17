@@ -79,7 +79,7 @@ class ReinscripcionService
 
     public function listar(array $filtros = [])
     {
-        $q = Reinscripcion::with(['alumno.carrera', 'alumno.user', 'periodo', 'aprobadoPor']);
+        $q = Reinscripcion::with(['alumno.carrera', 'alumno.user', 'periodo', 'aprobadoPor', 'reciboCobro']);
 
         if (!empty($filtros['estatus'])) {
             $q->where('estatus', $filtros['estatus']);

@@ -21,7 +21,7 @@ class InscripcionPdfController extends Controller
     {
         $this->authorize('view', $inscripcion->aspirante);
 
-        $inscripcion->load(['aspirante', 'carrera', 'periodo']);
+        $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno']);
 
         $docs = $inscripcion->aspirante->documentos ?? [];
         $d    = fn(string $key) => (bool) ($docs[$key] ?? false);
@@ -55,7 +55,7 @@ class InscripcionPdfController extends Controller
     {
         $this->authorize('view', $inscripcion->aspirante);
 
-        $inscripcion->load(['aspirante', 'carrera', 'periodo']);
+        $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno']);
 
         $html = view('pdfs.carta_compromiso', compact('inscripcion'))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
@@ -70,7 +70,7 @@ class InscripcionPdfController extends Controller
     {
         $this->authorize('view', $inscripcion->aspirante);
 
-        $inscripcion->load(['aspirante', 'carrera', 'periodo']);
+        $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno']);
 
         $html = view('pdfs.contrato_estudiante', compact('inscripcion'))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);

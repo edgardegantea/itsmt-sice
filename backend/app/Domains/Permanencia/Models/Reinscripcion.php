@@ -4,6 +4,7 @@ namespace App\Domains\Permanencia\Models;
 
 use App\Domains\Academico\Models\Alumno;
 use App\Domains\Academico\Models\Periodo;
+use App\Domains\Cobros\Models\ReciboCobro;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -53,5 +54,10 @@ class Reinscripcion extends Model
     public function reselloPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resello_por');
+    }
+
+    public function reciboCobro(): BelongsTo
+    {
+        return $this->belongsTo(ReciboCobro::class, 'recibo_cobro_id');
     }
 }

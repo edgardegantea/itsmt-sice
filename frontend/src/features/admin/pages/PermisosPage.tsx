@@ -319,12 +319,21 @@ function TabUsuarios({ catalogo }: { catalogo: Catalogo }) {
 export default function PermisosPage() {
   const [tab, setTab] = useState<'roles' | 'usuarios'>('roles')
 
-  const { data: catalogo } = useQuery({ queryKey: ['permisos-catalogo'], queryFn: api.catalogo, staleTime: Infinity })
+  const { data: catalogo, isLoading, isError, error } = useQuery({ queryKey: ['permisos-catalogo'], queryFn: api.catalogo, staleTime: Infinity })
 
-  if (!catalogo) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
         Cargando módulo de permisos…
+      </div>
+    )
+  }
+
+  if (isError || !catalogo) {
+    return (
+      <div className="flex flex-col items-center justify-center h-48 gap-2">
+        <p className="text-red-600 text-sm font-medium">Error al cargar el módulo de permisos</p>
+        <p className="text-slate-400 text-xs">{(error as any)?.response?.data?.message ?? String(error)}</p>
       </div>
     )
   }
