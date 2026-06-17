@@ -90,7 +90,7 @@ function FilaAspirante({
                   <div><p className="text-xs text-slate-400">Correo electrónico</p><p className="text-slate-700 mt-0.5 text-xs">{asp.email}</p></div>
                   <div><p className="text-xs text-slate-400">Teléfono</p><p className="text-slate-700 mt-0.5">{asp.telefono ?? '—'}</p></div>
                   <div><p className="text-xs text-slate-400">Turno</p><p className="text-slate-700 capitalize mt-0.5">{asp.turno_preferido}</p></div>
-                  <div><p className="text-xs text-slate-400">Fecha de nacimiento</p><p className="text-slate-700 mt-0.5">{asp.fecha_nacimiento}</p></div>
+                  <div><p className="text-xs text-slate-400">Fecha de nacimiento</p><p className="text-slate-700 mt-0.5">{asp.fecha_nacimiento ? new Date(asp.fecha_nacimiento).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' }) : '—'}</p></div>
                   <div><p className="text-xs text-slate-400">Municipio</p><p className="text-slate-700 mt-0.5">{asp.municipio_procedencia}</p></div>
                   <div><p className="text-xs text-slate-400">Bachillerato</p><p className="text-slate-700 mt-0.5 text-xs">{asp.escuela_bachillerato}</p></div>
                   <div><p className="text-xs text-slate-400">Promedio</p><p className="font-semibold text-slate-700 mt-0.5">{asp.promedio_bachillerato?.toFixed(1)}</p></div>

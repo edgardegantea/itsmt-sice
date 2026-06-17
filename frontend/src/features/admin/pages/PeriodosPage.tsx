@@ -25,6 +25,7 @@ const API = {
 }
 
 const fmtFecha = (s: string | null) => s ? new Date(s + 'T12:00:00').toLocaleDateString('es-MX') : '—'
+const toDateInput = (s: string | null | undefined): string => s ? s.slice(0, 10) : ''
 
 function PeriodoForm({
   inicial,
@@ -37,7 +38,13 @@ function PeriodoForm({
   onCancelar: () => void
   cargando: boolean
 }) {
-  const [form, setForm] = useState<Partial<Periodo>>(inicial ?? { tipo: 'ordinario', activo: false })
+  const [form, setForm] = useState<Partial<Periodo>>(inicial ? {
+    ...inicial,
+    fecha_inicio:              toDateInput(inicial.fecha_inicio),
+    fecha_fin:                 toDateInput(inicial.fecha_fin),
+    fecha_limite_baja_parcial: toDateInput(inicial.fecha_limite_baja_parcial),
+    fecha_limite_baja_temporal: toDateInput(inicial.fecha_limite_baja_temporal),
+  } : { tipo: 'ordinario', activo: false })
   const set = (k: keyof Periodo, v: unknown) => setForm(f => ({ ...f, [k]: v }))
 
   return (

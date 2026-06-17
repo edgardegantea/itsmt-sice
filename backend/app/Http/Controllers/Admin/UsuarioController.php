@@ -24,7 +24,12 @@ class UsuarioController extends Controller
     {
         $this->authorizeAdmin($request);
 
+        $esSuperadmin = $request->user()->hasRole('superadmin');
+
         $usuarios = User::with(['roles', 'carrera'])
+            ->when(! $esSuperadmin, fn($q) =>
+                $q->whereDoesntHave('roles', fn($rq) => $rq->where('name', 'superadmin'))
+            )
             ->when($request->query('q'), fn($q, $search) =>
                 $q->where(fn($q) =>
                     $q->where('name', 'ilike', "%{$search}%")
@@ -40,10 +45,18 @@ class UsuarioController extends Controller
         return ApiResponse::success($usuarios);
     }
 
+    private function denegarSiSuperadminOculto(Request $request, User $usuario): void
+    {
+        if (! $request->user()->hasRole('superadmin') && $usuario->hasRole('superadmin')) {
+            abort(404);
+        }
+    }
+
     // GET /api/admin/usuarios/{usuario}
     public function show(Request $request, User $usuario): JsonResponse
     {
         $this->authorizeAdmin($request);
+        $this->denegarSiSuperadminOculto($request, $usuario);
 
         return ApiResponse::success($usuario->load(['roles', 'carrera']));
     }
@@ -77,6 +90,7 @@ class UsuarioController extends Controller
     public function update(Request $request, User $usuario): JsonResponse
     {
         $this->authorizeAdmin($request);
+        $this->denegarSiSuperadminOculto($request, $usuario);
 
         $data = $request->validate([
             'name'       => ['sometimes', 'string', 'max:255'],
@@ -103,6 +117,7 @@ class UsuarioController extends Controller
     public function destroy(Request $request, User $usuario): JsonResponse
     {
         $this->authorizeAdmin($request);
+        $this->denegarSiSuperadminOculto($request, $usuario);
 
         if ($usuario->id === $request->user()->id) {
             return ApiResponse::error('No puedes eliminar tu propia cuenta.', 422);

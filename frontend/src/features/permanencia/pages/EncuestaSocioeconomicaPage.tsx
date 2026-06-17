@@ -305,7 +305,7 @@ export default function EncuestaSocioeconomicaPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Encabezado */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Encuesta Socioeconómica</h1>

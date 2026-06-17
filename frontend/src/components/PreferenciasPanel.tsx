@@ -6,6 +6,7 @@ import {
   type EscalaTexto,
   type ColorSidebar,
 } from '../store/preferenciasStore'
+import { useAuthStore } from '../store/authStore'
 
 interface Props {
   open: boolean
@@ -61,6 +62,9 @@ export default function PreferenciasPanel({ open, onClose }: Props) {
     set, reset,
   } = usePreferenciasStore()
 
+  const { user } = useAuthStore()
+  const esSuperadmin = user?.roles?.includes('superadmin') ?? false
+
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -89,7 +93,13 @@ export default function PreferenciasPanel({ open, onClose }: Props) {
           <button onClick={onClose} aria-label="Cerrar" className="text-slate-400 hover:text-white text-lg leading-none">&times;</button>
         </div>
 
-        <div className="p-4 space-y-4 overflow-y-auto max-h-[82vh]">
+        <div className={`p-4 space-y-4 overflow-y-auto max-h-[82vh] ${!esSuperadmin ? 'pointer-events-none select-none' : ''}`}>
+
+          {!esSuperadmin && (
+            <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/30 px-3 py-2 text-[11px] text-yellow-300 leading-snug">
+              Solo el <strong>superadministrador</strong> puede modificar estas preferencias.
+            </div>
+          )}
 
           {/* ── VISUALIZACIÓN ── */}
           <Divider label="Visualización" />
@@ -226,12 +236,14 @@ export default function PreferenciasPanel({ open, onClose }: Props) {
           />
 
           {/* Restablecer */}
-          <button
-            onClick={reset}
-            className="w-full text-xs text-slate-500 hover:text-slate-300 py-2 rounded-lg hover:bg-white/5 transition-colors border border-white/10 mt-1"
-          >
-            Restablecer todo
-          </button>
+          {esSuperadmin && (
+            <button
+              onClick={reset}
+              className="w-full text-xs text-slate-500 hover:text-slate-300 py-2 rounded-lg hover:bg-white/5 transition-colors border border-white/10 mt-1"
+            >
+              Restablecer todo
+            </button>
+          )}
         </div>
       </div>
     </>

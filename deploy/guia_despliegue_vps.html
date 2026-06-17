@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE — Guía de Despliegue VPS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11pt;
+    color: #1a1a2e;
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  /* ── Portada ── */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a3a5c 0%, #0d1f33 100%);
+    color: #fff;
+    text-align: center;
+    page-break-after: always;
+    padding: 60px 40px;
+  }
+  .cover .badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-size: 9pt;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .cover h1 { font-size: 36pt; font-weight: 800; line-height: 1.15; margin-bottom: 12px; }
+  .cover h2 { font-size: 16pt; font-weight: 300; opacity: 0.8; margin-bottom: 40px; }
+  .cover .meta {
+    border-top: 1px solid rgba(255,255,255,0.25);
+    padding-top: 28px;
+    font-size: 10pt;
+    opacity: 0.7;
+    line-height: 2;
+  }
+  .cover .accent { color: #64b5f6; }
+
+  /* ── Índice ── */
+  .toc {
+    padding: 50px 60px;
+    page-break-after: always;
+  }
+  .toc h2 { font-size: 20pt; color: #1a3a5c; border-bottom: 3px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 28px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { padding: 5px 0; font-size: 11pt; }
+  .toc li a { color: #1a3a5c; text-decoration: none; }
+  .toc li span { float: right; color: #888; }
+  .toc .sub { font-size: 10pt; color: #555; padding: 2px 0 2px 20px; }
+
+  /* ── Secciones ── */
+  .section {
+    padding: 42px 60px;
+    page-break-before: always;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #e3ecf7;
+  }
+  .section-num {
+    background: #1a3a5c;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14pt;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section-title { font-size: 18pt; font-weight: 700; color: #1a3a5c; }
+
+  h3 {
+    font-size: 12pt;
+    color: #1a3a5c;
+    margin: 22px 0 10px;
+    padding-left: 10px;
+    border-left: 4px solid #64b5f6;
+  }
+  p { margin: 8px 0; }
+
+  /* ── Código ── */
+  pre, code {
+    font-family: 'Fira Mono', 'Courier New', monospace;
+    font-size: 9pt;
+  }
+  pre {
+    background: #0d1f33;
+    color: #e2f0ff;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0 18px;
+    overflow-x: auto;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  code {
+    background: #e8f0f8;
+    color: #1a3a5c;
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+  .comment { color: #6fa3d0; }
+  .cmd { color: #81d4fa; }
+
+  /* ── Callouts ── */
+  .alert {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 10pt;
+    display: flex;
+    gap: 12px;
+  }
+  .alert-icon { font-size: 16pt; flex-shrink: 0; }
+  .alert.warn { background: #fff8e1; border-left: 4px solid #f9a825; }
+  .alert.info { background: #e3f2fd; border-left: 4px solid #1565c0; }
+  .alert.ok   { background: #e8f5e9; border-left: 4px solid #2e7d32; }
+  .alert.err  { background: #ffebee; border-left: 4px solid #c62828; }
+
+  /* ── Tabla ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 10pt;
+  }
+  th {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 9px 14px;
+    text-align: left;
+  }
+  td { padding: 8px 14px; border-bottom: 1px solid #dde8f5; }
+  tr:nth-child(even) td { background: #f4f8fd; }
+
+  /* ── Checklist ── */
+  .check-list { list-style: none; padding-left: 0; }
+  .check-list li {
+    padding: 5px 0 5px 28px;
+    position: relative;
+    font-size: 10.5pt;
+  }
+  .check-list li::before {
+    content: '☐';
+    position: absolute;
+    left: 0;
+    color: #1a3a5c;
+    font-size: 13pt;
+  }
+
+  /* ── Orden ejecución ── */
+  .steps { counter-reset: step; padding-left: 0; list-style: none; }
+  .steps li {
+    counter-increment: step;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 10px;
+    font-size: 10.5pt;
+  }
+  .steps li::before {
+    content: counter(step);
+    background: #1a3a5c;
+    color: #fff;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9pt;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { font-size: 10pt; }
+    pre { font-size: 8.5pt; }
+    .section { padding: 30px 50px; }
+    .cover { min-height: auto; padding: 80px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PORTADA
+════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="badge">Documento Técnico · Confidencial</div>
+  <h1>SICE</h1>
+  <h2>Sistema Integral de Control Escolar<br>Instituto Tecnológico Superior de Martínez de la Torre</h2>
+  <p style="font-size:18pt; margin-bottom: 40px; color:#64b5f6; font-weight:600;">Guía de Despliegue en VPS</p>
+  <div class="meta">
+    <strong>Servidor objetivo:</strong> Ubuntu 24.04 LTS<br>
+    <strong>Backend:</strong> <span class="accent">https://siceback.maewalliscorp.org</span><br>
+    <strong>Frontend:</strong> <span class="accent">https://sice.maewalliscorp.org</span><br>
+    <strong>Base de datos:</strong> PostgreSQL 16<br>
+    <strong>Generación de PDFs:</strong> Gotenberg 8 (Docker)<br>
+    <br>
+    <strong>Fecha:</strong> Junio 2026
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ÍNDICE
+════════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Contenido</h2>
+  <ol>
+    <li><a href="#s0">Prerequisitos y arquitectura</a></li>
+    <li><a href="#s1">Preparar archivos en tu Mac</a></li>
+    <li><a href="#s2">Configuración inicial del servidor</a>
+      <div class="sub">PHP 8.3 · Nginx · PostgreSQL 16 · Docker · Certbot · Firewall</div>
+    </li>
+    <li><a href="#s3">Base de datos PostgreSQL</a></li>
+    <li><a href="#s4">Subir archivos al VPS</a></li>
+    <li><a href="#s5">Configurar el backend Laravel</a></li>
+    <li><a href="#s6">Configurar Nginx</a></li>
+    <li><a href="#s7">Certificados SSL (Let's Encrypt)</a></li>
+    <li><a href="#s8">Servicio Gotenberg (PDFs)</a></li>
+    <li><a href="#s9">Verificación final</a></li>
+    <li><a href="#s10">Referencia rápida y comandos útiles</a></li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 0 — PREREQUISITOS
+════════════════════════════════════════════ -->
+<div class="section" id="s0">
+  <div class="section-header">
+    <div class="section-num">0</div>
+    <div class="section-title">Prerequisitos y arquitectura</div>
+  </div>
+
+  <h3>Arquitectura del sistema</h3>
+  <table>
+    <tr><th>Componente</th><th>Tecnología</th><th>Puerto</th></tr>
+    <tr><td>Frontend (SPA)</td><td>React + TypeScript + Vite</td><td>443 (HTTPS / Nginx)</td></tr>
+    <tr><td>Backend (API REST)</td><td>Laravel 13 / PHP 8.3</td><td>443 (HTTPS / Nginx + FPM)</td></tr>
+    <tr><td>Base de datos</td><td>PostgreSQL 16</td><td>5432 (local únicamente)</td></tr>
+    <tr><td>Generación de PDFs</td><td>Gotenberg 8 (Docker)</td><td>3000 (local únicamente)</td></tr>
+    <tr><td>Proxy / TLS</td><td>Nginx + Certbot</td><td>80 → 443</td></tr>
+  </table>
+
+  <h3>Prerequisitos antes de empezar</h3>
+  <ul class="check-list">
+    <li>Acceso SSH al VPS como <code>root</code> (o usuario con <code>sudo</code>)</li>
+    <li>DNS: <code>siceback.maewalliscorp.org</code> → IP del VPS (propagado)</li>
+    <li>DNS: <code>sice.maewalliscorp.org</code> → IP del VPS (propagado)</li>
+    <li>Node.js ≥ 18 instalado en tu Mac (para compilar el frontend)</li>
+    <li>Composer instalado en tu Mac (opcional, solo si necesitas depurar)</li>
+  </ul>
+
+  <div class="alert info">
+    <div class="alert-icon">ℹ️</div>
+    <div>Verifica que los DNS estén propagados antes del paso 7 (SSL). Puedes comprobarlo con: <code>dig siceback.maewalliscorp.org +short</code> — debe devolver la IP del VPS.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 1 — PREPARAR ARCHIVOS
+════════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">Preparar archivos en tu Mac</div>
+  </div>
+
+  <h3>1.1 Compilar el frontend</h3>
+  <p>Ejecuta esto en tu terminal local antes de subir los archivos:</p>
+<pre><span class="comment"># Ir al directorio del frontend</span>
+<span class="cmd">cd</span> /Users/edegantea/development/itsmt-sice/frontend
+
+<span class="comment"># Crear variables de entorno de producción</span>
+<span class="cmd">echo</span> "VITE_API_URL=https://siceback.maewalliscorp.org/api" > .env.production
+
+<span class="comment"># Compilar (el resultado queda en frontend/dist/)</span>
+<span class="cmd">npm</span> ci && npm run build</pre>
+
+  <div class="alert ok">
+    <div class="alert-icon">✅</div>
+    <div>Si el build termina sin errores, verás <code>frontend/dist/</code> con <code>index.html</code> y carpeta <code>assets/</code>. Esa carpeta completa es lo que va al VPS.</div>
+  </div>
+
+  <h3>1.2 Qué subir y qué excluir</h3>
+  <table>
+    <tr><th>Qué subir</th><th>Destino en el VPS</th></tr>
+    <tr><td>Carpeta <code>backend/</code> completa</td><td><code>/var/www/sice-backend/</code></td></tr>
+    <tr><td>Contenido de <code>frontend/dist/</code></td><td><code>/var/www/sice-frontend/</code></td></tr>
+  </table>
+  <table>
+    <tr><th>Excluir al subir</th><th>Razón</th></tr>
+    <tr><td><code>backend/vendor/</code></td><td>Se instala en el servidor con Composer</td></tr>
+    <tr><td><code>backend/.env</code></td><td>Se crea manualmente en el servidor</td></tr>
+    <tr><td><code>backend/storage/logs/*.log</code></td><td>Logs locales de desarrollo</td></tr>
+    <tr><td><code>backend/bootstrap/cache/</code></td><td>Se regenera en el servidor</td></tr>
+    <tr><td><code>node_modules/</code></td><td>No se usa en producción</td></tr>
+  </table>
+
+  <h3>1.3 Subir con rsync (recomendado)</h3>
+<pre><span class="comment"># Backend</span>
+<span class="cmd">rsync</span> -avz --progress \
+  --exclude='.env' \
+  --exclude='vendor/' \
+  --exclude='storage/logs/*.log' \
+  --exclude='bootstrap/cache/' \
+  /Users/edegantea/development/itsmt-sice/backend/ \
+  root@&lt;IP_VPS&gt;:/var/www/sice-backend/
+
+<span class="comment"># Frontend (el contenido de dist/, no la carpeta dist en sí)</span>
+<span class="cmd">rsync</span> -avz --progress --delete \
+  /Users/edegantea/development/itsmt-sice/frontend/dist/ \
+  root@&lt;IP_VPS&gt;:/var/www/sice-frontend/</pre>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 2 — CONFIGURACIÓN SERVIDOR
+════════════════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">Configuración inicial del servidor</div>
+  </div>
+
+  <p>Conéctate al VPS: <code>ssh root@&lt;IP_DEL_VPS&gt;</code></p>
+
+  <h3>2.1 Actualizar el sistema</h3>
+<pre><span class="cmd">apt</span> update && apt upgrade -y
+<span class="cmd">apt</span> install -y curl wget git unzip software-properties-common ufw fail2ban</pre>
+
+  <h3>2.2 Instalar PHP 8.3</h3>
+<pre><span class="cmd">add-apt-repository</span> ppa:ondrej/php -y
+<span class="cmd">apt</span> update
+<span class="cmd">apt</span> install -y \
+  php8.3 php8.3-fpm \
+  php8.3-pgsql php8.3-mbstring php8.3-xml php8.3-bcmath \
+  php8.3-curl php8.3-zip php8.3-gd php8.3-intl \
+  php8.3-tokenizer php8.3-ctype php8.3-fileinfo php8.3-dom
+
+<span class="comment"># Verificar</span>
+<span class="cmd">php8.3</span> -v</pre>
+
+  <h3>2.3 Instalar PostgreSQL 16</h3>
+<pre><span class="cmd">sh</span> -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+<span class="cmd">curl</span> -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+<span class="cmd">apt</span> update && apt install -y postgresql-16 postgresql-client-16
+<span class="cmd">systemctl</span> enable postgresql && systemctl start postgresql</pre>
+
+  <h3>2.4 Instalar Nginx</h3>
+<pre><span class="cmd">apt</span> install -y nginx
+<span class="cmd">systemctl</span> enable nginx && systemctl start nginx</pre>
+
+  <h3>2.5 Instalar Composer</h3>
+<pre><span class="cmd">curl</span> -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+<span class="cmd">composer</span> --version</pre>
+
+  <h3>2.6 Instalar Docker</h3>
+<pre><span class="cmd">curl</span> -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+<span class="cmd">echo</span> "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+  > /etc/apt/sources.list.d/docker.list
+<span class="cmd">apt</span> update && apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+<span class="cmd">systemctl</span> enable docker && systemctl start docker</pre>
+
+  <h3>2.7 Instalar Certbot</h3>
+<pre><span class="cmd">apt</span> install -y certbot python3-certbot-nginx</pre>
+
+  <h3>2.8 Configurar Firewall (UFW)</h3>
+<pre><span class="cmd">ufw</span> allow OpenSSH
+<span class="cmd">ufw</span> allow 'Nginx Full'
+<span class="cmd">ufw</span> --force enable
+<span class="cmd">ufw</span> status</pre>
+
+  <div class="alert warn">
+    <div class="alert-icon">⚠️</div>
+    <div>Asegúrate de que el puerto 22 (SSH) esté permitido ANTES de activar UFW. El comando <code>ufw allow OpenSSH</code> lo hace automáticamente.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 3 — BASE DE DATOS
+════════════════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-title">Base de datos PostgreSQL</div>
+  </div>
+
+  <h3>3.1 Crear usuario y base de datos</h3>
+<pre><span class="cmd">sudo</span> -u postgres psql</pre>
+
+  <p>Dentro de psql, ejecuta (reemplaza <code>TU_CONTRASEÑA_SEGURA</code> por una contraseña real):</p>
+<pre>CREATE ROLE sice_user LOGIN PASSWORD 'TU_CONTRASEÑA_SEGURA';
+CREATE DATABASE sice_produccion
+  OWNER sice_user
+  ENCODING 'UTF8'
+  LC_COLLATE 'C'
+  LC_CTYPE 'C'
+  TEMPLATE template0;
+GRANT ALL PRIVILEGES ON DATABASE sice_produccion TO sice_user;
+\q</pre>
+
+  <h3>3.2 Verificar conexión</h3>
+<pre><span class="cmd">psql</span> -U sice_user -d sice_produccion -h 127.0.0.1 -c "\l"</pre>
+
+  <div class="alert ok">
+    <div class="alert-icon">📝</div>
+    <div>Guarda las credenciales en un lugar seguro:<br>
+    <strong>Base de datos:</strong> <code>sice_produccion</code><br>
+    <strong>Usuario:</strong> <code>sice_user</code><br>
+    <strong>Contraseña:</strong> la que definiste arriba<br>
+    <strong>Host:</strong> <code>127.0.0.1</code> · <strong>Puerto:</strong> <code>5432</code>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 4 — SUBIR ARCHIVOS
+════════════════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">Subir archivos al VPS</div>
+  </div>
+
+  <h3>4.1 Crear directorios en el servidor</h3>
+<pre><span class="cmd">mkdir</span> -p /var/www/sice-backend
+<span class="cmd">mkdir</span> -p /var/www/sice-frontend</pre>
+
+  <h3>4.2 Subir desde tu Mac</h3>
+  <p>Ejecuta desde tu Mac (no desde el servidor):</p>
+<pre><span class="comment"># Backend (excluye vendor, .env y cachés)</span>
+<span class="cmd">rsync</span> -avz --progress \
+  --exclude='.env' \
+  --exclude='vendor/' \
+  --exclude='storage/logs/*.log' \
+  --exclude='bootstrap/cache/' \
+  /Users/edegantea/development/itsmt-sice/backend/ \
+  root@&lt;IP_VPS&gt;:/var/www/sice-backend/
+
+<span class="comment"># Frontend compilado</span>
+<span class="cmd">rsync</span> -avz --progress --delete \
+  /Users/edegantea/development/itsmt-sice/frontend/dist/ \
+  root@&lt;IP_VPS&gt;:/var/www/sice-frontend/</pre>
+
+  <div class="alert info">
+    <div class="alert-icon">ℹ️</div>
+    <div>El <code>--delete</code> en el frontend elimina archivos viejos del servidor que ya no existan localmente. Es útil para limpiar builds anteriores.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 5 — CONFIGURAR BACKEND LARAVEL
+════════════════════════════════════════════ -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">Configurar el backend Laravel</div>
+  </div>
+
+  <h3>5.1 Instalar dependencias PHP</h3>
+<pre><span class="cmd">cd</span> /var/www/sice-backend
+<span class="cmd">composer</span> install --no-dev --optimize-autoloader</pre>
+
+  <h3>5.2 Crear el archivo .env</h3>
+<pre><span class="cmd">nano</span> /var/www/sice-backend/.env</pre>
+
+  <p>Contenido completo del <code>.env</code> (sustituye los valores marcados):</p>
+<pre>APP_NAME="SICE - ITSMT"
+APP_ENV=production
+APP_KEY=
+APP_DEBUG=false
+APP_URL=https://siceback.maewalliscorp.org
+
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=es
+LOG_CHANNEL=stack
+LOG_LEVEL=error
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=sice_produccion
+DB_USERNAME=sice_user
+DB_PASSWORD=TU_CONTRASEÑA_SEGURA
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=480
+SESSION_SECURE_COOKIE=true
+SESSION_DOMAIN=.maewalliscorp.org
+
+FILESYSTEM_DISK=public
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="noreply@itsmt.edu.mx"
+MAIL_FROM_NAME="SICE - ITSMT"
+
+SANCTUM_STATEFUL_DOMAINS=sice.maewalliscorp.org
+FRONTEND_URL=https://sice.maewalliscorp.org
+
+GOTENBERG_URL=http://localhost:3000</pre>
+
+  <h3>5.3 Generar clave y preparar la aplicación</h3>
+<pre><span class="cmd">cd</span> /var/www/sice-backend
+
+<span class="comment"># Generar APP_KEY (esto edita el .env automáticamente)</span>
+<span class="cmd">php</span> artisan key:generate
+
+<span class="comment"># Dar permisos a www-data para escribir en storage</span>
+<span class="cmd">chown</span> -R www-data:www-data storage bootstrap/cache
+<span class="cmd">chmod</span> -R 775 storage bootstrap/cache
+
+<span class="comment"># Crear enlace simbólico para uploads (logos, imágenes)</span>
+<span class="cmd">php</span> artisan storage:link
+
+<span class="comment"># Ejecutar migraciones</span>
+<span class="cmd">php</span> artisan migrate --force
+
+<span class="comment"># Cachear configuración para producción</span>
+<span class="cmd">php</span> artisan config:cache
+<span class="cmd">php</span> artisan route:cache
+<span class="cmd">php</span> artisan view:cache</pre>
+
+  <div class="alert warn">
+    <div class="alert-icon">⚠️</div>
+    <div>Si ves <code>chown: Operation not permitted</code> en algún archivo, es porque el usuario actual no es propietario. Ejecuta primero: <code>chown -R $USER:$USER /var/www/sice-backend</code> y luego vuelve a ejecutar el chown a www-data.</div>
+  </div>
+
+  <h3>5.4 Crear el usuario administrador inicial</h3>
+<pre><span class="cmd">cd</span> /var/www/sice-backend
+<span class="cmd">php</span> artisan tinker</pre>
+  <p>Dentro de tinker:</p>
+<pre>\App\Models\User::create([
+  'name'     => 'Administrador',
+  'email'    => 'admin@itsmt.edu.mx',
+  'password' => bcrypt('CambiarEstaContrasena123!'),
+  'rol'      => 'superadmin',
+]);</pre>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 6 — NGINX
+════════════════════════════════════════════ -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div class="section-title">Configurar Nginx</div>
+  </div>
+
+  <h3>6.1 Configuración del backend</h3>
+<pre><span class="cmd">nano</span> /etc/nginx/sites-available/sice-backend</pre>
+<pre>server {
+    listen 80;
+    server_name siceback.maewalliscorp.org;
+    root /var/www/sice-backend/public;
+    index index.php;
+
+    client_max_body_size 10M;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_read_timeout 120;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}</pre>
+
+  <h3>6.2 Configuración del frontend</h3>
+<pre><span class="cmd">nano</span> /etc/nginx/sites-available/sice-frontend</pre>
+<pre>server {
+    listen 80;
+    server_name sice.maewalliscorp.org;
+    root /var/www/sice-frontend;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/json
+               application/javascript text/xml
+               application/xml image/svg+xml;
+    gzip_vary on;
+
+    # Assets con hash (Vite) — cachear 1 año
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # SVG e imágenes estáticas — cachear 7 días
+    location ~* \.(svg|ico|png|jpg|jpeg|webp|woff2?)$ {
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+
+    # SPA — todas las rutas van a index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}</pre>
+
+  <h3>6.3 Activar sitios y verificar</h3>
+<pre><span class="cmd">ln</span> -sf /etc/nginx/sites-available/sice-backend  /etc/nginx/sites-enabled/
+<span class="cmd">ln</span> -sf /etc/nginx/sites-available/sice-frontend /etc/nginx/sites-enabled/
+
+<span class="comment"># Eliminar el sitio por defecto si existe</span>
+<span class="cmd">rm</span> -f /etc/nginx/sites-enabled/default
+
+<span class="comment"># Verificar sintaxis y recargar</span>
+<span class="cmd">nginx</span> -t && systemctl reload nginx</pre>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 7 — SSL
+════════════════════════════════════════════ -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div class="section-title">Certificados SSL (Let's Encrypt)</div>
+  </div>
+
+  <div class="alert warn">
+    <div class="alert-icon">⚠️</div>
+    <div>Los DNS de ambos dominios deben estar apuntando a la IP del VPS y propagados antes de ejecutar Certbot. Si los DNS no están propagados, el reto HTTP-01 fallará.</div>
+  </div>
+
+  <h3>7.1 Obtener certificados</h3>
+<pre><span class="cmd">certbot</span> --nginx \
+  -d siceback.maewalliscorp.org \
+  -d sice.maewalliscorp.org \
+  --non-interactive \
+  --agree-tos \
+  --email edgar.degante.a@gmail.com \
+  --redirect</pre>
+
+  <p>Certbot modifica automáticamente los bloques de Nginx para agregar HTTPS y redirección 80→443.</p>
+
+  <h3>7.2 Verificar renovación automática</h3>
+<pre><span class="cmd">certbot</span> renew --dry-run</pre>
+
+  <div class="alert ok">
+    <div class="alert-icon">✅</div>
+    <div>La renovación automática está configurada por Certbot vía un timer de systemd. Los certificados se renuevan 30 días antes de expirar sin intervención manual.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 8 — GOTENBERG
+════════════════════════════════════════════ -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <div class="section-title">Servicio Gotenberg (PDFs)</div>
+  </div>
+
+  <h3>8.1 Descargar imagen Docker</h3>
+<pre><span class="cmd">docker</span> pull gotenberg/gotenberg:8</pre>
+
+  <h3>8.2 Crear servicio systemd</h3>
+<pre><span class="cmd">cat</span> > /etc/systemd/system/sice-gotenberg.service << 'EOF'
+[Unit]
+Description=Gotenberg PDF Service para SICE
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+RestartSec=5
+ExecStartPre=-/usr/bin/docker stop sice-gotenberg
+ExecStartPre=-/usr/bin/docker rm sice-gotenberg
+ExecStart=/usr/bin/docker run --name sice-gotenberg \
+  -p 127.0.0.1:3000:3000 \
+  gotenberg/gotenberg:8 \
+  gotenberg \
+  --chromium-disable-javascript=false \
+  --chromium-allow-list=file:///.*
+ExecStop=/usr/bin/docker stop sice-gotenberg
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+<span class="cmd">systemctl</span> daemon-reload
+<span class="cmd">systemctl</span> enable sice-gotenberg
+<span class="cmd">systemctl</span> start sice-gotenberg</pre>
+
+  <h3>8.3 Verificar que Gotenberg está activo</h3>
+<pre><span class="cmd">sleep</span> 8 && curl http://localhost:3000/health</pre>
+
+  <p>Respuesta esperada: <code>{"status":"up"}</code> o similar.</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 9 — VERIFICACIÓN FINAL
+════════════════════════════════════════════ -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-num">9</div>
+    <div class="section-title">Verificación final</div>
+  </div>
+
+  <h3>9.1 Estado de servicios</h3>
+<pre><span class="cmd">systemctl</span> status nginx php8.3-fpm postgresql sice-gotenberg docker</pre>
+
+  <h3>9.2 Verificar endpoints</h3>
+<pre><span class="comment"># Backend responde (debe retornar JSON con la configuración)</span>
+<span class="cmd">curl</span> -sf https://siceback.maewalliscorp.org/api/configuracion | head -c 200
+
+<span class="comment"># Frontend carga</span>
+<span class="cmd">curl</span> -sf https://sice.maewalliscorp.org | grep -o '&lt;title&gt;.*&lt;/title&gt;'
+
+<span class="comment"># Gotenberg</span>
+<span class="cmd">curl</span> http://localhost:3000/health
+
+<span class="comment"># Estado de migraciones (no debe haber ninguna en Pending)</span>
+<span class="cmd">cd</span> /var/www/sice-backend && php artisan migrate:status</pre>
+
+  <h3>9.3 SSL válido</h3>
+<pre><span class="cmd">openssl</span> s_client -connect siceback.maewalliscorp.org:443 -brief &lt;/dev/null 2&gt;&1
+<span class="cmd">openssl</span> s_client -connect sice.maewalliscorp.org:443 -brief &lt;/dev/null 2&gt;&1</pre>
+
+  <h3>9.4 Checklist de verificación</h3>
+  <ul class="check-list">
+    <li>Nginx activo y sin errores (<code>nginx -t</code>)</li>
+    <li>PHP-FPM 8.3 corriendo</li>
+    <li>PostgreSQL corriendo y BD accesible</li>
+    <li>Gotenberg respondiendo en <code>localhost:3000/health</code></li>
+    <li>Backend accesible en HTTPS y retorna JSON</li>
+    <li>Frontend accesible en HTTPS y carga la SPA</li>
+    <li>Storage symlink creado (<code>ls -la /var/www/sice-backend/public/storage</code>)</li>
+    <li>Migraciones aplicadas (0 Pending)</li>
+    <li>Certificados SSL válidos (sin advertencias)</li>
+    <li>Login funciona en el navegador</li>
+    <li>Generación de PDF prueba exitosa</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECCIÓN 10 — REFERENCIA RÁPIDA
+════════════════════════════════════════════ -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div class="section-title">Referencia rápida y comandos útiles</div>
+  </div>
+
+  <h3>Reiniciar servicios</h3>
+<pre><span class="cmd">systemctl</span> restart nginx
+<span class="cmd">systemctl</span> restart php8.3-fpm
+<span class="cmd">systemctl</span> restart sice-gotenberg</pre>
+
+  <h3>Ver logs en tiempo real</h3>
+<pre><span class="comment"># Laravel</span>
+<span class="cmd">tail</span> -f /var/www/sice-backend/storage/logs/laravel.log
+
+<span class="comment"># Nginx (errores)</span>
+<span class="cmd">tail</span> -f /var/log/nginx/error.log
+
+<span class="comment"># Gotenberg</span>
+<span class="cmd">journalctl</span> -u sice-gotenberg -f</pre>
+
+  <h3>Actualizar el sistema (después de cambios en el código)</h3>
+<pre><span class="comment"># 1. Subir nuevos archivos desde Mac (mismos comandos rsync del paso 4)</span>
+
+<span class="comment"># 2. En el servidor: actualizar Laravel</span>
+<span class="cmd">cd</span> /var/www/sice-backend
+<span class="cmd">composer</span> install --no-dev --optimize-autoloader
+<span class="cmd">php</span> artisan migrate --force
+<span class="cmd">php</span> artisan config:cache
+<span class="cmd">php</span> artisan route:cache
+<span class="cmd">php</span> artisan view:cache
+<span class="cmd">systemctl</span> restart php8.3-fpm</pre>
+
+  <h3>Limpiar caché de Laravel</h3>
+<pre><span class="cmd">cd</span> /var/www/sice-backend
+<span class="cmd">php</span> artisan config:clear
+<span class="cmd">php</span> artisan cache:clear
+<span class="cmd">php</span> artisan route:clear
+<span class="cmd">php</span> artisan view:clear</pre>
+
+  <h3>Backup de la base de datos</h3>
+<pre><span class="cmd">pg_dump</span> -U sice_user -h 127.0.0.1 sice_produccion \
+  > /root/backup_sice_$(date +%Y%m%d_%H%M).sql</pre>
+
+  <h3>Resumen del orden de instalación</h3>
+  <ol class="steps">
+    <li>Actualizar el sistema (<code>apt update && apt upgrade</code>)</li>
+    <li>Instalar PHP 8.3, Nginx, PostgreSQL 16, Docker, Certbot</li>
+    <li>Crear base de datos y usuario PostgreSQL</li>
+    <li>Subir archivos desde Mac (rsync)</li>
+    <li>Instalar dependencias Laravel (<code>composer install</code>) y crear <code>.env</code></li>
+    <li>Ejecutar <code>key:generate</code>, permisos, storage:link, migraciones, caché</li>
+    <li>Configurar Nginx para backend y frontend</li>
+    <li>Obtener certificados SSL con Certbot</li>
+    <li>Instalar y activar Gotenberg como servicio systemd</li>
+    <li>Verificar todos los servicios y endpoints</li>
+  </ol>
+
+  <div style="margin-top: 40px; padding: 20px; background: #f4f8fd; border-radius: 8px; text-align: center; font-size: 10pt; color: #555;">
+    <strong>SICE — Sistema Integral de Control Escolar</strong><br>
+    Instituto Tecnológico Superior de Martínez de la Torre<br>
+    Documento generado: Junio 2026
+  </div>
+</div>
+
+</body>
+</html>

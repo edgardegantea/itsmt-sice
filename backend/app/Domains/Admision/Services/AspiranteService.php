@@ -35,7 +35,7 @@ class AspiranteService
         $aspirante = Aspirante::create(array_merge(['estatus' => 'pendiente'], $datos));
         $aspirante->load(['carrera', 'periodo']);
 
-        Mail::to($aspirante->email)->queue(new ConfirmacionSolicitudMail($aspirante));
+        Mail::to($aspirante->email)->send(new ConfirmacionSolicitudMail($aspirante));
 
         return $aspirante;
     }
