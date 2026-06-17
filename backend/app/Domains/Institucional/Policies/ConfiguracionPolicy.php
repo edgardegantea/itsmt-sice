@@ -8,6 +8,6 @@ class ConfiguracionPolicy
 {
     public function update(User $user): bool
     {
-        return $user->hasRole('admin');
+        return $user->hasRole(['admin', 'superadmin']);
     }
 }

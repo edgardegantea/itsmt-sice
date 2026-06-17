@@ -15,7 +15,7 @@ class InscribirAspiranteRequest extends FormRequest
     {
         return [
             'aspirante_id' => ['required', 'uuid', 'exists:aspirantes,id'],
-            'tipo_ingreso' => ['nullable', 'in:nuevo_ingreso,reingreso,traslado,equivalencia'],
+            'tipo_ingreso' => ['nullable', 'in:nuevo_ingreso,reingreso,traslado,equivalencia,revalidacion'],
         ];
     }
 }

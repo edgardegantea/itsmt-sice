@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
-import { permanenciaApi, type TipoConstancia } from '../services/permanencia'
-import { admisionApi } from '../../admision/services/admision'
+import { permanenciaApi, type TipoConstancia, type Baja } from '../services/permanencia'
+import { useConstanciaPdf } from '../hooks/useConstanciaPdf'
 
 const TIPO_CONSTANCIA_LABEL: Record<TipoConstancia, string> = {
   estudios:      'Constancia de estudios',
@@ -45,24 +45,26 @@ export default function TramitesAlumnoPage() {
   const qc = useQueryClient()
   const alumnoId = (user as any)?.alumno_id as string | undefined
 
-  const [tab, setTab] = useState<'reinscripcion' | 'constancias'>('reinscripcion')
+  const [tab, setTab] = useState<'reinscripcion' | 'constancias' | 'baja'>('reinscripcion')
   const [tipoConstancia, setTipoConstancia] = useState<TipoConstancia>('estudios')
+
+  const { descargar: descargarConstancia, generando: generandoConstancia } = useConstanciaPdf()
 
   // Periodo activo
   const { data: periodo } = useQuery({
     queryKey: ['periodo-activo'],
-    queryFn: () => import('../../admision/services/catalogo').then(m => m.catalogoPublico.getPeriodoActivo()),
+    queryFn: () => import('../../admision/services/admision').then(m => m.admisionApi.getPeriodoActivo()),
   })
 
-  // Reinscripción del alumno en el periodo activo
+  // Reinscripciones del alumno (el backend ya scopea por alumno_id cuando rol=alumno)
   const { data: reinscripciones } = useQuery({
     queryKey: ['mis-reinscripciones'],
     queryFn: () => permanenciaApi.getReinscripciones(),
     enabled: !!alumnoId,
   })
 
-  const reinscripcionActual = reinscripciones?.data?.find(
-    (r: any) => r.periodo_id === periodo?.id && r.alumno?.user_id === user?.id
+  const reinscripcionActual = (reinscripciones?.data ?? reinscripciones as any)?.find(
+    (r: any) => r.periodo_id === periodo?.id
   )
 
   // Adeudos
@@ -90,8 +92,34 @@ export default function TramitesAlumnoPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['mis-constancias', alumnoId] }),
   })
 
+  // Bajas del alumno
+  const { data: misBajas = [] } = useQuery({
+    queryKey: ['mis-bajas'],
+    queryFn: () => permanenciaApi.getMisBajas(),
+    enabled: !!alumnoId,
+  })
+
+  const [bajaMotivo, setBajaMotivo] = useState('')
+  const [bajaSemestres, setBajaSemestres] = useState('')
+
+  const mutBaja = useMutation({
+    mutationFn: () => permanenciaApi.solicitarBajaTemporal({
+      periodo_id:                 periodo!.id,
+      fecha_solicitud:            new Date().toISOString().split('T')[0],
+      motivo_texto:               bajaMotivo || undefined,
+      numero_semestres_cursados:  bajaSemestres ? parseInt(bajaSemestres) : undefined,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mis-bajas'] })
+      qc.invalidateQueries({ queryKey: ['mis-reinscripciones'] })
+    },
+  })
+
+  const bajaActual = (misBajas as Baja[]).find(b => b.periodo_id === periodo?.id)
+
   const tieneAdeudos = adeudos.length > 0
-  const puedeReinscribirse = !tieneAdeudos && !reinscripcionActual && !!periodo
+  const pendienteCertificado = !!(user as any)?.pendiente_certificado_bachillerato
+  const puedeReinscribirse = !tieneAdeudos && !pendienteCertificado && !reinscripcionActual && !!periodo
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -102,7 +130,7 @@ export default function TramitesAlumnoPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-200">
-        {(['reinscripcion', 'constancias'] as const).map(t => (
+        {(['reinscripcion', 'constancias', 'baja'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -110,7 +138,7 @@ export default function TramitesAlumnoPage() {
               tab === t ? 'border-[#1a3a5c] text-[#1a3a5c]' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            {t === 'reinscripcion' ? 'Reinscripción' : 'Constancias'}
+            {t === 'reinscripcion' ? 'Reinscripción' : t === 'constancias' ? 'Constancias' : 'Baja temporal'}
           </button>
         ))}
       </div>
@@ -130,6 +158,16 @@ export default function TramitesAlumnoPage() {
                 ))}
               </ul>
               <p className="text-xs text-red-600 mt-3">Liquida tus adeudos en Caja antes de solicitar la reinscripción.</p>
+            </div>
+          )}
+
+          {pendienteCertificado && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+              <p className="text-sm font-semibold text-amber-800 mb-1">Certificado de bachillerato pendiente</p>
+              <p className="text-xs text-amber-700">
+                No puedes solicitar reinscripción hasta entregar tu certificado de bachillerato en Control Escolar
+                (TecNM-AC-PO-001-05). Una vez entregado, el personal actualizará tu expediente.
+              </p>
             </div>
           )}
 
@@ -190,6 +228,105 @@ export default function TramitesAlumnoPage() {
         </div>
       )}
 
+      {/* ── Baja temporal ── */}
+      {tab === 'baja' && (
+        <div className="space-y-5">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+            <p className="text-sm font-semibold text-amber-800 mb-1">Baja temporal (TecNM-AC-PO-002)</p>
+            <p className="text-xs text-amber-700">
+              Puedes solicitar baja temporal únicamente antes del plazo establecido por Control Escolar. Esta acción suspende tu inscripción en el periodo activo.
+            </p>
+          </div>
+
+          {bajaActual ? (
+            <div className="bg-white rounded-xl border border-slate-200 px-5 py-5 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-700">Baja registrada en este periodo</p>
+                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full capitalize">{bajaActual.tipo_baja}</span>
+              </div>
+              <p className="text-xs text-slate-500">Periodo: <span className="font-medium text-slate-700">{(bajaActual as any).periodo?.nombre}</span></p>
+              <p className="text-xs text-slate-500">Fecha de solicitud: <span className="font-medium text-slate-700">{new Date(bajaActual.fecha_solicitud).toLocaleDateString('es-MX')}</span></p>
+              {bajaActual.reingreso_posible && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-800">
+                  Tu baja tiene posibilidad de reingreso. Consulta con Control Escolar los requisitos para el periodo siguiente.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 px-5 py-5 space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Solicitar baja temporal</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Periodo: <span className="font-medium">{periodo?.nombre ?? 'Cargando…'}</span>
+                </p>
+              </div>
+              {!periodo && (
+                <p className="text-xs text-slate-400">No hay periodo activo disponible.</p>
+              )}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Semestres cursados</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={bajaSemestres}
+                  onChange={e => setBajaSemestres(e.target.value)}
+                  placeholder="Número de semestres cursados"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Motivo (opcional)</label>
+                <textarea
+                  rows={3}
+                  value={bajaMotivo}
+                  onChange={e => setBajaMotivo(e.target.value)}
+                  placeholder="Describe brevemente el motivo de tu baja temporal…"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 resize-none"
+                />
+              </div>
+              {mutBaja.isSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-xs text-green-800">
+                  Baja temporal registrada. Acude a Control Escolar para completar el trámite.
+                </div>
+              )}
+              {mutBaja.isError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs text-red-700">
+                  {(mutBaja.error as any)?.response?.data?.message ?? 'Error al solicitar la baja.'}
+                </div>
+              )}
+              <button
+                disabled={!periodo || mutBaja.isPending || mutBaja.isSuccess}
+                onClick={() => mutBaja.mutate()}
+                className="w-full py-2.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
+                style={{ backgroundColor: 'var(--color-primario)' }}
+              >
+                {mutBaja.isPending ? 'Procesando…' : 'Solicitar baja temporal'}
+              </button>
+            </div>
+          )}
+
+          {/* Historial */}
+          {(misBajas as Baja[]).length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <p className="px-5 pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Historial de bajas</p>
+              <div className="divide-y divide-slate-100">
+                {(misBajas as Baja[]).map(b => (
+                  <div key={b.id} className="px-5 py-3.5 flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-800 capitalize">{b.tipo_baja}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{(b as any).periodo?.nombre ?? '—'}</p>
+                      {b.motivo_texto && <p className="text-xs text-slate-500 mt-1">{b.motivo_texto}</p>}
+                    </div>
+                    <span className="text-xs text-slate-400 shrink-0">{new Date(b.fecha_solicitud).toLocaleDateString('es-MX')}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Constancias ── */}
       {tab === 'constancias' && (
         <div className="space-y-5">
@@ -229,16 +366,31 @@ export default function TramitesAlumnoPage() {
 
           {/* Historial */}
           {constancias.length > 0 && (
-            <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
-              {constancias.map((c: any) => (
-                <div key={c.id} className="px-5 py-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{TIPO_CONSTANCIA_LABEL[c.tipo as TipoConstancia]}</p>
-                    <p className="text-xs text-slate-400 mt-0.5 font-mono">{c.folio_unico}</p>
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <p className="px-5 pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Mis solicitudes</p>
+              <div className="divide-y divide-slate-100">
+                {constancias.map((c: any) => (
+                  <div key={c.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">{TIPO_CONSTANCIA_LABEL[c.tipo as TipoConstancia]}</p>
+                      <p className="text-xs text-slate-400 mt-0.5 font-mono">{c.folio_unico}</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Badge estatus={c.estatus} />
+                      {c.estatus === 'emitida' && (
+                        <button
+                          onClick={() => descargarConstancia(c)}
+                          disabled={generandoConstancia === c.id}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors disabled:opacity-50"
+                          style={{ backgroundColor: 'var(--color-primario)' }}
+                        >
+                          {generandoConstancia === c.id ? 'Generando…' : 'Descargar PDF'}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <Badge estatus={c.estatus} />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>

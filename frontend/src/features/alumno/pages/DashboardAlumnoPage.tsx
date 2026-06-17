@@ -31,6 +31,7 @@ interface AlumnoMe {
   estatus?: string
   pendiente_certificado_bachillerato?: boolean
   periodo_ingreso?: string
+  tipo_ingreso?: string
   observaciones_estatus?: string | null
   alumno_id?: string
 }
@@ -50,8 +51,8 @@ export default function DashboardAlumnoPage() {
   // Refresca los datos del alumno desde el servidor
   const { data: me, isLoading } = useQuery<AlumnoMe>({
     queryKey: ['alumno-me'],
-    queryFn: () => authApi.me() as Promise<AlumnoMe>,
-    initialData: cachedUser as AlumnoMe | undefined,
+    queryFn: () => authApi.me() as unknown as Promise<AlumnoMe>,
+    initialData: cachedUser as unknown as AlumnoMe | undefined,
   })
 
   const { descargar: descargarCredencial, generando: generandoCredencial } = useCredencialPdf()
@@ -101,11 +102,17 @@ export default function DashboardAlumnoPage() {
       {/* Datos académicos */}
       <section>
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Datos académicos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Stat label="Carrera" value={me?.carrera ?? '—'} />
-          <Stat label="Semestre" value={me?.semestre ? `${me.semestre}°` : '—'} />
+          <Stat label="Semestre actual" value={me?.semestre ? `${me.semestre}°` : '—'} />
           <Stat label="Número de control" value={me?.numero_control ?? '—'} mono />
+          <Stat label="Periodo de ingreso" value={me?.periodo_ingreso ?? '—'} />
         </div>
+        {me?.tipo_ingreso && (
+          <p className="mt-2 text-xs text-slate-400">
+            Tipo de ingreso: <span className="capitalize text-slate-600">{me.tipo_ingreso.replace(/_/g, ' ')}</span>
+          </p>
+        )}
       </section>
 
       {/* Credencial */}

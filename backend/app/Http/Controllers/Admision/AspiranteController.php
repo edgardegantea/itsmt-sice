@@ -24,7 +24,10 @@ class AspiranteController extends Controller
         $this->authorize('viewAny', Aspirante::class);
 
         return ApiResponse::success(
-            $this->service->listar($request->only(['carrera_id', 'estatus', 'puntaje_min']))
+            $this->service->listar(
+                $request->only(['carrera_id', 'periodo_id', 'estatus', 'puntaje_min']),
+                $request->user()->carreraRestringida()
+            )
         );
     }
 

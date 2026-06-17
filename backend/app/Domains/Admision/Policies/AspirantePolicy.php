@@ -9,21 +9,27 @@ class AspirantePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'director_academico', 'jefe_carrera', 'personal_administrativo']);
+        return $user->hasAnyRole(['admin', 'director_academico', 'jefe_carrera', 'personal_administrativo']);
     }
 
     public function view(User $user, Aspirante $aspirante): bool
     {
-        return $user->hasRole(['admin', 'director_academico', 'jefe_carrera', 'personal_administrativo']);
+        if ($user->hasRole('jefe_carrera')) {
+            return $user->carrera_id && $user->carrera_id === $aspirante->carrera_id;
+        }
+        return $user->hasAnyRole(['admin', 'director_academico', 'personal_administrativo']);
     }
 
     public function update(User $user, Aspirante $aspirante): bool
     {
-        return $user->hasRole(['admin', 'personal_administrativo']);
+        if ($user->hasRole('jefe_carrera')) {
+            return $user->carrera_id && $user->carrera_id === $aspirante->carrera_id;
+        }
+        return $user->hasAnyRole(['admin', 'personal_administrativo']);
     }
 
     public function inscribir(User $user, Aspirante $aspirante): bool
     {
-        return $user->hasRole(['admin', 'personal_administrativo']);
+        return $user->hasAnyRole(['admin', 'personal_administrativo']);
     }
 }

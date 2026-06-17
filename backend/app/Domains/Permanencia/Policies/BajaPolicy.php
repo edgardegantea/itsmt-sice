@@ -8,11 +8,17 @@ class BajaPolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'personal_administrativo']);
+        return $user->hasAnyRole(['admin', 'personal_administrativo', 'jefe_carrera']);
     }
 
     public function viewAny(User $user): bool
     {
         return $user->hasAnyRole(['admin', 'personal_administrativo', 'director_academico', 'jefe_carrera']);
+    }
+
+    // Alumno solicita su propia baja temporal
+    public function solicitar(User $user): bool
+    {
+        return $user->hasRole('alumno');
     }
 }

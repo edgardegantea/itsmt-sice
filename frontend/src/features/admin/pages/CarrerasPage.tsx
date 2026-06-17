@@ -148,7 +148,7 @@ export default function CarrerasPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {carreras.map(c => (
-              <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+              <tr key={c.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-800">
                   {c.nombre}
                   {c.especialidad && <span className="text-xs text-slate-400 ml-1">· {c.especialidad}</span>}

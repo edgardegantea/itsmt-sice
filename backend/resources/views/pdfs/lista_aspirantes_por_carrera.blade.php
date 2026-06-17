@@ -18,7 +18,7 @@ body {
   font-size: 9.5pt;
   color: #111;
   /* margen inferior amplio para que el bloque fijo no tape el contenido */
-  padding: 76px 80px 160px;
+  padding: 0 0 80px;
   background: #fff;
 }
 
@@ -111,9 +111,9 @@ body {
 /* ── Bloque fijo al pie (firmas + folio) ─────────────────────── */
 .page-bottom {
   position: fixed;
-  bottom: 48px;
-  left: 80px;
-  right: 80px;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 .firmas-sep { border: none; border-top: 1px solid #ccc; margin-bottom: 14px; }
 

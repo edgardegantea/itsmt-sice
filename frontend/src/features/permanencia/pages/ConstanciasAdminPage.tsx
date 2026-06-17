@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import apiClient from '../../../config/apiClient'
 import { permanenciaApi, type Constancia, type TipoConstancia } from '../services/permanencia'
 import { useConstanciaPdf } from '../hooks/useConstanciaPdf'
 
@@ -24,12 +25,22 @@ function Badge({ estatus }: { estatus: string }) {
 
 export default function ConstanciasAdminPage() {
   const qc = useQueryClient()
-  const [filtroEstatus, setFiltroEstatus] = useState('')
+  const [filtroEstatus,  setFiltroEstatus]  = useState('')
+  const [filtroCarrera,  setFiltroCarrera]  = useState('')
   const { descargar, generando } = useConstanciaPdf()
 
+  const { data: carreras = [] } = useQuery({
+    queryKey: ['carreras-select'],
+    queryFn: () => apiClient.get('/carreras').then(r => r.data.data?.data ?? r.data.data as { id: string; nombre: string; clave: string }[]),
+  })
+
+  const params: Record<string, string> = {}
+  if (filtroEstatus) params.estatus    = filtroEstatus
+  if (filtroCarrera) params.carrera_id = filtroCarrera
+
   const { data, isLoading } = useQuery({
-    queryKey: ['constancias-admin', filtroEstatus],
-    queryFn: () => permanenciaApi.getConstancias(filtroEstatus ? { estatus: filtroEstatus } : undefined),
+    queryKey: ['constancias-admin', params],
+    queryFn: () => permanenciaApi.getConstancias(Object.keys(params).length ? params : undefined),
   })
 
   const mutEmitir = useMutation({
@@ -46,15 +57,25 @@ export default function ConstanciasAdminPage() {
           <h1 className="text-xl font-semibold text-slate-800">Constancias</h1>
           <p className="text-sm text-slate-500 mt-0.5">Solicitudes recibidas de alumnos.</p>
         </div>
-        <select
-          value={filtroEstatus}
-          onChange={e => setFiltroEstatus(e.target.value)}
-          className="px-3.5 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
-        >
-          <option value="">Todos</option>
-          <option value="solicitada">Solicitadas</option>
-          <option value="emitida">Emitidas</option>
-        </select>
+        <div className="flex flex-wrap gap-2">
+          <select
+            value={filtroCarrera}
+            onChange={e => setFiltroCarrera(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+          >
+            <option value="">Todas las carreras</option>
+            {carreras.map((c: any) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
+          </select>
+          <select
+            value={filtroEstatus}
+            onChange={e => setFiltroEstatus(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+          >
+            <option value="">Todos</option>
+            <option value="solicitada">Solicitadas</option>
+            <option value="emitida">Emitidas</option>
+          </select>
+        </div>
       </div>
 
       {isLoading ? (
@@ -77,7 +98,7 @@ export default function ConstanciasAdminPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {constancias.map(c => (
-                  <tr key={c.id} className="hover:bg-slate-50">
+                  <tr key={c.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                     <td className="px-4 py-3 font-medium text-slate-800">{c.alumno?.user?.name ?? '—'}</td>
                     <td className="px-4 py-3 font-mono text-xs text-slate-600">{c.alumno?.numero_control}</td>
                     <td className="px-4 py-3 text-slate-600">{TIPO_LABEL[c.tipo]}</td>

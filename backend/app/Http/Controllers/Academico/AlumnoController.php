@@ -17,8 +17,11 @@ class AlumnoController extends Controller
     {
         $this->authorize('viewAny', Alumno::class);
 
+        $carreraForzada = $request->user()->carreraRestringida();
+
         $alumnos = Alumno::with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])
-            ->when($request->carrera_id, fn($q, $v) => $q->where('carrera_id', $v))
+            ->when($carreraForzada,                                     fn($q, $v) => $q->where('carrera_id', $v))
+            ->when(! $carreraForzada && $request->carrera_id,           fn($q) => $q->where('carrera_id', $request->carrera_id))
             ->when($request->estatus,    fn($q, $v) => $q->where('estatus', $v))
             ->when($request->semestre,   fn($q, $v) => $q->where('semestre_actual', $v))
             ->when($request->search, fn($q, $v) => $q

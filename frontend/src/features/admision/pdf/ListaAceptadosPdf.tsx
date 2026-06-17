@@ -1,5 +1,5 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
-import type { Aspirante, Carrera, Periodo } from '../services/admision'
+import type { Aspirante, Periodo } from '../services/admision'
 
 const S = StyleSheet.create({
   page: {

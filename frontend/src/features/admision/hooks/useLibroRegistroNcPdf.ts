@@ -3,7 +3,7 @@ import { pdf } from '@react-pdf/renderer'
 import { admisionApi } from '../services/admision'
 import { configuracionApi } from '../../admin/services/configuracion'
 import LibroRegistroNcPdf from '../pdf/LibroRegistroNcPdf'
-import { triggerDownload } from '../../../utils/pdfHelpers'
+import { openPdfPreview } from '../../../utils/pdfHelpers'
 
 async function getAllAlumnos() {
   const primera = await admisionApi.getAlumnos({ page: 1 })
@@ -41,9 +41,8 @@ export function useLibroRegistroNcPdf() {
         cfg: { ...cfg, logoBase64: cfg.logo_base64 ?? null },
       })
 
-      const blob = await pdf(doc).toBlob()
-      const fecha = new Date().toISOString().slice(0,10)
-      triggerDownload(blob, `libro-registro-nc-${fecha}.pdf`)
+      const blob = await pdf(doc as any).toBlob()
+      openPdfPreview(blob, `libro-registro-nc-${new Date().toISOString().slice(0,10)}.pdf`)
     } catch (err) {
       console.error('Error generando Libro Registro NC:', err)
       alert('No se pudo generar el PDF. Revisa la consola.')

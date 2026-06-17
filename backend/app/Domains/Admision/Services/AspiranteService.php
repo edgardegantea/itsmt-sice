@@ -14,10 +14,12 @@ use Spatie\Permission\Models\Role;
 
 class AspiranteService
 {
-    public function listar(array $filtros): LengthAwarePaginator
+    public function listar(array $filtros, ?string $carreraForzada = null): LengthAwarePaginator
     {
         return Aspirante::with(['carrera', 'periodo', 'inscripcion:id,aspirante_id'])
-            ->when($filtros['carrera_id']  ?? null, fn($q, $v) => $q->where('carrera_id', $v))
+            ->when($carreraForzada,                fn($q, $v) => $q->where('carrera_id', $v))
+            ->when(! $carreraForzada && ($filtros['carrera_id'] ?? null), fn($q) => $q->where('carrera_id', $filtros['carrera_id']))
+            ->when($filtros['periodo_id'] ?? null, fn($q) => $q->where('periodo_id', $filtros['periodo_id']))
             ->when($filtros['puntaje_min'] ?? null, fn($q, $v) => $q->where('puntaje_exani', '>=', $v))
             ->when(
                 isset($filtros['estatus']) && $filtros['estatus'] !== '',
@@ -53,13 +55,23 @@ class AspiranteService
     {
         $numero_control = $this->generarNumeroControl($aspirante);
 
+        // Mapeo TecNM-AC-PO-001: tipo_ingreso → tipo_ingreso_registro (catálogo oficial)
+        $tipoRegistroMap = [
+            'nuevo_ingreso' => 'Licenciatura',
+            'reingreso'     => 'Licenciatura',
+            'traslado'      => 'Traslado',
+            'equivalencia'  => 'Equivalencia',
+            'revalidacion'  => 'Revalidacion',
+        ];
+        $tipoIngresORegistro = $tipoRegistroMap[$tipoIngreso] ?? 'Licenciatura';
+
         $inscripcion = Inscripcion::create([
             'aspirante_id'          => $aspirante->id,
             'numero_control'        => $numero_control,
             'carrera_id'            => $aspirante->carrera_id,
             'periodo_id'            => $aspirante->periodo_id,
             'tipo_ingreso'          => $tipoIngreso,
-            'tipo_ingreso_registro' => 'Licenciatura',
+            'tipo_ingreso_registro' => $tipoIngresORegistro,
             'semestre_ingreso'      => 1,
             'fecha_inscripcion'     => now()->toDateString(),
             'inscrito_por'          => $inscritoPorId,

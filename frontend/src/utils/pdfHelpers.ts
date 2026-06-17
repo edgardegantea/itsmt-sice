@@ -24,6 +24,17 @@ export function triggerDownload(blob: Blob, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 15_000)
 }
 
+/**
+ * Abre el PDF en el visor modal integrado de la aplicación.
+ * El store gestiona el ciclo de vida del blob URL.
+ */
+export function openPdfPreview(blob: Blob, filename?: string): void {
+  // Importación dinámica para evitar ciclo de dependencias al inicializar el store
+  import('../store/pdfPreviewStore').then(({ usePdfPreviewStore }) => {
+    usePdfPreviewStore.getState().open(blob, filename)
+  })
+}
+
 export function fmtFecha(iso: string): string {
   const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
                  'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']

@@ -33,7 +33,10 @@ class CobroInscripcionController extends Controller
         $recibo->load(['inscripcion.aspirante', 'alumno.carrera', 'registradoPor']);
 
         $pdf = Pdf::loadView('pdfs.recibo_cobro', compact('recibo'))
-            ->setPaper('letter', 'portrait');
+            ->setPaper('letter', 'portrait')
+            ->setOption('margin_top', 20)->setOption('margin_bottom', 20)
+            ->setOption('margin_left', 20)->setOption('margin_right', 20)
+            ->setOption('dpi', 96)->setOption('defaultFont', 'Arial');
 
         return $pdf->stream("recibo-{$recibo->folio_fiscal}.pdf");
     }

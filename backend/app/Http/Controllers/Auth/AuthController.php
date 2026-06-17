@@ -66,7 +66,7 @@ class AuthController extends Controller
     // GET /api/auth/me
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $request->user()->load('carrera');
 
         $data = [
             'id'          => $user->id,
@@ -74,10 +74,12 @@ class AuthController extends Controller
             'email'       => $user->email,
             'roles'       => $user->getRoleNames(),
             'permissions' => $user->getAllPermissions()->pluck('name'),
+            'carrera_id'  => $user->carrera_id,
+            'carrera'     => $user->carrera ? ['id' => $user->carrera->id, 'nombre' => $user->carrera->nombre, 'clave' => $user->carrera->clave] : null,
         ];
 
         if ($user->hasRole('alumno')) {
-            $alumno = Alumno::with(['carrera', 'periodoIngreso'])->where('user_id', $user->id)->first();
+            $alumno = Alumno::with(['carrera', 'periodoIngreso', 'inscripcion'])->where('user_id', $user->id)->first();
             if ($alumno) {
                 $data['numero_control']                     = $alumno->numero_control;
                 $data['carrera']                            = $alumno->carrera?->nombre;
@@ -85,6 +87,7 @@ class AuthController extends Controller
                 $data['estatus']                            = $alumno->estatus;
                 $data['pendiente_certificado_bachillerato'] = $alumno->pendiente_certificado_bachillerato;
                 $data['periodo_ingreso']                    = $alumno->periodoIngreso?->nombre;
+                $data['tipo_ingreso']                       = $alumno->inscripcion?->tipo_ingreso;
                 $data['observaciones_estatus']              = $alumno->observaciones_estatus;
                 $data['alumno_id']                          = $alumno->id;
             }

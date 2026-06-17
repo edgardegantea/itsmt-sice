@@ -4,12 +4,13 @@ import { authApi, type LoginPayload } from '../services/auth'
 import { useAuthStore } from '../../../store/authStore'
 
 function destinoSegunRol(roles: string[]): string {
+  if (roles.includes('superadmin'))              return '/admin'
   if (roles.includes('admin'))                   return '/admin'
   if (roles.includes('director_academico'))      return '/admin'
   if (roles.includes('personal_administrativo')) return '/admin/aspirantes'
   if (roles.includes('jefe_carrera'))            return '/admin/aspirantes'
-  if (roles.includes('docente'))                return '/docente'
-  if (roles.includes('alumno'))                 return '/alumno/dashboard'
+  if (roles.includes('docente'))                 return '/docente'
+  if (roles.includes('alumno'))                  return '/alumno/dashboard'
   return '/login'
 }
 

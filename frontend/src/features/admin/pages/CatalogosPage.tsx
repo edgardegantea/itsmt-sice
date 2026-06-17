@@ -85,7 +85,7 @@ function EstadosTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {estados.map(e => (
-              <tr key={e.id} className="hover:bg-slate-50">
+              <tr key={e.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 text-slate-800 font-medium">{e.nombre}</td>
                 <td className="px-4 py-3 font-mono text-slate-600">{e.clave_curp}</td>
                 <td className="px-4 py-3 text-slate-500">{e.municipios_count ?? 0}</td>
@@ -193,7 +193,7 @@ function MunicipiosTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {municipios.map(m => (
-              <tr key={m.id} className="hover:bg-slate-50">
+              <tr key={m.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-800">{m.nombre}</td>
                 <td className="px-4 py-3 text-slate-500">{m.estado?.nombre ?? '—'}</td>
                 <td className="px-4 py-3 text-slate-500">{m.escuelas_count ?? 0}</td>
@@ -311,7 +311,7 @@ function EscuelasTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {escuelas.map(e => (
-              <tr key={e.id} className="hover:bg-slate-50">
+              <tr key={e.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-800">
                   {e.nombre}
                   {!e.activa && <span className="ml-2 text-xs text-slate-400">(inactiva)</span>}
@@ -425,7 +425,7 @@ function TurnosTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {turnos.map(t => (
-              <tr key={t.id} className="hover:bg-slate-50">
+              <tr key={t.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-800">{t.nombre}</td>
                 <td className="px-4 py-3 font-mono text-slate-600">{t.clave}</td>
                 <td className="px-4 py-3">

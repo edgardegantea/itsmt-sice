@@ -44,9 +44,14 @@ class ConstanciaController extends Controller
     {
         $this->authorize('viewAny', Constancia::class);
 
-        return ApiResponse::success(
-            $this->service->listar($request->only(['estatus', 'tipo', 'alumno_id']))
-        );
+        $filtros = $request->only(['estatus', 'tipo', 'alumno_id', 'carrera_id']);
+
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada) {
+            $filtros['carrera_id'] = $carreraForzada;
+        }
+
+        return ApiResponse::success($this->service->listar($filtros));
     }
 
     // POST /api/constancias/{constancia}/emitir  (admin emite y genera PDF)

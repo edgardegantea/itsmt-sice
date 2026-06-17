@@ -3,7 +3,7 @@ import { pdf } from '@react-pdf/renderer'
 import { permanenciaApi, type Constancia } from '../services/permanencia'
 import { configuracionApi } from '../../admin/services/configuracion'
 import ConstanciaPdf from '../pdf/ConstanciaPdf'
-import { triggerDownload } from '../../../utils/pdfHelpers'
+import { openPdfPreview } from '../../../utils/pdfHelpers'
 
 export function useConstanciaPdf() {
   const [generando, setGenerando] = useState<string | null>(null)
@@ -27,8 +27,9 @@ export function useConstanciaPdf() {
         },
       })
 
-      const blob = await pdf(doc).toBlob()
-      triggerDownload(blob, `${constanciaDetalle.folio_unico}.pdf`)
+      const blob = await pdf(doc as any).toBlob()
+      const folio = (constanciaDetalle as any).folio_unico ?? 'constancia'
+      openPdfPreview(blob, `${folio}.pdf`)
     } catch (err) {
       console.error('Error generando constancia:', err)
       alert('No se pudo generar el PDF.')

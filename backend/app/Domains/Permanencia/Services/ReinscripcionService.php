@@ -24,6 +24,13 @@ class ReinscripcionService
             throw new \DomainException('El alumno tiene adeudos pendientes.');
         }
 
+        // TecNM-AC-PO-001-05: alumno con certificado de bachillerato pendiente no puede reinscribirse
+        if ($alumno->pendiente_certificado_bachillerato) {
+            throw new \DomainException(
+                'No puedes reinscribirte hasta entregar el certificado de bachillerato (TecNM-AC-PO-001-05). Acude a Control Escolar.'
+            );
+        }
+
         $existente = Reinscripcion::where('alumno_id', $alumno->id)
             ->where('periodo_id', $periodoId)
             ->first();
@@ -82,6 +89,9 @@ class ReinscripcionService
         }
         if (!empty($filtros['carrera_id'])) {
             $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $filtros['carrera_id']));
+        }
+        if (!empty($filtros['alumno_id'])) {
+            $q->where('alumno_id', $filtros['alumno_id']);
         }
 
         return $q->latest()->paginate(20);

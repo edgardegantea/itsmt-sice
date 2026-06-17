@@ -47,6 +47,9 @@ class ConstanciaService
         if (!empty($filtros['alumno_id'])) {
             $q->where('alumno_id', $filtros['alumno_id']);
         }
+        if (!empty($filtros['carrera_id'])) {
+            $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $filtros['carrera_id']));
+        }
 
         return $q->latest()->paginate(20);
     }

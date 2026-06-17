@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import apiClient from '../../../config/apiClient'
-import { triggerDownload } from '../../../utils/pdfHelpers'
+import { openPdfPreview } from '../../../utils/pdfHelpers'
 
 export function useListaAceptadosPdf() {
   const [generando, setGenerando] = useState(false)
 
-  const descargar = async (periodoId: string, periodoNombre: string) => {
+  const descargar = async (periodoId: string, periodoNombre?: string) => {
     setGenerando(true)
     try {
       const response = await apiClient.get(
@@ -13,7 +13,8 @@ export function useListaAceptadosPdf() {
         { responseType: 'blob' }
       )
       const blob = new Blob([response.data], { type: 'application/pdf' })
-      triggerDownload(blob, `lista-aceptados-${periodoNombre.replace(/\s+/g, '-')}.pdf`)
+      const nombre = periodoNombre ? `lista-aceptados-${periodoNombre.replace(/\s+/g,'-')}.pdf` : 'lista-aceptados.pdf'
+      openPdfPreview(blob, nombre)
     } catch (err: any) {
       if (err?.response?.status === 404) {
         alert('No hay aspirantes aceptados en este periodo.')

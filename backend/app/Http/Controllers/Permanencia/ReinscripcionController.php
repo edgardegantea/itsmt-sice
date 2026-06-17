@@ -21,9 +21,22 @@ class ReinscripcionController extends Controller
     {
         $this->authorize('viewAny', Reinscripcion::class);
 
-        return ApiResponse::success(
-            $this->service->listar($request->only(['estatus', 'periodo_id', 'carrera_id']))
-        );
+        $filtros = $request->only(['estatus', 'periodo_id', 'carrera_id']);
+
+        // alumno solo ve sus propias reinscripciones
+        if ($request->user()->hasRole('alumno')) {
+            $alumno = Alumno::where('user_id', $request->user()->id)->first();
+            if (!$alumno) return ApiResponse::success([]);
+            $filtros['alumno_id'] = $alumno->id;
+        }
+
+        // jefe_carrera solo ve reinscripciones de su carrera
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada) {
+            $filtros['carrera_id'] = $carreraForzada;
+        }
+
+        return ApiResponse::success($this->service->listar($filtros));
     }
 
     // POST /api/reinscripciones

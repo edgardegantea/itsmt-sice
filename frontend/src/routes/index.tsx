@@ -20,12 +20,18 @@ const ConfiguracionPage     = lazy(() => import('../features/admin/pages/Configu
 const DashboardAlumnoPage      = lazy(() => import('../features/alumno/pages/DashboardAlumnoPage'))
 const ConsultaAspirantePage    = lazy(() => import('../features/admision/pages/ConsultaAspirantePage'))
 const TramitesAlumnoPage       = lazy(() => import('../features/permanencia/pages/TramitesAlumnoPage'))
-const ReinscripcionesAdminPage = lazy(() => import('../features/permanencia/pages/ReinscripcionesAdminPage'))
-const ConstanciasAdminPage     = lazy(() => import('../features/permanencia/pages/ConstanciasAdminPage'))
+const ReinscripcionesAdminPage        = lazy(() => import('../features/permanencia/pages/ReinscripcionesAdminPage'))
+const ConstanciasAdminPage            = lazy(() => import('../features/permanencia/pages/ConstanciasAdminPage'))
+const EncuestaSocioeconomicaPage      = lazy(() => import('../features/permanencia/pages/EncuestaSocioeconomicaPage'))
+const EncuestasAdminPage              = lazy(() => import('../features/permanencia/pages/EncuestasAdminPage'))
+const UsuariosPage                    = lazy(() => import('../features/admin/pages/UsuariosPage'))
+const GestionAcademicaPage            = lazy(() => import('../features/academico/pages/GestionAcademicaPage'))
+const CargaAcademicaAdminPage         = lazy(() => import('../features/academico/pages/CargaAcademicaAdminPage'))
+const PlaneacionDocentePage           = lazy(() => import('../features/academico/pages/PlaneacionDocentePage'))
 
 // ── Wrappers ──────────────────────────────────────────────────────────────────
 
-const ADMIN_ROLES = ['admin', 'director_academico', 'jefe_carrera', 'personal_administrativo']
+const ADMIN_ROLES = ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo']
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -62,8 +68,13 @@ export default function AppRoutes() {
         <Route path="/admin/carreras"   element={<AdminLayout><CarrerasPage /></AdminLayout>} />
         <Route path="/admin/catalogos"        element={<AdminLayout><CatalogosPage /></AdminLayout>} />
         <Route path="/admin/configuracion"  element={<AdminLayout><ConfiguracionPage /></AdminLayout>} />
-        <Route path="/admin/reinscripciones" element={<AdminLayout><ReinscripcionesAdminPage /></AdminLayout>} />
-        <Route path="/admin/constancias"     element={<AdminLayout><ConstanciasAdminPage /></AdminLayout>} />
+        <Route path="/admin/reinscripciones"          element={<AdminLayout><ReinscripcionesAdminPage /></AdminLayout>} />
+        <Route path="/admin/constancias"             element={<AdminLayout><ConstanciasAdminPage /></AdminLayout>} />
+        <Route path="/admin/encuestas-socioeconomicas" element={<AdminLayout><EncuestasAdminPage /></AdminLayout>} />
+        <Route path="/admin/usuarios"                  element={<AdminLayout><UsuariosPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica"         element={<AdminLayout><GestionAcademicaPage /></AdminLayout>} />
+        <Route path="/admin/carga-academica"           element={<AdminLayout><CargaAcademicaAdminPage /></AdminLayout>} />
+        <Route path="/docente/planeacion"              element={<AdminLayout><PlaneacionDocentePage /></AdminLayout>} />
 
         {/* Portal Alumno */}
         <Route
@@ -79,6 +90,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute requiredRole="alumno">
               <AlumnoLayout><TramitesAlumnoPage /></AlumnoLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/alumno/encuesta-socioeconomica"
+          element={
+            <ProtectedRoute requiredRole="alumno">
+              <AlumnoLayout><EncuestaSocioeconomicaPage /></AlumnoLayout>
             </ProtectedRoute>
           }
         />

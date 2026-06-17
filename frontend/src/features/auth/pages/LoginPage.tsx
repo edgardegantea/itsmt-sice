@@ -14,14 +14,38 @@ export default function LoginPage() {
     login({ email, password })
   }
 
-  const logoUrl = config.url_logo_principal ?? '/assets/img/logo/ic_imt.svg'
+  const logoUrl  = config.url_logo_principal ?? null
+  const fondoUrl = config.url_login_imagen_fondo ?? null
+  const opacidad = config.login_opacidad_fondo ?? 0.70
+  const loginTitulo    = config.login_titulo || 'Sistema Integral de Control Escolar'
+  const loginSubtitulo = config.login_subtitulo || config.nombre_institucion
 
   return (
     <div className="min-h-screen flex">
       {/* Panel izquierdo — institucional */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-between p-12" style={{ backgroundColor: 'var(--color-primario)' }}>
+      <div
+        className="hidden lg:flex w-1/2 flex-col justify-between p-12 relative bg-cover bg-center"
+        style={{
+          backgroundColor: 'var(--color-primario)',
+          ...(fondoUrl ? { backgroundImage: `url(${fondoUrl})` } : {}),
+        }}
+      >
+        {/* Capa de color con opacidad configurable sobre la imagen de fondo */}
+        {fondoUrl && (
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: 'var(--color-primario)', opacity: opacidad }}
+          />
+        )}
+        <div className="relative z-10 flex flex-col justify-between h-full">
         <div className="flex items-center gap-3">
-          <img src={logoUrl} alt={config.nombre_corto} className="h-12 w-12 object-contain" />
+          {logoUrl ? (
+              <img src={logoUrl} alt={config.nombre_corto} className="h-12 w-12 object-contain" />
+            ) : (
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+                {(config.nombre_corto ?? 'IT').slice(0, 2)}
+              </div>
+            )}
           <div>
             <p className="text-white text-base font-semibold tracking-wide">{config.nombre_corto}</p>
             {config.dependencia && (
@@ -32,20 +56,23 @@ export default function LoginPage() {
 
         <div>
           <h1 className="text-white text-4xl font-semibold leading-tight">
-            Sistema Integral de Control Escolar
+            {loginTitulo}
           </h1>
-          <p className="text-slate-400 text-sm mt-4 leading-relaxed">
-            {config.nombre_institucion}
-          </p>
+          {loginSubtitulo && (
+            <p className="text-slate-300 text-sm mt-4 leading-relaxed">
+              {loginSubtitulo}
+            </p>
+          )}
           {config.subsistema && (
-            <p className="text-slate-500 text-xs mt-2">{config.subsistema}</p>
+            <p className="text-slate-400 text-xs mt-2">{config.subsistema}</p>
           )}
         </div>
 
-        <p className="text-slate-600 text-xs">
+        <p className="text-slate-300/70 text-xs">
           {config.nombre_corto} © {new Date().getFullYear()}
           {config.clave_tecnm && <span className="ml-2">· {config.clave_tecnm}</span>}
         </p>
+        </div>
       </div>
 
       {/* Panel derecho — formulario */}
@@ -53,7 +80,13 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Logo móvil */}
           <div className="mb-8 flex flex-col items-center gap-3 lg:hidden">
-            <img src={logoUrl} alt={config.nombre_corto} className="h-14 w-14 object-contain" />
+            {logoUrl ? (
+              <img src={logoUrl} alt={config.nombre_corto} className="h-14 w-14 object-contain" />
+            ) : (
+              <div className="h-14 w-14 rounded-xl flex items-center justify-center text-base font-bold" style={{ backgroundColor: 'var(--color-primario)', color: 'white' }}>
+                {(config.nombre_corto ?? 'IT').slice(0, 2)}
+              </div>
+            )}
             <p className="text-slate-700 text-sm font-semibold">{config.nombre_corto} — Control Escolar</p>
           </div>
 

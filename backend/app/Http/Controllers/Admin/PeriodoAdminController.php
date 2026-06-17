@@ -15,7 +15,7 @@ class PeriodoAdminController extends Controller
     // GET /api/admin/periodos
     public function index(Request $request): JsonResponse
     {
-        if (! $request->user()?->hasAnyRole(['admin', 'director_academico', 'personal_administrativo'])) {
+        if (! $request->user()?->hasAnyRole(['superadmin', 'admin', 'director_academico', 'personal_administrativo'])) {
             return ApiResponse::error('No autorizado.', 403);
         }
 
@@ -57,7 +57,7 @@ class PeriodoAdminController extends Controller
     // PATCH /api/admin/periodos/{periodo}/activar
     public function activar(Request $request, Periodo $periodo): JsonResponse
     {
-        if (! $request->user()?->hasRole('admin')) {
+        if (! $request->user()?->hasRole(['admin', 'superadmin'])) {
             return ApiResponse::error('No autorizado.', 403);
         }
 

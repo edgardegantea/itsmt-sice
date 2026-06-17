@@ -11,7 +11,7 @@
     font-size: 8pt;
     color: #111;
     line-height: 1.3;
-    padding: 76px;
+    padding: 0;
   }
 
   /* ── Encabezado ── */
@@ -211,7 +211,7 @@
 </table>
 
 {{-- ── Tabla por tipo de ingreso ───────────────────────────────────────────── --}}
-@foreach($alumnos->groupBy('inscripcion.tipo_ingreso') as $tipoIngreso => $grupo)
+@foreach($alumnos->groupBy('inscripcion.tipo_ingreso_registro') as $tipoIngreso => $grupo)
 
 <div class="group-hdr">
   {{ mb_strtoupper($tipoIngreso ?: 'SIN CLASIFICAR', 'UTF-8') }} &nbsp;—&nbsp; {{ $grupo->count() }} registro(s)

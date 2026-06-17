@@ -24,3 +24,174 @@
   #root { min-height: 100vh; }
   h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
 }
+
+/* ── Preferencias de usuario ────────────────────────────────────────────────── */
+
+/* Densidad de filas */
+html[data-density="compacta"] table td,
+html[data-density="compacta"] table th {
+  padding-top:    0.25rem !important;
+  padding-bottom: 0.25rem !important;
+  font-size:      0.8125rem !important;
+}
+html[data-density="comoda"] table td,
+html[data-density="comoda"] table th {
+  padding-top:    1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* Densidad en listas y filas clickables tipo card */
+html[data-density="compacta"] [data-row] {
+  padding-top:    0.375rem !important;
+  padding-bottom: 0.375rem !important;
+}
+html[data-density="comoda"] [data-row] {
+  padding-top:    1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* Escala de texto base */
+html[data-escala="muy-pequena"] { font-size: 12px; }
+html[data-escala="pequena"]     { font-size: 13px; }
+html[data-escala="normal"]      { font-size: 14px; }
+html[data-escala="grande"]      { font-size: 16px; }
+html[data-escala="muy-grande"]  { font-size: 18px; }
+
+/* ── Accesibilidad ──────────────────────────────────────────────────────────── */
+
+/* 1 · Alto contraste -------------------------------------------------------- */
+html[data-alto-contraste] {
+  --ac-page:    #05101f;
+  --ac-surface: #0d1f35;
+  --ac-border:  #4a7ab5;
+  --ac-text-hi: #ffffff;
+  --ac-text-md: #cbd5e1;
+  --ac-text-lo: #94a3b8;
+  --ac-accent:  #facc15;
+  --ac-danger:  #f87171;
+  --ac-success: #4ade80;
+}
+
+html[data-alto-contraste] body {
+  background-color: var(--ac-page) !important;
+  color: var(--ac-text-hi) !important;
+}
+
+/* Superficies */
+html[data-alto-contraste] .bg-white,
+html[data-alto-contraste] .bg-slate-50,
+html[data-alto-contraste] .bg-slate-100 {
+  background-color: var(--ac-surface) !important;
+}
+
+/* Textos */
+html[data-alto-contraste] .text-slate-900,
+html[data-alto-contraste] .text-slate-800 { color: var(--ac-text-hi) !important; }
+html[data-alto-contraste] .text-slate-700,
+html[data-alto-contraste] .text-slate-600 { color: var(--ac-text-md) !important; }
+html[data-alto-contraste] .text-slate-500,
+html[data-alto-contraste] .text-slate-400 { color: var(--ac-text-lo) !important; }
+
+/* Bordes */
+html[data-alto-contraste] .border-slate-200,
+html[data-alto-contraste] .border-slate-100,
+html[data-alto-contraste] [class*="divide-slate"] > * + * {
+  border-color: var(--ac-border) !important;
+}
+
+/* Inputs, selects, textareas */
+html[data-alto-contraste] input,
+html[data-alto-contraste] select,
+html[data-alto-contraste] textarea {
+  background-color: var(--ac-surface) !important;
+  color:            var(--ac-text-hi) !important;
+  border-color:     var(--ac-border)  !important;
+}
+
+/* Botones primarios — mantener color pero reforzar contraste */
+html[data-alto-contraste] .bg-blue-600 { background-color: #1d4ed8 !important; }
+html[data-alto-contraste] .text-white  { color: #ffffff !important; }
+
+/* Badges / pills de estado */
+html[data-alto-contraste] [class*="bg-green-"]  { background-color: #052e16 !important; color: var(--ac-success) !important; }
+html[data-alto-contraste] [class*="bg-red-"]    { background-color: #1c0000 !important; color: var(--ac-danger)  !important; }
+html[data-alto-contraste] [class*="bg-yellow-"] { background-color: #1c1400 !important; color: var(--ac-accent)  !important; }
+html[data-alto-contraste] [class*="bg-amber-"]  { background-color: #1c1000 !important; color: var(--ac-accent)  !important; }
+html[data-alto-contraste] [class*="bg-purple-"] { background-color: #1a0033 !important; color: #c084fc !important; }
+html[data-alto-contraste] [class*="bg-blue-1"]  { background-color: #0a1a40 !important; color: #93c5fd !important; }
+html[data-alto-contraste] [class*="bg-cyan-"]   { background-color: #001a1a !important; color: #67e8f9 !important; }
+
+/* Tablas */
+html[data-alto-contraste] tr:hover td,
+html[data-alto-contraste] tr.hover\:bg-slate-50:hover {
+  background-color: #162035 !important;
+}
+
+/* Links activos en sidebar — mantener legibilidad */
+html[data-alto-contraste] nav a.text-white { color: #ffffff !important; }
+
+/* 2 · Reducir movimiento ---------------------------------------------------- */
+html[data-reducir-movimiento] *,
+html[data-reducir-movimiento] *::before,
+html[data-reducir-movimiento] *::after {
+  transition-duration:   0.01ms !important;
+  animation-duration:    0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior:       auto !important;
+}
+
+/* 3 · Texto espaciado ------------------------------------------------------- */
+html[data-texto-espaciado] body {
+  line-height:    1.9 !important;
+  letter-spacing: 0.04em !important;
+  word-spacing:   0.12em !important;
+}
+
+html[data-texto-espaciado] p,
+html[data-texto-espaciado] li,
+html[data-texto-espaciado] td,
+html[data-texto-espaciado] th,
+html[data-texto-espaciado] label,
+html[data-texto-espaciado] span {
+  line-height: 1.8 !important;
+}
+
+/* 4 · Foco realzado --------------------------------------------------------- */
+html[data-focus-realzado] :focus-visible {
+  outline:        3px solid #facc15 !important;
+  outline-offset: 3px !important;
+  box-shadow:     0 0 0 6px rgba(250,204,21,0.25) !important;
+  border-radius:  3px;
+}
+
+/* Quitar outline nativo solo en este modo para que el nuestro tome precedencia */
+html[data-focus-realzado] :focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* 5 · Subrayar enlaces y botones-enlace ------------------------------------- */
+html[data-subrayar-enlaces] a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+}
+
+html[data-subrayar-enlaces] button[class*="hover:underline"],
+html[data-subrayar-enlaces] button.text-blue-600,
+html[data-subrayar-enlaces] button.text-red-500,
+html[data-subrayar-enlaces] button.text-green-700 {
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+/* Respeto automático de las preferencias del sistema operativo */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration:   0.01ms !important;
+    animation-duration:    0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  body { filter: contrast(1.2); }
+}

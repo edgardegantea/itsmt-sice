@@ -29,7 +29,22 @@ class ConfiguracionInstitucional extends Model
         'subdirector_academico',
         'responsable_servicios_escolares',
         'fuente_interfaz',
+        'fecha_inicio_actualizacion_datos',
+        'fecha_fin_actualizacion_datos',
+        'login_titulo',
+        'login_subtitulo',
+        'login_imagen_fondo',
+        'login_opacidad_fondo',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'fecha_inicio_actualizacion_datos' => 'date',
+            'fecha_fin_actualizacion_datos'    => 'date',
+            'login_opacidad_fondo'             => 'float',
+        ];
+    }
 
     public static function instancia(): self
     {
@@ -48,17 +63,18 @@ class ConfiguracionInstitucional extends Model
         return Storage::disk('public')->url($this->logo_secundario);
     }
 
+    public function urlLoginImagenFondo(): ?string
+    {
+        if (!$this->login_imagen_fondo) return null;
+        return Storage::disk('public')->url($this->login_imagen_fondo);
+    }
+
     public function logoBase64(): ?string
     {
         if ($this->logo_principal && Storage::disk('public')->exists($this->logo_principal)) {
             $mime = Storage::disk('public')->mimeType($this->logo_principal);
             $data = base64_encode(Storage::disk('public')->get($this->logo_principal));
             return "data:{$mime};base64,{$data}";
-        }
-        $svgPath = public_path('assets/img/logo/ic_imt.svg');
-        if (file_exists($svgPath)) {
-            $data = base64_encode(file_get_contents($svgPath));
-            return "data:image/svg+xml;base64,{$data}";
         }
         return null;
     }

@@ -15,7 +15,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 7.5pt; color: #111; background: #fff; }
 
-    .pag { padding: 22px 40px 20px 40px; }
+    .pag { padding: 0; }
 
     /* ── Encabezado institucional ── */
     .enc { width: 100%; border-collapse: collapse; margin-bottom: 0; }
@@ -259,41 +259,31 @@
     <div class="docs-title">PARA USO EXCLUSIVO DEL DEPARTAMENTO DE SERVICIOS ESCOLARES</div>
     <div class="docs-sub">Original para cotejar y copias</div>
 
-    @php
-      $docsList = [
-        ['cant' => '**1', 'nombre' => 'Certificado de bachillerato o equivalente'],
-        ['cant' => '1',   'nombre' => 'Acta de nacimiento'],
-        ['cant' => '1',   'nombre' => 'CURP'],
-        ['cant' => '2',   'nombre' => 'Fotografías recientes'],
-        ['cant' => '*1',  'nombre' => 'Dictamen de revalidación o equivalencia de estudios'],
-        ['cant' => '*1',  'nombre' => 'Copia de documento migratorio (en caso de ser extranjero)'],
-        ['cant' => '1',   'nombre' => 'Copia de comprobante de cuota por concepto de inscripción'],
-        ['cant' => '1',   'nombre' => 'Certificado médico'],
-      ];
-    @endphp
-
     <table class="tbl-docs">
       <thead>
         <tr>
-          <th style="width:9%;">Cantidad</th>
-          <th style="text-align:left;">Documentos Solicitados</th>
-          <th style="width:20%;">Documentos Entregados</th>
+          <th style="width:5%; text-align:center;">#</th>
+          <th style="text-align:left;">Documentos Solicitados (TecNM-AC-PO-001-A01)</th>
+          <th style="width:22%; text-align:center;">Entregado</th>
         </tr>
       </thead>
       <tbody>
-        @foreach($docsList as $doc)
+        @foreach($documentos as $i => $doc)
         <tr>
-          <td class="c" style="color:#555; font-size:8pt;">{{ $doc['cant'] }}</td>
+          <td class="c" style="color:#555; font-size:8pt;">{{ $i + 1 }}</td>
           <td>{{ $doc['nombre'] }}</td>
+          @if($doc['entregado'])
+          <td class="check">✓</td>
+          @else
           <td class="pending">( &nbsp; )</td>
+          @endif
         </tr>
         @endforeach
       </tbody>
     </table>
 
     <p class="nota">
-      * Cuando aplique &nbsp;|&nbsp;
-      ** En caso de no contar con este documento se deberá presentar la carta compromiso.
+      El checklist refleja el estado actual de documentos registrados en el expediente digital.
     </p>
 
     <div style="text-align:right; margin-top:6px; font-size:8pt; color:{{ $AZUL }};">

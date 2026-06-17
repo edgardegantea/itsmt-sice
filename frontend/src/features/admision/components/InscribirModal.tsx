@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Modal from '../../../components/ui/Modal'
 import { useInscribir } from '../hooks/useAspirantes'
 import { useToastStore } from '../../../store/toastStore'
@@ -8,9 +9,18 @@ interface Props {
   onClose: () => void
 }
 
+const TIPOS_INGRESO = [
+  { value: 'nuevo_ingreso', label: 'Nuevo ingreso — Licenciatura' },
+  { value: 'reingreso',     label: 'Reingreso — Licenciatura' },
+  { value: 'traslado',      label: 'Traslado' },
+  { value: 'equivalencia',  label: 'Equivalencia' },
+  { value: 'revalidacion',  label: 'Revalidación' },
+]
+
 export default function InscribirModal({ aspirante, onClose }: Props) {
   const { mutate, isPending, isSuccess, data } = useInscribir()
   const { success, error: toastError }         = useToastStore()
+  const [tipoIngreso, setTipoIngreso]          = useState('nuevo_ingreso')
 
   if (isSuccess && data) {
     return (
@@ -51,6 +61,24 @@ export default function InscribirModal({ aspirante, onClose }: Props) {
           <p className="text-xs text-slate-400 mt-0.5">{aspirante.periodo.nombre}</p>
         </div>
 
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">
+            Tipo de ingreso <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={tipoIngreso}
+            onChange={e => setTipoIngreso(e.target.value)}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+          >
+            {TIPOS_INGRESO.map(t => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+          <p className="text-xs text-slate-400 mt-1">
+            Determina el tipo_ingreso_registro en el expediente (TecNM-AC-PO-001).
+          </p>
+        </div>
+
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-3 text-xs text-amber-700">
           <span className="mt-0.5">⚠</span>
           Se generará un número de control único. Esta acción no se puede deshacer.
@@ -61,7 +89,7 @@ export default function InscribirModal({ aspirante, onClose }: Props) {
             Cancelar
           </button>
           <button
-            onClick={() => mutate(aspirante.id, {
+            onClick={() => mutate({ aspiranteId: aspirante.id, tipoIngreso }, {
               onSuccess: () => success(`NC asignado a ${aspirante.nombres} ${aspirante.apellido_paterno}.`),
               onError:   () => toastError('Error al inscribir. Verifica que el estatus sea "aceptado".'),
             })}

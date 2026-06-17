@@ -22,6 +22,8 @@
   <li>Emitir evaluaciones periódicas y actas de calificaciones en tiempo y forma.</li>
   <li>Otorgar servicios de biblioteca, laboratorio y cómputo conforme a reglamento.</li>
   <li>Tramitar los documentos oficiales (constancias, certificados) en los plazos institucionales.</li>
+  <li>Brindar atención en ventanilla escolar para trámites, aclaraciones y servicios de Control Escolar.</li>
+  <li>Gestionar el proceso de reinscripción semestral conforme al calendario institucional vigente.</li>
 </ul>
 
 <div class="section">TERCERA — OBLIGACIONES DEL ALUMNO</div>

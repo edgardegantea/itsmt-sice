@@ -61,18 +61,18 @@ class HistoricoAlumnosSeeder extends Seeder
     // Por cohorte de ingreso, el semestre actual depende del año y período de ingreso
     private array $periodosDef = [
         // [nombre, tipo, año_inicio, año_fin, mes_inicio, mes_fin, semestre_activo_ahora]
-        ['Agosto–Diciembre 2020', 'regular', '2020-08-01', '2020-12-15', 12],
-        ['Enero–Junio 2021',      'regular', '2021-01-15', '2021-06-30', 11],
-        ['Agosto–Diciembre 2021', 'regular', '2021-08-01', '2021-12-15', 10],
-        ['Enero–Junio 2022',      'regular', '2022-01-15', '2022-06-30', 9],
-        ['Agosto–Diciembre 2022', 'regular', '2022-08-01', '2022-12-15', 8],
-        ['Enero–Junio 2023',      'regular', '2023-01-15', '2023-06-30', 7],
-        ['Agosto–Diciembre 2023', 'regular', '2023-08-01', '2023-12-15', 6],
-        ['Enero–Junio 2024',      'regular', '2024-01-15', '2024-06-30', 5],
-        ['Agosto–Diciembre 2024', 'regular', '2024-08-01', '2024-12-15', 4],
-        ['Enero–Junio 2025',      'regular', '2025-01-15', '2025-06-30', 3],
-        ['Agosto–Diciembre 2025', 'regular', '2025-08-01', '2025-12-15', 2],
-        ['Enero–Junio 2026',      'regular', '2026-01-15', '2026-06-30', 1],
+        ['Agosto–Diciembre 2020', 'ordinario', '2020-08-01', '2020-12-15', 12],
+        ['Enero–Junio 2021',      'ordinario', '2021-01-15', '2021-06-30', 11],
+        ['Agosto–Diciembre 2021', 'ordinario', '2021-08-01', '2021-12-15', 10],
+        ['Enero–Junio 2022',      'ordinario', '2022-01-15', '2022-06-30', 9],
+        ['Agosto–Diciembre 2022', 'ordinario', '2022-08-01', '2022-12-15', 8],
+        ['Enero–Junio 2023',      'ordinario', '2023-01-15', '2023-06-30', 7],
+        ['Agosto–Diciembre 2023', 'ordinario', '2023-08-01', '2023-12-15', 6],
+        ['Enero–Junio 2024',      'ordinario', '2024-01-15', '2024-06-30', 5],
+        ['Agosto–Diciembre 2024', 'ordinario', '2024-08-01', '2024-12-15', 4],
+        ['Enero–Junio 2025',      'ordinario', '2025-01-15', '2025-06-30', 3],
+        ['Agosto–Diciembre 2025', 'ordinario', '2025-08-01', '2025-12-15', 2],
+        ['Enero–Junio 2026',      'ordinario', '2026-01-15', '2026-06-30', 1],
     ];
 
     // Contador de secuencia por [año][carrera_codigo_it] para NCs únicos

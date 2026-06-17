@@ -14,7 +14,7 @@ class CarreraAdminController extends Controller
     // GET /api/admin/carreras
     public function index(Request $request): JsonResponse
     {
-        if (! $request->user()?->hasAnyRole(['admin', 'director_academico'])) {
+        if (! $request->user()?->hasAnyRole(['superadmin', 'admin', 'director_academico'])) {
             return ApiResponse::error('No autorizado.', 403);
         }
 
@@ -40,7 +40,7 @@ class CarreraAdminController extends Controller
     // PATCH /api/admin/carreras/{carrera}/toggle-activa
     public function toggleActiva(Request $request, Carrera $carrera): JsonResponse
     {
-        if (! $request->user()?->hasRole('admin')) {
+        if (! $request->user()?->hasRole(['admin', 'superadmin'])) {
             return ApiResponse::error('No autorizado.', 403);
         }
 

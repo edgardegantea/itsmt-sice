@@ -5,15 +5,23 @@ export interface LoginPayload {
   password: string
 }
 
+export interface AuthCarrera {
+  id: string
+  nombre: string
+  clave: string
+}
+
 export interface AuthUser {
   id: string
   name: string
   email: string
   roles: string[]
   permissions?: string[]
+  // jefe_carrera
+  carrera_id?: string | null
+  carrera?: AuthCarrera | null
   // campos extra para rol alumno
   numero_control?: string
-  carrera?: string
   semestre?: number
   estatus?: string
   pendiente_certificado_bachillerato?: boolean

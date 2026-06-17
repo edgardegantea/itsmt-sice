@@ -195,7 +195,7 @@ const DOCS = [
 export default function RegistroAspirantePage() {
   const { data: carreras = [], isLoading: cargandoCarreras } = useCarreras()
   const { data: periodo,  isLoading: cargandoPeriodo }       = usePeriodoActivo()
-  const { mutate, isPending, isSuccess, error }              = useRegistrarAspirante()
+  const { mutate, isPending, isSuccess, error, data: aspiranteRegistrado } = useRegistrarAspirante()
 
   // Catálogos
   const { data: estados = [] }  = useQuery({ queryKey: ['pub-estados'],  queryFn: catalogoPublico.getEstados })
@@ -232,7 +232,7 @@ export default function RegistroAspirantePage() {
     curp: '', fecha_nacimiento: '', sexo: '', estado_civil: '',
     municipio_procedencia: '', calle: '', colonia: '', ciudad: '', estado_domicilio: '', codigo_postal: '',
     escuela_bachillerato: '',
-    promedio_bachillerato: '', folio_exani: '', puntaje_exani: '',
+    promedio_bachillerato: '', folio_exani: '', folio_preinscripcion_tecnm: '', puntaje_exani: '',
     area_bachillerato: '',
     carrera_martinez: '',   // carrera sede Martínez (texto completo)
     carrera_vega: '',       // carrera sede Vega de Alatorre (texto completo)
@@ -455,6 +455,7 @@ export default function RegistroAspirantePage() {
       telefono:               form.telefono               || undefined,
       promedio_bachillerato:  parseFloat(form.promedio_bachillerato),
       folio_exani:            form.folio_exani            || undefined,
+      folio_preinscripcion_tecnm: form.folio_preinscripcion_tecnm || undefined,
       puntaje_exani:          form.puntaje_exani ? Number(form.puntaje_exani) : undefined,
       tiene_equipo_computo:   form.tiene_equipo_computo,   // "1" o "0" — Laravel boolean acepta estos valores
       medio_enterado:         form.medio_enterado === 'Otros' ? form.medio_enterado_otro : form.medio_enterado,
@@ -481,6 +482,13 @@ export default function RegistroAspirantePage() {
             </svg>
           </div>
           <h2 className="text-xl font-semibold text-slate-800 mb-2">¡Solicitud enviada!</h2>
+          {aspiranteRegistrado?.numero_ficha && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 mb-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Número de folio</p>
+              <p className="text-lg font-mono font-bold text-[#1a3a5c]">{aspiranteRegistrado.numero_ficha}</p>
+              <p className="text-xs text-slate-400 mt-1">Guarda este folio para dar seguimiento a tu solicitud.</p>
+            </div>
+          )}
           <p className="text-sm text-slate-500 leading-relaxed mb-2">
             Tu solicitud fue registrada. Recibirás un correo de confirmación en <strong>{form.email}</strong>.
           </p>
@@ -531,6 +539,8 @@ export default function RegistroAspirantePage() {
             <p className="text-xs text-slate-400 mt-1">
               ¿Ya tienes cuenta?{' '}
               <a href="/login" className="text-[#1a3a5c] font-medium hover:underline">Iniciar sesión</a>
+              {' · '}
+              <a href="/aspirante/consulta" className="text-[#1a3a5c] font-medium hover:underline">Consultar estatus</a>
             </p>
           </div>
         </div>
@@ -687,7 +697,7 @@ export default function RegistroAspirantePage() {
                 </div>
 
                 {/* Datos académicos */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Promedio bachillerato *</label>
                     <input
@@ -703,6 +713,9 @@ export default function RegistroAspirantePage() {
                   <Field label="Folio EXANI-II" value={form.folio_exani}
                     onChange={v => set('folio_exani', v)}
                     placeholder="Opcional" />
+                  <Field label="Folio de preinscripción TecNM" value={form.folio_preinscripcion_tecnm}
+                    onChange={v => set('folio_preinscripcion_tecnm', v)}
+                    placeholder="Opcional — ingreso.tecnm.mx" />
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Puntaje EXANI-II</label>
                     <input

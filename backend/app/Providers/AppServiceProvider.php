@@ -21,10 +21,20 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        ini_set('memory_limit', env('PHP_MEMORY_LIMIT', '256M'));
+    }
 
     public function boot(): void
     {
+        // Superadmin bypasses every Gate / Policy check in the system.
+        Gate::before(function ($user) {
+            if ($user->hasRole('superadmin')) {
+                return true;
+            }
+        });
+
         Gate::policy(Aspirante::class, AspirantePolicy::class);
         Gate::policy(Alumno::class, AlumnoPolicy::class);
         Gate::policy(ConfiguracionInstitucional::class, ConfiguracionPolicy::class);

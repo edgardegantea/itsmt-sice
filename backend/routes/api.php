@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CarreraAdminController;
+use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\CatalogoAdminController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -19,6 +20,17 @@ use App\Http\Controllers\Api\PdfProtoController;
 use App\Http\Controllers\Permanencia\ReinscripcionController;
 use App\Http\Controllers\Permanencia\ConstanciaController;
 use App\Http\Controllers\Permanencia\BajaController;
+use App\Http\Controllers\Permanencia\AdeudoController;
+use App\Http\Controllers\Permanencia\EncuestaSocioeconomicaController;
+use App\Http\Controllers\Academico\MateriaController;
+use App\Http\Controllers\Academico\GrupoController;
+use App\Http\Controllers\Academico\CargaAcademicaController;
+use App\Http\Controllers\Academico\TutoriaController;
+use App\Http\Controllers\Academico\FuncionPersonalController;
+use App\Http\Controllers\Academico\MallaCurricularController;
+use App\Http\Controllers\Academico\AulaController;
+use App\Http\Controllers\Academico\HorarioController;
+use App\Http\Controllers\Academico\PlaneacionDocenteController;
 use Illuminate\Support\Facades\Route;
 
 // Sprint 0 — Auth
@@ -94,6 +106,76 @@ Route::middleware('auth:sanctum')->group(function () {
     // Libro Registro NC — S1-13
     Route::get('/libro-registro-nc',                         [InscripcionPdfController::class, 'libroRegistroNc']);
 
+    // ── Gestión Académica (superadmin / admin) ────────────────────────────────
+
+    // Materias / Asignaturas
+    Route::get('/materias',                    [MateriaController::class, 'index']);
+    Route::post('/materias',                   [MateriaController::class, 'store']);
+    Route::patch('/materias/{materia}',        [MateriaController::class, 'update']);
+    Route::delete('/materias/{materia}',       [MateriaController::class, 'destroy']);
+
+    // Grupos
+    Route::get('/grupos',                                           [GrupoController::class, 'index']);
+    Route::post('/grupos',                                          [GrupoController::class, 'store']);
+    Route::get('/grupos/{grupo}',                                   [GrupoController::class, 'show']);
+    Route::patch('/grupos/{grupo}',                                 [GrupoController::class, 'update']);
+    Route::delete('/grupos/{grupo}',                                [GrupoController::class, 'destroy']);
+    Route::post('/grupos/{grupo}/alumnos',                          [GrupoController::class, 'asignarAlumnos']);
+    Route::delete('/grupos/{grupo}/alumnos/{alumno}',               [GrupoController::class, 'quitarAlumno']);
+
+    // Cargas académicas
+    Route::get('/cargas-academicas',                               [CargaAcademicaController::class, 'index']);
+    Route::post('/cargas-academicas',                              [CargaAcademicaController::class, 'store']);
+    Route::patch('/cargas-academicas/{cargaAcademica}',            [CargaAcademicaController::class, 'update']);
+    Route::delete('/cargas-academicas/{cargaAcademica}',           [CargaAcademicaController::class, 'destroy']);
+    Route::get('/admin/docentes',                                  [CargaAcademicaController::class, 'docentes']);
+
+    // Tutorías
+    Route::get('/tutorias',                    [TutoriaController::class, 'index']);
+    Route::post('/tutorias',                   [TutoriaController::class, 'store']);
+    Route::post('/tutorias/masivo',            [TutoriaController::class, 'masivo']);
+    Route::delete('/tutorias/{tutoria}',       [TutoriaController::class, 'destroy']);
+
+    // Funciones del personal
+    Route::get('/funciones-personal',                              [FuncionPersonalController::class, 'index']);
+    Route::post('/funciones-personal',                             [FuncionPersonalController::class, 'store']);
+    Route::patch('/funciones-personal/{funcionPersonal}',          [FuncionPersonalController::class, 'update']);
+    Route::delete('/funciones-personal/{funcionPersonal}',         [FuncionPersonalController::class, 'destroy']);
+
+    // Sprint 3 — Organización Académica
+    // Mallas curriculares
+    Route::get('/mallas-curriculares',                             [MallaCurricularController::class, 'index']);
+    Route::post('/mallas-curriculares',                            [MallaCurricularController::class, 'store']);
+    Route::patch('/mallas-curriculares/{mallaCurricular}',         [MallaCurricularController::class, 'update']);
+    Route::delete('/mallas-curriculares/{mallaCurricular}',        [MallaCurricularController::class, 'destroy']);
+
+    // Aulas
+    Route::get('/aulas',                                           [AulaController::class, 'index']);
+    Route::post('/aulas',                                          [AulaController::class, 'store']);
+    Route::patch('/aulas/{aula}',                                  [AulaController::class, 'update']);
+    Route::delete('/aulas/{aula}',                                 [AulaController::class, 'destroy']);
+
+    // Horarios (con detección de conflictos)
+    Route::get('/horarios',                                        [HorarioController::class, 'index']);
+    Route::get('/horarios/conflictos',                             [HorarioController::class, 'conflictos']);
+    Route::post('/horarios',                                       [HorarioController::class, 'store']);
+    Route::delete('/horarios/{horario}',                           [HorarioController::class, 'destroy']);
+
+    // Planeaciones didácticas
+    Route::get('/planeaciones-docentes',                                          [PlaneacionDocenteController::class, 'index']);
+    Route::get('/planeaciones-docentes/mias',                                     [PlaneacionDocenteController::class, 'mias']);
+    Route::post('/planeaciones-docentes',                                         [PlaneacionDocenteController::class, 'store']);
+    Route::post('/planeaciones-docentes/{planeacionDocente}/entregar',            [PlaneacionDocenteController::class, 'entregar']);
+    Route::patch('/planeaciones-docentes/{planeacionDocente}/estatus',            [PlaneacionDocenteController::class, 'cambiarEstatus']);
+
+    // Admin — Gestión de usuarios (solo admin)
+    Route::get('/admin/usuarios',               [UsuarioController::class, 'index']);
+    Route::post('/admin/usuarios',              [UsuarioController::class, 'store']);
+    Route::get('/admin/usuarios/{usuario}',     [UsuarioController::class, 'show']);
+    Route::patch('/admin/usuarios/{usuario}',   [UsuarioController::class, 'update']);
+    Route::delete('/admin/usuarios/{usuario}',  [UsuarioController::class, 'destroy']);
+    Route::get('/admin/roles',                  [UsuarioController::class, 'roles']);
+
     // Admin — Configuración institucional
     Route::get('/admin/configuracion',              [ConfiguracionController::class, 'show']);
     Route::patch('/admin/configuracion',            [ConfiguracionController::class, 'update']);
@@ -154,10 +236,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orden-reinscripcion/{periodo_id}',                       [ReinscripcionController::class, 'consultarOrden']);
 
     // Adeudos
+    Route::get('/adeudos',                                                [AdeudoController::class, 'index']);
+    Route::post('/adeudos',                                               [AdeudoController::class, 'store']);
+    Route::patch('/adeudos/{adeudo}/pagar',                               [AdeudoController::class, 'marcarPagado']);
+    Route::delete('/adeudos/{adeudo}',                                    [AdeudoController::class, 'destroy']);
     Route::get('/alumnos/{alumno}/adeudos',                               [ReinscripcionController::class, 'adeudos']);
 
     // Bajas
+    Route::get('/bajas',                                                  [BajaController::class, 'index']);
     Route::post('/bajas',                                                 [BajaController::class, 'store']);
+    Route::post('/bajas/solicitar',                                       [BajaController::class, 'solicitar']);
+    Route::get('/bajas/mias',                                             [BajaController::class, 'mias']);
     Route::get('/alumnos/{alumno}/bajas',                                 [BajaController::class, 'porAlumno']);
 
     // Constancias
@@ -165,4 +254,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/constancias',                                           [ConstanciaController::class, 'store']);
     Route::get('/alumnos/{alumno}/constancias',                           [ConstanciaController::class, 'porAlumno']);
     Route::post('/constancias/{constancia}/emitir',                       [ConstanciaController::class, 'emitir']);
+
+    // Encuesta Socioeconómica — alumno
+    Route::get('/encuestas-socioeconomicas/mi-encuesta',                  [EncuestaSocioeconomicaController::class, 'miEncuesta']);
+    Route::post('/encuestas-socioeconomicas',                             [EncuestaSocioeconomicaController::class, 'guardar']);
+    Route::post('/encuestas-socioeconomicas/{encuesta}/enviar',           [EncuestaSocioeconomicaController::class, 'enviar']);
+
+    // Encuesta Socioeconómica — admin
+    Route::get('/admin/encuestas-socioeconomicas',                        [EncuestaSocioeconomicaController::class, 'index']);
+    Route::get('/admin/encuestas-socioeconomicas/{encuesta}',             [EncuestaSocioeconomicaController::class, 'show']);
 });

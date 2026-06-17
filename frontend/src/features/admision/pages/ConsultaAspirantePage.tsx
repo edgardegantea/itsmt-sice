@@ -36,7 +36,7 @@ export default function ConsultaAspirantePage() {
   const [error, setError] = useState<string | null>(null)
   const [buscando, setBuscando] = useState(false)
 
-  const logoUrl = config.url_logo_principal ?? '/assets/img/logo/ic_imt.svg'
+  const logoUrl = config.url_logo_principal ?? null
 
   const consultar = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,7 +63,13 @@ export default function ConsultaAspirantePage() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header institucional */}
       <header className="bg-[#1a3a5c] text-white px-4 py-4 flex items-center gap-3">
-        <img src={logoUrl} alt={config.nombre_corto} className="h-9 w-9 object-contain" />
+        {logoUrl ? (
+          <img src={logoUrl} alt={config.nombre_corto} className="h-9 w-9 object-contain" />
+        ) : (
+          <div className="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+            {(config.nombre_corto ?? 'IT').slice(0, 2)}
+          </div>
+        )}
         <div>
           <p className="text-sm font-semibold leading-tight">{config.nombre_corto}</p>
           <p className="text-white/50 text-xs">Control Escolar</p>

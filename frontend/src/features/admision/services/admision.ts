@@ -15,7 +15,9 @@ export interface Periodo {
   fecha_inicio: string
   fecha_fin: string
   activo: boolean
-  tipo: 'regular' | 'intensivo'
+  tipo: 'ordinario' | 'verano' | 'intersemestral'
+  aspirantes_count?: number
+  inscripciones_count?: number
 }
 
 export type EstatusAspirante = 'pendiente' | 'aceptado' | 'rechazado' | 'inscrito'
@@ -36,6 +38,7 @@ export interface Aspirante {
   telefono: string | null
   estatus: EstatusAspirante
   observaciones: string | null
+  numero_ficha?: string | null
   carrera: Carrera
   periodo: Periodo
   created_at: string
@@ -45,6 +48,7 @@ export interface Aspirante {
   folio_exani?: string | null
   puntaje_exani?: number | null
   folio_preinscripcion_tecnm?: string | null
+  autorizacion_consulta_expediente?: string | null
 }
 
 export interface InscripcionDetalle {
@@ -123,6 +127,7 @@ export interface ActualizarAlumnoPayload {
   semestre_actual?: number
   carrera_id?: string
   pendiente_certificado_bachillerato?: boolean
+  autorizacion_consulta_expediente?: string
   observaciones_estatus?: string | null
 }
 
@@ -252,7 +257,12 @@ export const admisionApi = {
   },
 
   // Admin
-  getAspirantes: async (params: { carrera_id?: string; estatus?: string; page?: number }): Promise<PaginatedResponse<Aspirante>> => {
+  getPeriodos: async (): Promise<Periodo[]> => {
+    const { data } = await apiClient.get('/admin/periodos')
+    return data.data
+  },
+
+  getAspirantes: async (params: { carrera_id?: string; periodo_id?: string; estatus?: string; puntaje_min?: number; page?: number }): Promise<PaginatedResponse<Aspirante>> => {
     const { data } = await apiClient.get('/aspirantes', { params })
     return data.data
   },

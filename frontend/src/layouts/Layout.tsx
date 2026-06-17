@@ -3,6 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { authApi } from '../features/auth/services/auth'
 import { useConfiguracion } from '../hooks/useConfiguracion'
+import { usePreferenciasStore } from '../store/preferenciasStore'
+import PreferenciasPanel from '../components/PreferenciasPanel'
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
 
@@ -72,7 +74,7 @@ function IconSettings() {
   )
 }
 
-const ICONS: Record<string, () => JSX.Element> = {
+const ICONS: Record<string, () => React.JSX.Element> = {
   '/admin':                  IconDashboard,
   '/admin/aspirantes':       IconUsers,
   '/admin/alumnos':          IconGraduate,
@@ -80,23 +82,34 @@ const ICONS: Record<string, () => JSX.Element> = {
   '/admin/carreras':         IconBook,
   '/admin/catalogos':           IconTag,
   '/admin/configuracion':       IconSettings,
-  '/admin/reinscripciones':     IconCalendar,
-  '/admin/constancias':         IconBook,
+  '/admin/reinscripciones':              IconCalendar,
+  '/admin/constancias':                  IconBook,
+  '/admin/encuestas-socioeconomicas':    IconBook,
+  '/admin/usuarios':                     IconUsers,
+  '/admin/gestion-academica':            IconGraduate,
+  '/admin/carga-academica':              IconGraduate,
+  '/docente/planeacion':                 IconBook,
 }
 
 const NAV: { to: string; label: string; roles?: string[] }[] = [
-  { to: '/admin',                    label: 'Panel',            roles: ['admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
-  { to: '/admin/aspirantes',         label: 'Aspirantes',       roles: ['admin', 'jefe_carrera', 'personal_administrativo'] },
-  { to: '/admin/alumnos',            label: 'Alumnos',          roles: ['admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
-  { to: '/admin/reinscripciones',    label: 'Reinscripciones',  roles: ['admin', 'personal_administrativo', 'jefe_carrera'] },
-  { to: '/admin/constancias',        label: 'Constancias',      roles: ['admin', 'personal_administrativo'] },
-  { to: '/admin/periodos',           label: 'Periodos',         roles: ['admin'] },
-  { to: '/admin/carreras',           label: 'Carreras',         roles: ['admin', 'director_academico'] },
-  { to: '/admin/catalogos',          label: 'Catálogos',        roles: ['admin'] },
-  { to: '/admin/configuracion',      label: 'Configuración',    roles: ['admin'] },
+  { to: '/admin',                           label: 'Panel',               roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
+  { to: '/admin/aspirantes',                label: 'Aspirantes',          roles: ['superadmin', 'admin', 'jefe_carrera', 'personal_administrativo'] },
+  { to: '/admin/alumnos',                   label: 'Alumnos',             roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
+  { to: '/admin/gestion-academica',         label: 'Gestión Académica',   roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera'] },
+  { to: '/admin/carga-academica',           label: 'Carga Académica PDF', roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera'] },
+  { to: '/docente/planeacion',              label: 'Mi Planeación',       roles: ['docente', 'jefe_carrera'] },
+  { to: '/admin/reinscripciones',           label: 'Reinscripciones',     roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera'] },
+  { to: '/admin/constancias',               label: 'Constancias',         roles: ['superadmin', 'admin', 'personal_administrativo'] },
+  { to: '/admin/encuestas-socioeconomicas', label: 'Enc. Socioeconómica', roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'jefe_carrera'] },
+  { to: '/admin/periodos',                  label: 'Periodos',            roles: ['superadmin', 'admin'] },
+  { to: '/admin/carreras',                  label: 'Carreras',            roles: ['superadmin', 'admin', 'director_academico'] },
+  { to: '/admin/catalogos',                 label: 'Catálogos',           roles: ['superadmin', 'admin'] },
+  { to: '/admin/usuarios',                  label: 'Usuarios',            roles: ['superadmin', 'admin'] },
+  { to: '/admin/configuracion',             label: 'Configuración',       roles: ['superadmin', 'admin'] },
 ]
 
 const ROLE_LABEL: Record<string, string> = {
+  superadmin:              'Superadministrador',
   admin:                   'Administrador',
   director_academico:      'Director Académico',
   jefe_carrera:            'Jefe de Carrera',
@@ -109,7 +122,16 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { user, clearAuth } = useAuthStore()
   const navigate = useNavigate()
   const [menuAbierto, setMenuAbierto] = useState(false)
-  const [colapsado, setColapsado] = useState(false)
+  const [prefsOpen, setPrefsOpen] = useState(false)
+
+  const { sidebarColapsado, set: setPrefs } = usePreferenciasStore()
+  const [colapsado, setColapsadoLocal] = useState(sidebarColapsado)
+
+  const setColapsado = (v: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof v === 'function' ? v(colapsado) : v
+    setColapsadoLocal(next)
+    setPrefs({ sidebarColapsado: next })
+  }
 
   const handleLogout = async () => {
     try { await authApi.logout() } finally {
@@ -132,7 +154,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const roleLabel = user?.roles[0] ? (ROLE_LABEL[user.roles[0]] ?? user.roles[0]) : ''
   const { config } = useConfiguracion()
 
-  const logoUrl = config.url_logo_principal ?? '/assets/img/logo/ic_imt.svg'
+  const logoUrl = config.url_logo_principal ?? null
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -154,12 +176,18 @@ export default function Layout({ children }: { children: ReactNode }) {
           ${colapsado ? 'md:w-16' : 'md:w-56'}
           w-56
         `}
-        style={{ backgroundColor: 'var(--color-primario)' }}
+        style={{ backgroundColor: 'var(--color-sidebar-user, var(--color-primario))' }}
       >
         {/* Logo / Marca */}
         <div className={`pt-5 pb-4 flex items-center gap-3 shrink-0 ${colapsado ? 'px-4 justify-center' : 'px-5 justify-between'}`}>
           <div className={`flex items-center gap-2.5 min-w-0 ${colapsado ? 'justify-center' : ''}`}>
-            <img src={logoUrl} alt={config.nombre_corto} className="h-8 w-8 object-contain shrink-0" />
+            {logoUrl ? (
+              <img src={logoUrl} alt={config.nombre_corto} className="h-8 w-8 object-contain shrink-0" />
+            ) : (
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+                {(config.nombre_corto ?? 'IT').slice(0, 2)}
+              </div>
+            )}
             {!colapsado && (
               <div className="min-w-0">
                 <p className="text-white text-sm font-semibold tracking-wide truncate">{config.nombre_corto}</p>
@@ -252,6 +280,11 @@ export default function Layout({ children }: { children: ReactNode }) {
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-slate-200 truncate leading-tight">{user?.name}</p>
                 <p className="text-[11px] text-slate-500 truncate mt-0.5 leading-tight">{roleLabel}</p>
+                {user?.roles.includes('jefe_carrera') && user.carrera && typeof user.carrera === 'object' && (
+                  <p className="text-[10px] text-blue-300 truncate mt-0.5 leading-tight font-medium">
+                    {user.carrera.clave} — {user.carrera.nombre}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -277,37 +310,66 @@ export default function Layout({ children }: { children: ReactNode }) {
             )}
           </div>
 
-          {/* Botón colapsar — solo desktop */}
-          <div className="relative group/collapse hidden md:block">
-            <button
-              onClick={() => setColapsado(c => !c)}
-              className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsado ? 'justify-center' : ''}`}
-            >
-              <svg
-                className={`w-4 h-4 shrink-0 transition-transform duration-200 ${colapsado ? 'rotate-180' : ''}`}
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          {/* Fila: Preferencias + Colapsar */}
+          <div className={`flex gap-1 ${colapsado ? 'flex-col items-center' : ''}`}>
+            {/* Preferencias */}
+            <div className="relative group/prefs flex-1">
+              <button
+                onClick={() => setPrefsOpen(p => !p)}
+                className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsado ? 'justify-center' : ''}`}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
-              </svg>
-              {!colapsado && 'Contraer'}
-            </button>
-            {colapsado && (
-              <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
-                whitespace-nowrap rounded-md px-2.5 py-1.5 bg-slate-900 text-white text-xs font-medium shadow-lg
-                opacity-0 scale-95 group-hover/collapse:opacity-100 group-hover/collapse:scale-100
-                transition-all duration-150">
-                Expandir menú
-                <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
-              </div>
-            )}
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="12" cy="12" r="3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                {!colapsado && 'Preferencias'}
+              </button>
+              {colapsado && (
+                <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
+                  whitespace-nowrap rounded-md px-2.5 py-1.5 bg-slate-900 text-white text-xs font-medium shadow-lg
+                  opacity-0 scale-95 group-hover/prefs:opacity-100 group-hover/prefs:scale-100
+                  transition-all duration-150">
+                  Preferencias
+                  <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
+                </div>
+              )}
+            </div>
+
+            {/* Colapsar — solo desktop */}
+            <div className="relative group/collapse hidden md:block">
+              <button
+                onClick={() => setColapsado(c => !c)}
+                className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsado ? 'justify-center' : ''}`}
+              >
+                <svg
+                  className={`w-4 h-4 shrink-0 transition-transform duration-200 ${colapsado ? 'rotate-180' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+                </svg>
+                {!colapsado && 'Contraer'}
+              </button>
+              {colapsado && (
+                <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
+                  whitespace-nowrap rounded-md px-2.5 py-1.5 bg-slate-900 text-white text-xs font-medium shadow-lg
+                  opacity-0 scale-95 group-hover/collapse:opacity-100 group-hover/collapse:scale-100
+                  transition-all duration-150">
+                  Expandir menú
+                  <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Panel de preferencias */}
+        <PreferenciasPanel open={prefsOpen} onClose={() => setPrefsOpen(false)} />
       </aside>
 
       {/* ── Contenido principal ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar móvil */}
-        <header className="md:hidden sticky top-0 z-10 border-b border-white/8 px-4 py-3 flex items-center gap-3 shrink-0" style={{ backgroundColor: 'var(--color-primario)' }}>
+        <header className="md:hidden sticky top-0 z-10 border-b border-white/8 px-4 py-3 flex items-center gap-3 shrink-0" style={{ backgroundColor: 'var(--color-sidebar-user, var(--color-primario))' }}>
           <button
             onClick={() => setMenuAbierto(true)}
             aria-label="Abrir menú"

@@ -6,7 +6,7 @@ import SolicitudInscripcionPdf    from '../pdf/SolicitudInscripcionPdf'
 import CartaCompromisoPdf         from '../pdf/CartaCompromisoPdf'
 import CartaCompromisoDocsPdf     from '../pdf/CartaCompromisoDocsPdf'
 import ContratoEstudiantePdf      from '../pdf/ContratoEstudiantePdf'
-import { triggerDownload } from '../../../utils/pdfHelpers'
+import { openPdfPreview } from '../../../utils/pdfHelpers'
 
 export type TipoInscripcionPdf = 'solicitud' | 'carta-compromiso' | 'carta-compromiso-docs' | 'contrato'
 
@@ -33,8 +33,8 @@ export function useInscripcionPdf() {
       const { component, sufijo } = CONFIG[tipo]
       const doc = createElement(component, { inscripcion, cfg: cfgPdf })
 
-      const blob = await pdf(doc).toBlob()
-      triggerDownload(blob, `${inscripcion.numero_control}-${sufijo}.pdf`)
+      const blob = await pdf(doc as any).toBlob()
+      openPdfPreview(blob, `${inscripcion.numero_control}-${sufijo}.pdf`)
     } catch (err) {
       console.error('Error generando PDF:', err)
       alert('No se pudo generar el documento. Revisa la consola.')

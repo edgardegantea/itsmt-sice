@@ -22,7 +22,7 @@
       background: #fff;
     }
 
-    .pagina { padding: 48px 54px 44px 54px; page-break-after: always; }
+    .pagina { padding: 0; page-break-after: always; }
     .pagina:last-child { page-break-after: avoid; }
 
     /* ── Encabezado institucional ── */
@@ -88,32 +88,24 @@
 
     /* ── Ficha de encabezado ── */
     .ficha {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    .ficha td {
-      padding: 4px 0;
+    .ficha-fila {
+      margin-bottom: 4px;
       font-size: 8.5pt;
-      vertical-align: bottom;
+      line-height: 1.4;
     }
-    .ficha .lbl {
+    .ficha-fila .lbl {
       font-weight: bold;
       color: {{ $AZUL }};
       text-transform: uppercase;
       font-size: 7.5pt;
       letter-spacing: 0.5px;
-      width: 38%;
-      padding-right: 6px;
-      white-space: nowrap;
     }
-    .ficha .val {
-      border-bottom: 1.5px solid {{ $AZUL }};
-      padding-bottom: 1px;
+    .ficha-fila .val {
       color: #111;
-      font-size: 9pt;
+      font-size: 8.5pt;
     }
-    .ficha .spacer { height: 4px; }
 
     /* ── Tabla de aspirantes ── */
     .tbl {
@@ -251,24 +243,17 @@
   </div>
 
   {{-- ── Ficha ── --}}
-  <table class="ficha">
-    <tr>
-      <td class="lbl">Instituto Tecnológico</td>
-      <td class="val">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</td>
-    </tr>
-    <tr><td colspan="2" class="spacer"></td></tr>
-    <tr>
-      <td class="lbl">Carrera</td>
-      <td class="val">{{ mb_strtoupper($nombreCarrera, 'UTF-8') }}</td>
-    </tr>
-    <tr><td colspan="2" class="spacer"></td></tr>
-    <tr>
-      <td class="lbl">Fecha de Inscripción</td>
-      <td class="val">
-        {{ \Carbon\Carbon::parse($periodo->fecha_inicio)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
-      </td>
-    </tr>
-  </table>
+  <div class="ficha">
+    <div class="ficha-fila">
+      <span class="lbl">Instituto Tecnológico: </span><span class="val">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</span>
+    </div>
+    <div class="ficha-fila">
+      <span class="lbl">Carrera: </span><span class="val">{{ mb_strtoupper($nombreCarrera, 'UTF-8') }}</span>
+    </div>
+    <div class="ficha-fila">
+      <span class="lbl">Fecha de Inscripción: </span><span class="val">{{ \Carbon\Carbon::parse($periodo->fecha_inicio)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}</span>
+    </div>
+  </div>
 
   {{-- ── Tabla de aspirantes ── --}}
   <table class="tbl">

@@ -1,0 +1,125 @@
+<?php
+
+namespace App\Http\Controllers\Academico;
+
+use App\Domains\Academico\Models\Alumno;
+use App\Domains\Academico\Models\Grupo;
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
+class GrupoController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $carreraForzada = $request->user()?->carreraRestringida();
+
+        $grupos = Grupo::with(['carrera', 'periodo'])
+            ->withCount('alumnos')
+            ->when($carreraForzada,                                              fn($q, $v) => $q->where('carrera_id', $v))
+            ->when(! $carreraForzada && $request->query('carrera_id'),           fn($q, $c) => $q->where('carrera_id', $c))
+            ->when($request->query('periodo_id'), fn($q, $p) => $q->where('periodo_id', $p))
+            ->when($request->query('semestre'),   fn($q, $s) => $q->where('semestre', $s))
+            ->orderBy('semestre')->orderBy('clave')
+            ->get();
+
+        return ApiResponse::success($grupos);
+    }
+
+    public function show(Grupo $grupo): JsonResponse
+    {
+        return ApiResponse::success(
+            $grupo->load([
+                'carrera', 'periodo',
+                'alumnos.user',
+                'cargas.docente', 'cargas.materia',
+            ])
+        );
+    }
+
+    private function verificarCarrera(Request $request, string $carreraId): void
+    {
+        $restringida = $request->user()?->carreraRestringida();
+        if ($restringida && $restringida !== $carreraId) {
+            abort(403, 'No tienes permiso para gestionar datos de otra carrera.');
+        }
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'carrera_id' => ['required', 'uuid', 'exists:carreras,id'],
+            'periodo_id' => ['required', 'uuid', 'exists:periodos,id'],
+            'clave'      => ['required', 'string', 'max:20'],
+            'semestre'   => ['required', 'integer', 'min:1', 'max:12'],
+            'turno'      => ['required', Rule::in(['matutino', 'vespertino', 'sabatino'])],
+            'capacidad'  => ['sometimes', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $this->verificarCarrera($request, $data['carrera_id']);
+
+        $grupo = Grupo::create($data);
+
+        return ApiResponse::success($grupo->load(['carrera', 'periodo']), 'Grupo creado.', 201);
+    }
+
+    public function update(Request $request, Grupo $grupo): JsonResponse
+    {
+        $this->verificarCarrera($request, $grupo->carrera_id);
+
+        $data = $request->validate([
+            'clave'     => ['sometimes', 'string', 'max:20'],
+            'semestre'  => ['sometimes', 'integer', 'min:1', 'max:12'],
+            'turno'     => ['sometimes', Rule::in(['matutino', 'vespertino', 'sabatino'])],
+            'capacidad' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'activo'    => ['sometimes', 'boolean'],
+        ]);
+
+        $grupo->update($data);
+
+        return ApiResponse::success($grupo->fresh(['carrera', 'periodo']), 'Grupo actualizado.');
+    }
+
+    public function destroy(Request $request, Grupo $grupo): JsonResponse
+    {
+        $this->verificarCarrera($request, $grupo->carrera_id);
+
+        $grupo->delete();
+
+        return ApiResponse::success(null, 'Grupo eliminado.');
+    }
+
+    // POST /api/admin/grupos/{grupo}/alumnos
+    public function asignarAlumnos(Request $request, Grupo $grupo): JsonResponse
+    {
+        $this->verificarCarrera($request, $grupo->carrera_id);
+
+        $data = $request->validate([
+            'alumno_ids'   => ['required', 'array'],
+            'alumno_ids.*' => ['uuid', 'exists:alumnos,id'],
+        ]);
+
+        $sync = collect($data['alumno_ids'])->mapWithKeys(fn($id) => [
+            $id => ['fecha_asignacion' => now()->toDateString()],
+        ]);
+
+        $grupo->alumnos()->syncWithoutDetaching($sync->all());
+
+        return ApiResponse::success(
+            $grupo->load('alumnos.user')->alumnos,
+            count($data['alumno_ids']) . ' alumno(s) asignado(s).'
+        );
+    }
+
+    // DELETE /api/admin/grupos/{grupo}/alumnos/{alumno}
+    public function quitarAlumno(Request $request, Grupo $grupo, Alumno $alumno): JsonResponse
+    {
+        $this->verificarCarrera($request, $grupo->carrera_id);
+
+        $grupo->alumnos()->detach($alumno->id);
+
+        return ApiResponse::success(null, 'Alumno retirado del grupo.');
+    }
+}

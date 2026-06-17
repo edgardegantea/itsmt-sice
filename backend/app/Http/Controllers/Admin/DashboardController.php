@@ -16,22 +16,23 @@ class DashboardController extends Controller
     // GET /api/admin/dashboard
     public function index(Request $request): JsonResponse
     {
-        if (! $request->user()?->hasAnyRole(['admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'])) {
+        if (! $request->user()?->hasAnyRole(['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'])) {
             return ApiResponse::error('No autorizado.', 403);
         }
 
-        $periodoActivo = Periodo::where('activo', true)->first();
+        $carreraForzada = $request->user()->carreraRestringida();
+        $periodoActivo  = Periodo::where('activo', true)->first();
 
-        $aspirantesBase = $periodoActivo
-            ? Aspirante::where('periodo_id', $periodoActivo->id)
-            : Aspirante::query();
+        $aspirantesBase = Aspirante::query()
+            ->when($periodoActivo,  fn($q) => $q->where('periodo_id', $periodoActivo->id))
+            ->when($carreraForzada, fn($q, $v) => $q->where('carrera_id', $v));
 
-        $porEstatus = $aspirantesBase->clone()
+        $porEstatus = (clone $aspirantesBase)
             ->selectRaw("estatus, COUNT(*) as total")
             ->groupBy('estatus')
             ->pluck('total', 'estatus');
 
-        $porCarrera = $aspirantesBase->clone()
+        $porCarrera = (clone $aspirantesBase)
             ->where('estatus', 'aceptado')
             ->join('carreras', 'aspirantes.carrera_id', '=', 'carreras.id')
             ->selectRaw('carreras.nombre, carreras.clave, COUNT(*) as total')
@@ -39,11 +40,15 @@ class DashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
-        $alumnosPorEstatus = Alumno::selectRaw("estatus, COUNT(*) as total")
+        $alumnosQ = Alumno::query()->when($carreraForzada, fn($q, $v) => $q->where('carrera_id', $v));
+
+        $alumnosPorEstatus = (clone $alumnosQ)
+            ->selectRaw("estatus, COUNT(*) as total")
             ->groupBy('estatus')
             ->pluck('total', 'estatus');
 
-        $alumnosPorCarrera = Alumno::join('carreras', 'alumnos.carrera_id', '=', 'carreras.id')
+        $alumnosPorCarrera = (clone $alumnosQ)
+            ->join('carreras', 'alumnos.carrera_id', '=', 'carreras.id')
             ->selectRaw('carreras.nombre, carreras.clave, COUNT(*) as total')
             ->where('alumnos.estatus', 'activo')
             ->groupBy('carreras.id', 'carreras.nombre', 'carreras.clave')
@@ -67,7 +72,7 @@ class DashboardController extends Controller
                 'por_estatus'         => $alumnosPorEstatus,
                 'activos_por_carrera' => $alumnosPorCarrera,
             ],
-            'carreras_activas' => Carrera::where('activa', true)->count(),
+            'carreras_activas' => $carreraForzada ? 1 : Carrera::where('activa', true)->count(),
         ]);
     }
 }

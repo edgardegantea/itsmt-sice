@@ -11,8 +11,7 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        // 6 roles TecNM según plan Scrum
-        $roles = ['admin', 'director_academico', 'jefe_carrera', 'docente', 'alumno', 'personal_administrativo'];
+        $roles = ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'docente', 'alumno', 'personal_administrativo'];
 
         foreach ($roles as $role) {
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
@@ -22,6 +21,12 @@ class RoleSeeder extends Seeder
             ['email' => 'admin@itsmt.edu.mx'],
             ['name' => 'Administrador ITSMT', 'password' => Hash::make('Admin123!')]
         );
-        $admin->assignRole('admin');
+        $admin->syncRoles(['admin']);
+
+        $superadmin = User::firstOrCreate(
+            ['email' => 'superadmin@itsmt.edu.mx'],
+            ['name' => 'Super Administrador', 'password' => Hash::make('SuperAdmin123!')]
+        );
+        $superadmin->syncRoles(['superadmin']);
     }
 }

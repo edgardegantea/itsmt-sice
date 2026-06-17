@@ -7,7 +7,7 @@ import { useToastStore } from '../../../store/toastStore'
 interface Periodo {
   id: string
   nombre: string
-  tipo: 'regular' | 'intensivo'
+  tipo: 'ordinario' | 'verano' | 'intersemestral'
   fecha_inicio: string
   fecha_fin: string
   activo: boolean
@@ -37,7 +37,7 @@ function PeriodoForm({
   onCancelar: () => void
   cargando: boolean
 }) {
-  const [form, setForm] = useState<Partial<Periodo>>(inicial ?? { tipo: 'regular', activo: false })
+  const [form, setForm] = useState<Partial<Periodo>>(inicial ?? { tipo: 'ordinario', activo: false })
   const set = (k: keyof Periodo, v: unknown) => setForm(f => ({ ...f, [k]: v }))
 
   return (
@@ -51,10 +51,11 @@ function PeriodoForm({
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Tipo *</label>
-          <select required value={form.tipo ?? 'regular'} onChange={e => set('tipo', e.target.value)}
+          <select required value={form.tipo ?? 'ordinario'} onChange={e => set('tipo', e.target.value)}
             className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30">
-            <option value="regular">Regular</option>
-            <option value="intensivo">Intensivo</option>
+            <option value="ordinario">Ordinario</option>
+            <option value="verano">Verano</option>
+            <option value="intersemestral">Intersemestral</option>
           </select>
         </div>
         <div>

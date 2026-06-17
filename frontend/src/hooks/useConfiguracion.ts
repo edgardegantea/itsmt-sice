@@ -19,8 +19,19 @@ const FALLBACK: ConfiguracionInstitucional = {
   logo_secundario: null,
   color_primario: '#1a3a5c',
   color_secundario: '#2d6a9f',
+  subdirector_academico: null,
+  responsable_servicios_escolares: null,
+  fuente_interfaz: 'Inter',
   url_logo_principal: null,
   url_logo_secundario: null,
+  url_login_imagen_fondo: null,
+  logo_base64: null,
+  fecha_inicio_actualizacion_datos: null,
+  fecha_fin_actualizacion_datos: null,
+  login_titulo: null,
+  login_subtitulo: null,
+  login_imagen_fondo: null,
+  login_opacidad_fondo: 0.70,
 }
 
 export function useConfiguracion() {

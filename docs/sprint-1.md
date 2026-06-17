@@ -35,13 +35,31 @@ creación del expediente académico y emisión de los 4 documentos oficiales en 
 
 **Total comprometido:** 61 SP
 
-## Correcciones aplicadas vs. documento
+## Correcciones aplicadas vs. documento (auditoría v15.0)
 
 | Campo | Antes | Ahora | Fuente |
 |-------|-------|-------|--------|
 | `alumnos.estatus` enum | `baja_parcial` | `baja_definitiva` | Plan v15.0 §BD |
 | `aspirantes.documentos` JSON | checklist hardcoded en PDF | leído del registro + checkboxes en formulario | S1-01 criterio + §BD |
 | S1-06 | diferida | implementada | endpoint comprometido en §API |
+| `tipo_ingreso_registro` | siempre `Licenciatura` (hardcoded) | derivado del `tipo_ingreso`: Traslado → `Traslado`, Equivalencia → `Equivalencia`, Revalidacion → `Revalidacion`, resto → `Licenciatura` | auditoría v15.0 + TecNM-AC-PO-001 |
+| Modal inscripción | sin selector de tipo ingreso | dropdown Nuevo ingreso / Reingreso / Traslado / Equivalencia / Revalidación | auditoría v15.0 |
+| `periodos.tipo` enum | `regular \| intensivo` (incorrecto) | `ordinario \| verano \| intersemestral` (TecNM) — migración 2026_06_16_100000 normaliza datos existentes | auditoría v15.0 §BD |
+| `libro_registro_nc.blade.php` | agrupa por `tipo_ingreso` | agrupa por `tipo_ingreso_registro` (Licenciatura/Traslado/Equivalencia/Revalidacion — catálogo oficial) | auditoría v15.0 S1-13 |
+| S1-07 checklist documentos | 8 items hardcoded en blade ignorando variable del controller | blade ahora usa los 13 items dinámicos pasados por `InscripcionPdfController::solicitudInscripcion()` — refleja estado real del expediente digital | auditoría v15.0 S1-07 |
+| S1-10 activación bandera | `cartaCompromisoDocs()` solo generaba el PDF | ahora también activa `pendiente_certificado_bachillerato = true` en el expediente del alumno (criterio explícito del docx: "activa la bandera en el expediente") | auditoría v15.0 S1-10 |
+| S1-13 libro permanente | `Alumno::with(...)` excluía soft-deleted (bajas definitivas) | cambiado a `Alumno::withTrashed()` — el libro es registro permanente e inmutable per docx | auditoría v15.0 S1-13 |
+| TramitesAlumnoPage UX | botón reinscripción sin deshabilitar ni advertir cuando `pendiente_certificado_bachillerato = true` | `puedeReinscribirse` ahora incluye `!pendienteCertificado`; se muestra banner ámbar previo explicando el bloqueo (TecNM-AC-PO-001-05) | auditoría v15.0 S1-10/UX |
+
+### Compliance gap corregido — TecNM-AC-PO-001-05
+
+**Bloqueo de reinscripción por certificado de bachillerato:**  
+El procedimiento TecNM-AC-PO-001-05 establece que si el alumno no ha entregado el certificado de bachillerato, el sistema debe **bloquear automáticamente** su reinscripción.
+
+- `ReinscripcionService::solicitar()` ahora verifica `$alumno->pendiente_certificado_bachillerato` antes de crear la solicitud.  
+- Si es `true`, lanza `DomainException` con mensaje: *"No puedes reinscribirte hasta entregar el certificado de bachillerato (TecNM-AC-PO-001-05). Acude a Control Escolar."*  
+- El admin puede desbloquear actualizando el campo desde `PATCH /api/alumnos/{id}` (checkbox en la UI de Alumnos).
+- `DashboardAlumnoPage` ya mostraba la advertencia visual; ahora el backend también bloquea el trámite.
 
 ## Historias diferidas (Ciclo 2 / Post-Sprint 14)
 
