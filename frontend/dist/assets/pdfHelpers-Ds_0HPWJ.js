@@ -1,2 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/index-DDfnQLDo.js","assets/react-DoK4WR2u.js","assets/QueryClientProvider-DqUGAOul.js","assets/apiClient-CR9UkZ3E.js","assets/index-PEbtxCjN.css"])))=>i.map(i=>d[i]);
-import{m as e}from"./index-DDfnQLDo.js";function t(t,n){e(async()=>{let{usePdfPreviewStore:e}=await import(`./index-DDfnQLDo.js`).then(e=>e.i);return{usePdfPreviewStore:e}},__vite__mapDeps([0,1,2,3,4])).then(({usePdfPreviewStore:e})=>{e.getState().open(t,n)})}export{t};
