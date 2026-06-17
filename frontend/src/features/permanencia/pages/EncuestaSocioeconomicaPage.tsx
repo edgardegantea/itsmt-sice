@@ -332,6 +332,7 @@ export default function EncuestaSocioeconomicaPage() {
     if (data?.encuesta) {
       setForm({
         ...data.encuesta,
+        semestre:             data.encuesta.semestre ?? alumno?.inscripcion?.semestre_actual ?? 1,
         dp_fecha_nacimiento:  toDate(data.encuesta.dp_fecha_nacimiento),
         vehiculos:            data.encuesta.vehiculos       ?? [],
         gastos_mensuales:     data.encuesta.gastos_mensuales ?? {},

@@ -1,0 +1,1 @@
+import{l as e}from"./index-BTxmymZW.js";import{t}from"./admision-BOT9PgHe.js";function n(){return e({queryKey:[`carreras`],queryFn:t.getCarreras,staleTime:1e3*60*10})}export{n as t};

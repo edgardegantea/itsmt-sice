@@ -38,6 +38,12 @@ class EncuestaSocioeconomicaController extends Controller
     {
         $alumno = Alumno::where('user_id', $request->user()->id)->firstOrFail();
 
+        foreach (['vehiculos', 'gastos_mensuales'] as $field) {
+            if ($request->has($field) && is_string($request->input($field))) {
+                $request->merge([$field => json_decode($request->input($field), true) ?? []]);
+            }
+        }
+
         $data = $request->validate($this->rules());
 
         $periodo = Periodo::findOrFail($data['periodo_id']);
@@ -106,7 +112,7 @@ class EncuestaSocioeconomicaController extends Controller
     {
         return [
             'periodo_id'                 => ['required', 'uuid', 'exists:periodos,id'],
-            'semestre'                   => ['required', 'integer', 'min:1', 'max:12'],
+            'semestre'                   => ['nullable', 'integer', 'min:1', 'max:12'],
             // Fase 1 — Datos personales
             'foto_infantil'              => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:4096'],
             'dp_curp'                    => ['nullable', 'string', 'max:18'],
