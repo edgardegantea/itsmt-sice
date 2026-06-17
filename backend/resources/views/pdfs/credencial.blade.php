@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #fff; }
+    body { font-family: Arial, sans-serif; background: #fff; text-transform: uppercase; }
 
     /* Tarjeta credencial: 85.6 × 53.98 mm (tamaño CR-80) escalada a 90% del ancho */
     .credencial {

@@ -17,6 +17,7 @@ body {
   font-family: Arial, sans-serif;
   font-size: 9.5pt;
   color: #111;
+  text-transform: uppercase;
   /* margen inferior amplio para que el bloque fijo no tape el contenido */
   padding: 0 0 80px;
   background: #fff;

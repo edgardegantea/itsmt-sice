@@ -12,7 +12,7 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 8.5pt; color: #111; padding: 8mm 12mm; }
+    body { font-family: Arial, sans-serif; font-size: 8.5pt; color: #111; padding: 8mm 12mm; text-transform: uppercase; }
 
     .enc { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
     .enc td { vertical-align: middle; }
@@ -75,7 +75,7 @@
   <table class="alumno-info">
     <tr>
       <td class="lbl">Nombre</td>
-      <td>{{ $asp ? strtoupper(trim("{$asp->apellido_paterno} {$asp->apellido_materno} {$asp->nombres}")) : strtoupper($alumno->user?->name ?? '—') }}</td>
+      <td>{{ $asp ? mb_strtoupper(trim("{$asp->apellido_paterno} {$asp->apellido_materno} {$asp->nombres}"), 'UTF-8') : mb_strtoupper($alumno->user?->name ?? '—', 'UTF-8') }}</td>
       <td class="lbl">N° Control</td>
       <td><strong>{{ $alumno->numero_control }}</strong></td>
     </tr>
@@ -120,7 +120,7 @@
           <td>
             @forelse($c->horarios as $h)
               <span class="horario-chip">
-                {{ strtoupper(substr($h->dia ?? '', 0, 3)) }} {{ $h->hora_inicio ? \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_inicio)->format('H:i') : '' }}–{{ $h->hora_fin ? \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_fin)->format('H:i') : '' }}
+                {{ mb_strtoupper(mb_substr($h->dia ?? '', 0, 3, 'UTF-8'), 'UTF-8') }} {{ $h->hora_inicio ? \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_inicio)->format('H:i') : '' }}–{{ $h->hora_fin ? \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_fin)->format('H:i') : '' }}
               </span>
             @empty
               <span style="color:#aaa">—</span>

@@ -13,7 +13,7 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 7.5pt; color: #111; background: #fff; }
+    body { font-family: Arial, sans-serif; font-size: 7.5pt; color: #111; background: #fff; text-transform: uppercase; }
 
     .pag { padding: 0; }
 

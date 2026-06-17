@@ -12,6 +12,7 @@
     color: #111;
     line-height: 1.3;
     padding: 0;
+    text-transform: uppercase;
   }
 
   /* ── Encabezado ── */

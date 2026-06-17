@@ -20,6 +20,7 @@
       font-size: 9pt;
       color: #1a1a1a;
       background: #fff;
+      text-transform: uppercase;
     }
 
     .pagina { padding: 0; page-break-after: always; }

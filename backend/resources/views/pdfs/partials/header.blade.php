@@ -8,7 +8,7 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 10pt; color: #1a1a1a; }
+    body { font-family: Arial, sans-serif; font-size: 10pt; color: #1a1a1a; text-transform: uppercase; }
     .header { border-bottom: 2px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 16px; }
     .header table { width: 100%; border-collapse: collapse; }
     .header-logo { width: 64px; text-align: center; vertical-align: middle; padding-right: 10px; }

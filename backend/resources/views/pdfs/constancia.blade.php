@@ -30,7 +30,7 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 10mm 15mm; }
+    body { font-family: Arial, sans-serif; font-size: 10pt; color: #1a1a1a; padding: 10mm 15mm; text-transform: uppercase; }
 
     .enc { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
     .enc td { vertical-align: middle; }
@@ -94,7 +94,13 @@
   <div class="cuerpo">
     <p>
       La Dirección del <strong>{{ $cfg->nombre_institucion }}</strong>, hace constar que el(la) alumno(a)
-      <strong>{{ $alumno->nombre_completo ?? ($alumno->inscripcion?->aspirante?->nombre_completo ?? strtoupper($alumno->user?->name ?? '')) }}</strong>,
+      @php
+        $asp = $alumno->inscripcion?->aspirante;
+        $nombreConstancia = $asp
+          ? mb_strtoupper(trim("{$asp->apellido_paterno} {$asp->apellido_materno} {$asp->nombres}"), 'UTF-8')
+          : mb_strtoupper($alumno->user?->name ?? '', 'UTF-8');
+      @endphp
+      <strong>{{ $nombreConstancia }}</strong>,
       con número de control <strong>{{ $alumno->numero_control }}</strong>,
       {!! $cuerpo !!}
     </p>
