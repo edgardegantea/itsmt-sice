@@ -351,7 +351,8 @@ export default function EncuestaSocioeconomicaPage() {
         dp_escuela_bachillerato:  aspirante?.escuela_bachillerato  ?? '',
       }))
     }
-    isFirstLoad.current = false
+    // Esperar al siguiente ciclo para que el auto-save no dispare con los datos iniciales
+    setTimeout(() => { isFirstLoad.current = false }, 100)
   }, [data])
 
   const guardar = useMutation({
@@ -379,13 +380,13 @@ export default function EncuestaSocioeconomicaPage() {
 
   // Auto-guardado con debounce 1.5s
   useEffect(() => {
-    if (isFirstLoad.current || enviada || bloqueado) return
+    if (isFirstLoad.current || enviada || bloqueado || !periodo?.id) return
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     autoSaveTimer.current = setTimeout(() => {
-      guardar.mutate(form)
+      guardar.mutate({ ...form, periodo_id: periodo.id })
     }, 1500)
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
-  }, [form])
+  }, [form, periodo?.id])
 
   const gastos     = (form.gastos_mensuales ?? {}) as GastosMensuales
   const totalGastos = Object.values(gastos).reduce((s, v) => s + (Number(v) || 0), 0)
