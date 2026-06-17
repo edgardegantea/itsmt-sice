@@ -2,7 +2,9 @@
 
 namespace App\Domains\Institucional\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class DirectorioPersonal extends Model
@@ -12,9 +14,12 @@ class DirectorioPersonal extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'user_id',
         'nombre',
         'cargo',
         'area',
+        'area_id',
+        'puesto_id',
         'email',
         'telefono',
         'extension',
@@ -28,6 +33,21 @@ class DirectorioPersonal extends Model
         'firma_documentos' => 'boolean',
         'orden'            => 'integer',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function directorio_area(): BelongsTo
+    {
+        return $this->belongsTo(DirectorioArea::class, 'area_id');
+    }
+
+    public function puesto(): BelongsTo
+    {
+        return $this->belongsTo(DirectorioPuesto::class, 'puesto_id');
+    }
 
     protected static function boot(): void
     {

@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PeriodoAdminController;
 use App\Http\Controllers\Admin\PermisosController;
 use App\Http\Controllers\Admin\DirectorioController;
+use App\Http\Controllers\Admin\DirectorioAreaController;
+use App\Http\Controllers\Admin\DirectorioPuestoController;
 use App\Http\Controllers\Academico\AlumnoController;
 use App\Http\Controllers\Academico\CarreraController;
 use App\Http\Controllers\Academico\PeriodoController;
@@ -202,10 +204,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/admin/carreras/{carrera}/toggle-activa', [CarreraAdminController::class, 'toggleActiva']);
 
     // Admin — Directorio institucional
-    Route::get('/admin/directorio',                  [DirectorioController::class, 'index']);
-    Route::post('/admin/directorio',                 [DirectorioController::class, 'store']);
-    Route::patch('/admin/directorio/{directorio}',   [DirectorioController::class, 'update']);
-    Route::delete('/admin/directorio/{directorio}',  [DirectorioController::class, 'destroy']);
+    Route::get('/admin/directorio',                         [DirectorioController::class, 'index']);
+    Route::get('/admin/directorio/usuarios-disponibles',    [DirectorioController::class, 'usuariosDisponibles']);
+    Route::post('/admin/directorio',                        [DirectorioController::class, 'store']);
+    Route::patch('/admin/directorio/{directorio}',          [DirectorioController::class, 'update']);
+    Route::delete('/admin/directorio/{directorio}',         [DirectorioController::class, 'destroy']);
+    // Admin — Directorio: Áreas
+    Route::get('/admin/directorio-areas',                   [DirectorioAreaController::class, 'index']);
+    Route::post('/admin/directorio-areas',                  [DirectorioAreaController::class, 'store']);
+    Route::patch('/admin/directorio-areas/{area}',          [DirectorioAreaController::class, 'update']);
+    Route::delete('/admin/directorio-areas/{area}',         [DirectorioAreaController::class, 'destroy']);
+    // Admin — Directorio: Puestos
+    Route::get('/admin/directorio-puestos',                 [DirectorioPuestoController::class, 'index']);
+    Route::post('/admin/directorio-puestos',                [DirectorioPuestoController::class, 'store']);
+    Route::patch('/admin/directorio-puestos/{puesto}',      [DirectorioPuestoController::class, 'update']);
+    Route::delete('/admin/directorio-puestos/{puesto}',     [DirectorioPuestoController::class, 'destroy']);
 
     // Admin — Periodos CRUD
     Route::get('/admin/periodos',                    [PeriodoAdminController::class, 'index']);
