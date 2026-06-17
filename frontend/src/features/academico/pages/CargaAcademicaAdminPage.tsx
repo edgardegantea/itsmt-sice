@@ -99,7 +99,12 @@ export default function CargaAcademicaAdminPage() {
             <tbody className="divide-y divide-slate-100">
               {alumnos.map((a: any) => (
                 <tr key={a.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
-                  <td className="px-4 py-3 font-medium text-slate-800">{a.user?.name ?? '—'}</td>
+                  <td className="px-4 py-3 font-medium text-slate-800">
+                    {a.user?.name
+                      ?? (a.inscripcion?.aspirante
+                          ? `${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}, ${a.inscripcion.aspirante.nombres}`.trim()
+                          : '—')}
+                  </td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{a.numero_control}</td>
                   <td className="px-4 py-3 text-slate-600 text-xs">{a.carrera?.clave ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{a.semestre_actual ?? '—'}</td>

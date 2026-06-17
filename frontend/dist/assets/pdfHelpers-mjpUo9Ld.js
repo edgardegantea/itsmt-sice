@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/index-Uxcq2zXW.js","assets/react-DoK4WR2u.js","assets/QueryClientProvider-DqUGAOul.js","assets/apiClient-q7smXMO0.js","assets/index-DQSgMjfx.css"])))=>i.map(i=>d[i]);
+import{m as e}from"./index-Uxcq2zXW.js";function t(t,n){e(async()=>{let{usePdfPreviewStore:e}=await import(`./index-Uxcq2zXW.js`).then(e=>e.i);return{usePdfPreviewStore:e}},__vite__mapDeps([0,1,2,3,4])).then(({usePdfPreviewStore:e})=>{e.getState().open(t,n)})}export{t};
