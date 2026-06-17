@@ -274,4 +274,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Encuesta Socioeconómica — admin
     Route::get('/admin/encuestas-socioeconomicas',                        [EncuestaSocioeconomicaController::class, 'index']);
     Route::get('/admin/encuestas-socioeconomicas/{encuesta}',             [EncuestaSocioeconomicaController::class, 'show']);
+    Route::patch('/admin/encuestas-socioeconomicas/{encuesta}',           [EncuestaSocioeconomicaController::class, 'adminUpdate']);
 });

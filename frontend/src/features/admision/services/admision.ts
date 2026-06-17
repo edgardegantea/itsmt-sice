@@ -109,6 +109,7 @@ export interface Alumno {
   observaciones_estatus: string | null
   inscripcion?: {
     id: string
+    aspirante_id: string
     tipo_ingreso?: string
     fecha_inscripcion?: string
     aspirante: {

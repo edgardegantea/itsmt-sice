@@ -108,6 +108,25 @@ class EncuestaSocioeconomicaController extends Controller
         );
     }
 
+    // PATCH /api/admin/encuestas-socioeconomicas/{encuesta}  (solo superadmin)
+    public function adminUpdate(Request $request, EncuestaSocioeconomica $encuesta): JsonResponse
+    {
+        abort_unless($request->user()?->hasRole('superadmin'), 403, 'Solo el superadministrador puede editar encuestas enviadas.');
+
+        foreach (['vehiculos', 'gastos_mensuales'] as $field) {
+            if ($request->has($field) && is_string($request->input($field))) {
+                $request->merge([$field => json_decode($request->input($field), true) ?? []]);
+            }
+        }
+
+        $data = $request->validate($this->rules());
+        unset($data['periodo_id']); // periodo no cambia
+
+        $encuesta->update($data);
+
+        return ApiResponse::success($encuesta->fresh(), 'Encuesta actualizada.');
+    }
+
     private function rules(): array
     {
         return [

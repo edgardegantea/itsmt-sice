@@ -54,10 +54,25 @@ function Spinner({ className = 'w-3.5 h-3.5' }: { className?: string }) {
 
 // ── Modal edición ─────────────────────────────────────────────────────────────
 
+const INPUT_CLS = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+const LABEL_CLS = 'block text-xs font-medium text-slate-600 mb-1'
+
+interface AspiranteForm {
+  nombres: string
+  apellido_paterno: string
+  apellido_materno: string
+  curp: string
+  email: string
+  telefono: string
+}
+
 function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void }) {
   const qc = useQueryClient()
   const { data: carreras = [] } = useCarreras()
   const { success, error: toastError } = useToastStore()
+
+  const asp = alumno.inscripcion?.aspirante
+
   const [form, setForm] = useState<ActualizarAlumnoPayload>({
     estatus:                              alumno.estatus,
     semestre_actual:                      alumno.semestre_actual,
@@ -67,51 +82,126 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
     observaciones_estatus:                alumno.observaciones_estatus ?? '',
   })
 
+  const [aspForm, setAspForm] = useState<AspiranteForm>({
+    nombres:          asp?.nombres          ?? '',
+    apellido_paterno: asp?.apellido_paterno ?? '',
+    apellido_materno: asp?.apellido_materno ?? '',
+    curp:             asp?.curp             ?? '',
+    email:            asp?.email            ?? '',
+    telefono:         asp?.telefono         ?? '',
+  })
+
+  const aspiranteId = alumno.inscripcion?.aspirante_id
+
   const { mutate, isPending } = useMutation({
-    mutationFn: (p: ActualizarAlumnoPayload) => admisionApi.actualizarAlumno(alumno.id, p),
+    mutationFn: async (p: ActualizarAlumnoPayload) => {
+      const promises: Promise<unknown>[] = [admisionApi.actualizarAlumno(alumno.id, p)]
+      if (aspiranteId) {
+        promises.push(admisionApi.actualizarAspirante(aspiranteId, aspForm))
+      }
+      await Promise.all(promises)
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['alumnos'] }); success('Alumno actualizado.'); onClose() },
     onError:   () => toastError('Error al actualizar. Intenta de nuevo.'),
   })
 
   return (
     <Modal title={`Editar alumno — ${alumno.numero_control}`} onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); mutate(form) }} className="space-y-4">
-        {alumno.inscripcion?.aspirante && (
-          <div className="bg-slate-50 rounded-lg px-4 py-3 text-sm text-slate-600 space-y-0.5">
-            <p className="font-medium text-slate-800">{apellidosNombre(alumno)}</p>
-            <p className="text-xs">{alumno.inscripcion.aspirante.email} · CURP: {alumno.inscripcion.aspirante.curp}</p>
-          </div>
-        )}
+      <form onSubmit={(e) => { e.preventDefault(); mutate(form) }} className="space-y-5">
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Carrera</label>
-            <select
-              value={form.carrera_id ?? ''}
-              onChange={e => setForm(f => ({ ...f, carrera_id: e.target.value }))}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
-            >
-              {carreras.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.clave})</option>)}
-            </select>
+        {/* Datos personales */}
+        <div>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Datos personales</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className={LABEL_CLS}>Nombres</label>
+              <input
+                value={aspForm.nombres}
+                onChange={e => setAspForm(f => ({ ...f, nombres: e.target.value }))}
+                className={INPUT_CLS}
+                placeholder="Nombres"
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Apellido paterno</label>
+              <input
+                value={aspForm.apellido_paterno}
+                onChange={e => setAspForm(f => ({ ...f, apellido_paterno: e.target.value }))}
+                className={INPUT_CLS}
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Apellido materno</label>
+              <input
+                value={aspForm.apellido_materno}
+                onChange={e => setAspForm(f => ({ ...f, apellido_materno: e.target.value }))}
+                className={INPUT_CLS}
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>CURP</label>
+              <input
+                value={aspForm.curp}
+                onChange={e => setAspForm(f => ({ ...f, curp: e.target.value.toUpperCase() }))}
+                className={`${INPUT_CLS} font-mono uppercase`}
+                maxLength={18}
+                placeholder="18 caracteres"
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Teléfono</label>
+              <input
+                value={aspForm.telefono}
+                onChange={e => setAspForm(f => ({ ...f, telefono: e.target.value }))}
+                className={INPUT_CLS}
+                placeholder="10 dígitos"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={LABEL_CLS}>Correo electrónico</label>
+              <input
+                type="email"
+                value={aspForm.email}
+                onChange={e => setAspForm(f => ({ ...f, email: e.target.value }))}
+                className={INPUT_CLS}
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Semestre actual</label>
-            <input
-              type="number" min={1} max={12}
-              value={form.semestre_actual}
-              onChange={e => setForm(f => ({ ...f, semestre_actual: Number(e.target.value) }))}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Estatus</label>
-            <select
-              value={form.estatus}
-              onChange={e => setForm(f => ({ ...f, estatus: e.target.value as EstatusAlumno }))}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
-            >
-              {Object.entries(ESTATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
+        </div>
+
+        {/* Datos académicos */}
+        <div>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Datos académicos</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className={LABEL_CLS}>Carrera</label>
+              <select
+                value={form.carrera_id ?? ''}
+                onChange={e => setForm(f => ({ ...f, carrera_id: e.target.value }))}
+                className={`${INPUT_CLS} bg-white`}
+              >
+                {carreras.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.clave})</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Semestre actual</label>
+              <input
+                type="number" min={1} max={12}
+                value={form.semestre_actual}
+                onChange={e => setForm(f => ({ ...f, semestre_actual: Number(e.target.value) }))}
+                className={INPUT_CLS}
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Estatus</label>
+              <select
+                value={form.estatus}
+                onChange={e => setForm(f => ({ ...f, estatus: e.target.value as EstatusAlumno }))}
+                className={`${INPUT_CLS} bg-white`}
+              >
+                {Object.entries(ESTATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -126,11 +216,11 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Autorización consulta de expediente (TecNM-AC-PO-001-04)</label>
+          <label className={LABEL_CLS}>Autorización consulta de expediente (TecNM-AC-PO-001-04)</label>
           <select
             value={form.autorizacion_consulta_expediente ?? ''}
             onChange={e => setForm(f => ({ ...f, autorizacion_consulta_expediente: e.target.value }))}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
+            className={`${INPUT_CLS} bg-white`}
           >
             <option value="padre">Padre</option>
             <option value="madre">Madre</option>
@@ -147,12 +237,12 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Observaciones</label>
+          <label className={LABEL_CLS}>Observaciones</label>
           <textarea
             rows={3}
             value={form.observaciones_estatus ?? ''}
             onChange={e => setForm(f => ({ ...f, observaciones_estatus: e.target.value }))}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 resize-none"
+            className={`${INPUT_CLS} resize-none`}
             placeholder="Motivo del cambio de estatus, notas…"
           />
         </div>
