@@ -75,7 +75,7 @@
   <table class="alumno-info">
     <tr>
       <td class="lbl">Nombre</td>
-      <td>{{ $asp ? strtoupper($asp->nombre_completo) : strtoupper($alumno->user?->name ?? '—') }}</td>
+      <td>{{ $asp ? strtoupper(trim("{$asp->apellido_paterno} {$asp->apellido_materno} {$asp->nombres}")) : strtoupper($alumno->user?->name ?? '—') }}</td>
       <td class="lbl">N° Control</td>
       <td><strong>{{ $alumno->numero_control }}</strong></td>
     </tr>
