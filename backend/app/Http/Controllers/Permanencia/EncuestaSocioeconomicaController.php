@@ -86,7 +86,7 @@ class EncuestaSocioeconomicaController extends Controller
     {
         $carreraForzada = $request->user()->carreraRestringida();
 
-        $query = EncuestaSocioeconomica::with(['alumno.inscripcion.carrera', 'periodo'])
+        $query = EncuestaSocioeconomica::with(['alumno.user', 'alumno.inscripcion.carrera', 'periodo'])
             ->when($carreraForzada, fn($q, $v) =>
                 $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $v))
             )
@@ -104,7 +104,7 @@ class EncuestaSocioeconomicaController extends Controller
     public function show(EncuestaSocioeconomica $encuesta): JsonResponse
     {
         return ApiResponse::success(
-            $encuesta->load(['alumno.inscripcion.carrera', 'periodo'])
+            $encuesta->load(['alumno.user', 'alumno.inscripcion.carrera', 'periodo'])
         );
     }
 
