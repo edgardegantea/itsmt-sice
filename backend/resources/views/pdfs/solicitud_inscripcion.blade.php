@@ -17,24 +17,21 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 7.5pt; color: #111; background: #fff; text-transform: uppercase; }
 
-    .pag { padding: 0; }
-
     /* ── Encabezado institucional ── */
-    .enc { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+    .enc { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
     .enc td { vertical-align: middle; }
     .enc .logo-td { width: 60px; padding-right: 10px; }
     .enc .logo-td img { height: 50px; max-width: 56px; object-fit: contain; }
     .enc .inst { font-size: 9.5pt; font-weight: bold; color: {{ $AZUL }}; line-height: 1.2; }
     .enc .meta { text-align: right; font-size: 7pt; color: #888; white-space: nowrap; vertical-align: top; }
 
-    .sep { height: 3px; background: {{ $AZUL }}; margin: 5px 0 3px; }
-    .ref { font-size: 6.5pt; color: #aaa; text-align: right; margin-bottom: 8px; }
+    .ref { font-size: 6.5pt; color: #aaa; text-align: right; margin-bottom: 8px; border-top: 1px solid {{ $LINEA }}; padding-top: 3px; }
 
     /* ── Bloque encabezado del formato ── */
-    .fmt-header { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 8px; }
-    .fmt-header td { padding: 2px 0; vertical-align: bottom; }
-    .fmt-header .lbl { font-weight: bold; color: {{ $AZUL }}; white-space: nowrap; padding-right: 5px; }
-    .fmt-header .val { font-weight: bold; color: #222; padding: 0 4px 1px; }
+    .fmt-row { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 3px; }
+    .fmt-row td { padding: 2px 4px; vertical-align: middle; }
+    .lbl { font-weight: bold; color: {{ $AZUL }}; white-space: nowrap; }
+    .val { font-weight: bold; color: #222; }
 
     /* ── Título ── */
     .titulo {
@@ -44,10 +41,10 @@
       color: {{ $AZUL }};
       letter-spacing: 1px;
       text-transform: uppercase;
-      margin-bottom: 8px;
+      margin: 6px 0 8px;
     }
 
-    /* ── Sección: etiqueta ── */
+    /* ── Sección ── */
     .sec-title {
       font-size: 7pt;
       font-weight: bold;
@@ -60,12 +57,11 @@
       margin-top: 7px;
     }
 
-    /* ── Campos: etiqueta + valor en negrita (sin subrayado) ── */
-    .campos { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 2px; }
-    .campos td { padding: 2px 3px; vertical-align: bottom; }
-    .campos .lbl { font-weight: bold; color: {{ $AZUL }}; white-space: nowrap; }
-    .campos .val { font-weight: bold; color: #222; padding: 0 4px 1px; }
-    .campos .hint { font-size: 7pt; color: #999; font-weight: normal; }
+    /* ── Filas de datos: etiqueta + valor juntos en cada celda ── */
+    .fila { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 3px; }
+    .fila td { padding: 2px 4px; vertical-align: middle; }
+    .fila .campo { white-space: nowrap; }
+    .hint { font-size: 6.5pt; color: #999; font-weight: normal; }
 
     /* ── Tabla de documentos ── */
     .docs-wrap {
@@ -74,12 +70,7 @@
       margin-top: 7px;
       margin-bottom: 5px;
     }
-    .docs-title {
-      font-size: 7pt;
-      font-weight: bold;
-      color: {{ $AZUL }};
-      margin-bottom: 3px;
-    }
+    .docs-title { font-size: 7pt; font-weight: bold; color: {{ $AZUL }}; margin-bottom: 3px; }
     .docs-sub { font-size: 6.5pt; color: #555; margin-bottom: 3px; }
 
     .tbl-docs { width: 100%; border-collapse: collapse; font-size: 7pt; }
@@ -113,13 +104,12 @@
       border-left: 3px solid {{ $LINEA }};
     }
 
-    /* ── Firmas ── */
-    .firmas { width: 100%; border-collapse: collapse; margin-top: 14px; }
+    /* ── Firmas (sin línea) ── */
+    .firmas { width: 100%; border-collapse: collapse; margin-top: 20px; }
     .firmas td { text-align: center; vertical-align: bottom; padding: 0 20px; }
-    .firma-espacio { height: 28px; }
-    .firma-linea { border-top: 1.2px solid #333; margin-bottom: 3px; }
-    .firma-nombre { font-size: 7pt; color: #333; font-weight: bold; }
-    .firma-cargo  { font-size: 6.5pt; color: #777; margin-top: 1px; }
+    .firma-espacio { height: 32px; }
+    .firma-nombre { font-size: 7.5pt; color: #111; font-weight: bold; border-top: 1px solid #333; padding-top: 4px; }
+    .firma-cargo  { font-size: 6.5pt; color: #777; margin-top: 2px; }
 
     /* ── Pie ── */
     .pie {
@@ -132,7 +122,6 @@
   </style>
 </head>
 <body>
-<div class="pag">
 
   {{-- ── Encabezado institucional ── --}}
   <table class="enc">
@@ -149,24 +138,19 @@
       </td>
     </tr>
   </table>
-  <div class="sep"></div>
   <div class="ref">TecNM-AC-PO-001-02 · Rev. O · Solicitud de Inscripción</div>
 
-  {{-- ── Encabezado del formato (Instituto / Periodo / Fecha) ── --}}
-  <table class="fmt-header">
+  {{-- ── Encabezado del formato ── --}}
+  <table class="fmt-row">
     <tr>
-      <td class="lbl" style="width:32%;">INSTITUTO TECNOLÓGICO:</td>
-      <td class="val" style="width:38%;">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</td>
-      <td style="width:3%;"></td>
-      <td class="lbl" style="width:10%; white-space:nowrap;">PERIODO:</td>
-      <td class="val" style="width:17%;">{{ $per->nombre }}</td>
+      <td style="width:32%;"><span class="lbl">INSTITUTO TECNOLÓGICO:</span></td>
+      <td style="width:38%;"><span class="val">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</span></td>
+      <td style="width:12%;"><span class="lbl">PERIODO:</span></td>
+      <td><span class="val">{{ $per->nombre }}</span></td>
     </tr>
-    <tr><td colspan="5" style="height:4px;"></td></tr>
     <tr>
-      <td class="lbl">FECHA:</td>
-      <td class="val" colspan="4">
-        {{ now()->format('d') }} de {{ now()->locale('es')->isoFormat('MMMM') }} de {{ now()->format('Y') }}
-      </td>
+      <td><span class="lbl">FECHA:</span></td>
+      <td colspan="3"><span class="val">{{ now()->format('d') }} de {{ now()->locale('es')->isoFormat('MMMM') }} de {{ now()->format('Y') }}</span></td>
     </tr>
   </table>
 
@@ -174,82 +158,95 @@
   <div class="titulo">Solicitud de Inscripción</div>
 
   {{-- ── Nombre ── --}}
-  <table class="campos">
+  <table class="fila">
     <tr>
-      <td class="lbl" style="width:14%;">NOMBRE:</td>
-      <td class="val">
-        {{ mb_strtoupper($asp->apellido_paterno, 'UTF-8') }}
-        {{ mb_strtoupper($asp->apellido_materno ?? '', 'UTF-8') }},
-        {{ mb_strtoupper($asp->nombres, 'UTF-8') }}
+      <td class="campo">
+        <span class="lbl">NOMBRE:</span>
+        <span class="val">
+          {{ mb_strtoupper($asp->apellido_paterno, 'UTF-8') }}
+          {{ mb_strtoupper($asp->apellido_materno ?? '', 'UTF-8') }},
+          {{ mb_strtoupper($asp->nombres, 'UTF-8') }}
+        </span>
+        <span class="hint">&nbsp;(Apellido paterno, apellido materno, nombre(s))</span>
       </td>
-      <td class="hint" style="padding-left:8px; white-space:nowrap;">(Apellido paterno, apellido materno, nombre(s))</td>
     </tr>
   </table>
 
   {{-- ── Nacimiento / Estado civil ── --}}
-  <table class="campos" style="margin-top:4px;">
+  <table class="fila">
     <tr>
-      <td class="lbl" style="width:28%;">FECHA DE NACIMIENTO:</td>
-      <td class="val" style="width:22%;">
-        {{ \Carbon\Carbon::parse($asp->fecha_nacimiento)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
+      <td style="width:50%;" class="campo">
+        <span class="lbl">FECHA DE NACIMIENTO:</span>
+        <span class="val">{{ \Carbon\Carbon::parse($asp->fecha_nacimiento)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}</span>
       </td>
-      <td style="width:4%;"></td>
-      <td class="lbl" style="width:18%;">ESTADO CIVIL:</td>
-      <td class="val">{{ ucfirst(str_replace('_', ' ', $asp->estado_civil ?? '—')) }}</td>
+      <td class="campo">
+        <span class="lbl">ESTADO CIVIL:</span>
+        <span class="val">{{ ucfirst(str_replace('_', ' ', $asp->estado_civil ?? '—')) }}</span>
+      </td>
     </tr>
   </table>
 
   {{-- ── Dirección ── --}}
   <div class="sec-title">Dirección</div>
-  <table class="campos">
+  <table class="fila">
     <tr>
-      <td class="lbl" style="width:10%;">CALLE:</td>
-      <td class="val" style="width:40%;">{{ mb_strtoupper($asp->calle ?? '', 'UTF-8') }}</td>
-      <td style="width:4%;"></td>
-      <td class="lbl" style="width:12%;">COLONIA:</td>
-      <td class="val">{{ mb_strtoupper($asp->colonia ?? '', 'UTF-8') }}</td>
+      <td style="width:50%;" class="campo">
+        <span class="lbl">CALLE:</span>
+        <span class="val">{{ mb_strtoupper($asp->calle ?? '', 'UTF-8') }}</span>
+      </td>
+      <td class="campo">
+        <span class="lbl">COLONIA:</span>
+        <span class="val">{{ mb_strtoupper($asp->colonia ?? '', 'UTF-8') }}</span>
+      </td>
     </tr>
-  </table>
-  <table class="campos" style="margin-top:4px;">
     <tr>
-      <td class="lbl" style="width:10%;">CIUDAD:</td>
-      <td class="val" style="width:36%;">{{ mb_strtoupper($asp->ciudad ?? '', 'UTF-8') }}</td>
-      <td style="width:4%;"></td>
-      <td class="lbl" style="width:10%;">ESTADO:</td>
-      <td class="val" style="width:20%;">{{ mb_strtoupper($asp->estado_domicilio ?? '', 'UTF-8') }}</td>
-      <td style="width:3%;"></td>
-      <td class="lbl" style="width:12%; white-space:nowrap;">C.P.:</td>
-      <td class="val" style="width:5%;">{{ $asp->codigo_postal ?? '' }}</td>
+      <td class="campo">
+        <span class="lbl">CIUDAD:</span>
+        <span class="val">{{ mb_strtoupper($asp->ciudad ?? '', 'UTF-8') }}</span>
+      </td>
+      <td class="campo">
+        <span class="lbl">ESTADO:</span>
+        <span class="val">{{ mb_strtoupper($asp->estado_domicilio ?? '', 'UTF-8') }}</span>
+        &nbsp;&nbsp;
+        <span class="lbl">C.P.:</span>
+        <span class="val">{{ $asp->codigo_postal ?? '' }}</span>
+      </td>
     </tr>
-  </table>
-  <table class="campos" style="margin-top:4px;">
     <tr>
-      <td class="lbl" style="width:14%;">TELÉFONO:</td>
-      <td class="val" style="width:30%;">{{ $asp->telefono ?? '—' }}</td>
-      <td style="width:4%;"></td>
-      <td class="lbl" style="width:10%;">E-MAIL:</td>
-      <td class="val">{{ $asp->email }}</td>
+      <td class="campo">
+        <span class="lbl">TELÉFONO:</span>
+        <span class="val">{{ $asp->telefono ?? '—' }}</span>
+      </td>
+      <td class="campo">
+        <span class="lbl">E-MAIL:</span>
+        <span class="val">{{ $asp->email }}</span>
+      </td>
     </tr>
   </table>
 
   {{-- ── Carrera ── --}}
   <div class="sec-title">Carrera</div>
-  <table class="campos">
+  <table class="fila">
     <tr>
-      <td class="lbl" style="width:28%;">CARRERA A CURSAR:</td>
-      <td class="val">{{ mb_strtoupper($carr->nombre, 'UTF-8') }}</td>
+      <td class="campo">
+        <span class="lbl">CARRERA A CURSAR:</span>
+        <span class="val">{{ mb_strtoupper($carr->nombre, 'UTF-8') }}</span>
+      </td>
     </tr>
   </table>
 
   {{-- ── Escuela de procedencia ── --}}
   <div class="sec-title">Escuela de Procedencia</div>
-  <table class="campos">
+  <table class="fila">
     <tr>
-      <td class="lbl" style="width:30%;">NOMBRE DE LA ESCUELA:</td>
-      <td class="val" style="width:42%;">{{ mb_strtoupper($asp->escuela_bachillerato, 'UTF-8') }}</td>
-      <td style="width:4%;"></td>
-      <td class="lbl" style="width:12%;">PROMEDIO:</td>
-      <td class="val" style="width:12%; text-align:center;">{{ number_format($asp->promedio_bachillerato, 1) }}</td>
+      <td style="width:75%;" class="campo">
+        <span class="lbl">NOMBRE DE LA ESCUELA:</span>
+        <span class="val">{{ mb_strtoupper($asp->escuela_bachillerato, 'UTF-8') }}</span>
+      </td>
+      <td class="campo">
+        <span class="lbl">PROMEDIO:</span>
+        <span class="val">{{ number_format($asp->promedio_bachillerato, 1) }}</span>
+      </td>
     </tr>
   </table>
 
@@ -281,9 +278,7 @@
       </tbody>
     </table>
 
-    <p class="nota">
-      El checklist refleja el estado actual de documentos registrados en el expediente digital.
-    </p>
+    <p class="nota">El checklist refleja el estado actual de documentos registrados en el expediente digital.</p>
 
     <div style="text-align:right; margin-top:6px; font-size:8pt; color:{{ $AZUL }};">
       Recibió y revisó: ________________________________
@@ -299,7 +294,6 @@
     <tr>
       <td style="width:50%;">
         <div class="firma-espacio"></div>
-        <div class="firma-linea"></div>
         <div class="firma-nombre">
           {{ mb_strtoupper($asp->apellido_paterno, 'UTF-8') }}
           {{ mb_strtoupper($asp->apellido_materno ?? '', 'UTF-8') }},
@@ -309,7 +303,6 @@
       </td>
       <td style="width:50%;">
         <div class="firma-espacio"></div>
-        <div class="firma-linea"></div>
         <div class="firma-nombre">
           {{ mb_strtoupper($jefeControlEscolar?->name ?? 'SELLO Y FIRMA', 'UTF-8') }}
         </div>
@@ -326,6 +319,5 @@
     </tr>
   </table>
 
-</div>
 </body>
 </html>
