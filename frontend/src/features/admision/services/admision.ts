@@ -224,6 +224,11 @@ export interface ActualizarAspirantePayload {
 export const admisionApi = {
   // Públicos
   getCarreras: async (): Promise<Carrera[]> => {
+    const { data } = await apiClient.get('/admin/carreras')
+    return data.data
+  },
+
+  getCarrerasPublico: async (): Promise<Carrera[]> => {
     const { data } = await apiClient.get('/carreras')
     return data.data
   },

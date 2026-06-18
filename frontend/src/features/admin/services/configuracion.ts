@@ -18,6 +18,9 @@ export interface ConfiguracionInstitucional {
   logo_secundario: string | null
   color_primario: string
   color_secundario: string
+  color_acento: string
+  color_sidebar: string | null
+  radio_bordes: 'cuadrado' | 'moderado' | 'redondeado' | 'pill'
   subdirector_academico: string | null
   responsable_servicios_escolares: string | null
   fuente_interfaz: string

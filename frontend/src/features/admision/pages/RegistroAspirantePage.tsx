@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCarreras } from '../hooks/useCarreras'
+import { admisionApi } from '../services/admision'
 import { usePeriodoActivo } from '../hooks/usePeriodoActivo'
 import { useRegistrarAspirante } from '../hooks/useRegistrarAspirante'
 import { validarCurp, validarEmail, validarTelefono, extraerErroresApi } from '../../../utils/validaciones'
@@ -193,7 +193,11 @@ const DOCS = [
 
 // ── Página ────────────────────────────────────────────────────────────────────
 export default function RegistroAspirantePage() {
-  const { data: carreras = [], isLoading: cargandoCarreras } = useCarreras()
+  const { data: carreras = [], isLoading: cargandoCarreras } = useQuery({
+    queryKey: ['carreras-publico'],
+    queryFn: admisionApi.getCarrerasPublico,
+    staleTime: 10 * 60 * 1000,
+  })
   const { data: periodo,  isLoading: cargandoPeriodo }       = usePeriodoActivo()
   const { mutate, isPending, isSuccess, error, data: aspiranteRegistrado } = useRegistrarAspirante()
 
@@ -234,8 +238,6 @@ export default function RegistroAspirantePage() {
     escuela_bachillerato: '',
     promedio_bachillerato: '', folio_exani: '', folio_preinscripcion_tecnm: '', puntaje_exani: '',
     area_bachillerato: '',
-    carrera_martinez: '',   // carrera sede Martínez (texto completo)
-    carrera_vega: '',       // carrera sede Vega de Alatorre (texto completo)
     turno_preferido: '', email: '', telefono: '',
     carrera_id: '',
     medio_enterado: '', medio_enterado_otro: '',
@@ -438,11 +440,6 @@ export default function RegistroAspirantePage() {
     return Object.keys(e).length === 0
   }
 
-  // Determina campus y modalidad desde la selección de carrera
-  const campusPreferido = form.carrera_martinez ? 'martinez_de_la_torre' : form.carrera_vega ? 'vega_de_alatorre' : undefined
-  const carreraTexto    = form.carrera_martinez || form.carrera_vega || ''
-  const modalidad       = carreraTexto.toLowerCase().includes('sabatino') ? 'sabatino'
-    : carreraTexto.toLowerCase().includes('escolarizado') ? 'escolarizado' : undefined
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -459,8 +456,6 @@ export default function RegistroAspirantePage() {
       puntaje_exani:          form.puntaje_exani ? Number(form.puntaje_exani) : undefined,
       tiene_equipo_computo:   form.tiene_equipo_computo,   // "1" o "0" — Laravel boolean acepta estos valores
       medio_enterado:         form.medio_enterado === 'Otros' ? form.medio_enterado_otro : form.medio_enterado,
-      campus_preferido:       campusPreferido,
-      modalidad_preferida:    modalidad,
       constancia_bachillerato: constanciaFile!,
       documentos:             Object.keys(documentos).length ? documentos : undefined,
     } as any, {
@@ -537,7 +532,7 @@ export default function RegistroAspirantePage() {
               <span className="text-xs text-amber-600 font-medium">Sin periodo activo</span>
             )}
             <p className="text-xs text-slate-400 mt-1">
-              ¿Ya tienes cuenta?{' '}
+              ¿Ya estás inscrito?{' '}
               <a href="/login" className="text-[#1a3a5c] font-medium hover:underline">Iniciar sesión</a>
               {' · '}
               <a href="/aspirante/consulta" className="text-[#1a3a5c] font-medium hover:underline">Consultar estatus</a>
@@ -795,59 +790,19 @@ export default function RegistroAspirantePage() {
                   {err('area_bachillerato') && <p className="mt-1 text-xs text-red-600">{err('area_bachillerato')}</p>}
                 </div>
 
-                {/* Carrera — Sede Martínez */}
+                {/* Carrera */}
                 <div className="mb-4">
                   <SelectField
-                    label="Ingeniería a la que desea ingresar — Sede Martínez de la Torre"
-                    value={form.carrera_martinez}
-                    onChange={v => {
-                      set('carrera_martinez', v)
-                      if (v) { set('carrera_vega', ''); tocar('carrera_id') }
-                      // Mapea al carrera_id del catálogo para la BD
-                      const nombre = v.split(' (')[0].trim()
-                      const c = carreras.find(c => c.nombre.toLowerCase().includes(nombre.toLowerCase().split(' ').slice(0,3).join(' ')))
-                      set('carrera_id', c?.id ?? '')
-                    }}
-                    options={[
-                      { value: 'Ingeniería en Gestión Empresarial (Escolarizado)', label: 'Ingeniería en Gestión Empresarial (Escolarizado)' },
-                      { value: 'Ingeniería en Gestión Empresarial (Sabatino)',     label: 'Ingeniería en Gestión Empresarial (Sabatino)' },
-                      { value: 'Ingeniería en Sistemas Computacionales (Escolarizado)', label: 'Ingeniería en Sistemas Computacionales (Escolarizado)' },
-                      { value: 'Ingeniería en Sistemas Computacionales (Sabatino)',     label: 'Ingeniería en Sistemas Computacionales (Sabatino)' },
-                      { value: 'Ingeniería en Mecatrónica',                        label: 'Ingeniería en Mecatrónica' },
-                      { value: 'Ingeniería en Innovación Agrícola Sustentable (Escolarizado)', label: 'Ingeniería en Innovación Agrícola Sustentable (Escolarizado)' },
-                      { value: 'Ingeniería en Innovación Agrícola Sustentable (Sabatino)',     label: 'Ingeniería en Innovación Agrícola Sustentable (Sabatino)' },
-                      { value: 'Ingeniería en Industrias Alimentarias',            label: 'Ingeniería en Industrias Alimentarias' },
-                      { value: 'Ingeniería Ambiental',                             label: 'Ingeniería Ambiental' },
-                      { value: 'Ingeniería Industrial (Escolarizado)',              label: 'Ingeniería Industrial (Escolarizado)' },
-                      { value: 'Ingeniería Industrial (Sabatino)',                  label: 'Ingeniería Industrial (Sabatino)' },
-                    ]}
-                    placeholder="Dejar en blanco si elige la sede Vega de Alatorre"
+                    label="Ingeniería a la que desea ingresar *"
+                    value={form.carrera_id}
+                    onChange={v => { set('carrera_id', v); tocar('carrera_id') }}
+                    onBlur={() => tocar('carrera_id')}
+                    options={carreras.map(c => ({ value: c.id, label: c.nombre }))}
+                    placeholder={cargandoCarreras ? 'Cargando carreras…' : 'Selecciona una carrera'}
+                    required
+                    error={err('carrera_id')}
                   />
                 </div>
-
-                {/* Carrera — Extensión Vega de Alatorre */}
-                <div className="mb-4">
-                  <SelectField
-                    label="Ingeniería a la que desea ingresar — Extensión Vega de Alatorre"
-                    value={form.carrera_vega}
-                    onChange={v => {
-                      set('carrera_vega', v)
-                      if (v) { set('carrera_martinez', ''); tocar('carrera_id') }
-                      const nombre = v.split(' (')[0].trim()
-                      const c = carreras.find(c => c.nombre.toLowerCase().includes(nombre.toLowerCase().split(' ').slice(0,3).join(' ')))
-                      set('carrera_id', c?.id ?? '')
-                    }}
-                    options={[
-                      { value: 'Ingeniería en Gestión Empresarial (Sabatino) — Vega',      label: 'Ingeniería en Gestión Empresarial (Sabatino)' },
-                      { value: 'Ingeniería en Sistemas Computacionales (Sabatino) — Vega', label: 'Ingeniería en Sistemas Computacionales (Sabatino)' },
-                      { value: 'Ingeniería Industrial (Sabatino) — Vega',                   label: 'Ingeniería Industrial (Sabatino)' },
-                      { value: 'Ingeniería Mecatrónica — Vega',                              label: 'Ingeniería Mecatrónica' },
-                    ]}
-                    placeholder="Dejar en blanco si seleccionó Sede Martínez de la Torre"
-                  />
-                </div>
-
-                {err('carrera_id') && <p className="mb-3 text-xs text-red-600">{err('carrera_id')}</p>}
 
                 <SelectField label="Turno preferido *" value={form.turno_preferido}
                   onChange={v => set('turno_preferido', v)} onBlur={() => tocar('turno_preferido')}

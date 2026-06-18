@@ -31,7 +31,7 @@ export default function ConstanciasAdminPage() {
 
   const { data: carreras = [] } = useQuery({
     queryKey: ['carreras-select'],
-    queryFn: () => apiClient.get('/carreras').then(r => r.data.data?.data ?? r.data.data as { id: string; nombre: string; clave: string }[]),
+    queryFn: () => apiClient.get('/admin/carreras').then(r => r.data.data as { id: string; nombre: string; clave: string }[]),
   })
 
   const params: Record<string, string> = {}
