@@ -1,3 +1,8 @@
+@php
+  $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
+  $jefeControlEscolar = \App\Models\User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
+                        ?? \App\Models\User::role('personal_administrativo')->orderBy('created_at')->first();
+@endphp
 @include('pdfs.partials.header')
 
 <div class="folio">TecNM-AC-PO-001-05 · Folio: {{ $inscripcion->numero_control }}-CCD</div>

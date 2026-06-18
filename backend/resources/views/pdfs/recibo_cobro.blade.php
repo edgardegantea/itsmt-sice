@@ -1,3 +1,8 @@
+@php
+  $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
+  $jefeControlEscolar = \App\Models\User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
+                        ?? \App\Models\User::role('personal_administrativo')->orderBy('created_at')->first();
+@endphp
 @include('pdfs.partials.header')
 
 <div class="folio">CFDI · RFC Emisor: {{ $recibo->rfc_emisor }}</div>
@@ -70,8 +75,9 @@
   </div>
   <div class="firma-block">
     <div class="firma-line"></div>
-    <p>Jefe(a) de Servicios Escolares</p>
-    <p style="font-size:8pt;">ITSMT</p>
+    <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($jefeControlEscolar?->name ?? '___________________________', 'UTF-8') }}</p>
+    <p>Jefe(a) de Control Escolar</p>
+    <p style="font-size:8pt;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>
 

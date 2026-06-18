@@ -1,3 +1,7 @@
+@php
+  $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
+  $subdirectorAcademico = \App\Models\User::where('email', 'subacademica@martineztorre.tecnm.mx')->first();
+@endphp
 @include('pdfs.partials.header')
 
 <div class="folio">TecNM-AC-PO-001-03 · Folio: {{ $inscripcion->numero_control }}-CT</div>
