@@ -7,44 +7,20 @@ import { useAuthStore } from '../../../store/authStore'
 
 type TabId = 'institucion' | 'identidad' | 'login' | 'interfaz' | 'sistema'
 
-// ── Paletas predefinidas ───────────────────────────────────────────────────────
-
-const PALETAS = [
-  { nombre: 'Océano',    primario: '#1a3a5c', secundario: '#2d6a9f', acento: '#f59e0b', sidebar: null },
-  { nombre: 'Esmeralda', primario: '#064e3b', secundario: '#047857', acento: '#f97316', sidebar: null },
-  { nombre: 'Morado',    primario: '#3b0764', secundario: '#7c3aed', acento: '#f43f5e', sidebar: null },
-  { nombre: 'Pizarra',   primario: '#0f172a', secundario: '#334155', acento: '#38bdf8', sidebar: null },
-  { nombre: 'Coral',     primario: '#7f1d1d', secundario: '#b91c1c', acento: '#fbbf24', sidebar: '#b91c1c' },
-  { nombre: 'Teal',      primario: '#134e4a', secundario: '#0d9488', acento: '#f59e0b', sidebar: '#0d9488' },
-  { nombre: 'Índigo',    primario: '#1e1b4b', secundario: '#4338ca', acento: '#f59e0b', sidebar: null },
-  { nombre: 'Neutral',   primario: '#1c1917', secundario: '#57534e', acento: '#0ea5e9', sidebar: null },
-]
-
-const RADIO_BORDES_OPTS = [
-  { valor: 'cuadrado',   label: 'Cuadrado',   preview: '2px' },
-  { valor: 'moderado',   label: 'Moderado',   preview: '6px' },
-  { valor: 'redondeado', label: 'Redondeado', preview: '12px' },
-  { valor: 'pill',       label: 'Pill',       preview: '9999px' },
-]
-
 type FormState = Omit<
   ConfiguracionInstitucional,
   'id' | 'logo_principal' | 'logo_secundario' | 'login_imagen_fondo' |
   'url_logo_principal' | 'url_logo_secundario' | 'url_login_imagen_fondo' | 'logo_base64'
-> & {
-  color_acento: string
-  color_sidebar: string | null
-  radio_bordes: 'cuadrado' | 'moderado' | 'redondeado' | 'pill'
-}
+>
 
 // ── Componentes auxiliares ─────────────────────────────────────────────────
 
-function ColorField({ label, value, onChange }: { label: string; value: string | null; onChange: (v: string) => void }) {
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   const isValidHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v)
   const hexDisplay = value ?? '#000000'
   return (
     <div>
-      {label && <label className="block text-xs font-medium text-slate-600 mb-2">{label}</label>}
+      <label className="block text-xs font-medium text-slate-600 mb-2">{label}</label>
       <div className="flex items-center gap-3">
         <label className="relative cursor-pointer shrink-0">
           <span className="block w-10 h-10 rounded-lg border-2 border-slate-200 shadow-sm transition-transform hover:scale-105"
@@ -178,14 +154,11 @@ export default function ConfiguracionPage() {
         login_opacidad_fondo: rest.login_opacidad_fondo ?? 0.70,
         fecha_inicio_actualizacion_datos: toDate(rest.fecha_inicio_actualizacion_datos),
         fecha_fin_actualizacion_datos:    toDate(rest.fecha_fin_actualizacion_datos),
-        color_acento:  rest.color_acento  ?? '#f59e0b',
-        color_sidebar: rest.color_sidebar ?? null,
-        radio_bordes:  rest.radio_bordes  ?? 'redondeado',
       })
     }
   }, [data])
 
-  const set = (field: keyof FormState, value: string | number | null) =>
+  const set = (field: keyof FormState, value: string | number) =>
     setForm(f => f ? { ...f, [field]: value } : f)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -306,125 +279,13 @@ export default function ConfiguracionPage() {
               </div>
             </section>
 
-            {/* Paletas predefinidas */}
             <section className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-              <div>
-                <h2 className="text-sm font-semibold text-slate-700">Paletas predefinidas</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Aplica un conjunto de colores con un clic. Luego puedes ajustar cada color individualmente.</p>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {PALETAS.map(p => {
-                  const activa =
-                    form.color_primario === p.primario &&
-                    form.color_secundario === p.secundario &&
-                    form.color_acento === p.acento
-                  return (
-                    <button key={p.nombre} type="button"
-                      onClick={() => setForm(f => f ? {
-                        ...f,
-                        color_primario:   p.primario,
-                        color_secundario: p.secundario,
-                        color_acento:     p.acento,
-                        color_sidebar:    p.sidebar,
-                      } : f)}
-                      className={`relative text-left p-3 rounded-xl border-2 transition-all ${
-                        activa ? 'border-[var(--color-primario)] shadow-md' : 'border-slate-200 hover:border-slate-300'
-                      }`}>
-                      <div className="flex gap-1 mb-2">
-                        <span className="w-5 h-5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: p.primario }} />
-                        <span className="w-5 h-5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: p.secundario }} />
-                        <span className="w-5 h-5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: p.acento }} />
-                      </div>
-                      <p className="text-xs font-medium text-slate-700">{p.nombre}</p>
-                      {activa && (
-                        <span className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center"
-                          style={{ backgroundColor: p.primario }}>
-                          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-5.121-5.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            </section>
-
-            {/* Colores individuales */}
-            <section className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
-              <div>
-                <h2 className="text-sm font-semibold text-slate-700">Colores del sistema</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Se aplican al panel de control, vistas de usuarios y documentos PDF.</p>
-              </div>
+              <h2 className="text-sm font-semibold text-slate-700">Colores del sistema</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <ColorField label="Color primario" value={form.color_primario} onChange={v => set('color_primario', v)} />
                 <ColorField label="Color secundario" value={form.color_secundario} onChange={v => set('color_secundario', v)} />
-                <ColorField label="Color de acento" value={form.color_acento} onChange={v => set('color_acento', v)} />
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-medium text-slate-600">Color del sidebar</label>
-                    <button type="button" onClick={() => set('color_sidebar', '')}
-                      className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors">
-                      Usar color primario
-                    </button>
-                  </div>
-                  <ColorField label="" value={form.color_sidebar ?? form.color_primario}
-                    onChange={v => set('color_sidebar', v)} />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    {!form.color_sidebar ? 'Usando el color primario como base.' : 'Color independiente activo.'}
-                  </p>
-                </div>
               </div>
-
-              {/* Vista previa mini de colores */}
-              <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide px-4 pt-3 pb-1">Vista previa</p>
-                <div className="flex divide-x divide-white/20">
-                  <div className="flex-1 p-3" style={{ backgroundColor: form.color_primario }}>
-                    <p className="text-[9px] font-mono text-white/60 mb-1">Primario</p>
-                    <p className="text-xs font-bold text-white">{form.color_primario}</p>
-                  </div>
-                  <div className="flex-1 p-3" style={{ backgroundColor: form.color_secundario }}>
-                    <p className="text-[9px] font-mono text-white/60 mb-1">Secundario</p>
-                    <p className="text-xs font-bold text-white">{form.color_secundario}</p>
-                  </div>
-                  <div className="flex-1 p-3" style={{ backgroundColor: form.color_acento }}>
-                    <p className="text-[9px] font-mono text-white/60 mb-1">Acento</p>
-                    <p className="text-xs font-bold text-white">{form.color_acento}</p>
-                  </div>
-                  <div className="flex-1 p-3" style={{ backgroundColor: form.color_sidebar ?? form.color_primario }}>
-                    <p className="text-[9px] font-mono text-white/60 mb-1">Sidebar</p>
-                    <p className="text-xs font-bold text-white">{form.color_sidebar ?? '(primario)'}</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Estilo de bordes */}
-            <section className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-              <div>
-                <h2 className="text-sm font-semibold text-slate-700">Estilo de bordes</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Afecta botones, tarjetas, campos de texto y otros elementos de la interfaz.</p>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {RADIO_BORDES_OPTS.map(opt => {
-                  const selected = (form.radio_bordes ?? 'redondeado') === opt.valor
-                  return (
-                    <button key={opt.valor} type="button"
-                      onClick={() => set('radio_bordes', opt.valor)}
-                      className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                        selected ? 'border-[var(--color-primario)] bg-[var(--color-primario)]/5' : 'border-slate-200 hover:border-slate-300'
-                      }`}>
-                      <div className="w-10 h-6 border-2 border-slate-400 bg-slate-100"
-                        style={{ borderRadius: opt.preview }} />
-                      <p className="text-xs font-medium text-slate-700">{opt.label}</p>
-                      {selected && (
-                        <span className="text-[10px] font-semibold" style={{ color: 'var(--color-primario)' }}>Activo</span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+              <p className="text-xs text-slate-400">Se aplican al panel de control, vistas de usuarios y documentos PDF.</p>
             </section>
           </div>
         )}

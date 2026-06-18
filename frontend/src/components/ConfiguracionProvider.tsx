@@ -10,16 +10,7 @@ export default function ConfiguracionProvider() {
     root.style.setProperty('--color-primario',      config.color_primario)
     root.style.setProperty('--color-secundario',    config.color_secundario)
     root.style.setProperty('--color-primario-hover', config.color_primario + 'dd')
-    root.style.setProperty('--color-acento',        (config as any).color_acento ?? '#f59e0b')
-    root.style.setProperty('--color-sidebar-user',  (config as any).color_sidebar || config.color_primario)
-    const radiusMap: Record<string, string> = {
-      cuadrado:   '0px',
-      moderado:   '6px',
-      redondeado: '12px',
-      pill:       '9999px',
-    }
-    root.style.setProperty('--radio-bordes', radiusMap[(config as any).radio_bordes ?? 'redondeado'] ?? '12px')
-  }, [config.color_primario, config.color_secundario, (config as any).color_acento, (config as any).color_sidebar, (config as any).radio_bordes])
+  }, [config.color_primario, config.color_secundario])
 
   useEffect(() => {
     applyFont((config as any).fuente_interfaz ?? DEFAULT_FONT)
