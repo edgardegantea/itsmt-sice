@@ -4,7 +4,9 @@
   $asp  = $inscripcion->aspirante;
   $carr = $inscripcion->carrera;
   $per  = $inscripcion->periodo;
-  $AZUL = '#1a3a5c';
+  $jefeControlEscolar = \App\Models\User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
+                        ?? \App\Models\User::role('personal_administrativo')->orderBy('created_at')->first();
+  $AZUL  = '#1a3a5c';
   $LINEA = '#c8d4e0';
 @endphp
 <!DOCTYPE html>
@@ -22,8 +24,7 @@
     .enc td { vertical-align: middle; }
     .enc .logo-td { width: 60px; padding-right: 10px; }
     .enc .logo-td img { height: 50px; max-width: 56px; object-fit: contain; }
-    .enc .inst { font-size: 9pt; font-weight: bold; color: {{ $AZUL }}; line-height: 1.2; }
-    .enc .dep  { font-size: 7pt; color: #666; margin-top: 2px; }
+    .enc .inst { font-size: 9.5pt; font-weight: bold; color: {{ $AZUL }}; line-height: 1.2; }
     .enc .meta { text-align: right; font-size: 7pt; color: #888; white-space: nowrap; vertical-align: top; }
 
     .sep { height: 3px; background: {{ $AZUL }}; margin: 5px 0 3px; }
@@ -33,7 +34,7 @@
     .fmt-header { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 8px; }
     .fmt-header td { padding: 2px 0; vertical-align: bottom; }
     .fmt-header .lbl { font-weight: bold; color: {{ $AZUL }}; white-space: nowrap; padding-right: 5px; }
-    .fmt-header .val { border-bottom: 1.2px solid #333; padding: 0 4px 1px; }
+    .fmt-header .val { font-weight: bold; color: #222; padding: 0 4px 1px; }
 
     /* ── Título ── */
     .titulo {
@@ -46,25 +47,25 @@
       margin-bottom: 8px;
     }
 
-    /* ── Sección: etiqueta + línea ── */
+    /* ── Sección: etiqueta ── */
     .sec-title {
       font-size: 7pt;
       font-weight: bold;
-      color: {{ $AZUL }};
+      color: #fff;
+      background: {{ $AZUL }};
       text-transform: uppercase;
       letter-spacing: 0.6px;
-      border-bottom: 1.5px solid {{ $AZUL }};
-      padding-bottom: 1px;
+      padding: 2px 6px;
       margin-bottom: 4px;
       margin-top: 7px;
     }
 
-    /* ── Campos: etiqueta + valor subrayado ── */
+    /* ── Campos: etiqueta + valor en negrita (sin subrayado) ── */
     .campos { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 2px; }
     .campos td { padding: 2px 3px; vertical-align: bottom; }
     .campos .lbl { font-weight: bold; color: {{ $AZUL }}; white-space: nowrap; }
-    .campos .val { border-bottom: 1px solid #444; padding: 0 4px 1px; }
-    .campos .hint { font-size: 7pt; color: #999; }
+    .campos .val { font-weight: bold; color: #222; padding: 0 4px 1px; }
+    .campos .hint { font-size: 7pt; color: #999; font-weight: normal; }
 
     /* ── Tabla de documentos ── */
     .docs-wrap {
@@ -141,8 +142,6 @@
       @endif
       <td>
         <div class="inst">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</div>
-        @if($cfg->dependencia)<div class="dep">{{ $cfg->dependencia }}</div>@endif
-        @if($cfg->subsistema)<div class="dep">{{ $cfg->subsistema }}</div>@endif
       </td>
       <td class="meta">
         @if($cfg->clave_tecnm)<strong style="color:#555;">{{ $cfg->clave_tecnm }}</strong><br>@endif
@@ -201,7 +200,7 @@
   </table>
 
   {{-- ── Dirección ── --}}
-  <div class="sec-title" style="margin-top:8px;">Dirección</div>
+  <div class="sec-title">Dirección</div>
   <table class="campos">
     <tr>
       <td class="lbl" style="width:10%;">CALLE:</td>
@@ -238,7 +237,7 @@
   <table class="campos">
     <tr>
       <td class="lbl" style="width:28%;">CARRERA A CURSAR:</td>
-      <td class="val" style="font-weight:bold;">{{ mb_strtoupper($carr->nombre, 'UTF-8') }}</td>
+      <td class="val">{{ mb_strtoupper($carr->nombre, 'UTF-8') }}</td>
     </tr>
   </table>
 
@@ -312,11 +311,9 @@
         <div class="firma-espacio"></div>
         <div class="firma-linea"></div>
         <div class="firma-nombre">
-          {{ $cfg->responsable_servicios_escolares
-              ? mb_strtoupper($cfg->responsable_servicios_escolares, 'UTF-8')
-              : 'SELLO Y FIRMA' }}
+          {{ mb_strtoupper($jefeControlEscolar?->name ?? 'SELLO Y FIRMA', 'UTF-8') }}
         </div>
-        <div class="firma-cargo">Departamento de Servicios Escolares</div>
+        <div class="firma-cargo">Departamento de Control Escolar</div>
       </td>
     </tr>
   </table>
