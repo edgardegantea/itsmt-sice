@@ -114,7 +114,7 @@ const NAV: { to: string; label: string; roles?: string[] }[] = [
   { to: '/admin/periodos',                  label: 'Periodos',            roles: ['superadmin', 'admin'] },
   { to: '/admin/carreras',                  label: 'Carreras',            roles: ['superadmin', 'admin', 'director_academico'] },
   { to: '/admin/catalogos',                 label: 'Catálogos',           roles: ['superadmin', 'admin'] },
-  { to: '/admin/directorio',                label: 'Directorio',          roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
+  { to: '/admin/directorio',                label: 'Directorio',          roles: ['superadmin'] },
   { to: '/admin/usuarios',                  label: 'Usuarios',            roles: ['superadmin', 'admin'] },
   { to: '/admin/permisos',                  label: 'Permisos',            roles: ['superadmin'] },
   { to: '/admin/configuracion',             label: 'Configuración',       roles: ['superadmin', 'admin'] },
@@ -324,8 +324,8 @@ export default function Layout({ children }: { children: ReactNode }) {
 
           {/* Fila: Preferencias + Colapsar */}
           <div className={`flex gap-1 ${colapsado ? 'flex-col items-center' : ''}`}>
-            {/* Preferencias */}
-            <div className="relative group/prefs flex-1">
+            {/* Preferencias — solo superadmin */}
+            <div className={`relative group/prefs flex-1 ${user?.roles.includes('superadmin') ? '' : 'hidden'}`}>
               <button
                 onClick={() => setPrefsOpen(p => !p)}
                 className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsado ? 'justify-center' : ''}`}

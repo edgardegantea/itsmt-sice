@@ -199,6 +199,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin — Carreras CRUD
     Route::get('/admin/carreras',                           [CarreraAdminController::class, 'index']);
+    Route::get('/admin/carreras/{carrera}',                 [CarreraAdminController::class, 'show']);
     Route::post('/admin/carreras',                          [CarreraAdminController::class, 'store']);
     Route::patch('/admin/carreras/{carrera}',               [CarreraAdminController::class, 'update']);
     Route::patch('/admin/carreras/{carrera}/toggle-activa', [CarreraAdminController::class, 'toggleActiva']);

@@ -25,7 +25,7 @@ const usuariosApi = {
   roles:   () =>
     apiClient.get('/admin/roles').then(r => r.data.data as string[]),
   carreras: () =>
-    apiClient.get('/carreras').then(r => (r.data.data?.data ?? r.data.data) as Carrera[]),
+    apiClient.get('/admin/carreras').then(r => r.data.data as Carrera[]),
   create:  (d: Record<string, unknown>) =>
     apiClient.post('/admin/usuarios', d).then(r => r.data.data as Usuario),
   update:  (id: string, d: Record<string, unknown>) =>
@@ -96,7 +96,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
   const createMut = useMutation({
     mutationFn: () => usuariosApi.create({
       ...form,
-      carrera_id: needsCarrera && form.carrera_id ? form.carrera_id : null,
+      carrera_id: form.carrera_id || null,
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['usuarios'] })
@@ -115,7 +115,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
         name:       form.name,
         email:      form.email,
         role:       form.role,
-        carrera_id: needsCarrera && form.carrera_id ? form.carrera_id : null,
+        carrera_id: form.carrera_id || null,
       }
       if (form.password) payload.password = form.password
       return usuariosApi.update(usuario!.id, payload)
@@ -174,21 +174,19 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
             </select>
           </div>
 
-          {needsCarrera && (
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">
-                Carrera asignada <span className="text-red-500">*</span>
-              </label>
-              <select className={inputCls} value={form.carrera_id} onChange={e => set('carrera_id', e.target.value)}>
-                <option value="">— Seleccionar carrera —</option>
-                {carreras.map(c => (
-                  <option key={c.id} value={c.id}>{c.nombre} ({c.clave})</option>
-                ))}
-              </select>
-              {errors.carrera_id && <p className="text-red-500 text-xs mt-1">{errors.carrera_id}</p>}
-              <p className="text-xs text-slate-400 mt-1">El jefe solo verá los datos de esta carrera.</p>
-            </div>
-          )}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Carrera asignada {needsCarrera && <span className="text-red-500">*</span>}
+            </label>
+            <select className={inputCls} value={form.carrera_id} onChange={e => set('carrera_id', e.target.value)}>
+              <option value="">— Sin carrera asignada —</option>
+              {carreras.map(c => (
+                <option key={c.id} value={c.id}>{c.nombre} ({c.clave})</option>
+              ))}
+            </select>
+            {errors.carrera_id && <p className="text-red-500 text-xs mt-1">{errors.carrera_id}</p>}
+            {needsCarrera && <p className="text-xs text-slate-400 mt-1">El jefe de carrera solo verá los datos de esta carrera.</p>}
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
