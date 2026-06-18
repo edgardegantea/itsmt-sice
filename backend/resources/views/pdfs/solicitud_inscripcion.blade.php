@@ -141,16 +141,22 @@
   <div class="ref">TecNM-AC-PO-001-02 · Rev. O · Solicitud de Inscripción</div>
 
   {{-- ── Encabezado del formato ── --}}
-  <table class="fmt-row">
+  <table class="fila" style="margin-bottom:6px;">
     <tr>
-      <td style="width:32%;"><span class="lbl">INSTITUTO TECNOLÓGICO:</span></td>
-      <td style="width:38%;"><span class="val">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</span></td>
-      <td style="width:12%;"><span class="lbl">PERIODO:</span></td>
-      <td><span class="val">{{ $per->nombre }}</span></td>
+      <td style="width:60%;" class="campo">
+        <span class="lbl">INSTITUTO TECNOLÓGICO:</span>
+        <span class="val">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</span>
+      </td>
+      <td class="campo">
+        <span class="lbl">PERIODO:</span>
+        <span class="val">{{ $per->nombre }}</span>
+      </td>
     </tr>
     <tr>
-      <td><span class="lbl">FECHA:</span></td>
-      <td colspan="3"><span class="val">{{ now()->format('d') }} de {{ now()->locale('es')->isoFormat('MMMM') }} de {{ now()->format('Y') }}</span></td>
+      <td colspan="2" class="campo">
+        <span class="lbl">FECHA:</span>
+        <span class="val">{{ now()->format('d') }} de {{ now()->locale('es')->isoFormat('MMMM') }} de {{ now()->format('Y') }}</span>
+      </td>
     </tr>
   </table>
 
