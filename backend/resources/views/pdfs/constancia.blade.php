@@ -1,6 +1,9 @@
 @php
   $cfg     = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
   $logoB64 = $cfg->logoBase64();
+  $directorGeneral    = \App\Models\User::role('admin')->orderBy('created_at')->first();
+  $jefeControlEscolar = \App\Models\User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
+                        ?? \App\Models\User::role('personal_administrativo')->orderBy('created_at')->first();
   $alumno  = $constancia->alumno;
   $carrera = $alumno->carrera ?? $alumno->inscripcion?->carrera;
   $periodo = $alumno->periodoIngreso;
@@ -117,12 +120,12 @@
   <table class="firmas">
     <tr>
       <td>
-        <div class="firma-linea">{{ $cfg->director_general ?? $cfg->responsable_servicios_escolares ?? '___________________________' }}</div>
-        <div class="firma-cargo">{{ $cfg->cargo_director ?? 'Director(a) General' }}</div>
+        <div class="firma-linea">{{ mb_strtoupper($directorGeneral?->name ?? '___________________________', 'UTF-8') }}</div>
+        <div class="firma-cargo">Director(a) General</div>
       </td>
       <td>
-        <div class="firma-linea">{{ $constancia->emitidaPor?->name ?? '___________________________' }}</div>
-        <div class="firma-cargo">Jefe(a) de Departamento de Servicios Escolares</div>
+        <div class="firma-linea">{{ mb_strtoupper($jefeControlEscolar?->name ?? ($constancia->emitidaPor?->name ?? '___________________________'), 'UTF-8') }}</div>
+        <div class="firma-cargo">Jefe(a) de Departamento de Control Escolar</div>
       </td>
     </tr>
   </table>

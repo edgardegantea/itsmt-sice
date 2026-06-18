@@ -36,8 +36,9 @@
   </div>
   <div class="firma-block">
     <div class="firma-line"></div>
-    <p>Firma del Director</p>
-    <p style="font-size:8pt;">Instituto Tecnológico Superior de Martínez de la Torre</p>
+    <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($directorGeneral?->name ?? '___________________________', 'UTF-8') }}</p>
+    <p>Director(a) General</p>
+    <p style="font-size:8pt;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>
 

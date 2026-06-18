@@ -50,8 +50,9 @@
   </div>
   <div class="firma-block">
     <div class="firma-line"></div>
-    <p>Por la Institución</p>
-    <p style="font-size:8pt;">Subdirección Académica — ITSMT</p>
+    <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($subdirectorAcademico?->name ?? '___________________________', 'UTF-8') }}</p>
+    <p>Subdirector(a) Académico(a)</p>
+    <p style="font-size:8pt;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>
 

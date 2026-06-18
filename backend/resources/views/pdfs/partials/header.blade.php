@@ -1,6 +1,12 @@
 @php
   $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
   $logoB64 = $cfg->logoBase64();
+
+  // Firmantes dinámicos desde la BD
+  $directorGeneral        = \App\Models\User::role('admin')->orderBy('created_at')->first();
+  $jefeControlEscolar     = \App\Models\User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
+                            ?? \App\Models\User::role('personal_administrativo')->orderBy('created_at')->first();
+  $subdirectorAcademico   = \App\Models\User::where('email', 'subacademica@martineztorre.tecnm.mx')->first();
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -45,7 +51,7 @@
       </td>
       <td class="header-center">
         <h1>{{ $cfg->nombre_institucion }}</h1>
-        <p>{{ $cfg->subsistema ?? 'Departamento de Servicios Escolares' }} · {{ now()->format('d/m/Y') }}</p>
+        <p>{{ $cfg->dependencia ?? 'Tecnológico Nacional de México' }} · {{ now()->format('d/m/Y') }}</p>
       </td>
       <td class="header-right">
         @if($cfg->clave_tecnm)<strong>{{ $cfg->clave_tecnm }}</strong><br>@endif

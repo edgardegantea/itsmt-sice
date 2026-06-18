@@ -211,11 +211,14 @@
       {{ $alumno->semestre_actual }}° Semestre · {{ $alumno->periodoIngreso?->nombre }}
     </div>
 
+    @php
+      $dirGen = \App\Models\User::role('admin')->orderBy('created_at')->first();
+    @endphp
     <div class="firma-bloque">
       <div class="firma-linea"></div>
       <div class="firma-texto">
-        DIRECTOR(A) GENERAL<br>
-        Instituto Tecnológico Superior de Martínez de la Torre
+        {{ mb_strtoupper($dirGen?->name ?? 'DIRECTOR(A) GENERAL', 'UTF-8') }}<br>
+        Director(a) General
       </div>
     </div>
   </div>

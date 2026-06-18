@@ -40,8 +40,9 @@
   </div>
   <div class="firma-block">
     <div class="firma-line"></div>
-    <p>Recibe — Servicios Escolares</p>
-    <p style="font-size:8pt;">ITSMT — Firma y sello</p>
+    <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($jefeControlEscolar?->name ?? '___________________________', 'UTF-8') }}</p>
+    <p>Jefe(a) de Control Escolar</p>
+    <p style="font-size:8pt;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>
 
