@@ -17,8 +17,8 @@ export default function CargaAcademicaAdminPage() {
   })
 
   const { data: carreras = [] } = useQuery({
-    queryKey: ['carreras-select'],
-    queryFn: () => apiClient.get('/carreras').then(r => r.data.data as { id: string; nombre: string; clave: string }[]),
+    queryKey: ['carreras-admin'],
+    queryFn: () => apiClient.get('/admin/carreras').then(r => r.data.data as { id: string; nombre: string; clave: string }[]),
   })
 
   const params: Record<string, string> = {}

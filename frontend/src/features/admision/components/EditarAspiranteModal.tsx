@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Modal from '../../../components/ui/Modal'
 import { admisionApi, type Aspirante, type ActualizarAspirantePayload } from '../services/admision'
-import { useCarreras } from '../hooks/useCarreras'
+import { useCarrerasAdmin } from '../hooks/useCarreras'
 import { useToastStore } from '../../../store/toastStore'
 import apiClient from '../../../config/apiClient'
 
@@ -29,7 +29,7 @@ const BACHILLERATOS = [
 
 export default function EditarAspiranteModal({ aspirante, onClose }: Props) {
   const qc = useQueryClient()
-  const { data: carreras = [] } = useCarreras()
+  const { data: carreras = [] } = useCarrerasAdmin()
   const { success, error: toastError } = useToastStore()
 
   const { data: periodos = [] } = useQuery({

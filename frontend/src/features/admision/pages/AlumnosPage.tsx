@@ -8,7 +8,7 @@ import {
   type RegistrarCobroPayload,
 } from '../services/admision'
 import Modal from '../../../components/ui/Modal'
-import { useCarreras } from '../hooks/useCarreras'
+import { useCarrerasAdmin } from '../hooks/useCarreras'
 import { useCredencialPdf } from '../hooks/useCredencialPdf'
 import { useLibroRegistroNcPdf } from '../hooks/useLibroRegistroNcPdf'
 import { useInscripcionPdf, type TipoInscripcionPdf } from '../hooks/useInscripcionPdf'
@@ -68,7 +68,7 @@ interface AspiranteForm {
 
 function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void }) {
   const qc = useQueryClient()
-  const { data: carreras = [] } = useCarreras()
+  const { data: carreras = [] } = useCarrerasAdmin()
   const { success, error: toastError } = useToastStore()
 
   const asp = alumno.inscripcion?.aspirante
@@ -620,7 +620,7 @@ export default function AlumnosPage() {
   const { descargar: descargarCredencial, generando: generandoCredencial } = useCredencialPdf()
   const { descargar: descargarLibroNc,   generando: generandoLibroNc }    = useLibroRegistroNcPdf()
   const { descargar: descargarInscPdf,   generando: generandoInscPdf }    = useInscripcionPdf()
-  const { data: carreras = [] } = useCarreras()
+  const { data: carreras = [] } = useCarrerasAdmin()
 
   const { data, isLoading } = useQuery({
     queryKey: ['alumnos', filtros],
