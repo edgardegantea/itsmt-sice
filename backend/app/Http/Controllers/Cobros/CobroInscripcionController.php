@@ -7,12 +7,14 @@ use App\Domains\Cobros\Models\ReciboCobro;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admision\RegistrarCobroRequest;
 use App\Http\Responses\ApiResponse;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\GotenbergService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
 class CobroInscripcionController extends Controller
 {
+    public function __construct(private GotenbergService $gotenberg) {}
+
     // POST /api/cobros-inscripcion
     public function store(RegistrarCobroRequest $request): JsonResponse
     {
@@ -32,12 +34,12 @@ class CobroInscripcionController extends Controller
 
         $recibo->load(['inscripcion.aspirante', 'alumno.carrera', 'registradoPor']);
 
-        $pdf = Pdf::loadView('pdfs.recibo_cobro', compact('recibo'))
-            ->setPaper('letter', 'portrait')
-            ->setOption('margin_top', 20)->setOption('margin_bottom', 20)
-            ->setOption('margin_left', 20)->setOption('margin_right', 20)
-            ->setOption('dpi', 96)->setOption('defaultFont', 'Arial');
+        $html = view('pdfs.recibo_cobro', compact('recibo'))->render();
+        $pdf  = $this->gotenberg->htmlToPdf($html);
 
-        return $pdf->stream("recibo-{$recibo->folio_fiscal}.pdf");
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"recibo-{$recibo->folio_fiscal}.pdf\"",
+        ]);
     }
 }
