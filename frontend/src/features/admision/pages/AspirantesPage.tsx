@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { admisionApi } from '../services/admision'
-import { useCarrerasAdmin } from '../hooks/useCarreras'
 import { useAspirantes } from '../hooks/useAspirantes'
 import { useListaAceptadosPorCarreraPdf } from '../hooks/useListaAceptadosPorCarreraPdf'
 import { useListaAceptadosPdf } from '../hooks/useListaAceptadosPdf'
@@ -178,7 +177,10 @@ export default function AspirantesPage() {
   const [inscribiendo,  setInscribiendo] = useState<Aspirante | null>(null)
   const { error: toastError } = useToastStore()
 
-  const { data: carreras = [], isLoading: cargandoCarreras } = useCarrerasAdmin()
+  const { data: carreras = [], isLoading: cargandoCarreras } = useQuery({
+    queryKey: ['carreras'],
+    queryFn: admisionApi.getCarreras,
+  })
 
   const { data: periodos = [], isLoading: cargandoPeriodos } = useQuery({
     queryKey: ['admin-periodos'],
@@ -264,7 +266,7 @@ export default function AspirantesPage() {
                   className="w-full appearance-none bg-white border border-slate-200 rounded-lg px-3 py-2 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/60 disabled:opacity-50 disabled:cursor-wait transition"
                 >
                   <option value="">Todas las carreras</option>
-                  {carreras.map((c) => (
+                  {carreras.filter((c) => c.activa).map((c) => (
                     <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>
                   ))}
                 </select>

@@ -795,20 +795,59 @@ export default function RegistroAspirantePage() {
                   {err('area_bachillerato') && <p className="mt-1 text-xs text-red-600">{err('area_bachillerato')}</p>}
                 </div>
 
-                {/* Carrera */}
+                {/* Carrera — Sede Martínez */}
                 <div className="mb-4">
                   <SelectField
-                    label="Ingeniería a la que desea ingresar *"
-                    value={form.carrera_id}
-                    onChange={v => { set('carrera_id', v); set('carrera_martinez', ''); set('carrera_vega', ''); tocar('carrera_id') }}
-                    onBlur={() => tocar('carrera_id')}
-                    options={carreras.map(c => ({ value: c.id, label: c.nombre }))}
-                    placeholder={cargandoCarreras ? 'Cargando carreras…' : 'Selecciona una ingeniería'}
-                    required
-                    disabled={cargandoCarreras}
-                    error={err('carrera_id')}
+                    label="Ingeniería a la que desea ingresar — Sede Martínez de la Torre"
+                    value={form.carrera_martinez}
+                    onChange={v => {
+                      set('carrera_martinez', v)
+                      if (v) { set('carrera_vega', ''); tocar('carrera_id') }
+                      // Mapea al carrera_id del catálogo para la BD
+                      const nombre = v.split(' (')[0].trim()
+                      const c = carreras.find(c => c.nombre.toLowerCase().includes(nombre.toLowerCase().split(' ').slice(0,3).join(' ')))
+                      set('carrera_id', c?.id ?? '')
+                    }}
+                    options={[
+                      { value: 'Ingeniería en Gestión Empresarial (Escolarizado)', label: 'Ingeniería en Gestión Empresarial (Escolarizado)' },
+                      { value: 'Ingeniería en Gestión Empresarial (Sabatino)',     label: 'Ingeniería en Gestión Empresarial (Sabatino)' },
+                      { value: 'Ingeniería en Sistemas Computacionales (Escolarizado)', label: 'Ingeniería en Sistemas Computacionales (Escolarizado)' },
+                      { value: 'Ingeniería en Sistemas Computacionales (Sabatino)',     label: 'Ingeniería en Sistemas Computacionales (Sabatino)' },
+                      { value: 'Ingeniería en Mecatrónica',                        label: 'Ingeniería en Mecatrónica' },
+                      { value: 'Ingeniería en Innovación Agrícola Sustentable (Escolarizado)', label: 'Ingeniería en Innovación Agrícola Sustentable (Escolarizado)' },
+                      { value: 'Ingeniería en Innovación Agrícola Sustentable (Sabatino)',     label: 'Ingeniería en Innovación Agrícola Sustentable (Sabatino)' },
+                      { value: 'Ingeniería en Industrias Alimentarias',            label: 'Ingeniería en Industrias Alimentarias' },
+                      { value: 'Ingeniería Ambiental',                             label: 'Ingeniería Ambiental' },
+                      { value: 'Ingeniería Industrial (Escolarizado)',              label: 'Ingeniería Industrial (Escolarizado)' },
+                      { value: 'Ingeniería Industrial (Sabatino)',                  label: 'Ingeniería Industrial (Sabatino)' },
+                    ]}
+                    placeholder="Dejar en blanco si elige la sede Vega de Alatorre"
                   />
                 </div>
+
+                {/* Carrera — Extensión Vega de Alatorre */}
+                <div className="mb-4">
+                  <SelectField
+                    label="Ingeniería a la que desea ingresar — Extensión Vega de Alatorre"
+                    value={form.carrera_vega}
+                    onChange={v => {
+                      set('carrera_vega', v)
+                      if (v) { set('carrera_martinez', ''); tocar('carrera_id') }
+                      const nombre = v.split(' (')[0].trim()
+                      const c = carreras.find(c => c.nombre.toLowerCase().includes(nombre.toLowerCase().split(' ').slice(0,3).join(' ')))
+                      set('carrera_id', c?.id ?? '')
+                    }}
+                    options={[
+                      { value: 'Ingeniería en Gestión Empresarial (Sabatino) — Vega',      label: 'Ingeniería en Gestión Empresarial (Sabatino)' },
+                      { value: 'Ingeniería en Sistemas Computacionales (Sabatino) — Vega', label: 'Ingeniería en Sistemas Computacionales (Sabatino)' },
+                      { value: 'Ingeniería Industrial (Sabatino) — Vega',                   label: 'Ingeniería Industrial (Sabatino)' },
+                      { value: 'Ingeniería Mecatrónica — Vega',                              label: 'Ingeniería Mecatrónica' },
+                    ]}
+                    placeholder="Dejar en blanco si seleccionó Sede Martínez de la Torre"
+                  />
+                </div>
+
+                {err('carrera_id') && <p className="mb-3 text-xs text-red-600">{err('carrera_id')}</p>}
 
                 <SelectField label="Turno preferido *" value={form.turno_preferido}
                   onChange={v => set('turno_preferido', v)} onBlur={() => tocar('turno_preferido')}

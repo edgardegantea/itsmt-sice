@@ -21,8 +21,8 @@ function Badge({ label, color }: { label: string; color?: string }) {
 
 function useCarreras() {
   return useQuery({
-    queryKey: ['carreras-admin'],
-    queryFn: () => apiClient.get('/admin/carreras').then(r => r.data.data as { id: string; nombre: string; clave: string }[]),
+    queryKey: ['carreras-select'],
+    queryFn: () => apiClient.get('/carreras').then(r => r.data.data?.data ?? r.data.data as { id: string; nombre: string; clave: string }[]),
   })
 }
 

@@ -1,4 +1,4 @@
-import { useCarrerasAdmin } from '../hooks/useCarreras'
+import { useCarreras } from '../hooks/useCarreras'
 
 interface Props {
   carrera_id: string
@@ -9,7 +9,7 @@ interface Props {
 const SELECT = 'px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/20 focus:border-[#1a3a5c] transition'
 
 export default function FiltrosAspirantes({ carrera_id, estatus, onChange }: Props) {
-  const { data: carreras = [] } = useCarrerasAdmin()
+  const { data: carreras = [] } = useCarreras()
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
