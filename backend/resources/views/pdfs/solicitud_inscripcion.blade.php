@@ -147,12 +147,13 @@
         <span class="lbl">INSTITUTO TECNOLÓGICO:</span>
         <span class="val">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</span>
       </td>
+      
+    </tr>
+    <tr>
       <td class="campo">
         <span class="lbl">PERIODO:</span>
         <span class="val">{{ $per->nombre }}</span>
       </td>
-    </tr>
-    <tr>
       <td colspan="2" class="campo">
         <span class="lbl">FECHA:</span>
         <span class="val">{{ now()->format('d') }} de {{ now()->locale('es')->isoFormat('MMMM') }} de {{ now()->format('Y') }}</span>
@@ -160,8 +161,11 @@
     </tr>
   </table>
 
+  <br>
+
   {{-- ── Título ── --}}
   <div class="titulo">Solicitud de Inscripción</div>
+  <br>
 
   {{-- ── Nombre ── --}}
   <table class="fila">
@@ -299,7 +303,6 @@
   <table class="firmas">
     <tr>
       <td style="width:50%;">
-        <div class="firma-espacio"></div>
         <div class="firma-nombre">
           {{ mb_strtoupper($asp->apellido_paterno, 'UTF-8') }}
           {{ mb_strtoupper($asp->apellido_materno ?? '', 'UTF-8') }},
@@ -308,7 +311,7 @@
         <div class="firma-cargo">Nombre y Firma del Aspirante</div>
       </td>
       <td style="width:50%;">
-        <div class="firma-espacio"></div>
+
         <div class="firma-nombre">
           {{ mb_strtoupper($jefeControlEscolar?->name ?? 'SELLO Y FIRMA', 'UTF-8') }}
         </div>
