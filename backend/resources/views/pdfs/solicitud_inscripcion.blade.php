@@ -108,7 +108,7 @@
     .firmas { width: 100%; border-collapse: collapse; margin-top: 20px; }
     .firmas td { text-align: center; vertical-align: bottom; padding: 0 20px; }
     .firma-espacio { height: 32px; }
-    .firma-nombre { font-size: 7.5pt; color: #111; font-weight: bold; border-top: 1px solid #333; padding-top: 4px; }
+    .firma-nombre { font-size: 7.5pt; color: #111; font-weight: bold; padding-top: 20px; }
     .firma-cargo  { font-size: 6.5pt; color: #777; margin-top: 2px; }
 
     /* ── Pie ── */
