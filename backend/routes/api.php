@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PermisosController;
 use App\Http\Controllers\Admin\DirectorioController;
 use App\Http\Controllers\Admin\DirectorioAreaController;
 use App\Http\Controllers\Admin\DirectorioPuestoController;
+use App\Http\Controllers\Admin\FirmantePdfController;
 use App\Http\Controllers\Academico\AlumnoController;
 use App\Http\Controllers\Academico\CarreraController;
 use App\Http\Controllers\Academico\PeriodoController;
@@ -62,6 +63,7 @@ Route::prefix('catalogo')->group(function () {
 
 // Configuración institucional (pública — la consumen Login, Layout, PDFs)
 Route::get('/configuracion', [ConfiguracionController::class, 'show']);
+Route::get('/firmantes-pdf', [FirmantePdfController::class, 'index']);
 
 // Sprint 1 — Admisión: endpoints públicos
 Route::get('/carreras',        [CarreraController::class, 'index']);
@@ -189,6 +191,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/admin/configuracion',            [ConfiguracionController::class, 'update']);
     Route::post('/admin/configuracion/logo',        [ConfiguracionController::class, 'subirLogo']);
     Route::delete('/admin/configuracion/logo',      [ConfiguracionController::class, 'eliminarLogo']);
+
+    // Admin — Firmantes PDF
+    Route::get('/admin/firmantes-pdf',                      [FirmantePdfController::class, 'index']);
+    Route::post('/admin/firmantes-pdf',                     [FirmantePdfController::class, 'store']);
+    Route::patch('/admin/firmantes-pdf/{firmantePdf}',      [FirmantePdfController::class, 'update']);
+    Route::delete('/admin/firmantes-pdf/{firmantePdf}',     [FirmantePdfController::class, 'destroy']);
 
     // Admin — Dashboard
     Route::get('/admin/dashboard', [DashboardController::class, 'index']);

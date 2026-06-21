@@ -203,14 +203,14 @@ html, body {
         <td>
           <div class="firma-space"></div>
           <div class="firma-line"></div>
-          <div class="firma-name">Elaboró</div>
-          <div class="firma-rol">Nombre y Firma</div>
+          <div class="firma-name">{{ mb_strtoupper($jefeControlEscolar?->name ?? 'Jefe de Servicios Escolares', 'UTF-8') }}</div>
+          <div class="firma-rol">Jefe(a) de Servicios Escolares</div>
           <div class="firma-date">Fecha: _______________</div>
         </td>
         <td>
           <div class="firma-space"></div>
           <div class="firma-line"></div>
-          <div class="firma-name">Autorizó</div>
+          <div class="firma-name">{{ mb_strtoupper($subdirectorAcademico?->name ?? 'Subdirector(a) Académico(a)', 'UTF-8') }}</div>
           <div class="firma-rol">Subdirector(a) Académico(a)</div>
           <div class="firma-date">Fecha: _______________</div>
         </td>

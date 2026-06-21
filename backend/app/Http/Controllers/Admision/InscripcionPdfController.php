@@ -10,6 +10,7 @@ use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
 use App\Http\Controllers\Controller;
 use App\Domains\Institucional\Models\ConfiguracionInstitucional;
+use App\Domains\Institucional\Models\FirmantePdf;
 use App\Models\User;
 use App\Services\GotenbergService;
 use Illuminate\Http\Response;
@@ -20,11 +21,15 @@ class InscripcionPdfController extends Controller
 
     private function firmantes(): array
     {
+        $map = FirmantePdf::where('activo', true)
+            ->orderBy('orden')
+            ->get()
+            ->keyBy('clave');
+
         return [
-            'directorGeneral'      => User::role('admin')->orderBy('created_at')->first(),
-            'subdirectorAcademico' => User::where('email', 'subacademica@martineztorre.tecnm.mx')->first(),
-            'jefeControlEscolar'   => User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
-                                         ?? User::role('personal_administrativo')->orderBy('created_at')->first(),
+            'directorGeneral'      => $map->get('director_general'),
+            'subdirectorAcademico' => $map->get('subdirector_academico'),
+            'jefeControlEscolar'   => $map->get('jefe_servicios_escolares'),
         ];
     }
 
@@ -143,8 +148,9 @@ class InscripcionPdfController extends Controller
         $pdfs = [];
         $idx  = 1;
         foreach ($porCarrera as $nombreCarrera => $grupo) {
-            $html   = view('pdfs.lista_aspirantes_por_carrera', compact(
-                'periodo', 'cfg', 'nombreCarrera', 'grupo', 'idx', 'totalCarreras'
+            $html   = view('pdfs.lista_aspirantes_por_carrera', array_merge(
+                compact('periodo', 'cfg', 'nombreCarrera', 'grupo', 'idx', 'totalCarreras'),
+                $this->firmantes()
             ))->render();
             $pdfs[] = $this->gotenberg->htmlToPdf($html, $pdfOptions);
             $idx++;
