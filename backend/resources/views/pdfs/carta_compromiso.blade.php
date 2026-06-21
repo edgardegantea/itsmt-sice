@@ -11,7 +11,7 @@
 </p>
 
 <div class="section">COMPROMISOS DEL ESTUDIANTE</div>
-<ol style="font-size:9pt; padding-left:18px; line-height:1.7;">
+<ol style="font-size:9pt; padding-left:18px; line-height:1.5;">
   <li>Cumplir puntualmente con el pago de cuotas y derechos escolares en los plazos establecidos.</li>
   <li>Acreditar el plan de estudios correspondiente a su carrera conforme a la normativa del TecNM.</li>
   <li>Hacer uso adecuado de las instalaciones, equipos y recursos de la institución.</li>
@@ -21,7 +21,7 @@
 </ol>
 
 <div class="section">COMPROMISOS DE LA INSTITUCIÓN</div>
-<ol style="font-size:9pt; padding-left:18px; line-height:1.7;">
+<ol style="font-size:9pt; padding-left:18px; line-height:1.5;">
   <li>Proporcionar formación profesional de calidad conforme al plan de estudios TecNM.</li>
   <li>Garantizar atención en ventanilla y servicios escolares en horarios establecidos.</li>
   <li>Gestionar los trámites de reinscripción en los periodos correspondientes.</li>
