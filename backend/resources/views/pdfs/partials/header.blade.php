@@ -32,7 +32,7 @@
     table.datos td { padding: 4px 6px; border: 1px solid #ccc; }
     table.datos td.label { font-weight: bold; background: #f0f4f8; width: 38%; }
     .firma-block { display: inline-block; text-align: center; width: 44%; margin-top: 40px; }
-    .firma-line { border-top: 0px solid #333; margin-top: 50px; }
+    .firma-line { border-top: 0px solid #fff; margin-top: 50px; }
     .footer { font-size: 7.5pt; color: #777; text-align: center; margin-top: 24px;
               border-top: 1px solid #ddd; padding-top: 6px; }
   </style>
