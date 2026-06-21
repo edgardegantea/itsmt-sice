@@ -11,16 +11,28 @@
 <head>
 <meta charset="UTF-8">
 <style>
+@page { size: A4 portrait; margin: 18mm 20mm; }
+
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
   font-family: Arial, sans-serif;
   font-size: 9.5pt;
   color: #111;
   text-transform: uppercase;
-  /* margen inferior amplio para que el bloque fijo no tape el contenido */
-  padding: 0 0 80px;
   background: #fff;
 }
+
+/* ── Un bloque = una página ──────────────────────────────────── */
+.carrera-block {
+  display: flex;
+  flex-direction: column;
+  min-height: 238mm;          /* altura útil A4 con márgenes @page */
+  page-break-after: always;
+}
+.carrera-block:last-child { page-break-after: avoid; }
+
+/* El espacio entre tabla y firmas se expande para empujar firmas al fondo */
+.spacer { flex: 1; }
 
 /* ── Encabezado ─────────────────────────────────────────────── */
 .hdr-wrap { display: table; width: 100%; border-collapse: collapse; }
@@ -33,10 +45,9 @@ body {
 .hdr-center .dep  { font-size: 8pt; color: #555; margin-top: 4px; }
 .hdr-meta { text-align: right; font-size: 7pt; color: #777; padding-left: 12px; line-height: 1.8; white-space: nowrap; }
 .hdr-meta strong { color: #333; }
-
 .hdr-rule { border: none; border-top: 2px solid #111; margin: 10px 0 16px; }
 
-/* ── Título del documento ────────────────────────────────────── */
+/* ── Título ──────────────────────────────────────────────────── */
 .doc-title {
   text-align: center;
   font-size: 12.5pt;
@@ -50,79 +61,43 @@ body {
   margin-bottom: 16px;
 }
 
-/* ── Bloque de datos del documento ──────────────────────────── */
+/* ── Campos ──────────────────────────────────────────────────── */
 .doc-fields { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
 .doc-fields tr td { padding: 5px 0; font-size: 9pt; vertical-align: bottom; }
-.doc-fields .lbl {
-  font-weight: bold;
-  color: #111;
-  width: 28%;
-  padding-right: 10px;
-  white-space: nowrap;
-}
-.doc-fields .val {
-  color: #111;
-  padding-bottom: 2px;
-}
+.doc-fields .lbl { font-weight: bold; color: #111; width: 28%; padding-right: 10px; white-space: nowrap; }
+.doc-fields .val { color: #111; padding-bottom: 2px; }
+.doc-periodo { text-align: right; font-size: 7.5pt; color: #555; margin: 8px 0 14px; }
 
-/* ── Período ─────────────────────────────────────────────────── */
-.doc-periodo {
-  text-align: right;
-  font-size: 7.5pt;
-  color: #555;
-  margin: 8px 0 14px;
-}
-
-/* ── Tabla de aspirantes ─────────────────────────────────────── */
+/* ── Tabla ───────────────────────────────────────────────────── */
 .lista { width: 100%; border-collapse: collapse; font-size: 9pt; }
 .lista thead tr th {
-  background: #333;
-  color: #fff;
-  font-weight: bold;
-  font-size: 9pt;
-  padding: 7px 9px;
+  background: #333; color: #fff; font-weight: bold; font-size: 9pt; padding: 7px 9px;
 }
-.lista tbody tr td {
-  padding: 6px 9px;
-  color: #111;
-  font-size: 9pt;
-}
-.lista tbody tr:nth-child(odd) td  { background: #f4f4f4; }
+.lista tbody tr td { padding: 6px 9px; color: #111; font-size: 9pt; }
+.lista tbody tr:nth-child(odd)  td { background: #f4f4f4; }
 .lista tbody tr:nth-child(even) td { background: #ffffff; }
-
 .col-no  { text-align: center; width: 6%; color: #555; }
 .col-ap  { width: 25%; font-weight: bold; }
 .col-am  { width: 22%; }
 .col-nm  { width: 26%; }
 .col-fch { text-align: center; width: 21%; }
-
-/* Fila total */
 .row-total td {
-  background: #e8e8e8 !important;
-  color: #111 !important;
-  font-weight: bold;
-  font-size: 9pt;
-  padding: 6px 9px;
+  background: #e8e8e8 !important; color: #111 !important;
+  font-weight: bold; font-size: 9pt; padding: 6px 9px;
   border-top: 1.5px solid #555 !important;
 }
 .row-total .tot-label { text-align: right; }
 .row-total .tot-val   { text-align: center; }
 
-/* ── Bloque fijo al pie (firmas + folio) ─────────────────────── */
-.page-bottom {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+/* ── Firmas — fluyen al final del bloque ─────────────────────── */
+.firmas-wrap {
+  border-top: 1px solid #ccc;
+  padding-top: 14px;
+  margin-top: 0;
 }
-.firmas-sep { border: none; border-top: 1px solid #ccc; margin-bottom: 14px; }
-
 .firmas-grid { width: 100%; border-collapse: collapse; }
 .firmas-grid td {
-  width: 50%;
-  text-align: center;
-  vertical-align: bottom;
-  padding: 0 24px;
+  width: 50%; text-align: center; vertical-align: bottom; padding: 0 24px;
 }
 .firma-space { height: 44px; }
 .firma-line  { border-top: 1px solid #333; margin-bottom: 6px; }
@@ -134,10 +109,6 @@ body {
 .page-footer td { font-size: 7pt; color: #aaa; vertical-align: middle; }
 .pf-left  { text-align: left; }
 .pf-right { text-align: right; }
-
-/* ── Saltos de página ────────────────────────────────────────── */
-.carrera-block { page-break-after: always; }
-.carrera-block:last-child { page-break-after: avoid; }
 </style>
 </head>
 <body>
@@ -222,9 +193,11 @@ body {
     </tbody>
   </table>
 
-  {{-- ── Firmas + pie — fijos al fondo, una instancia por carrera ── --}}
-  <div class="page-bottom">
-    <hr class="firmas-sep">
+  {{-- Spacer que empuja las firmas al fondo del bloque --}}
+  <div class="spacer"></div>
+
+  {{-- ── Firmas al fondo del bloque ─────────────────────────── --}}
+  <div class="firmas-wrap">
     <table class="firmas-grid">
       <tr>
         <td>
