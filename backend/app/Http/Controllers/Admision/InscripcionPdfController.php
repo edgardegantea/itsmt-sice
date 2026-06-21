@@ -77,7 +77,8 @@ class InscripcionPdfController extends Controller
 
         $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno']);
 
-        $html = view('pdfs.carta_compromiso', array_merge(compact('inscripcion'), $this->firmantes()))->render();
+        $cfg  = ConfiguracionInstitucional::instancia();
+        $html = view('pdfs.carta_compromiso', array_merge(compact('inscripcion', 'cfg'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         $inscripcion->update(['carta_compromiso_generada' => true]);
@@ -92,7 +93,8 @@ class InscripcionPdfController extends Controller
 
         $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno']);
 
-        $html = view('pdfs.contrato_estudiante', array_merge(compact('inscripcion'), $this->firmantes()))->render();
+        $cfg  = ConfiguracionInstitucional::instancia();
+        $html = view('pdfs.contrato_estudiante', array_merge(compact('inscripcion', 'cfg'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         $inscripcion->update(['contrato_generado' => true]);
@@ -176,7 +178,8 @@ class InscripcionPdfController extends Controller
             $inscripcion->alumno->update(['pendiente_certificado_bachillerato' => true]);
         }
 
-        $html = view('pdfs.carta_compromiso_docs', array_merge(compact('inscripcion'), $this->firmantes()))->render();
+        $cfg  = ConfiguracionInstitucional::instancia();
+        $html = view('pdfs.carta_compromiso_docs', array_merge(compact('inscripcion', 'cfg'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         return response($pdf, 200, $this->headers("carta-compromiso-docs-{$inscripcion->numero_control}.pdf"));
