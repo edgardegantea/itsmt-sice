@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type CargaAcademica, type Horario } from '../../services/academico'
-import { selectCls, useCarreras, usePeriodos } from './shared'
+import { selectCls, useCarreras, usePeriodos, mutationError } from './shared'
 
 const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const
 const DIAS_LABEL: Record<typeof DIAS[number], string> = {
@@ -72,7 +72,7 @@ export default function HorariosTab() {
     setGuardado(false)
     const existentes = (horarios as Horario[])
       .filter(h => h.carga_academica_id === id)
-      .map(h => ({ dia_semana: h.dia_semana as any, hora_inicio: h.hora_inicio, hora_fin: h.hora_fin }))
+      .map(h => ({ dia_semana: h.dia_semana, hora_inicio: h.hora_inicio, hora_fin: h.hora_fin }))
     setBloques(existentes.length > 0 ? existentes : [{ dia_semana: 'lunes', hora_inicio: '07:00', hora_fin: '09:00' }])
   }
 
@@ -187,7 +187,7 @@ export default function HorariosTab() {
                 )}
                 {mutSave.isError && (
                   <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs text-red-700">
-                    {(mutSave.error as any)?.response?.data?.message ?? 'Error al guardar horarios.'}
+                    {mutationError(mutSave.error)}
                   </div>
                 )}
                 {guardado && (

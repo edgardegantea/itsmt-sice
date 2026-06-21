@@ -84,7 +84,7 @@ export default function MallaTab() {
                     {porSemestre[s].map(m => (
                       <tr key={m.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                         <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{m.materia?.clave}</td>
-                        <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{(m.materia as any)?.clave_oficial_tecnm ?? '—'}</td>
+                        <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{m.materia?.clave_oficial_tecnm ?? '—'}</td>
                         <td className="px-4 py-2.5 font-medium text-slate-800">{m.materia?.nombre}</td>
                         <td className="px-4 py-2.5 text-slate-600">{m.materia?.creditos}</td>
                         <td className="px-4 py-2.5 text-slate-500 capitalize">{m.materia?.tipo}</td>

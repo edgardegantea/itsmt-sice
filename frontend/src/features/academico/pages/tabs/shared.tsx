@@ -43,6 +43,12 @@ export function EmptyRow({ cols, msg = 'Sin registros.' }: { cols: number; msg?:
   return <tr><td colSpan={cols} className="px-4 py-8 text-center text-slate-400 text-sm">{msg}</td></tr>
 }
 
+// Helper reutilizable para mensajes de error en mutaciones
+export function mutationError(e: unknown): string {
+  return (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    ?? 'Ocurrió un error. Intenta de nuevo.'
+}
+
 // Shared select queries
 export function useCarreras() {
   return useQuery({

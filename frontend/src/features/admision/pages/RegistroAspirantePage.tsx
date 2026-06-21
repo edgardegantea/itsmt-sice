@@ -457,15 +457,15 @@ export default function RegistroAspirantePage() {
       folio_exani:            form.folio_exani            || undefined,
       folio_preinscripcion_tecnm: form.folio_preinscripcion_tecnm || undefined,
       puntaje_exani:          form.puntaje_exani ? Number(form.puntaje_exani) : undefined,
-      tiene_equipo_computo:   form.tiene_equipo_computo,   // "1" o "0" — Laravel boolean acepta estos valores
+      tiene_equipo_computo:   form.tiene_equipo_computo === '1',
       medio_enterado:         form.medio_enterado === 'Otros' ? form.medio_enterado_otro : form.medio_enterado,
       campus_preferido:       campusPreferido,
       modalidad_preferida:    modalidad,
       constancia_bachillerato: constanciaFile!,
       documentos:             Object.keys(documentos).length ? documentos : undefined,
-    } as any, {
-      onError: (err: any) => {
-        console.error('422 detalle:', err?.response?.data)
+    }, {
+      onError: (err: unknown) => {
+        console.error('422 detalle:', err)
         setErrores(extraerErroresApi(err))
       },
     })

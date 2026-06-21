@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
-import { permanenciaApi, type Reinscripcion, type Baja, type Adeudo, type OrdenReinscripcion } from '../services/permanencia'
+import { permanenciaApi, type Reinscripcion, type Baja, type Adeudo, type OrdenReinscripcion, type TipoBaja } from '../services/permanencia'
+import { mutationError } from '../../academico/pages/tabs/shared'
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 
@@ -19,17 +20,20 @@ function Badge({ label, color }: { label: string; color?: string }) {
   )
 }
 
+type CarreraItem = { id: string; nombre: string; clave: string }
+type PeriodoItem = { id: string; nombre: string; activo: boolean }
+
 function useCarreras() {
-  return useQuery({
+  return useQuery<CarreraItem[]>({
     queryKey: ['carreras-select'],
-    queryFn: () => apiClient.get('/carreras').then(r => r.data.data?.data ?? r.data.data as { id: string; nombre: string; clave: string }[]),
+    queryFn: () => apiClient.get('/carreras').then(r => r.data.data?.data ?? r.data.data),
   })
 }
 
 function usePeriodos() {
-  return useQuery({
+  return useQuery<PeriodoItem[]>({
     queryKey: ['periodos-select'],
-    queryFn: () => apiClient.get('/admin/periodos').then(r => r.data.data as { id: string; nombre: string; activo: boolean }[]),
+    queryFn: () => apiClient.get('/admin/periodos').then(r => r.data.data),
   })
 }
 
@@ -78,7 +82,7 @@ function AccionModal({ r, onClose }: { r: Reinscripcion; onClose: () => void }) 
           />
         </div>
 
-        {mut.isError && <p className="text-xs text-red-600">{(mut.error as any)?.response?.data?.message ?? 'Error al actualizar.'}</p>}
+        {mut.isError && <p className="text-xs text-red-600">{mutationError(mut.error)}</p>}
 
         <div className="flex gap-3 justify-end">
           <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">Cancelar</button>
@@ -134,11 +138,11 @@ function TabReinscripciones() {
         </select>
         <select value={filtroCarrera} onChange={e => setFiltroCarrera(e.target.value)} className={selectCls}>
           <option value="">Todas las carreras</option>
-          {carreras.map((c: any) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
+          {carreras.map((c) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
         </select>
         <select value={filtroPeriodo} onChange={e => setFiltroPeriodo(e.target.value)} className={selectCls}>
           <option value="">Todos los periodos</option>
-          {periodos.map((p: any) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+          {periodos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
         </select>
       </div>
 
@@ -226,7 +230,7 @@ function TabOrdenReinscripcion() {
       setForm({ periodo_id: '', carrera_id: '', semestre: '1', fecha_inicio_reinscripcion: '', fecha_fin_reinscripcion: '' })
       setError('')
     },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Error al publicar.'),
+    onError: (e) => setError(mutationError(e)),
   })
 
   const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
@@ -241,14 +245,14 @@ function TabOrdenReinscripcion() {
             <label className="block text-xs font-medium text-slate-600 mb-1">Periodo</label>
             <select value={form.periodo_id} onChange={e => setForm(f => ({...f, periodo_id: e.target.value}))} className={inp}>
               <option value="">Seleccionar…</option>
-              {periodos.map((p: any) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {periodos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Carrera</label>
             <select value={form.carrera_id} onChange={e => setForm(f => ({...f, carrera_id: e.target.value}))} className={inp}>
               <option value="">Seleccionar…</option>
-              {carreras.map((c: any) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
+              {carreras.map((c) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
             </select>
           </div>
           <div>
@@ -287,7 +291,7 @@ function TabOrdenReinscripcion() {
           <select value={periodoConsulta} onChange={e => setPeriodoConsulta(e.target.value)}
             className="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30">
             <option value="">Seleccionar periodo…</option>
-            {periodos.map((p: any) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+            {periodos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </select>
         </div>
 
@@ -333,7 +337,7 @@ function NuevoAdeudoModal({ onClose }: { onClose: () => void }) {
   const mut = useMutation({
     mutationFn: () => permanenciaApi.crearAdeudo({ alumno_id: alumnoId, concepto, monto: parseFloat(monto) }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['adeudos-admin'] }); onClose() },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Error.'),
+    onError: (e) => setError(mutationError(e)),
   })
 
   const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
@@ -409,7 +413,7 @@ function TabAdeudos() {
         </select>
         <select value={filtroCarrera} onChange={e => setFiltroCarrera(e.target.value)} className={selectCls}>
           <option value="">Todas las carreras</option>
-          {carreras.map((c: any) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
+          {carreras.map((c) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
         </select>
         <button
           onClick={() => setShowNuevo(true)}
@@ -490,7 +494,7 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
     mutationFn: () => permanenciaApi.registrarBaja({
       alumno_id: form.alumno_id,
       periodo_id: form.periodo_id,
-      tipo_baja: form.tipo_baja as any,
+      tipo_baja: form.tipo_baja as TipoBaja,
       motivo_enum: form.motivo_enum || undefined,
       motivo_texto: form.motivo_texto || undefined,
       fecha_solicitud: form.fecha_solicitud,
@@ -498,11 +502,11 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
       reingreso_posible: form.reingreso_posible,
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['bajas-admin'] }); onClose() },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Error al registrar.'),
+    onError: (e) => setError(mutationError(e)),
   })
 
   const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
-  const f = (k: keyof typeof form, v: any) => setForm(prev => ({ ...prev, [k]: v }))
+  const f = (k: keyof typeof form, v: string | boolean | number) => setForm(prev => ({ ...prev, [k]: v }))
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -518,7 +522,7 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
             <label className="block text-xs font-medium text-slate-600 mb-1">Periodo</label>
             <select value={form.periodo_id} onChange={e => f('periodo_id', e.target.value)} className={inp}>
               <option value="">Seleccionar…</option>
-              {periodos.map((p: any) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {periodos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </div>
           <div>
@@ -600,11 +604,11 @@ function TabBajas() {
         </select>
         <select value={filtroCarrera} onChange={e => setFiltroCarrera(e.target.value)} className={selectCls}>
           <option value="">Todas las carreras</option>
-          {carreras.map((c: any) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
+          {carreras.map((c) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
         </select>
         <select value={filtroPeriodo} onChange={e => setFiltroPeriodo(e.target.value)} className={selectCls}>
           <option value="">Todos los periodos</option>
-          {periodos.map((p: any) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+          {periodos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
         </select>
         <button
           onClick={() => setShowModal(true)}

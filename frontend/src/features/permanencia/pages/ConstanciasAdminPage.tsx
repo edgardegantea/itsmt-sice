@@ -29,9 +29,9 @@ export default function ConstanciasAdminPage() {
   const [filtroCarrera,  setFiltroCarrera]  = useState('')
   const { descargar, generando } = useConstanciaPdf()
 
-  const { data: carreras = [] } = useQuery({
+  const { data: carreras = [] } = useQuery<{ id: string; nombre: string; clave: string }[]>({
     queryKey: ['carreras-select'],
-    queryFn: () => apiClient.get('/carreras').then(r => r.data.data?.data ?? r.data.data as { id: string; nombre: string; clave: string }[]),
+    queryFn: () => apiClient.get('/carreras').then(r => r.data.data?.data ?? r.data.data),
   })
 
   const params: Record<string, string> = {}
@@ -64,7 +64,7 @@ export default function ConstanciasAdminPage() {
             className="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
           >
             <option value="">Todas las carreras</option>
-            {carreras.map((c: any) => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
+            {carreras.map(c => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
           </select>
           <select
             value={filtroEstatus}

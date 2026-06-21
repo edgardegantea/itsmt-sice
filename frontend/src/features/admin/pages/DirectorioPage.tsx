@@ -25,6 +25,7 @@ interface PersonaDirectorio {
   area: string | null; area_id: string | null; puesto_id: string | null
   email: string | null; telefono: string | null; extension: string | null
   orden: number; activo: boolean; firma_documentos: boolean
+  clave_firma: string | null
   user: UsuarioSimple | null
   directorio_area: Area | null
   puesto: Puesto | null
@@ -33,12 +34,12 @@ interface PersonaDirectorio {
 type PersonaForm = {
   user_id: string; nombre: string; cargo: string; area_id: string
   puesto_id: string; email: string; telefono: string; extension: string
-  orden: number; activo: boolean; firma_documentos: boolean
+  orden: number; activo: boolean; firma_documentos: boolean; clave_firma: string
 }
 type AreaForm    = { nombre: string; descripcion: string; tipo: string; orden: number; activo: boolean }
 type PuestoForm  = { nombre: string; descripcion: string; funciones: string; area_id: string; firma_documentos: boolean; orden: number; activo: boolean }
 
-const PERSONA_EMPTY: PersonaForm = { user_id:'', nombre:'', cargo:'', area_id:'', puesto_id:'', email:'', telefono:'', extension:'', orden:0, activo:true, firma_documentos:false }
+const PERSONA_EMPTY: PersonaForm = { user_id:'', nombre:'', cargo:'', area_id:'', puesto_id:'', email:'', telefono:'', extension:'', orden:0, activo:true, firma_documentos:false, clave_firma:'' }
 const AREA_EMPTY: AreaForm       = { nombre:'', descripcion:'', tipo:'departamento', orden:0, activo:true }
 const PUESTO_EMPTY: PuestoForm   = { nombre:'', descripcion:'', funciones:'', area_id:'', firma_documentos:false, orden:0, activo:true }
 
@@ -182,6 +183,7 @@ function PersonaModal({ persona, areas, puestos, usuarios, onClose }: {
     email: persona.email ?? '', telefono: persona.telefono ?? '',
     extension: persona.extension ?? '', orden: persona.orden,
     activo: persona.activo, firma_documentos: persona.firma_documentos,
+    clave_firma: persona.clave_firma ?? '',
   } : { ...PERSONA_EMPTY })
 
   const set = <K extends keyof PersonaForm>(k: K, v: PersonaForm[K]) => setForm(f => ({ ...f, [k]: v }))
@@ -277,10 +279,37 @@ function PersonaModal({ persona, areas, puestos, usuarios, onClose }: {
           </Field>
         </div>
 
-        <div className="flex gap-6 pt-1 border-t">
+        <div className="flex gap-6 pt-1 border-t flex-wrap">
           <Toggle checked={form.activo} onChange={v => set('activo', v)} label="Activo en directorio" />
           <Toggle checked={form.firma_documentos} onChange={v => set('firma_documentos', v)} label="Firma documentos oficiales" />
         </div>
+
+        {form.firma_documentos && (
+          <div className="pt-2">
+            <Field label="Clave de rol en documentos PDF">
+              <div className="flex gap-2">
+                <Input
+                  value={form.clave_firma}
+                  onChange={e => set('clave_firma', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))}
+                  placeholder="ej. subdirector_academico"
+                />
+                <select
+                  className="px-2 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/20 focus:border-[#1a3a5c] transition"
+                  value=""
+                  onChange={e => { if (e.target.value) set('clave_firma', e.target.value) }}
+                >
+                  <option value="">Sugeridas…</option>
+                  <option value="director_general">director_general</option>
+                  <option value="subdirector_academico">subdirector_academico</option>
+                  <option value="jefe_servicios_escolares">jefe_servicios_escolares</option>
+                  <option value="elaboro">elaboro</option>
+                  <option value="autorizo">autorizo</option>
+                </select>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Identifica el rol de esta persona en cada documento. Solo minúsculas y guiones bajos.</p>
+            </Field>
+          </div>
+        )}
       </div>
     </Modal>
   )

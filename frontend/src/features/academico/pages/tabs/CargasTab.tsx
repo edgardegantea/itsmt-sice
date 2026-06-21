@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type CargaAcademica } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, selectCls, inputCls, usePeriodos } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, selectCls, inputCls, usePeriodos, mutationError } from './shared'
 
 export default function CargasTab() {
   const qc = useQueryClient()
@@ -29,13 +29,13 @@ export default function CargasTab() {
   const save = useMutation({
     mutationFn: () => modal?.id ? academicoApi.updateCarga(modal.id!, modal) : academicoApi.createCarga(modal!),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cargas'] }); addToast('Carga guardada.', 'success'); setModal(null) },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const del = useMutation({
     mutationFn: (id: string) => academicoApi.deleteCarga(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cargas'] }); addToast('Carga eliminada.', 'success') },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const set = (k: keyof CargaAcademica, v: unknown) => setModal(m => ({ ...m, [k]: v }))

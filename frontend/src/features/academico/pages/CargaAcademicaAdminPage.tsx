@@ -3,6 +3,15 @@ import { useQuery } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import { useCargaAcademicaPdf } from '../hooks/useCargaAcademicaPdf'
 
+type AlumnoItem = {
+  id: string
+  numero_control: string
+  semestre_actual: number
+  carrera?: { nombre: string; clave: string }
+  user?: { name: string }
+  inscripcion?: { aspirante?: { nombres: string; apellido_paterno: string; apellido_materno?: string } }
+}
+
 const selectCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
 
 export default function CargaAcademicaAdminPage() {
@@ -30,7 +39,7 @@ export default function CargaAcademicaAdminPage() {
     queryKey: ['alumnos-carga', params],
     queryFn: () => apiClient.get('/alumnos', { params }).then(r => {
       const d = r.data.data
-      return (Array.isArray(d) ? d : d?.data ?? []) as any[]
+      return (Array.isArray(d) ? d : d?.data ?? []) as AlumnoItem[]
     }),
     enabled: !!periodoId,
   })
@@ -97,7 +106,7 @@ export default function CargaAcademicaAdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {alumnos.map((a: any) => (
+              {alumnos.map((a) => (
                 <tr key={a.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                   <td className="px-4 py-3 font-medium text-slate-800">
                     {a.user?.name

@@ -56,7 +56,7 @@ export default function CredencialPdf({ alumno }: Props) {
   const asp = alumno.inscripcion?.aspirante
   const apellidos = [asp?.apellido_paterno, asp?.apellido_materno].filter(Boolean).join(' ')
   const nombres   = asp?.nombres ?? ''
-  const periodo   = (alumno as any).periodo_ingreso?.nombre ?? ''
+  const periodo   = alumno.periodo_ingreso?.nombre ?? ''
 
   return (
     <Document title={`Credencial — ${alumno.numero_control}`}>

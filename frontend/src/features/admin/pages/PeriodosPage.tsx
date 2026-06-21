@@ -141,7 +141,7 @@ export default function PeriodosPage() {
       qc.invalidateQueries({ queryKey: ['admin-periodos'] })
       success('Periodo eliminado correctamente.')
     },
-    onError: (err: any) => toastError(err?.response?.data?.message ?? 'Error al eliminar el periodo.'),
+    onError: (err: { response?: { data?: { message?: string } } }) => toastError(err?.response?.data?.message ?? 'Error al eliminar el periodo.'),
   })
 
   return (

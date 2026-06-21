@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Materia } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls, useCarreras } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls, useCarreras, mutationError } from './shared'
 
 const TIPO_LABEL: Record<string, string> = {
   obligatoria: 'Obligatoria', optativa: 'Optativa', taller: 'Taller', lab: 'Laboratorio',
@@ -36,13 +36,13 @@ export default function MateriasTab() {
       ? academicoApi.updateMateria(modal.id!, modal)
       : academicoApi.createMateria({ ...modal, carrera_id: modal?.carrera_id ?? filtroCarrera }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['materias'] }); addToast('Materia guardada.', 'success'); setModal(null) },
-    onError:   (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError:   (e) => addToast(mutationError(e), 'error'),
   })
 
   const del = useMutation({
     mutationFn: (id: string) => academicoApi.deleteMateria(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['materias'] }); addToast('Materia eliminada.', 'success') },
-    onError:   (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError:   (e) => addToast(mutationError(e), 'error'),
   })
 
   const set = (k: keyof Materia, v: unknown) => setModal(m => ({ ...m, [k]: v }))

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Tutoria } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, Th, EmptyRow, selectCls, usePeriodos, useAlumnos } from './shared'
+import { Field, Th, EmptyRow, selectCls, usePeriodos, useAlumnos, mutationError } from './shared'
 
 export default function TutoriasTab() {
   const qc = useQueryClient()
@@ -28,13 +28,13 @@ export default function TutoriasTab() {
   const saveMasivo = useMutation({
     mutationFn: () => academicoApi.createTutoriaMasiva(modal!),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tutorias'] }); addToast('Tutorías asignadas.', 'success'); setModal(null) },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const del = useMutation({
     mutationFn: (id: string) => academicoApi.deleteTutoria(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tutorias'] }); addToast('Tutoría eliminada.', 'success') },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const toggleAlumno = (id: string) =>

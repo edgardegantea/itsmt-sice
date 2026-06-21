@@ -13,8 +13,8 @@ export default function ConfiguracionProvider() {
   }, [config.color_primario, config.color_secundario])
 
   useEffect(() => {
-    applyFont((config as any).fuente_interfaz ?? DEFAULT_FONT)
-  }, [(config as any).fuente_interfaz])
+    applyFont(config.fuente_interfaz ?? DEFAULT_FONT)
+  }, [config.fuente_interfaz])
 
   useEffect(() => {
     if (config.nombre_corto) {

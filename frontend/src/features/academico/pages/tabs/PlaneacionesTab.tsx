@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type PlaneacionDocente, type EstatusPlaneacion } from '../../services/academico'
-import { selectCls, usePeriodos, Th, EmptyRow } from './shared'
+import { selectCls, usePeriodos, Th, EmptyRow, mutationError } from './shared'
 
 const ESTATUS_COLOR: Record<EstatusPlaneacion, string> = {
   borrador:  'bg-slate-100 text-slate-600',
@@ -51,7 +51,7 @@ function RevisionModal({ planeacion, onClose }: { planeacion: PlaneacionDocente;
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Nuevo estatus *</label>
-            <select value={estatus} onChange={e => setEstatus(e.target.value as any)} className={selectCls}>
+            <select value={estatus} onChange={e => setEstatus(e.target.value as 'revisada' | 'liberada' | 'devuelta')} className={selectCls}>
               <option value="revisada">Revisada — en proceso</option>
               <option value="liberada">Liberada — aprobada</option>
               <option value="devuelta">Devuelta — requiere correcciones</option>
@@ -68,7 +68,7 @@ function RevisionModal({ planeacion, onClose }: { planeacion: PlaneacionDocente;
             />
           </div>
           {mutCambiar.isError && (
-            <p className="text-xs text-red-600">{(mutCambiar.error as any)?.response?.data?.message ?? 'Error al guardar.'}</p>
+            <p className="text-xs text-red-600">{mutationError(mutCambiar.error)}</p>
           )}
         </div>
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">

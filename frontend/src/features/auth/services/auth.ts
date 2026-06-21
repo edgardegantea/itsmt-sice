@@ -21,6 +21,7 @@ export interface AuthUser {
   carrera_id?: string | null
   carrera?: AuthCarrera | null
   // campos extra para rol alumno
+  alumno_id?: string
   numero_control?: string
   semestre?: number
   estatus?: string

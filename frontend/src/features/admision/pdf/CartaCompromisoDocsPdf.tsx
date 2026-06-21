@@ -35,8 +35,8 @@ export default function CartaCompromisoDocsPdf({ inscripcion, cfg }: Props) {
   const { aspirante: asp, carrera, periodo } = inscripcion
   const today = new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' })
   const folio = `${inscripcion.numero_control}-CCD`
-  const fechaLimite = (periodo as any).fecha_limite_baja_parcial
-    ? new Date((periodo as any).fecha_limite_baja_parcial + 'T12:00:00').toLocaleDateString('es-MX')
+  const fechaLimite = periodo.fecha_limite_baja_parcial
+    ? new Date(periodo.fecha_limite_baja_parcial + 'T12:00:00').toLocaleDateString('es-MX')
     : 'fecha por confirmar'
 
   return (

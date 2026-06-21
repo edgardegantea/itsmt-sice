@@ -4,8 +4,186 @@ import { configuracionApi, type ConfiguracionInstitucional } from '../services/c
 import { useToastStore } from '../../../store/toastStore'
 import { FONT_OPTIONS, loadGoogleFont, DEFAULT_FONT } from '../../../config/fonts'
 import { useAuthStore } from '../../../store/authStore'
+import apiClient from '../../../config/apiClient'
 
-type TabId = 'institucion' | 'identidad' | 'login' | 'interfaz' | 'sistema'
+type TabId = 'institucion' | 'identidad' | 'login' | 'interfaz' | 'firmantes' | 'sistema'
+
+// ── Tab Firmantes (lee del Directorio) ────────────────────────────────────────
+
+interface PersonaFirmante {
+  id: string; nombre: string; cargo: string; clave_firma: string | null
+  activo: boolean; orden: number
+  directorio_area: { nombre: string } | null
+}
+
+const CLAVES_SISTEMA = [
+  { clave: 'director_general',         label: 'Director(a) General' },
+  { clave: 'subdirector_academico',    label: 'Subdirector(a) Académico(a)' },
+  { clave: 'jefe_servicios_escolares', label: 'Jefe(a) de Servicios Escolares' },
+  { clave: 'elaboro',                  label: 'Elaboró' },
+  { clave: 'autorizo',                 label: 'Autorizó' },
+]
+
+function FirmantesTab() {
+  const qc = useQueryClient()
+  const { toast: addToast } = useToastStore()
+
+  const { data: directorio = [], isLoading } = useQuery<PersonaFirmante[]>({
+    queryKey: ['directorio'],
+    queryFn: () => apiClient.get('/admin/directorio').then(r => r.data.data),
+  })
+
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [claveEdit, setClaveEdit] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const guardarClave = async (id: string) => {
+    setSaving(true)
+    try {
+      await apiClient.patch(`/admin/directorio/${id}`, { clave_firma: claveEdit || null })
+      qc.invalidateQueries({ queryKey: ['directorio'] })
+      setEditandoId(null)
+      addToast('Clave actualizada.', 'success')
+    } catch {
+      addToast('Error al guardar.', 'error')
+    } finally { setSaving(false) }
+  }
+
+  if (isLoading) return <div className="text-sm text-slate-400 py-4">Cargando…</div>
+
+  const sinClave = directorio.filter(p => !p.clave_firma)
+  const conClave = directorio.filter(p => !!p.clave_firma)
+
+  return (
+    <div className="space-y-6">
+      <section className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-700">Firmantes en documentos PDF</h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Las personas del Directorio con "Firma documentos" activado pueden aparecer en los PDF.
+            Asigna aquí su rol (clave) para que el sistema sepa qué nombre imprimir en cada espacio.
+          </p>
+        </div>
+
+        {conClave.length === 0 ? (
+          <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">
+            Ninguna persona del Directorio tiene asignada una clave de firma aún.
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {conClave.map(p => (
+              <div key={p.id} className="flex items-center gap-4 py-3.5">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm text-slate-800">{p.nombre}</span>
+                    {!p.activo && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 font-medium">Inactivo</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                    <span className="text-xs text-slate-500">{p.cargo}</span>
+                    {p.directorio_area && <span className="text-[10px] text-slate-400">{p.directorio_area.nombre}</span>}
+                    {editandoId === p.id ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <select
+                          value={claveEdit}
+                          onChange={e => setClaveEdit(e.target.value)}
+                          className="px-2 py-1 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/20"
+                        >
+                          <option value="">— Sin clave —</option>
+                          {CLAVES_SISTEMA.map(c => (
+                            <option key={c.clave} value={c.clave}>{c.clave} — {c.label}</option>
+                          ))}
+                        </select>
+                        <button onClick={() => guardarClave(p.id)} disabled={saving}
+                          className="text-xs px-3 py-1 rounded-lg text-white disabled:opacity-50"
+                          style={{ backgroundColor: 'var(--color-primario)' }}>
+                          {saving ? '…' : 'OK'}
+                        </button>
+                        <button onClick={() => setEditandoId(null)}
+                          className="text-xs px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100">
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">
+                        {p.clave_firma}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {editandoId !== p.id && (
+                  <button onClick={() => { setEditandoId(p.id); setClaveEdit(p.clave_firma ?? '') }}
+                    className="text-xs px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition shrink-0">
+                    Cambiar clave
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sinClave.length > 0 && (
+          <details className="group">
+            <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-700 list-none flex items-center gap-1">
+              <svg className="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+              {sinClave.length} personas del directorio sin clave de firma asignada
+            </summary>
+            <div className="mt-3 divide-y divide-slate-100 border border-slate-100 rounded-xl">
+              {sinClave.map(p => (
+                <div key={p.id} className="flex items-center gap-4 px-4 py-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-slate-700">{p.nombre}</p>
+                    <p className="text-xs text-slate-400">{p.cargo}</p>
+                  </div>
+                  <button onClick={() => { setEditandoId(p.id); setClaveEdit('') }}
+                    className="text-xs px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition shrink-0">
+                    Asignar clave
+                  </button>
+                  {editandoId === p.id && (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={claveEdit}
+                        onChange={e => setClaveEdit(e.target.value)}
+                        className="px-2 py-1 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/20"
+                      >
+                        <option value="">— Selecciona —</option>
+                        {CLAVES_SISTEMA.map(c => (
+                          <option key={c.clave} value={c.clave}>{c.clave} — {c.label}</option>
+                        ))}
+                      </select>
+                      <button onClick={() => guardarClave(p.id)} disabled={saving || !claveEdit}
+                        className="text-xs px-3 py-1 rounded-lg text-white disabled:opacity-50"
+                        style={{ backgroundColor: 'var(--color-primario)' }}>
+                        {saving ? '…' : 'OK'}
+                      </button>
+                      <button onClick={() => setEditandoId(null)}
+                        className="text-xs px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100">✕</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
+        <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
+          <p className="text-xs text-slate-600 font-medium mb-1">Claves reconocidas por el sistema</p>
+          <ul className="text-xs text-slate-500 space-y-0.5">
+            {CLAVES_SISTEMA.map(c => (
+              <li key={c.clave}><span className="font-mono text-slate-700">{c.clave}</span> — {c.label}</li>
+            ))}
+          </ul>
+          <p className="text-[11px] text-slate-400 mt-2">
+            Para agregar o editar personas del directorio, ve a <strong>Directorio</strong> en el menú lateral.
+          </p>
+        </div>
+      </section>
+    </div>
+  )
+}
 
 type FormState = Omit<
   ConfiguracionInstitucional,
@@ -123,6 +301,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'identidad',   label: 'Identidad visual' },
   { id: 'login',       label: 'Pantalla de inicio' },
   { id: 'interfaz',    label: 'Interfaz' },
+  { id: 'firmantes',   label: 'Firmantes' },
   { id: 'sistema',     label: 'Sistema' },
 ]
 
@@ -147,7 +326,7 @@ export default function ConfiguracionPage() {
   useEffect(() => {
     if (data) {
       const { id, logo_principal, logo_secundario, login_imagen_fondo,
-        url_logo_principal, url_logo_secundario, url_login_imagen_fondo, logo_base64, ...rest } = data as any
+        url_logo_principal, url_logo_secundario, url_login_imagen_fondo, logo_base64, ...rest } = data
       const toDate = (s: string | null | undefined) => s ? s.slice(0, 10) : ''
       setForm({
         ...rest,
@@ -427,6 +606,9 @@ export default function ConfiguracionPage() {
           </div>
         )}
 
+        {/* ── Tab: Firmantes ── */}
+        {tabActiva === 'firmantes' && <FirmantesTab />}
+
         {/* ── Tab: Sistema (solo superadmin) ── */}
         {tabActiva === 'sistema' && esSuperadmin && (
           <div className="space-y-6">
@@ -482,13 +664,15 @@ export default function ConfiguracionPage() {
           </div>
         )}
 
-        <div className="flex justify-end mt-6 pb-4">
-          <button type="submit" disabled={guardando}
-            className="disabled:opacity-60 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
-            style={{ backgroundColor: 'var(--color-primario)' }}>
-            {guardando ? 'Guardando…' : 'Guardar cambios'}
-          </button>
-        </div>
+        {tabActiva !== 'firmantes' && (
+          <div className="flex justify-end mt-6 pb-4">
+            <button type="submit" disabled={guardando}
+              className="disabled:opacity-60 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
+              style={{ backgroundColor: 'var(--color-primario)' }}>
+              {guardando ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   )

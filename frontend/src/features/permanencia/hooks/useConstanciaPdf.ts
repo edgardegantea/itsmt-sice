@@ -17,12 +17,11 @@ export function useConstanciaPdf() {
         { responseType: 'blob' }
       )
       const blob = new Blob([response.data], { type: 'application/pdf' })
-      const folio = (constancia as any).folio_unico ?? 'constancia'
-      openPdfPreview(blob, `${folio}.pdf`)
+      openPdfPreview(blob, `${constancia.folio_unico}.pdf`)
       toast('Constancia generada correctamente.', 'success')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error generando constancia:', err)
-      const msg = err?.response?.data?.message ?? 'No se pudo generar el PDF. Intenta de nuevo.'
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'No se pudo generar el PDF. Intenta de nuevo.'
       toast(msg, 'error')
     } finally {
       setGenerando(null)

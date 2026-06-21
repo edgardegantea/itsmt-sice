@@ -293,12 +293,11 @@
       <td style="width:50%;">
         <div class="firma-bloque">
           <div class="firma-nombre-pre">
-            {{ $cfg->responsable_servicios_escolares
-                ? mb_strtoupper($cfg->responsable_servicios_escolares, 'UTF-8') : '' }}
+            {{ mb_strtoupper($jefeControlEscolar?->name ?? '', 'UTF-8') }}
           </div>
           <div class="firma-linea"></div>
           <div class="firma-rol">Elaboró</div>
-          <div class="firma-cargo">Responsable de Servicios Escolares</div>
+          <div class="firma-cargo">{{ $jefeControlEscolar?->cargo ?? 'Responsable de Servicios Escolares' }}</div>
           <div class="firma-fecha">
             Fecha: {{ now()->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
           </div>
@@ -307,12 +306,11 @@
       <td style="width:50%;">
         <div class="firma-bloque">
           <div class="firma-nombre-pre">
-            {{ $cfg->subdirector_academico
-                ? mb_strtoupper($cfg->subdirector_academico, 'UTF-8') : '' }}
+            {{ mb_strtoupper($subdirectorAcademico?->name ?? '', 'UTF-8') }}
           </div>
           <div class="firma-linea"></div>
           <div class="firma-rol">Autorizó</div>
-          <div class="firma-cargo">Subdirector(a) Académico(a)</div>
+          <div class="firma-cargo">{{ $subdirectorAcademico?->cargo ?? 'Subdirector(a) Académico(a)' }}</div>
           <div class="firma-fecha">Fecha: ________________________________</div>
         </div>
       </td>

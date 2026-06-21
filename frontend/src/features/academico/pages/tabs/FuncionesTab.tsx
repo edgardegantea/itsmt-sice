@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type FuncionPersonal } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls, mutationError } from './shared'
 import apiClient from '../../../../config/apiClient'
 
 function usePersonal() {
@@ -46,13 +46,13 @@ export default function FuncionesTab() {
   const save = useMutation({
     mutationFn: () => modal?.id ? academicoApi.updateFuncion(modal.id!, modal) : academicoApi.createFuncion(modal!),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['funciones'] }); addToast('Función guardada.', 'success'); setModal(null) },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const del = useMutation({
     mutationFn: (id: string) => academicoApi.deleteFuncion(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['funciones'] }); addToast('Función eliminada.', 'success') },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const set = (k: keyof FuncionPersonal, v: unknown) => setModal(m => ({ ...m, [k]: v }))

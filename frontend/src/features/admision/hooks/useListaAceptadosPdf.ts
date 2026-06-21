@@ -19,8 +19,8 @@ export function useListaAceptadosPdf() {
       const nombre = periodoNombre ? `lista-aceptados-${periodoNombre.replace(/\s+/g,'-')}.pdf` : 'lista-aceptados.pdf'
       openPdfPreview(blob, nombre)
       toast('Lista de aceptados generada.', 'success')
-    } catch (err: any) {
-      if (err?.response?.status === 404) {
+    } catch (err: unknown) {
+      if ((err as { response?: { status?: number } })?.response?.status === 404) {
         toast('No hay aspirantes aceptados en este periodo.', 'error')
       } else {
         console.error('Error generando PDF:', err)

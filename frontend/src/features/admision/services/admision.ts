@@ -18,6 +18,7 @@ export interface Periodo {
   tipo: 'ordinario' | 'verano' | 'intersemestral'
   aspirantes_count?: number
   inscripciones_count?: number
+  fecha_limite_baja_parcial?: string | null
 }
 
 export type EstatusAspirante = 'pendiente' | 'aceptado' | 'rechazado' | 'inscrito'
@@ -191,6 +192,7 @@ export interface RegistrarAspirantePayload {
   campus_preferido?: string
   modalidad_preferida?: string
   constancia_bachillerato: File   // archivo — se enviará como FormData
+  documentos?: Record<string, boolean>
 }
 
 export interface ActualizarEstatusPayload {
@@ -235,7 +237,7 @@ export const admisionApi = {
 
   registrarAspirante: async (payload: RegistrarAspirantePayload): Promise<Aspirante> => {
     const fd = new FormData()
-    const { constancia_bachillerato, documentos, ...campos } = payload as any
+    const { constancia_bachillerato, documentos, ...campos } = payload
 
     Object.entries(campos).forEach(([k, v]) => {
       if (v !== undefined && v !== null) fd.append(k, String(v))

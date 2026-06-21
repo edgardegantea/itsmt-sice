@@ -13,6 +13,7 @@ export interface Materia {
   horas_practica: number
   tipo: 'obligatoria' | 'optativa' | 'taller' | 'lab'
   activa: boolean
+  clave_oficial_tecnm?: string
   carrera?: { id: string; nombre: string; clave: string }
 }
 
@@ -91,10 +92,10 @@ export interface PlaneacionDocente {
   estatus: EstatusPlaneacion
   caracterizacion: string | null
   intencion_didactica: string | null
-  competencias: any[] | null
+  competencias: { descripcion?: string; [key: string]: unknown }[] | null
   fuentes_informacion: string | null
   apoyos_didacticos: string | null
-  calendarizacion: any[] | null
+  calendarizacion: { semana?: number; tema?: string; [key: string]: unknown }[] | null
   fecha_entrega: string | null
   observaciones_revision: string | null
   revisado_en: string | null

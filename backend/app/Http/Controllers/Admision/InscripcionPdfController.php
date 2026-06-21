@@ -114,7 +114,7 @@ class InscripcionPdfController extends Controller
         abort_if($aspirantes->isEmpty(), 404, 'No hay aspirantes aceptados en este periodo.');
 
         $cfg  = ConfiguracionInstitucional::instancia();
-        $html = view('pdfs.lista_aspirantes_aceptados', compact('periodo', 'aspirantes', 'cfg'))->render();
+        $html = view('pdfs.lista_aspirantes_aceptados', array_merge(compact('periodo', 'aspirantes', 'cfg'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         return response($pdf, 200, $this->headers("lista-aceptados-{$periodo->id}.pdf"));

@@ -5,6 +5,8 @@ import { useToastStore } from '../../../store/toastStore'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
+type ApiErr = { response?: { data?: { message?: string } } }
+
 type Catalogo = Record<string, string[]>
 type RolPermisos = { name: string; permisos: string[] }
 type Usuario = { id: string; name: string; email: string; roles: { name: string }[] }
@@ -125,7 +127,7 @@ function TabRoles({ catalogo }: { catalogo: Catalogo }) {
       success('Permisos del rol actualizados.')
       setDirty(false)
     },
-    onError: (e: any) => toastError(e?.response?.data?.message ?? 'Error al guardar.'),
+    onError: (e: ApiErr) => toastError(e?.response?.data?.message ?? 'Error al guardar.'),
   })
 
   function seleccionar(nombre: string) {
@@ -221,7 +223,7 @@ function TabUsuarios({ catalogo }: { catalogo: Catalogo }) {
       success('Permisos del usuario actualizados.')
       setDirty(false)
     },
-    onError: (e: any) => toastError(e?.response?.data?.message ?? 'Error al guardar.'),
+    onError: (e: ApiErr) => toastError(e?.response?.data?.message ?? 'Error al guardar.'),
   })
 
   function seleccionar(u: Usuario) {
@@ -333,7 +335,7 @@ export default function PermisosPage() {
     return (
       <div className="flex flex-col items-center justify-center h-48 gap-2">
         <p className="text-red-600 text-sm font-medium">Error al cargar el módulo de permisos</p>
-        <p className="text-slate-400 text-xs">{(error as any)?.response?.data?.message ?? String(error)}</p>
+        <p className="text-slate-400 text-xs">{(error as ApiErr)?.response?.data?.message ?? String(error)}</p>
       </div>
     )
   }

@@ -39,7 +39,7 @@ const DIAS_CORTO: Record<string, string> = {
   lunes: 'L', martes: 'Ma', miercoles: 'Mi', jueves: 'J', viernes: 'V', sabado: 'S',
 }
 
-function fmtHorario(horarios: any[]): string {
+function fmtHorario(horarios: { dia_semana: string; hora_inicio: string; hora_fin: string }[]): string {
   return horarios.map(h =>
     `${DIAS_CORTO[h.dia_semana] ?? h.dia_semana} ${h.hora_inicio.slice(0,5)}–${h.hora_fin.slice(0,5)}`
   ).join(', ')

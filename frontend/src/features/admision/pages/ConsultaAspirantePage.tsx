@@ -51,8 +51,8 @@ export default function ConsultaAspirantePage() {
     try {
       const { data } = await apiClient.get(`/aspirantes/consultar-estatus?curp=${curpLimpia}`)
       setResultado(data.data)
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'No se pudo consultar. Intenta más tarde.'
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'No se pudo consultar. Intenta más tarde.'
       setError(msg)
     } finally {
       setBuscando(false)

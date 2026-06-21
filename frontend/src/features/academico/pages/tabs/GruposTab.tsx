@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Grupo } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls, useCarreras, usePeriodos, useAlumnos } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls, useCarreras, usePeriodos, useAlumnos, mutationError } from './shared'
 
 const TURNO_LABEL = { matutino: 'Matutino', vespertino: 'Vespertino', sabatino: 'Sabatino' }
 
@@ -33,13 +33,13 @@ export default function GruposTab() {
   const save = useMutation({
     mutationFn: () => modal?.id ? academicoApi.updateGrupo(modal.id!, modal) : academicoApi.createGrupo(modal!),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['grupos'] }); addToast('Grupo guardado.', 'success'); setModal(null) },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const del = useMutation({
     mutationFn: (id: string) => academicoApi.deleteGrupo(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['grupos'] }); addToast('Grupo eliminado.', 'success') },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const asignar = useMutation({
@@ -51,7 +51,7 @@ export default function GruposTab() {
       setAsignarOpen(false)
       setSelAlumnos([])
     },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const quitar = useMutation({
@@ -61,7 +61,7 @@ export default function GruposTab() {
       qc.invalidateQueries({ queryKey: ['grupo-detalle', detalle?.id] })
       addToast('Alumno retirado.', 'success')
     },
-    onError: (e: any) => addToast(e?.response?.data?.message ?? 'Error', 'error'),
+    onError: (e) => addToast(mutationError(e), 'error'),
   })
 
   const { data: grupoDetalle } = useQuery({

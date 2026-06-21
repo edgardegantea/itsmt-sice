@@ -5,6 +5,8 @@ import { useToastStore } from '../../../store/toastStore'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
+type ApiErr = { response?: { data?: { message?: string; errors?: Record<string, string | string[]> } } }
+
 interface Carrera { id: string; nombre: string; clave: string }
 
 interface Usuario {
@@ -87,7 +89,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
     role:       usuario?.roles[0]?.name ?? 'personal_administrativo',
     carrera_id: usuario?.carrera_id ?? '',
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [errors, setErrors] = useState<Record<string, string | string[]>>({})
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
@@ -103,7 +105,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
       addToast('Usuario creado correctamente.', 'success')
       onClose()
     },
-    onError: (err: any) => {
+    onError: (err: ApiErr) => {
       setErrors(err?.response?.data?.errors ?? {})
       addToast(err?.response?.data?.message ?? 'Error al crear usuario.', 'error')
     },
@@ -125,7 +127,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
       addToast('Usuario actualizado.', 'success')
       onClose()
     },
-    onError: (err: any) => {
+    onError: (err: ApiErr) => {
       setErrors(err?.response?.data?.errors ?? {})
       addToast(err?.response?.data?.message ?? 'Error al actualizar.', 'error')
     },
@@ -244,7 +246,7 @@ export default function UsuariosPage() {
       qc.invalidateQueries({ queryKey: ['usuarios'] })
       addToast('Usuario eliminado.', 'success')
     },
-    onError: (err: any) => addToast(err?.response?.data?.message ?? 'Error al eliminar.', 'error'),
+    onError: (err: ApiErr) => addToast(err?.response?.data?.message ?? 'Error al eliminar.', 'error'),
   })
 
   const confirmarEliminar = (u: Usuario) => {

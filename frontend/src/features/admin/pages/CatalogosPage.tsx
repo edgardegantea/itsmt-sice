@@ -6,14 +6,31 @@ import {
   catalogoAdmin,
   type Estado, type Municipio, type EscuelaBachillerato, type Turno,
 } from '../../admision/services/catalogo'
+import apiClient from '../../../config/apiClient'
 
-type Tab = 'estados' | 'municipios' | 'escuelas' | 'turnos'
+type Tab = 'estados' | 'municipios' | 'escuelas' | 'turnos' | 'areas' | 'puestos'
 
 const TAB_LABELS: Record<Tab, string> = {
   estados:    'Estados',
   municipios: 'Municipios',
   escuelas:   'Escuelas de bachillerato',
   turnos:     'Turnos',
+  areas:      'Áreas / Departamentos',
+  puestos:    'Puestos',
+}
+
+type DirectorioArea = { id: number; nombre: string; descripcion: string | null; tipo: string; orden: number; activo: boolean; personal_count: number }
+type DirectorioPuesto = { id: number; nombre: string; descripcion: string | null; area_id: number | null; area?: { nombre: string } | null; firma_documentos: boolean; orden: number; activo: boolean; personal_count: number }
+
+const directorioApi = {
+  getAreas:    () => apiClient.get('/admin/directorio-areas').then(r => r.data.data as DirectorioArea[]),
+  crearArea:   (d: object) => apiClient.post('/admin/directorio-areas', d),
+  editarArea:  (id: number, d: object) => apiClient.patch(`/admin/directorio-areas/${id}`, d),
+  borrarArea:  (id: number) => apiClient.delete(`/admin/directorio-areas/${id}`),
+  getPuestos:  () => apiClient.get('/admin/directorio-puestos').then(r => r.data.data as DirectorioPuesto[]),
+  crearPuesto: (d: object) => apiClient.post('/admin/directorio-puestos', d),
+  editarPuesto:(id: number, d: object) => apiClient.patch(`/admin/directorio-puestos/${id}`, d),
+  borrarPuesto:(id: number) => apiClient.delete(`/admin/directorio-puestos/${id}`),
 }
 
 const INPUT = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]'
@@ -477,6 +494,265 @@ function TurnosTab() {
   )
 }
 
+// ── Áreas / Departamentos ──────────────────────────────────────────────────────
+
+const TIPOS_AREA = [
+  { value: 'administracion', label: 'Administración' },
+  { value: 'academico',      label: 'Académico' },
+  { value: 'departamento',   label: 'Departamento' },
+]
+
+function AreasTab() {
+  const qc = useQueryClient()
+  const { success, error: toastError } = useToastStore()
+  const [modal, setModal] = useState<'nueva' | DirectorioArea | null>(null)
+  const [form, setForm]   = useState({ nombre: '', descripcion: '', tipo: 'departamento', orden: 0, activo: true })
+
+  const { data: areas = [], isLoading } = useQuery({ queryKey: ['dir-areas'], queryFn: directorioApi.getAreas })
+
+  const guardar = useMutation({
+    mutationFn: (d: typeof form) => modal === 'nueva'
+      ? directorioApi.crearArea(d)
+      : directorioApi.editarArea((modal as DirectorioArea).id, d),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['dir-areas'] })
+      success(modal === 'nueva' ? 'Área creada.' : 'Área actualizada.')
+      setModal(null)
+    },
+    onError: () => toastError('Error al guardar. Verifica que el nombre sea único.'),
+  })
+
+  const eliminar = useMutation({
+    mutationFn: (id: number) => directorioApi.borrarArea(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['dir-areas'] }); success('Área eliminada.') },
+    onError: () => toastError('No se puede eliminar: tiene personal o puestos asociados.'),
+  })
+
+  const abrirModal = (item: 'nueva' | DirectorioArea) => {
+    setForm(item === 'nueva'
+      ? { nombre: '', descripcion: '', tipo: 'departamento', orden: 0, activo: true }
+      : { nombre: item.nombre, descripcion: item.descripcion ?? '', tipo: item.tipo, orden: item.orden, activo: item.activo })
+    setModal(item)
+  }
+
+  return (
+    <div>
+      <div className="flex justify-end mb-4">
+        <button onClick={() => abrirModal('nueva')}
+          className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors">
+          + Nueva área
+        </button>
+      </div>
+      {isLoading && <p className="text-sm text-slate-400">Cargando…</p>}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Nombre</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Tipo</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Personal</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Estado</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {areas.map(a => (
+              <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
+                <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
+                <td className="px-4 py-3 text-slate-500 capitalize">{TIPOS_AREA.find(t => t.value === a.tipo)?.label ?? a.tipo}</td>
+                <td className="px-4 py-3 text-slate-500">{a.personal_count}</td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${a.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {a.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex justify-end gap-3">
+                    <button onClick={() => abrirModal(a)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
+                    <button onClick={() => eliminar.mutate(a.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {modal && (
+        <Modal title={modal === 'nueva' ? 'Nueva área / departamento' : `Editar: ${(modal as DirectorioArea).nombre}`} onClose={() => setModal(null)}>
+          <form onSubmit={e => { e.preventDefault(); guardar.mutate(form) }} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
+              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={INPUT} placeholder="Ej: Recursos Humanos" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Tipo</label>
+                <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={SELECT}>
+                  {TIPOS_AREA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Orden de aparición</label>
+                <input type="number" min={0} value={form.orden} onChange={e => setForm(f => ({ ...f, orden: Number(e.target.value) }))} className={INPUT} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Descripción</label>
+              <textarea rows={2} value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={INPUT} />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+              Área activa
+            </label>
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
+              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+                {guardar.isPending ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+// ── Puestos ────────────────────────────────────────────────────────────────────
+
+function PuestosTab() {
+  const qc = useQueryClient()
+  const { success, error: toastError } = useToastStore()
+  const [modal, setModal] = useState<'nuevo' | DirectorioPuesto | null>(null)
+  const [form, setForm]   = useState({ nombre: '', descripcion: '', area_id: '', firma_documentos: false, orden: 0, activo: true })
+
+  const { data: areas = [] }   = useQuery({ queryKey: ['dir-areas'], queryFn: directorioApi.getAreas })
+  const { data: puestos = [], isLoading } = useQuery({ queryKey: ['dir-puestos'], queryFn: directorioApi.getPuestos })
+
+  const guardar = useMutation({
+    mutationFn: (d: typeof form) => {
+      const payload = { ...d, area_id: d.area_id ? Number(d.area_id) : null }
+      return modal === 'nuevo'
+        ? directorioApi.crearPuesto(payload)
+        : directorioApi.editarPuesto((modal as DirectorioPuesto).id, payload)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['dir-puestos'] })
+      success(modal === 'nuevo' ? 'Puesto creado.' : 'Puesto actualizado.')
+      setModal(null)
+    },
+    onError: () => toastError('Error al guardar. Verifica que el nombre sea único.'),
+  })
+
+  const eliminar = useMutation({
+    mutationFn: (id: number) => directorioApi.borrarPuesto(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['dir-puestos'] }); success('Puesto eliminado.') },
+    onError: () => toastError('No se puede eliminar: tiene personal asociado.'),
+  })
+
+  const abrirModal = (item: 'nuevo' | DirectorioPuesto) => {
+    setForm(item === 'nuevo'
+      ? { nombre: '', descripcion: '', area_id: '', firma_documentos: false, orden: 0, activo: true }
+      : { nombre: item.nombre, descripcion: item.descripcion ?? '', area_id: item.area_id ? String(item.area_id) : '', firma_documentos: item.firma_documentos, orden: item.orden, activo: item.activo })
+    setModal(item)
+  }
+
+  return (
+    <div>
+      <div className="flex justify-end mb-4">
+        <button onClick={() => abrirModal('nuevo')}
+          className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors">
+          + Nuevo puesto
+        </button>
+      </div>
+      {isLoading && <p className="text-sm text-slate-400">Cargando…</p>}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Puesto</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Área</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Firma docs.</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Personal</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Estado</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {puestos.map(p => (
+              <tr key={p.id} className="hover:bg-blue-50/60 transition-colors">
+                <td className="px-4 py-3 font-medium text-slate-800">{p.nombre}</td>
+                <td className="px-4 py-3 text-slate-500">{p.area?.nombre ?? '—'}</td>
+                <td className="px-4 py-3">
+                  {p.firma_documentos
+                    ? <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700">Sí</span>
+                    : <span className="text-xs text-slate-400">No</span>}
+                </td>
+                <td className="px-4 py-3 text-slate-500">{p.personal_count}</td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {p.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex justify-end gap-3">
+                    <button onClick={() => abrirModal(p)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
+                    <button onClick={() => eliminar.mutate(p.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {modal && (
+        <Modal title={modal === 'nuevo' ? 'Nuevo puesto' : `Editar: ${(modal as DirectorioPuesto).nombre}`} onClose={() => setModal(null)}>
+          <form onSubmit={e => { e.preventDefault(); guardar.mutate(form) }} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Nombre del puesto *</label>
+              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={INPUT} placeholder="Ej: Director General" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Área / Departamento</label>
+                <select value={form.area_id} onChange={e => setForm(f => ({ ...f, area_id: e.target.value }))} className={SELECT}>
+                  <option value="">Sin área</option>
+                  {areas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Orden de aparición</label>
+                <input type="number" min={0} value={form.orden} onChange={e => setForm(f => ({ ...f, orden: Number(e.target.value) }))} className={INPUT} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Descripción</label>
+              <textarea rows={2} value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={INPUT} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={form.firma_documentos} onChange={e => setForm(f => ({ ...f, firma_documentos: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+                Firma documentos oficiales
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+                Puesto activo
+              </label>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
+              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+                {guardar.isPending ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
 // ── Página principal ───────────────────────────────────────────────────────────
 
 export default function CatalogosPage() {
@@ -505,6 +781,8 @@ export default function CatalogosPage() {
       {tab === 'municipios' && <MunicipiosTab />}
       {tab === 'escuelas'   && <EscuelasTab />}
       {tab === 'turnos'     && <TurnosTab />}
+      {tab === 'areas'      && <AreasTab />}
+      {tab === 'puestos'    && <PuestosTab />}
     </div>
   )
 }

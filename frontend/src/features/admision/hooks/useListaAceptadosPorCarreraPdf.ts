@@ -19,8 +19,8 @@ export function useListaAceptadosPorCarreraPdf() {
       const nombre = periodoNombre ? `lista-aceptados-por-carrera-${periodoNombre.replace(/\s+/g,'-')}.pdf` : 'lista-aceptados-por-carrera.pdf'
       openPdfPreview(blob, nombre)
       toast('PDF generado correctamente.', 'success')
-    } catch (err: any) {
-      if (err?.response?.status === 404) {
+    } catch (err: unknown) {
+      if ((err as { response?: { status?: number } })?.response?.status === 404) {
         toast('No hay aspirantes aceptados en este periodo.', 'error')
       } else {
         console.error('Error generando PDF:', err)

@@ -146,6 +146,26 @@ export interface Adeudo {
   alumno?: { numero_control: string; user?: { name: string }; carrera?: { nombre: string; clave: string } }
 }
 
+export interface MiEncuestaAlumno {
+  id: string
+  numero_control: string
+  user?: { name: string }
+  inscripcion?: {
+    carrera?: { nombre: string; clave: string }
+    semestre_actual?: number
+    aspirante?: {
+      curp?: string
+      fecha_nacimiento?: string
+      sexo?: string
+      estado_civil?: string
+      municipio_procedencia?: string
+      escuela_bachillerato?: string
+      email?: string
+      telefono?: string
+    }
+  }
+}
+
 export interface OrdenReinscripcion {
   id: string
   periodo_id: string
@@ -249,7 +269,7 @@ export const permanenciaApi = {
     apiClient.post('/bajas/solicitar', data).then(r => r.data.data),
 
   // Encuesta Socioeconómica
-  getMiEncuesta: (periodoId?: string): Promise<{ encuesta: EncuestaSocioeconomica | null; periodo: any; alumno: any }> =>
+  getMiEncuesta: (periodoId?: string): Promise<{ encuesta: EncuestaSocioeconomica | null; periodo: { id: string; nombre: string } | null; alumno: MiEncuestaAlumno | null }> =>
     apiClient.get('/encuestas-socioeconomicas/mi-encuesta', { params: periodoId ? { periodo_id: periodoId } : {} }).then(r => r.data.data),
 
   guardarEncuesta: (data: Partial<EncuestaSocioeconomica>, foto?: File | null): Promise<EncuestaSocioeconomica> => {

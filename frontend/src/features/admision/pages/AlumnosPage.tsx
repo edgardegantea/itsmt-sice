@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   admisionApi,
@@ -275,12 +275,14 @@ function CobroModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void }
   })
   const [reciboId, setReciboId] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
-  const { success: toastSuccess, error: toastError } = useToastStore()
+  const { info: toastInfo, success: toastSuccess, error: toastError } = useToastStore()
 
   const abrirPdf = async (id: string) => {
+    toastInfo('Procesando recibo PDF…')
     try {
       const resp = await apiClient.get(`/cobros-inscripcion/${id}/recibo/pdf`, { responseType: 'blob' })
       openPdfPreview(new Blob([resp.data], { type: 'application/pdf' }), `recibo-${alumno.numero_control}.pdf`)
+      toastSuccess('Recibo PDF generado correctamente.')
     } catch {
       toastError('No se pudo generar el recibo PDF.')
     }
@@ -397,6 +399,8 @@ function FilaAlumno({
   generandoCredencial,
   onInscripcionPdf,
   generandoInscPdf,
+  selected,
+  onSelect,
 }: {
   alumno: Alumno
   expanded: boolean
@@ -407,6 +411,8 @@ function FilaAlumno({
   generandoCredencial: string | null
   onInscripcionPdf: (tipo: TipoInscripcionPdf) => void
   generandoInscPdf: TipoInscripcionPdf | null
+  selected: boolean
+  onSelect: (id: string, checked: boolean) => void
 }) {
   const asp = alumno.inscripcion?.aspirante
 
@@ -419,8 +425,18 @@ function FilaAlumno({
           expanded ? 'bg-[#1a3a5c]/10' : 'hover:bg-blue-50/60'
         }`}
       >
+        {/* Checkbox */}
+        <td className="pl-3 pr-1 py-3.5 w-8" onClick={e => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={e => onSelect(alumno.id, e.target.checked)}
+            className="w-4 h-4 accent-[#1a3a5c] cursor-pointer"
+          />
+        </td>
+
         {/* Chevron */}
-        <td className={`pl-4 pr-2 py-3.5 w-8 border-l-4 ${expanded ? 'border-[#1a3a5c]' : 'border-transparent'}`}>
+        <td className={`pl-1 pr-2 py-3.5 w-8 border-l-4 ${expanded ? 'border-[#1a3a5c]' : 'border-transparent'}`}>
           <svg
             className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-[#1a3a5c]' : 'text-slate-400'}`}
             fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
@@ -476,7 +492,7 @@ function FilaAlumno({
       {/* ── Panel expandido ── */}
       {expanded && (
         <tr className="bg-[#1a3a5c]/[0.07]">
-          <td colSpan={7} className="px-0 pb-0 border-l-4 border-[#1a3a5c]">
+          <td colSpan={8} className="px-0 pb-0 border-l-4 border-[#1a3a5c]">
             <div className="mx-4 mb-4 mt-2 bg-white rounded-xl ring-1 ring-slate-200 shadow-sm overflow-hidden">
 
               {/* Datos */}
@@ -530,7 +546,7 @@ function FilaAlumno({
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Fecha de inscripción</p>
-                    <p className="text-slate-700 mt-0.5">{alumno.inscripcion?.fecha_inscripcion ?? '—'}</p>
+                    <p className="text-slate-700 mt-0.5">{alumno.inscripcion?.fecha_inscripcion ? new Date(alumno.inscripcion.fecha_inscripcion).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Certificado bachillerato</p>
@@ -611,11 +627,49 @@ function FilaAlumno({
 
 // ── Página principal ──────────────────────────────────────────────────────────
 
+// ── Helpers exportar / imprimir ───────────────────────────────────────────────
+
+function alumnosACsv(alumnos: Alumno[]): string {
+  const cabecera = ['N° Control','Apellidos y nombre','CURP','Email','Teléfono','Carrera','Semestre','Estatus','Certificado bach.','Periodo ingreso']
+  const filas = alumnos.map(a => {
+    const asp = a.inscripcion?.aspirante
+    return [
+      a.numero_control,
+      [asp?.apellido_paterno, asp?.apellido_materno, asp?.nombres].filter(Boolean).join(' '),
+      asp?.curp ?? '',
+      asp?.email ?? '',
+      asp?.telefono ?? '',
+      `${a.carrera?.clave ?? ''} — ${a.carrera?.nombre ?? ''}`,
+      a.semestre_actual,
+      ESTATUS_LABEL[a.estatus],
+      a.pendiente_certificado_bachillerato ? 'Pendiente' : 'Entregado',
+      a.periodo_ingreso?.nombre ?? '',
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+  })
+  return [cabecera.join(','), ...filas].join('\n')
+}
+
+function descargarCsv(contenido: string, nombre: string) {
+  const blob = new Blob(['﻿' + contenido], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href = url; a.download = nombre; a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ── Página principal ───────────────────────────────────────────────────────────
+
 export default function AlumnosPage() {
-  const [filtros, setFiltros]       = useState({ search: '', estatus: '', semestre: '', carrera_id: '', page: 1 })
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [editando, setEditando]     = useState<Alumno | null>(null)
-  const [cobrando, setCobrando]     = useState<Alumno | null>(null)
+  const [filtros, setFiltros]           = useState({ search: '', estatus: '', semestre: '', carrera_id: '', page: 1 })
+  const [expandedId, setExpandedId]     = useState<string | null>(null)
+  const [editando, setEditando]         = useState<Alumno | null>(null)
+  const [cobrando, setCobrando]         = useState<Alumno | null>(null)
+  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
+  const [estatusLote, setEstatusLote]   = useState<EstatusAlumno | ''>('')
+  const [exportando, setExportando]     = useState(false)
+
+  const qc = useQueryClient()
+  const { success, error: toastError } = useToastStore()
 
   const { descargar: descargarCredencial, generando: generandoCredencial } = useCredencialPdf()
   const { descargar: descargarLibroNc,   generando: generandoLibroNc }    = useLibroRegistroNcPdf()
@@ -638,6 +692,86 @@ export default function AlumnosPage() {
 
   const toggle = (id: string) => setExpandedId((prev) => (prev === id ? null : id))
 
+  // ── Selección ────────────────────────────────────────────────────────────────
+  const handleSelect = useCallback((id: string, checked: boolean) => {
+    setSeleccionados(prev => {
+      const next = new Set(prev)
+      checked ? next.add(id) : next.delete(id)
+      return next
+    })
+  }, [])
+
+  const todosSeleccionados = alumnos.length > 0 && alumnos.every(a => seleccionados.has(a.id))
+  const algunoSeleccionado = alumnos.some(a => seleccionados.has(a.id))
+
+  const toggleTodos = () => {
+    if (todosSeleccionados) {
+      setSeleccionados(prev => { const n = new Set(prev); alumnos.forEach(a => n.delete(a.id)); return n })
+    } else {
+      setSeleccionados(prev => { const n = new Set(prev); alumnos.forEach(a => n.add(a.id)); return n })
+    }
+  }
+
+  const limpiarSeleccion = () => setSeleccionados(new Set())
+
+  // ── Exportar CSV página actual ────────────────────────────────────────────────
+  const exportarPagina = () => {
+    const lista = seleccionados.size > 0
+      ? alumnos.filter(a => seleccionados.has(a.id))
+      : alumnos
+    descargarCsv(alumnosACsv(lista), `alumnos-pagina-${filtros.page}.csv`)
+  }
+
+  // ── Exportar CSV todos los resultados ─────────────────────────────────────────
+  const exportarTodo = async () => {
+    setExportando(true)
+    try {
+      const res = await apiClient.get('/admin/alumnos', { params: {
+        search:     filtros.search     || undefined,
+        estatus:    filtros.estatus    || undefined,
+        semestre:   filtros.semestre   || undefined,
+        carrera_id: filtros.carrera_id || undefined,
+        per_page:   10000,
+      }}).then(r => r.data)
+      descargarCsv(alumnosACsv(res.data ?? []), `alumnos-completo-${new Date().toISOString().slice(0,10)}.csv`)
+    } catch { toastError('Error al exportar.') }
+    finally  { setExportando(false) }
+  }
+
+  // ── Imprimir ──────────────────────────────────────────────────────────────────
+  const imprimir = () => {
+    const lista = seleccionados.size > 0
+      ? alumnos.filter(a => seleccionados.has(a.id))
+      : alumnos
+    const filas = lista.map(a => {
+      const asp = a.inscripcion?.aspirante
+      const nombre = [asp?.apellido_paterno, asp?.apellido_materno, asp?.nombres].filter(Boolean).join(' ')
+      return `<tr><td>${a.numero_control}</td><td>${nombre}</td><td>${a.carrera?.clave ?? ''}</td><td>${a.semestre_actual}°</td><td>${ESTATUS_LABEL[a.estatus]}</td></tr>`
+    }).join('')
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Listado de alumnos</title>
+    <style>body{font-family:Arial,sans-serif;font-size:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:4px 8px;text-align:left}th{background:#f0f0f0}h2{margin-bottom:8px}</style></head>
+    <body><h2>Listado de alumnos</h2><p style="font-size:11px;color:#666">Generado: ${new Date().toLocaleString('es-MX')} — ${lista.length} registro(s)</p>
+    <table><thead><tr><th>N° Control</th><th>Alumno</th><th>Carrera</th><th>Sem.</th><th>Estatus</th></tr></thead><tbody>${filas}</tbody></table></body></html>`
+    const w = window.open('', '_blank')
+    if (w) { w.document.write(html); w.document.close(); w.print() }
+  }
+
+  // ── Cambiar estatus en lote ───────────────────────────────────────────────────
+  const mutLote = useMutation({
+    mutationFn: async (nuevoEstatus: EstatusAlumno) => {
+      await Promise.all([...seleccionados].map(id =>
+        apiClient.patch(`/admin/alumnos/${id}`, { estatus: nuevoEstatus })
+      ))
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['alumnos'] })
+      success(`Estatus actualizado en ${seleccionados.size} alumno(s).`)
+      limpiarSeleccion()
+      setEstatusLote('')
+    },
+    onError: () => toastError('Error al actualizar estatus.'),
+  })
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto">
 
@@ -650,19 +784,99 @@ export default function AlumnosPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => descargarLibroNc()}
-          disabled={generandoLibroNc}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
-        >
-          {generandoLibroNc ? <Spinner /> : (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={exportarPagina}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
             </svg>
-          )}
-          Libro Registro NC
-        </button>
+            Exportar página
+          </button>
+          <button
+            onClick={exportarTodo}
+            disabled={exportando}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
+          >
+            {exportando ? <Spinner /> : (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+              </svg>
+            )}
+            Exportar todo (CSV)
+          </button>
+          <button
+            onClick={imprimir}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z"/>
+            </svg>
+            Imprimir
+          </button>
+          <button
+            onClick={() => descargarLibroNc()}
+            disabled={generandoLibroNc}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
+          >
+            {generandoLibroNc ? <Spinner /> : (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+              </svg>
+            )}
+            Libro Registro NC
+          </button>
+        </div>
       </div>
+
+      {/* ── Barra de acciones en lote ── */}
+      {seleccionados.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 px-4 py-3 bg-[#1a3a5c]/5 border border-[#1a3a5c]/20 rounded-xl">
+          <span className="text-sm font-medium text-[#1a3a5c]">
+            {seleccionados.size} alumno{seleccionados.size !== 1 ? 's' : ''} seleccionado{seleccionados.size !== 1 ? 's' : ''}
+          </span>
+          <div className="flex flex-wrap gap-2 ml-auto items-center">
+            <button onClick={exportarPagina}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-white transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+              </svg>
+              Exportar selección
+            </button>
+            <button onClick={imprimir}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-white transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z"/>
+              </svg>
+              Imprimir selección
+            </button>
+            <div className="flex items-center gap-1.5">
+              <select
+                value={estatusLote}
+                onChange={e => setEstatusLote(e.target.value as EstatusAlumno | '')}
+                className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+              >
+                <option value="">Cambiar estatus a…</option>
+                {Object.entries(ESTATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+              {estatusLote && (
+                <button
+                  onClick={() => mutLote.mutate(estatusLote as EstatusAlumno)}
+                  disabled={mutLote.isPending}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {mutLote.isPending ? 'Aplicando…' : 'Aplicar'}
+                </button>
+              )}
+            </div>
+            <button onClick={limpiarSeleccion}
+              className="text-xs text-slate-400 hover:text-slate-600 underline">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Card ── */}
       <div className="bg-white rounded-xl shadow-sm ring-1 ring-slate-200 overflow-hidden">
@@ -729,7 +943,16 @@ export default function AlumnosPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="w-8 pl-4"/>
+                  <th className="pl-3 pr-1 w-8">
+                    <input
+                      type="checkbox"
+                      checked={todosSeleccionados}
+                      ref={el => { if (el) el.indeterminate = algunoSeleccionado && !todosSeleccionados }}
+                      onChange={toggleTodos}
+                      className="w-4 h-4 accent-[#1a3a5c] cursor-pointer"
+                    />
+                  </th>
+                  <th className="w-8 pl-1"/>
                   <th className="text-left px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">N° Control</th>
                   <th className="text-left px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Alumno</th>
                   <th className="text-left px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide hidden sm:table-cell">Carrera</th>
@@ -754,6 +977,8 @@ export default function AlumnosPage() {
                       if (inscId) descargarInscPdf(inscId, tipo)
                     }}
                     generandoInscPdf={generandoInscPdf}
+                    selected={seleccionados.has(a.id)}
+                    onSelect={handleSelect}
                   />
                 ))}
               </tbody>

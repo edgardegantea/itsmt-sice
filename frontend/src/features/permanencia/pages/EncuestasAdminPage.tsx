@@ -14,9 +14,14 @@ const GASTOS_LABELS: Record<keyof GastosMensuales, string> = {
 const INPUT = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
 const LABEL = 'block text-xs font-medium text-slate-500 mb-1'
 
+type EncuestaConRelaciones = EncuestaSocioeconomica & {
+  alumno?: { id: string; numero_control: string; user?: { name: string }; inscripcion?: { carrera?: { nombre: string } } }
+  periodo?: { id: string; nombre: string }
+}
+
 // ── Modal edición superadmin ──────────────────────────────────────────────────
 
-function EditEncuestaModal({ enc, onClose }: { enc: any; onClose: () => void }) {
+function EditEncuestaModal({ enc, onClose }: { enc: EncuestaConRelaciones; onClose: () => void }) {
   const qc = useQueryClient()
   const { success, error: toastError } = useToastStore()
 
@@ -216,9 +221,9 @@ function Field({ label, children, wide }: { label: string; children: React.React
 
 // ── Modal detalle (solo lectura) ──────────────────────────────────────────────
 
-function DetailModal({ enc, onClose }: { enc: EncuestaSocioeconomica & { alumno?: any; periodo?: any }; onClose: () => void }) {
-  const alumno = (enc as any).alumno
-  const periodo = (enc as any).periodo
+function DetailModal({ enc, onClose }: { enc: EncuestaConRelaciones; onClose: () => void }) {
+  const alumno = enc.alumno
+  const periodo = enc.periodo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -329,7 +334,7 @@ export default function EncuestasAdminPage() {
     queryFn: () => permanenciaApi.getEncuestas(params),
   })
 
-  const encuestas: any[] = data?.data ?? []
+  const encuestas: EncuestaConRelaciones[] = data?.data ?? []
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -367,7 +372,7 @@ export default function EncuestasAdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {encuestas.map((enc: any) => (
+              {encuestas.map((enc) => (
                 <tr key={enc.id} className="hover:bg-blue-50/60 transition-colors">
                   <td className="px-4 py-3 font-medium text-slate-900">{enc.alumno?.user?.name ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600 font-mono">{enc.alumno?.numero_control ?? '—'}</td>

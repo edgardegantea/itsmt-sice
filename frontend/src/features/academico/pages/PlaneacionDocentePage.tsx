@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
-import { academicoApi, type PlaneacionDocente, type EstatusPlaneacion } from '../services/academico'
+import { academicoApi, type PlaneacionDocente, type EstatusPlaneacion, type CargaAcademica } from '../services/academico'
+import { mutationError } from './tabs/shared'
 import apiClient from '../../../config/apiClient'
 
 const ESTATUS_COLOR: Record<EstatusPlaneacion, string> = {
@@ -49,7 +50,7 @@ export default function PlaneacionDocentePage() {
     enabled: !!user?.id,
   })
 
-  const cargaActual = (misCargas as any[]).find(c => c.id === cargaSelId)
+  const cargaActual = (misCargas as CargaAcademica[]).find(c => c.id === cargaSelId)
   const planeacionActual = (misPlaneaciones as PlaneacionDocente[]).find(p => p.carga_academica_id === cargaSelId)
 
   const seleccionarCarga = (id: string) => {
@@ -111,7 +112,7 @@ export default function PlaneacionDocentePage() {
             <label className="block text-xs font-medium text-slate-600 mb-1">Materia asignada</label>
             <select value={cargaSelId} onChange={e => seleccionarCarga(e.target.value)} className={selectCls}>
               <option value="">— Selecciona —</option>
-              {(misCargas as any[]).map(c => (
+              {(misCargas as CargaAcademica[]).map(c => (
                 <option key={c.id} value={c.id}>{c.materia?.nombre} / {c.grupo?.clave}</option>
               ))}
             </select>
@@ -222,10 +223,10 @@ export default function PlaneacionDocentePage() {
 
           {/* Errores */}
           {mutSave.isError && (
-            <p className="text-xs text-red-600">{(mutSave.error as any)?.response?.data?.message ?? 'Error al guardar.'}</p>
+            <p className="text-xs text-red-600">{mutationError(mutSave.error)}</p>
           )}
           {mutEntregar.isError && (
-            <p className="text-xs text-red-600">{(mutEntregar.error as any)?.response?.data?.message ?? 'Error al entregar.'}</p>
+            <p className="text-xs text-red-600">{mutationError(mutEntregar.error)}</p>
           )}
           {saved && <p className="text-xs text-green-700">Borrador guardado correctamente.</p>}
           {mutEntregar.isSuccess && (

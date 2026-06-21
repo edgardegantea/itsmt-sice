@@ -71,7 +71,7 @@ export default function LibroRegistroNcPdf({ alumnos, cfg }: Props) {
 
   const porTipo = new Map<string, Alumno[]>()
   for (const a of alumnos) {
-    const key = (a.inscripcion as any)?.tipo_ingreso ?? 'SIN CLASIFICAR'
+    const key = a.inscripcion?.tipo_ingreso ?? 'SIN CLASIFICAR'
     if (!porTipo.has(key)) porTipo.set(key, [])
     porTipo.get(key)!.push(a)
   }
@@ -136,8 +136,8 @@ export default function LibroRegistroNcPdf({ alumnos, cfg }: Props) {
               const apellidos = am ? `${ap} · ${am}` : ap
               const nombre = apellidos + (nm ? `, ${nm}` : '')
               const [bg, fg] = BADGE_COLORS[a.estatus] ?? ['#f1f5f9', '#475569']
-              const fechaInsc = (a.inscripcion as any)?.fecha_inscripcion
-                ? new Date((a.inscripcion as any).fecha_inscripcion + 'T12:00:00').toLocaleDateString('es-MX')
+              const fechaInsc = a.inscripcion?.fecha_inscripcion
+                ? new Date(a.inscripcion?.fecha_inscripcion + 'T12:00:00').toLocaleDateString('es-MX')
                 : '—'
               return (
                 <View key={a.id} style={i % 2 === 0 ? S.rowOdd : S.rowEven}>

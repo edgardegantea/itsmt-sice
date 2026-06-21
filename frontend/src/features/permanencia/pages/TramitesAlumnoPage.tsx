@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
-import { permanenciaApi, type TipoConstancia, type Baja } from '../services/permanencia'
+import { permanenciaApi, type TipoConstancia, type Baja, type Reinscripcion } from '../services/permanencia'
+import { mutationError } from '../../academico/pages/tabs/shared'
 import { useConstanciaPdf } from '../hooks/useConstanciaPdf'
 
 const TIPO_CONSTANCIA_LABEL: Record<TipoConstancia, string> = {
@@ -43,7 +44,7 @@ function Badge({ estatus }: { estatus: string }) {
 export default function TramitesAlumnoPage() {
   const { user } = useAuthStore()
   const qc = useQueryClient()
-  const alumnoId = (user as any)?.alumno_id as string | undefined
+  const alumnoId = user?.alumno_id
 
   const [tab, setTab] = useState<'reinscripcion' | 'constancias' | 'baja'>('reinscripcion')
   const [tipoConstancia, setTipoConstancia] = useState<TipoConstancia>('estudios')
@@ -63,8 +64,8 @@ export default function TramitesAlumnoPage() {
     enabled: !!alumnoId,
   })
 
-  const reinscripcionActual = (reinscripciones?.data ?? reinscripciones as any)?.find(
-    (r: any) => r.periodo_id === periodo?.id
+  const reinscripcionActual = ((reinscripciones?.data ?? reinscripciones) as Reinscripcion[] | undefined)?.find(
+    r => r.periodo_id === periodo?.id
   )
 
   // Adeudos
@@ -118,7 +119,7 @@ export default function TramitesAlumnoPage() {
   const bajaActual = (misBajas as Baja[]).find(b => b.periodo_id === periodo?.id)
 
   const tieneAdeudos = adeudos.length > 0
-  const pendienteCertificado = !!(user as any)?.pendiente_certificado_bachillerato
+  const pendienteCertificado = !!user?.pendiente_certificado_bachillerato
   const puedeReinscribirse = !tieneAdeudos && !pendienteCertificado && !reinscripcionActual && !!periodo
 
   return (
@@ -150,7 +151,7 @@ export default function TramitesAlumnoPage() {
             <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4">
               <p className="text-sm font-semibold text-red-800 mb-1">Tienes adeudos pendientes</p>
               <ul className="space-y-1 mt-2">
-                {adeudos.map((a: any) => (
+                {adeudos.map((a) => (
                   <li key={a.id} className="text-xs text-red-700 flex justify-between">
                     <span>{a.concepto}</span>
                     <span className="font-semibold">${parseFloat(a.monto).toFixed(2)}</span>
@@ -212,7 +213,7 @@ export default function TramitesAlumnoPage() {
               )}
               {mutSolicitar.isError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs text-red-700">
-                  {(mutSolicitar.error as any)?.response?.data?.message ?? 'Error al solicitar reinscripción.'}
+                  {mutationError(mutSolicitar.error)}
                 </div>
               )}
               <button
@@ -244,7 +245,7 @@ export default function TramitesAlumnoPage() {
                 <p className="text-sm font-semibold text-slate-700">Baja registrada en este periodo</p>
                 <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full capitalize">{bajaActual.tipo_baja}</span>
               </div>
-              <p className="text-xs text-slate-500">Periodo: <span className="font-medium text-slate-700">{(bajaActual as any).periodo?.nombre}</span></p>
+              <p className="text-xs text-slate-500">Periodo: <span className="font-medium text-slate-700">{bajaActual.periodo?.nombre}</span></p>
               <p className="text-xs text-slate-500">Fecha de solicitud: <span className="font-medium text-slate-700">{new Date(bajaActual.fecha_solicitud).toLocaleDateString('es-MX')}</span></p>
               {bajaActual.reingreso_posible && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-800">
@@ -292,7 +293,7 @@ export default function TramitesAlumnoPage() {
               )}
               {mutBaja.isError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs text-red-700">
-                  {(mutBaja.error as any)?.response?.data?.message ?? 'Error al solicitar la baja.'}
+                  {mutationError(mutBaja.error)}
                 </div>
               )}
               <button
@@ -315,7 +316,7 @@ export default function TramitesAlumnoPage() {
                   <div key={b.id} className="px-5 py-3.5 flex items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium text-slate-800 capitalize">{b.tipo_baja}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{(b as any).periodo?.nombre ?? '—'}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{b.periodo?.nombre ?? '—'}</p>
                       {b.motivo_texto && <p className="text-xs text-slate-500 mt-1">{b.motivo_texto}</p>}
                     </div>
                     <span className="text-xs text-slate-400 shrink-0">{new Date(b.fecha_solicitud).toLocaleDateString('es-MX')}</span>
@@ -369,7 +370,7 @@ export default function TramitesAlumnoPage() {
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <p className="px-5 pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Mis solicitudes</p>
               <div className="divide-y divide-slate-100">
-                {constancias.map((c: any) => (
+                {constancias.map((c) => (
                   <div key={c.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium text-slate-800">{TIPO_CONSTANCIA_LABEL[c.tipo as TipoConstancia]}</p>
