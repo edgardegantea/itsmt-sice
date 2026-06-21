@@ -117,11 +117,11 @@
     <tr>
       <td>
         <div class="firma-linea">{{ mb_strtoupper($directorGeneral?->name ?? '___________________________', 'UTF-8') }}</div>
-        <div class="firma-cargo">Director(a) General</div>
+        <div class="firma-cargo">{{ $directorGeneral?->cargo ?? 'Director(a) General' }}</div>
       </td>
       <td>
         <div class="firma-linea">{{ mb_strtoupper($jefeControlEscolar?->name ?? ($constancia->emitidaPor?->name ?? '___________________________'), 'UTF-8') }}</div>
-        <div class="firma-cargo">Jefe(a) de Departamento de Control Escolar</div>
+        <div class="firma-cargo">{{ $jefeControlEscolar?->cargo ?? 'Jefe(a) de Control Escolar' }}</div>
       </td>
     </tr>
   </table>

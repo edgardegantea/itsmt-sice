@@ -4,7 +4,7 @@
 <div class="title">CARTA COMPROMISO DE ENTREGA DE DOCUMENTOS</div>
 
 <p style="font-size:9pt; margin-bottom:12px;">
-  En la ciudad de Martínez de la Torre, Ver., a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
+  En {{ $cfg->ciudad ?? 'la ciudad' }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}, a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
   el alumno <strong>{{ $inscripcion->aspirante->nombres }} {{ $inscripcion->aspirante->apellido_paterno }} {{ $inscripcion->aspirante->apellido_materno }}</strong>,
   con CURP <strong>{{ $inscripcion->aspirante->curp }}</strong> y número de control <strong>{{ $inscripcion->numero_control }}</strong>,
   inscrito en la carrera de <strong>{{ $inscripcion->carrera->nombre }}</strong>,
@@ -13,7 +13,7 @@
 
 <p style="font-size:9pt; margin-bottom:10px;">
   <strong>Que al momento de su inscripción formal no presentó el Certificado de Bachillerato original</strong>,
-  y que se compromete a entregarlo a Servicios Escolares del ITSMT
+  y que se compromete a entregarlo a Servicios Escolares del {{ $cfg->nombre_corto }}
   <strong>a más tardar antes del inicio del proceso de reinscripción del siguiente periodo</strong>
   ({{ $inscripcion->periodo->nombre }}, antes del {{ optional($inscripcion->periodo->fecha_limite_baja_parcial)->format('d/m/Y') ?? 'fecha por confirmar' }}).
 </p>
@@ -41,7 +41,7 @@
   <div class="firma-block">
     <div class="firma-line"></div>
     <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($jefeControlEscolar?->name ?? '___________________________', 'UTF-8') }}</p>
-    <p>Jefe(a) de Control Escolar</p>
+    <p>{{ $jefeControlEscolar?->cargo ?? 'Jefe(a) de Control Escolar' }}</p>
     <p style="font-size:8pt;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>

@@ -4,7 +4,7 @@
 <div class="title">CARTA COMPROMISO DEL ESTUDIANTE</div>
 
 <p style="font-size:9pt; margin-bottom:10px;">
-  En la ciudad de Martínez de la Torre, Ver., a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
+  En {{ $cfg->ciudad ?? 'la ciudad' }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}, a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
   el alumno <strong>{{ $inscripcion->aspirante->nombres }} {{ $inscripcion->aspirante->apellido_paterno }} {{ $inscripcion->aspirante->apellido_materno }}</strong>,
   con número de control <strong>{{ $inscripcion->numero_control }}</strong>, inscrito en la carrera de
   <strong>{{ $inscripcion->carrera->nombre }}</strong>, manifiesta su conocimiento y aceptación de los siguientes compromisos:
@@ -37,7 +37,7 @@
   <div class="firma-block">
     <div class="firma-line"></div>
     <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($directorGeneral?->name ?? '___________________________', 'UTF-8') }}</p>
-    <p>Director(a) General</p>
+    <p>{{ $directorGeneral?->cargo ?? 'Director(a) General' }}</p>
     <p style="font-size:8pt;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>

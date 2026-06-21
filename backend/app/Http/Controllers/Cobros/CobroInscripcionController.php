@@ -35,10 +35,11 @@ class CobroInscripcionController extends Controller
 
         $recibo->load(['inscripcion.aspirante', 'alumno.carrera', 'registradoPor']);
 
+        $cfg                = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
         $jefeControlEscolar = \App\Domains\Institucional\Models\DirectorioPersonal::where('firma_documentos', true)
                               ->where('clave_firma', 'jefe_servicios_escolares')->where('activo', true)->first();
 
-        $html = view('pdfs.recibo_cobro', compact('recibo', 'jefeControlEscolar'))->render();
+        $html = view('pdfs.recibo_cobro', compact('recibo', 'jefeControlEscolar', 'cfg'))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         return response($pdf, 200, [

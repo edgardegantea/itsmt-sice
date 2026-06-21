@@ -189,9 +189,10 @@ class InscripcionPdfController extends Controller
 
         $alumno = $inscripcion->alumno()->with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])->firstOrFail();
 
+        $cfg             = ConfiguracionInstitucional::instancia();
         $directorGeneral = DirectorioPersonal::where('firma_documentos', true)
             ->where('clave_firma', 'director_general')->where('activo', true)->first();
-        $html = view('pdfs.credencial', compact('alumno', 'directorGeneral'))->render();
+        $html = view('pdfs.credencial', compact('alumno', 'directorGeneral', 'cfg'))->render();
 
         // Credencial: 85.6mm × 54mm (tamaño tarjeta CR-80)
         $pdf = $this->gotenberg->htmlToPdf($html, [
@@ -217,7 +218,7 @@ class InscripcionPdfController extends Controller
             ->get();
 
         $cfg  = ConfiguracionInstitucional::instancia();
-        $html = view('pdfs.libro_registro_nc', compact('alumnos', 'cfg'))->render();
+        $html = view('pdfs.libro_registro_nc', array_merge(compact('alumnos', 'cfg'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdfLandscape($html);
 
         return response($pdf, 200, $this->headers('libro-registro-nc-' . now()->format('Ymd') . '.pdf'));

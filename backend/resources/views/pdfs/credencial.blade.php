@@ -165,8 +165,8 @@
 {{-- ── FRENTE ── --}}
 <div class="frente">
   <div class="banda-top">
-    <h1>TECNOLÓGICO NACIONAL DE MÉXICO</h1>
-    <p>Instituto Tecnológico Superior de Martínez de la Torre</p>
+    <h1>{{ mb_strtoupper($cfg->dependencia ?? 'TECNOLÓGICO NACIONAL DE MÉXICO', 'UTF-8') }}</h1>
+    <p>{{ $cfg->nombre_institucion }}</p>
   </div>
 
   <div class="cuerpo">
@@ -190,14 +190,14 @@
   </div>
 
   <div class="banda-bot">
-    Válida para el periodo {{ $alumno->periodoIngreso?->nombre }} · ITSMT
+    Válida para el periodo {{ $alumno->periodoIngreso?->nombre }} · {{ $cfg->nombre_corto }}
   </div>
 </div>
 
 {{-- ── REVERSO ── --}}
 <div class="reverso">
   <div class="rev-banda-top">
-    CREDENCIAL DE ESTUDIANTE · INSTITUTO TECNOLÓGICO SUPERIOR DE MARTÍNEZ DE LA TORRE
+    CREDENCIAL DE ESTUDIANTE · {{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}
   </div>
 
   <div class="rev-cuerpo">
@@ -214,14 +214,14 @@
     <div class="firma-bloque">
       <div class="firma-linea"></div>
       <div class="firma-texto">
-        {{ mb_strtoupper($directorGeneral?->name ?? 'DIRECTOR(A) GENERAL', 'UTF-8') }}<br>
-        Director(a) General
+        {{ mb_strtoupper($directorGeneral?->name ?? '___________________________', 'UTF-8') }}<br>
+        {{ $directorGeneral?->cargo ?? 'Director(a) General' }}
       </div>
     </div>
   </div>
 
   <div class="rev-banda-bot">
-    Documento generado por SICE · {{ now()->format('d/m/Y') }} · ITSMT
+    Documento generado por SICE · {{ now()->format('d/m/Y') }} · {{ $cfg->nombre_corto }}
   </div>
 </div>
 

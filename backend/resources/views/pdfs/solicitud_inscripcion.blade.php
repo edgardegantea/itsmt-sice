@@ -312,7 +312,7 @@
         <div class="firma-nombre">
           {{ mb_strtoupper($jefeControlEscolar?->name ?? 'SELLO Y FIRMA', 'UTF-8') }}
         </div>
-        <div class="firma-cargo">Departamento de Control Escolar</div>
+        <div class="firma-cargo">{{ $jefeControlEscolar?->cargo ?? 'Departamento de Control Escolar' }}</div>
       </td>
     </tr>
   </table>

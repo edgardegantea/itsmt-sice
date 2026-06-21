@@ -4,14 +4,14 @@
 <div class="title">CONTRATO CON EL ESTUDIANTE</div>
 
 <p style="font-size:9pt; margin-bottom:10px;">
-  Contrato bilateral celebrado entre el <strong>Instituto Tecnológico Superior de Martínez de la Torre (ITSMT)</strong>
+  Contrato bilateral celebrado entre el <strong>{{ $cfg->nombre_institucion }} ({{ $cfg->nombre_corto }})</strong>
   y el alumno <strong>{{ $inscripcion->aspirante->nombres }} {{ $inscripcion->aspirante->apellido_paterno }} {{ $inscripcion->aspirante->apellido_materno }}</strong>,
   con número de control <strong>{{ $inscripcion->numero_control }}</strong>, para el periodo <strong>{{ $inscripcion->periodo->nombre }}</strong>.
 </p>
 
 <div class="section">PRIMERA — OBJETO DEL CONTRATO</div>
 <p style="font-size:9pt; margin-bottom:8px;">
-  El ITSMT se compromete a prestar servicios educativos de nivel superior en la carrera de
+  El {{ $cfg->nombre_corto }} se compromete a prestar servicios educativos de nivel superior en la carrera de
   <strong>{{ $inscripcion->carrera->nombre }}</strong>, conforme al plan de estudios aprobado por la Secretaría de Educación Pública
   y el Tecnológico Nacional de México.
 </p>
@@ -28,7 +28,7 @@
 
 <div class="section">TERCERA — OBLIGACIONES DEL ALUMNO</div>
 <ul style="font-size:9pt; padding-left:16px; line-height:1.7; margin-bottom:8px;">
-  <li>Cubrir las cuotas y derechos escolares en las fechas establecidas por el ITSMT.</li>
+  <li>Cubrir las cuotas y derechos escolares en las fechas establecidas por el {{ $cfg->nombre_corto }}.</li>
   <li>Cursar y acreditar las materias del semestre de acuerdo con el plan de estudios.</li>
   <li>Hacer buen uso de las instalaciones y equipo de la institución.</li>
   <li>Cumplir el Reglamento Interno de Estudiantes del TecNM vigente.</li>
@@ -51,7 +51,7 @@
   <div class="firma-block">
     <div class="firma-line"></div>
     <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($subdirectorAcademico?->name ?? '___________________________', 'UTF-8') }}</p>
-    <p>Subdirector(a) Académico(a)</p>
+    <p>{{ $subdirectorAcademico?->cargo ?? 'Subdirector(a) Académico(a)' }}</p>
     <p style="font-size:8pt;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>

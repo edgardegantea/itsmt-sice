@@ -63,7 +63,7 @@
 <div style="margin-top:36px; display:flex; justify-content:space-between; align-items:flex-end;">
   <div>
     <p style="font-size:8pt; color:#666;">
-      Instituto Tecnológico Superior de Martínez de la Torre<br>
+      {{ $cfg->nombre_institucion }}<br>
       RFC: {{ $recibo->rfc_emisor }}<br>
       Subdirección Administrativa
     </p>
@@ -71,7 +71,7 @@
   <div class="firma-block">
     <div class="firma-line"></div>
     <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($jefeControlEscolar?->name ?? '___________________________', 'UTF-8') }}</p>
-    <p>Jefe(a) de Control Escolar</p>
+    <p>{{ $jefeControlEscolar?->cargo ?? 'Jefe(a) de Control Escolar' }}</p>
     <p style="font-size:8pt;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>

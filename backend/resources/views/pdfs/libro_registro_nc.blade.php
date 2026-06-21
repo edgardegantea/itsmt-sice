@@ -143,9 +143,10 @@
     margin-top: 18px;
   }
   .firmas td { text-align: center; width: 33%; padding-top: 28px; vertical-align: top; }
-  .firma-line { border-top: 1px solid #333; width: 80%; margin: 0 auto 3px; }
-  .firma-cargo { font-size: 7.5pt; font-weight: bold; color: #1a3a5c; }
-  .firma-inst  { font-size: 6.5pt; color: #666; }
+  .firma-line   { border-top: 1px solid #333; width: 80%; margin: 0 auto 3px; }
+  .firma-nombre { font-size: 7pt; font-weight: bold; color: #111; margin-bottom: 1px; }
+  .firma-cargo  { font-size: 7.5pt; font-weight: bold; color: #1a3a5c; }
+  .firma-inst   { font-size: 6.5pt; color: #666; }
 
   .nota {
     font-size: 6.5pt;
@@ -265,8 +266,8 @@
 
 {{-- ── Nota legal ───────────────────────────────────────────────────────────── --}}
 <p class="nota">
-  Este documento constituye el registro oficial de números de control expedidos por el Instituto Tecnológico
-  Superior de Martínez de la Torre. Es un documento de control interno del Departamento de Servicios Escolares.
+  Este documento constituye el registro oficial de números de control expedidos por {{ $cfg->nombre_institucion }}.
+  Es un documento de control interno del Departamento de Servicios Escolares.
   Cualquier modificación posterior deberá documentarse mediante oficio firmado por el Director(a) General y
   el Jefe(a) de Control Escolar, con copia al expediente del alumno. Prohibida su reproducción parcial sin autorización.
 </p>
@@ -276,18 +277,21 @@
   <tr>
     <td>
       <div class="firma-line"></div>
-      <div class="firma-cargo">Director(a) General</div>
-      <div class="firma-inst">Instituto Tecnológico Superior de Martínez de la Torre</div>
+      <div class="firma-nombre">{{ mb_strtoupper($directorGeneral?->name ?? '', 'UTF-8') }}</div>
+      <div class="firma-cargo">{{ $directorGeneral?->cargo ?? 'Director(a) General' }}</div>
+      <div class="firma-inst">{{ $cfg->nombre_institucion }}</div>
     </td>
     <td>
       <div class="firma-line"></div>
-      <div class="firma-cargo">Jefe(a) de Control Escolar</div>
-      <div class="firma-inst">Departamento de Servicios Escolares · ITSMT</div>
+      <div class="firma-nombre">{{ mb_strtoupper($jefeControlEscolar?->name ?? '', 'UTF-8') }}</div>
+      <div class="firma-cargo">{{ $jefeControlEscolar?->cargo ?? 'Jefe(a) de Control Escolar' }}</div>
+      <div class="firma-inst">{{ $cfg->nombre_institucion }}</div>
     </td>
     <td>
       <div class="firma-line"></div>
-      <div class="firma-cargo">Subdirector(a) Académico(a)</div>
-      <div class="firma-inst">ITSMT</div>
+      <div class="firma-nombre">{{ mb_strtoupper($subdirectorAcademico?->name ?? '', 'UTF-8') }}</div>
+      <div class="firma-cargo">{{ $subdirectorAcademico?->cargo ?? 'Subdirector(a) Académico(a)' }}</div>
+      <div class="firma-inst">{{ $cfg->nombre_institucion }}</div>
     </td>
   </tr>
 </table>
