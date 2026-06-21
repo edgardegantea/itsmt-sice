@@ -15,7 +15,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 10pt; color: #1a1a1a; }
-    .header { border-bottom: 2px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 16px; }
+    .header { border-bottom: 2px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 30px; }
     .header table { width: 100%; border-collapse: collapse; }
     .header-logo { width: 64px; text-align: center; vertical-align: middle; padding-right: 10px; }
     .header-logo img { height: 52px; max-width: 60px; object-fit: contain; }
@@ -32,7 +32,7 @@
     table.datos td { padding: 4px 6px; border: 1px solid #ccc; }
     table.datos td.label { font-weight: bold; background: #f0f4f8; width: 38%; }
     .firma-block { display: inline-block; text-align: center; width: 44%; margin-top: 40px; }
-    .firma-line { border-top: 1px solid #333; margin-top: 40px; }
+    .firma-line { border-top: 0px solid #333; margin-top: 50px; }
     .footer { font-size: 7.5pt; color: #777; text-align: center; margin-top: 24px;
               border-top: 1px solid #ddd; padding-top: 6px; }
   </style>
