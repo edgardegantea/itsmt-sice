@@ -11,8 +11,6 @@
 <head>
 <meta charset="UTF-8">
 <style>
-@page { size: A4 portrait; margin: 18mm 20mm; }
-
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
   font-family: Arial, sans-serif;
@@ -22,17 +20,11 @@ body {
   background: #fff;
 }
 
-/* ── Un bloque = una página ──────────────────────────────────── */
+/* ── Un bloque = una o más páginas ──────────────────────────── */
 .carrera-block {
-  display: flex;
-  flex-direction: column;
-  min-height: 238mm;          /* altura útil A4 con márgenes @page */
   page-break-after: always;
 }
 .carrera-block:last-child { page-break-after: avoid; }
-
-/* El espacio entre tabla y firmas se expande para empujar firmas al fondo */
-.spacer { flex: 1; }
 
 /* ── Encabezado ─────────────────────────────────────────────── */
 .hdr-wrap { display: table; width: 100%; border-collapse: collapse; }
@@ -89,11 +81,13 @@ body {
 .row-total .tot-label { text-align: right; }
 .row-total .tot-val   { text-align: center; }
 
-/* ── Firmas — fluyen al final del bloque ─────────────────────── */
+/* ── Spacer: JS ajusta la altura para empujar firmas al fondo ─ */
+.spacer { display: block; }
+
+/* ── Firmas ──────────────────────────────────────────────────── */
 .firmas-wrap {
   border-top: 1px solid #ccc;
   padding-top: 14px;
-  margin-top: 0;
 }
 .firmas-grid { width: 100%; border-collapse: collapse; }
 .firmas-grid td {
@@ -193,10 +187,10 @@ body {
     </tbody>
   </table>
 
-  {{-- Spacer que empuja las firmas al fondo del bloque --}}
+  {{-- Spacer: altura calculada por JS --}}
   <div class="spacer"></div>
 
-  {{-- ── Firmas al fondo del bloque ─────────────────────────── --}}
+  {{-- ── Firmas al pie de la última página del bloque ──────── --}}
   <div class="firmas-wrap">
     <table class="firmas-grid">
       <tr>
@@ -229,6 +223,42 @@ body {
 
 </div>
 @endforeach
+
+<script>
+(function () {
+  // Parámetros del controller: A4 portrait, márgenes 18mm top/bottom
+  // Altura útil = 297mm - 18mm - 18mm = 261mm
+  // A 96 dpi: 1mm = 96/25.4 px ≈ 3.7795 px
+  var MM_TO_PX  = 96 / 25.4;
+  var PAGE_H_MM = 261;
+  var PAGE_H_PX = PAGE_H_MM * MM_TO_PX; // ≈ 986.6 px
+
+  document.querySelectorAll('.carrera-block').forEach(function (block) {
+    var spacer = block.querySelector('.spacer');
+    var firmas = block.querySelector('.firmas-wrap');
+
+    // 1. Medir el contenido sin el spacer
+    spacer.style.height = '0';
+    var contentH  = block.getBoundingClientRect().height;
+    var firmasH   = firmas.getBoundingClientRect().height;
+    var bodyH     = contentH - firmasH; // contenido antes de las firmas
+
+    // 2. ¿En qué página termina el contenido?
+    var pagesNeeded      = Math.ceil(bodyH / PAGE_H_PX) || 1;
+    var usedOnLastPage   = bodyH - (pagesNeeded - 1) * PAGE_H_PX;
+    var freeOnLastPage   = PAGE_H_PX - usedOnLastPage;
+
+    // 3. ¿Caben las firmas en el espacio libre?
+    if (freeOnLastPage >= firmasH + 2) {
+      // Caben: ajustar spacer para que queden pegadas al pie
+      spacer.style.height = (freeOnLastPage - firmasH) + 'px';
+    } else {
+      // No caben: empujar las firmas a la página siguiente
+      spacer.style.height = freeOnLastPage + 'px';
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

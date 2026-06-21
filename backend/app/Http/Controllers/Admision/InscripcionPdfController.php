@@ -128,7 +128,15 @@ class InscripcionPdfController extends Controller
 
         $cfg  = ConfiguracionInstitucional::instancia();
         $html = view('pdfs.lista_aspirantes_por_carrera', compact('periodo', 'aspirantes', 'cfg'))->render();
-        $pdf  = $this->gotenberg->htmlToPdf($html);
+        $pdf  = $this->gotenberg->htmlToPdf($html, [
+            'paperWidth'        => '210mm',
+            'paperHeight'       => '297mm',
+            'marginTop'         => '18mm',
+            'marginBottom'      => '18mm',
+            'marginLeft'        => '20mm',
+            'marginRight'       => '20mm',
+            'preferCssPageSize' => 'false',
+        ]);
 
         return response($pdf, 200, $this->headers("lista-aceptados-por-carrera-{$periodo->id}.pdf"));
     }
