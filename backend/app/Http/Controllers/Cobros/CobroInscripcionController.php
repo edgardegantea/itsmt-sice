@@ -35,8 +35,8 @@ class CobroInscripcionController extends Controller
 
         $recibo->load(['inscripcion.aspirante', 'alumno.carrera', 'registradoPor']);
 
-        $jefeControlEscolar = User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
-                              ?? User::role('personal_administrativo')->orderBy('created_at')->first();
+        $jefeControlEscolar = \App\Domains\Institucional\Models\DirectorioPersonal::where('firma_documentos', true)
+                              ->where('clave_firma', 'jefe_servicios_escolares')->where('activo', true)->first();
 
         $html = view('pdfs.recibo_cobro', compact('recibo', 'jefeControlEscolar'))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);

@@ -189,7 +189,8 @@ class InscripcionPdfController extends Controller
 
         $alumno = $inscripcion->alumno()->with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])->firstOrFail();
 
-        $directorGeneral = \App\Models\User::role('admin')->orderBy('created_at')->first();
+        $directorGeneral = DirectorioPersonal::where('firma_documentos', true)
+            ->where('clave_firma', 'director_general')->where('activo', true)->first();
         $html = view('pdfs.credencial', compact('alumno', 'directorGeneral'))->render();
 
         // Credencial: 85.6mm × 54mm (tamaño tarjeta CR-80)
