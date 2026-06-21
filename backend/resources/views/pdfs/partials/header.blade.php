@@ -15,7 +15,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 10pt; color: #1a1a1a; }
-    .header { border-bottom: 5px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 30px; }
+    .header { border-bottom: 0px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 30px; }
     .header table { width: 100%; border-collapse: collapse; }
     .header-logo { width: 64px; text-align: center; vertical-align: middle; padding-right: 10px; }
     .header-logo img { height: 52px; max-width: 60px; object-fit: contain; }
