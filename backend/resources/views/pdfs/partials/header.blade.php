@@ -14,7 +14,7 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 10pt; color: #1a1a1a; text-transform: uppercase; }
+    body { font-family: Arial, sans-serif; font-size: 10pt; color: #1a1a1a; }
     .header { border-bottom: 2px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 16px; }
     .header table { width: 100%; border-collapse: collapse; }
     .header-logo { width: 64px; text-align: center; vertical-align: middle; padding-right: 10px; }
@@ -25,7 +25,7 @@
     .header-center p  { font-size: 8.5pt; color: #555; margin-top: 2px; }
     .header-right { text-align: right; vertical-align: top; font-size: 8pt; color: #777; white-space: nowrap; padding-left: 10px; }
     .folio { text-align: right; font-size: 8pt; color: #555; margin-bottom: 10px; }
-    .title { font-size: 12pt; font-weight: bold; text-align: center; padding: 6px; margin-bottom: 14px; }
+    .title { font-size: 12pt; font-weight: bold; text-align: center; padding: 10px; margin-bottom: 20px; }
     .section { font-size: 9pt; font-weight: bold; color: #1a3a5c;
                border-bottom: 1px solid #1a3a5c; margin: 12px 0 6px; }
     table.datos { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 10px; }
