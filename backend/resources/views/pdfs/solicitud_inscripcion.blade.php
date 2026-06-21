@@ -83,7 +83,7 @@
     .tbl-docs th.c, .tbl-docs td.c { text-align: center; }
     .tbl-docs td {
       padding: 3px 6px;
-      border-bottom: 1px solid {{ $LINEA }};
+      border-bottom: 0px solid {{ $LINEA }};
       vertical-align: middle;
     }
     .tbl-docs tbody tr:nth-child(even) { background: #f4f7fb; }
