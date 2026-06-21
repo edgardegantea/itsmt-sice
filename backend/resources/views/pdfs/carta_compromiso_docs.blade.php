@@ -3,7 +3,7 @@
 <div class="folio">TecNM-AC-PO-001-05 · Folio: {{ $inscripcion->numero_control }}-CCD</div>
 <div class="title">CARTA COMPROMISO DE ENTREGA DE DOCUMENTOS</div>
 
-<p style="font-size:9pt; margin-bottom:12px; text-align:justify;">
+<p class="parrafo" style="font-size:9pt; margin-bottom:12px; text-align:justify;">
   En {{ $cfg->ciudad ?? 'la ciudad' }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}, a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
   el alumno <strong>{{ $inscripcion->aspirante->nombres }} {{ $inscripcion->aspirante->apellido_paterno }} {{ $inscripcion->aspirante->apellido_materno }}</strong>,
   con CURP <strong>{{ $inscripcion->aspirante->curp }}</strong> y número de control <strong>{{ $inscripcion->numero_control }}</strong>,

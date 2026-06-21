@@ -34,7 +34,10 @@
     .firma-block { display: inline-block; text-align: center; width: 44%; margin-top: 40px; }
     .firma-line { border-top: 0px solid #fff; margin-top: 50px; font-size: }
     .footer { font-size: 9pt; color: #777; text-align: center; margin-top: 24px;
-              border-top: 1px solid #ddd; padding-top: 20px; }
+              border-top: 1px solid #fff; padding-top: 20px; }
+
+    .parrafo {text-align: justify;}
+
   </style>
 </head>
 <body>
