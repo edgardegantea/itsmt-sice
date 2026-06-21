@@ -3,6 +3,7 @@
 namespace App\Domains\Institucional\Models;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
@@ -26,12 +27,14 @@ class DirectorioPersonal extends Model
         'orden',
         'activo',
         'firma_documentos',
+        'clave_firma',
     ];
 
     protected $casts = [
         'activo'           => 'boolean',
         'firma_documentos' => 'boolean',
         'orden'            => 'integer',
+        'clave_firma'      => 'string',
     ];
 
     public function user(): BelongsTo
@@ -47,6 +50,12 @@ class DirectorioPersonal extends Model
     public function puesto(): BelongsTo
     {
         return $this->belongsTo(DirectorioPuesto::class, 'puesto_id');
+    }
+
+    /** Alias para que los blades usen ->name igual que con User */
+    protected function name(): Attribute
+    {
+        return Attribute::make(get: fn () => $this->nombre);
     }
 
     protected static function boot(): void

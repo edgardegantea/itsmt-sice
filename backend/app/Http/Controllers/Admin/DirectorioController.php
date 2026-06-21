@@ -58,6 +58,7 @@ class DirectorioController extends Controller
             'orden'            => 'integer|min:0',
             'activo'           => 'boolean',
             'firma_documentos' => 'boolean',
+            'clave_firma'      => 'nullable|string|max:80|regex:/^[a-z0-9_]+$/|unique:directorio_personal,clave_firma',
         ]);
 
         $persona = DirectorioPersonal::create($data);
@@ -81,6 +82,7 @@ class DirectorioController extends Controller
             'orden'            => 'integer|min:0',
             'activo'           => 'boolean',
             'firma_documentos' => 'boolean',
+            'clave_firma'      => "nullable|string|max:80|regex:/^[a-z0-9_]+$/|unique:directorio_personal,clave_firma,{$directorio->id}",
         ]);
 
         $directorio->update($data);

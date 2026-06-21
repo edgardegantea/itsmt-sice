@@ -10,7 +10,7 @@ use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
 use App\Http\Controllers\Controller;
 use App\Domains\Institucional\Models\ConfiguracionInstitucional;
-use App\Domains\Institucional\Models\FirmantePdf;
+use App\Domains\Institucional\Models\DirectorioPersonal;
 use App\Models\User;
 use App\Services\GotenbergService;
 use Illuminate\Http\Response;
@@ -21,10 +21,12 @@ class InscripcionPdfController extends Controller
 
     private function firmantes(): array
     {
-        $map = FirmantePdf::where('activo', true)
+        $map = DirectorioPersonal::where('firma_documentos', true)
+            ->whereNotNull('clave_firma')
+            ->where('activo', true)
             ->orderBy('orden')
             ->get()
-            ->keyBy('clave');
+            ->keyBy('clave_firma');
 
         return [
             'directorGeneral'      => $map->get('director_general'),
