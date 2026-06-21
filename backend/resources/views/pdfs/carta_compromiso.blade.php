@@ -5,9 +5,9 @@
 
 <p style="font-size:9pt; margin-bottom:10px;">
   En {{ $cfg->ciudad ?? 'la ciudad' }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}, a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
-  el alumno <strong>{{ $inscripcion->aspirante->nombres }} {{ $inscripcion->aspirante->apellido_paterno }} {{ $inscripcion->aspirante->apellido_materno }}</strong>,
+  el alumno <strong>{{ mb_strtoupper($inscripcion->aspirante->nombres . ' ' . $inscripcion->aspirante->apellido_paterno . ' ' . $inscripcion->aspirante->apellido_materno, 'UTF-8') }}</strong>,
   con número de control <strong>{{ $inscripcion->numero_control }}</strong>, inscrito en la carrera de
-  <strong>{{ $inscripcion->carrera->nombre }}</strong>, manifiesta su conocimiento y aceptación de los siguientes compromisos:
+  <strong>{{ mb_strtoupper($inscripcion->carrera->nombre, 'UTF-8') }}</strong>, manifiesta su conocimiento y aceptación de los siguientes compromisos:
 </p>
 
 <div class="section">COMPROMISOS DEL ESTUDIANTE</div>
@@ -32,7 +32,7 @@
   <div class="firma-block">
     <div class="firma-line"></div>
     <p>Firma del Alumno</p>
-    <p style="font-size:8pt;">{{ $inscripcion->aspirante->nombres }} {{ $inscripcion->aspirante->apellido_paterno }}</p>
+    <p style="font-size:8pt;">{{ mb_strtoupper($inscripcion->aspirante->nombres . ' ' . $inscripcion->aspirante->apellido_paterno, 'UTF-8') }}</p>
   </div>
   <div class="firma-block">
     <div class="firma-line"></div>
