@@ -1,10 +1,8 @@
 @php
-  $logoB64    = $cfg->logoBase64();
-  $porCarrera = $aspirantes->groupBy(fn($a) => $a->carrera->nombre);
-  $totalCarreras = $porCarrera->count();
-  $fechaInsc  = \Carbon\Carbon::parse($periodo->fecha_inicio)->locale('es')->isoFormat('D [de] MMMM [de] YYYY')
-              . ' al '
-              . \Carbon\Carbon::parse($periodo->fecha_fin)->locale('es')->isoFormat('D [de] MMMM [de] YYYY');
+  $logoB64   = $cfg->logoBase64();
+  $fechaInsc = \Carbon\Carbon::parse($periodo->fecha_inicio)->locale('es')->isoFormat('D [de] MMMM [de] YYYY')
+             . ' al '
+             . \Carbon\Carbon::parse($periodo->fecha_fin)->locale('es')->isoFormat('D [de] MMMM [de] YYYY');
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -12,19 +10,31 @@
 <meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body {
+
+/*
+ * El documento representa UNA sola carrera (un PDF por carrera).
+ * La página tiene: 297mm alto - 18mm top - 18mm bottom = 261mm útiles.
+ * Usamos min-height + flex para que el contenido empuje las firmas al fondo
+ * de la última página cuando el contenido es corto, o las firmas simplemente
+ * caigan al fondo si hay desbordamiento natural de página.
+ */
+html, body {
   font-family: Arial, sans-serif;
   font-size: 9.5pt;
   color: #111;
   text-transform: uppercase;
   background: #fff;
+  /* Altura del área útil A4 portrait con márgenes 18mm */
+  min-height: 261mm;
 }
 
-/* ── Un bloque = una o más páginas ──────────────────────────── */
-.carrera-block {
-  page-break-after: always;
+.page-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 261mm;
 }
-.carrera-block:last-child { page-break-after: avoid; }
+
+.content { flex: 1; }
 
 /* ── Encabezado ─────────────────────────────────────────────── */
 .hdr-wrap { display: table; width: 100%; border-collapse: collapse; }
@@ -81,13 +91,11 @@ body {
 .row-total .tot-label { text-align: right; }
 .row-total .tot-val   { text-align: center; }
 
-/* ── Spacer: JS ajusta la altura para empujar firmas al fondo ─ */
-.spacer { display: block; }
-
 /* ── Firmas ──────────────────────────────────────────────────── */
 .firmas-wrap {
   border-top: 1px solid #ccc;
   padding-top: 14px;
+  margin-top: 20px;
 }
 .firmas-grid { width: 100%; border-collapse: collapse; }
 .firmas-grid td {
@@ -107,90 +115,88 @@ body {
 </head>
 <body>
 
-@foreach($porCarrera as $nombreCarrera => $grupo)
-@php $carreraIdx = $loop->iteration; @endphp
-<div class="carrera-block">
+<div class="page-wrap">
+  <div class="content">
 
-  {{-- ── Encabezado institucional ─────────────────────────────── --}}
-  <table class="hdr-wrap">
-    <tr>
-      <td class="hdr-logo">
-        @if($logoB64)
-          <img src="{{ $logoB64 }}" alt="{{ $cfg->nombre_corto }}">
-        @else
-          <span class="hdr-logo-txt">{{ $cfg->nombre_corto }}</span>
-        @endif
-      </td>
-      <td class="hdr-center">
-        <div class="inst">{{ $cfg->nombre_institucion }}</div>
-        <div class="dep">{{ $cfg->dependencia ?? 'Tecnológico Nacional de México' }}</div>
-      </td>
-      <td class="hdr-meta">
-        Código: <strong>TecNM-AC-PO-001-01</strong><br>
-        Revisión: <strong>O</strong><br>
-        @if($cfg->clave_tecnm)Clave: <strong>{{ $cfg->clave_tecnm }}</strong>@endif
-      </td>
-    </tr>
-  </table>
-  <hr class="hdr-rule">
-
-  {{-- ── Título ──────────────────────────────────────────────── --}}
-  <div class="doc-title">LISTA DE ASPIRANTES ACEPTADOS</div>
-
-  {{-- ── Campos del documento ────────────────────────────────── --}}
-  <table class="doc-fields">
-    <tr>
-      <td class="lbl">INSTITUTO TECNOLÓGICO:</td>
-      <td class="val">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</td>
-    </tr>
-    <tr>
-      <td class="lbl">CARRERA:</td>
-      <td class="val">{{ mb_strtoupper($nombreCarrera, 'UTF-8') }}</td>
-    </tr>
-    <tr>
-      <td class="lbl">FECHA DE INSCRIPCIÓN:</td>
-      <td class="val">{{ mb_strtoupper($fechaInsc, 'UTF-8') }}</td>
-    </tr>
-  </table>
-
-  <p class="doc-periodo">
-    Periodo académico: <strong>{{ mb_strtoupper($periodo->nombre, 'UTF-8') }}</strong>
-    &nbsp;&nbsp;|&nbsp;&nbsp;
-    Total en esta carrera: <strong>{{ $grupo->count() }}</strong> aspirante(s)
-  </p>
-
-  {{-- ── Tabla ───────────────────────────────────────────────── --}}
-  <table class="lista">
-    <thead>
+    {{-- ── Encabezado institucional ─────────────────────────────── --}}
+    <table class="hdr-wrap">
       <tr>
-        <th class="col-no">No.</th>
-        <th class="col-ap" style="text-align:left;">Apellido Paterno</th>
-        <th class="col-am" style="text-align:left;">Apellido Materno</th>
-        <th class="col-nm" style="text-align:left;">Nombre(s)</th>
-        <th class="col-fch">No. de Ficha</th>
+        <td class="hdr-logo">
+          @if($logoB64)
+            <img src="{{ $logoB64 }}" alt="{{ $cfg->nombre_corto }}">
+          @else
+            <span class="hdr-logo-txt">{{ $cfg->nombre_corto }}</span>
+          @endif
+        </td>
+        <td class="hdr-center">
+          <div class="inst">{{ $cfg->nombre_institucion }}</div>
+          <div class="dep">{{ $cfg->dependencia ?? 'Tecnológico Nacional de México' }}</div>
+        </td>
+        <td class="hdr-meta">
+          Código: <strong>TecNM-AC-PO-001-01</strong><br>
+          Revisión: <strong>O</strong><br>
+          @if($cfg->clave_tecnm)Clave: <strong>{{ $cfg->clave_tecnm }}</strong>@endif
+        </td>
       </tr>
-    </thead>
-    <tbody>
-      @foreach($grupo->sortBy('apellido_paterno')->values() as $i => $asp)
+    </table>
+    <hr class="hdr-rule">
+
+    {{-- ── Título ──────────────────────────────────────────────── --}}
+    <div class="doc-title">LISTA DE ASPIRANTES ACEPTADOS</div>
+
+    {{-- ── Campos del documento ────────────────────────────────── --}}
+    <table class="doc-fields">
       <tr>
-        <td class="col-no">{{ $i + 1 }}</td>
-        <td class="col-ap">{{ mb_strtoupper($asp->apellido_paterno, 'UTF-8') }}</td>
-        <td class="col-am">{{ mb_strtoupper($asp->apellido_materno ?? '', 'UTF-8') }}</td>
-        <td class="col-nm">{{ mb_strtoupper($asp->nombres, 'UTF-8') }}</td>
-        <td class="col-fch">{{ $asp->folio_preinscripcion_tecnm ?? '—' }}</td>
+        <td class="lbl">INSTITUTO TECNOLÓGICO:</td>
+        <td class="val">{{ mb_strtoupper($cfg->nombre_institucion, 'UTF-8') }}</td>
       </tr>
-      @endforeach
-      <tr class="row-total">
-        <td colspan="4" class="tot-label">Total de aspirantes aceptados en la carrera:</td>
-        <td class="tot-val">{{ $grupo->count() }}</td>
+      <tr>
+        <td class="lbl">CARRERA:</td>
+        <td class="val">{{ mb_strtoupper($nombreCarrera, 'UTF-8') }}</td>
       </tr>
-    </tbody>
-  </table>
+      <tr>
+        <td class="lbl">FECHA DE INSCRIPCIÓN:</td>
+        <td class="val">{{ mb_strtoupper($fechaInsc, 'UTF-8') }}</td>
+      </tr>
+    </table>
 
-  {{-- Spacer: altura calculada por JS --}}
-  <div class="spacer"></div>
+    <p class="doc-periodo">
+      Periodo académico: <strong>{{ mb_strtoupper($periodo->nombre, 'UTF-8') }}</strong>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      Total en esta carrera: <strong>{{ $grupo->count() }}</strong> aspirante(s)
+    </p>
 
-  {{-- ── Firmas al pie de la última página del bloque ──────── --}}
+    {{-- ── Tabla ───────────────────────────────────────────────── --}}
+    <table class="lista">
+      <thead>
+        <tr>
+          <th class="col-no">No.</th>
+          <th class="col-ap" style="text-align:left;">Apellido Paterno</th>
+          <th class="col-am" style="text-align:left;">Apellido Materno</th>
+          <th class="col-nm" style="text-align:left;">Nombre(s)</th>
+          <th class="col-fch">No. de Ficha</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($grupo->sortBy('apellido_paterno')->values() as $i => $asp)
+        <tr>
+          <td class="col-no">{{ $i + 1 }}</td>
+          <td class="col-ap">{{ mb_strtoupper($asp->apellido_paterno, 'UTF-8') }}</td>
+          <td class="col-am">{{ mb_strtoupper($asp->apellido_materno ?? '', 'UTF-8') }}</td>
+          <td class="col-nm">{{ mb_strtoupper($asp->nombres, 'UTF-8') }}</td>
+          <td class="col-fch">{{ $asp->folio_preinscripcion_tecnm ?? '—' }}</td>
+        </tr>
+        @endforeach
+        <tr class="row-total">
+          <td colspan="4" class="tot-label">Total de aspirantes aceptados en la carrera:</td>
+          <td class="tot-val">{{ $grupo->count() }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>{{-- /.content --}}
+
+  {{-- ── Firmas al pie (flex empuja esto al final de la última página) ── --}}
   <div class="firmas-wrap">
     <table class="firmas-grid">
       <tr>
@@ -215,50 +221,13 @@ body {
         <td class="pf-left">c.c.p. Departamento de Servicios Escolares.</td>
         <td class="pf-right">
           TecNM-AC-PO-001-01 &nbsp;·&nbsp; Rev. O &nbsp;·&nbsp;
-          Lista {{ $carreraIdx }} de {{ $totalCarreras }}
+          Lista {{ $idx }} de {{ $totalCarreras }}
         </td>
       </tr>
     </table>
   </div>
 
-</div>
-@endforeach
-
-<script>
-(function () {
-  // Parámetros del controller: A4 portrait, márgenes 18mm top/bottom
-  // Altura útil = 297mm - 18mm - 18mm = 261mm
-  // A 96 dpi: 1mm = 96/25.4 px ≈ 3.7795 px
-  var MM_TO_PX  = 96 / 25.4;
-  var PAGE_H_MM = 261;
-  var PAGE_H_PX = PAGE_H_MM * MM_TO_PX; // ≈ 986.6 px
-
-  document.querySelectorAll('.carrera-block').forEach(function (block) {
-    var spacer = block.querySelector('.spacer');
-    var firmas = block.querySelector('.firmas-wrap');
-
-    // 1. Medir el contenido sin el spacer
-    spacer.style.height = '0';
-    var contentH  = block.getBoundingClientRect().height;
-    var firmasH   = firmas.getBoundingClientRect().height;
-    var bodyH     = contentH - firmasH; // contenido antes de las firmas
-
-    // 2. ¿En qué página termina el contenido?
-    var pagesNeeded      = Math.ceil(bodyH / PAGE_H_PX) || 1;
-    var usedOnLastPage   = bodyH - (pagesNeeded - 1) * PAGE_H_PX;
-    var freeOnLastPage   = PAGE_H_PX - usedOnLastPage;
-
-    // 3. ¿Caben las firmas en el espacio libre?
-    if (freeOnLastPage >= firmasH + 2) {
-      // Caben: ajustar spacer para que queden pegadas al pie
-      spacer.style.height = (freeOnLastPage - firmasH) + 'px';
-    } else {
-      // No caben: empujar las firmas a la página siguiente
-      spacer.style.height = freeOnLastPage + 'px';
-    }
-  });
-})();
-</script>
+</div>{{-- /.page-wrap --}}
 
 </body>
 </html>

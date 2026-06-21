@@ -59,4 +59,30 @@ class GotenbergService
     {
         return $this->htmlToPdf($html, array_merge(['landscape' => 'true'], $options));
     }
+
+    /**
+     * Fusiona varios PDFs (como strings binarios) en uno solo, en orden.
+     *
+     * @param  string[]  $pdfs  Array de contenidos PDF binarios
+     */
+    public function mergePdfs(array $pdfs): string
+    {
+        $request = Http::timeout(30);
+
+        foreach ($pdfs as $i => $pdfContent) {
+            $request = $request->attach("file_{$i}.pdf", $pdfContent, "file_{$i}.pdf");
+        }
+
+        try {
+            $response = $request->post("{$this->baseUrl}/forms/pdfengines/merge");
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('Gotenberg no disponible al fusionar PDFs.', 0, $e);
+        }
+
+        if (! $response->successful()) {
+            throw new RuntimeException("Gotenberg merge error {$response->status()}: {$response->body()}");
+        }
+
+        return $response->body();
+    }
 }

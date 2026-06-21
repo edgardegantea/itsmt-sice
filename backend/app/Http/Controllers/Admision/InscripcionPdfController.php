@@ -126,9 +126,11 @@ class InscripcionPdfController extends Controller
 
         abort_if($aspirantes->isEmpty(), 404, 'No hay aspirantes aceptados en este periodo.');
 
-        $cfg  = ConfiguracionInstitucional::instancia();
-        $html = view('pdfs.lista_aspirantes_por_carrera', compact('periodo', 'aspirantes', 'cfg'))->render();
-        $pdf  = $this->gotenberg->htmlToPdf($html, [
+        $cfg         = ConfiguracionInstitucional::instancia();
+        $porCarrera  = $aspirantes->groupBy(fn($a) => $a->carrera->nombre);
+        $totalCarreras = $porCarrera->count();
+
+        $pdfOptions = [
             'paperWidth'        => '210mm',
             'paperHeight'       => '297mm',
             'marginTop'         => '18mm',
@@ -136,7 +138,21 @@ class InscripcionPdfController extends Controller
             'marginLeft'        => '20mm',
             'marginRight'       => '20mm',
             'preferCssPageSize' => 'false',
-        ]);
+        ];
+
+        $pdfs = [];
+        $idx  = 1;
+        foreach ($porCarrera as $nombreCarrera => $grupo) {
+            $html   = view('pdfs.lista_aspirantes_por_carrera', compact(
+                'periodo', 'cfg', 'nombreCarrera', 'grupo', 'idx', 'totalCarreras'
+            ))->render();
+            $pdfs[] = $this->gotenberg->htmlToPdf($html, $pdfOptions);
+            $idx++;
+        }
+
+        $pdf = count($pdfs) === 1
+            ? $pdfs[0]
+            : $this->gotenberg->mergePdfs($pdfs);
 
         return response($pdf, 200, $this->headers("lista-aceptados-por-carrera-{$periodo->id}.pdf"));
     }
