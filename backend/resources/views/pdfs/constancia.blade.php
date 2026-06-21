@@ -1,9 +1,5 @@
 @php
-  $cfg     = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
   $logoB64 = $cfg->logoBase64();
-  $directorGeneral    = \App\Models\User::role('admin')->orderBy('created_at')->first();
-  $jefeControlEscolar = \App\Models\User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
-                        ?? \App\Models\User::role('personal_administrativo')->orderBy('created_at')->first();
   $alumno  = $constancia->alumno;
   $carrera = $alumno->carrera ?? $alumno->inscripcion?->carrera;
   $periodo = $alumno->periodoIngreso;

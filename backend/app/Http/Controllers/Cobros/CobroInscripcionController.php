@@ -7,6 +7,7 @@ use App\Domains\Cobros\Models\ReciboCobro;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admision\RegistrarCobroRequest;
 use App\Http\Responses\ApiResponse;
+use App\Models\User;
 use App\Services\GotenbergService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -34,7 +35,10 @@ class CobroInscripcionController extends Controller
 
         $recibo->load(['inscripcion.aspirante', 'alumno.carrera', 'registradoPor']);
 
-        $html = view('pdfs.recibo_cobro', compact('recibo'))->render();
+        $jefeControlEscolar = User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
+                              ?? User::role('personal_administrativo')->orderBy('created_at')->first();
+
+        $html = view('pdfs.recibo_cobro', compact('recibo', 'jefeControlEscolar'))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         return response($pdf, 200, [

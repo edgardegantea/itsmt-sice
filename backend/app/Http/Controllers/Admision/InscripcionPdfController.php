@@ -9,12 +9,24 @@ use App\Domains\Academico\Models\Periodo;
 use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
 use App\Http\Controllers\Controller;
+use App\Domains\Institucional\Models\ConfiguracionInstitucional;
+use App\Models\User;
 use App\Services\GotenbergService;
 use Illuminate\Http\Response;
 
 class InscripcionPdfController extends Controller
 {
     public function __construct(private GotenbergService $gotenberg) {}
+
+    private function firmantes(): array
+    {
+        return [
+            'directorGeneral'      => User::role('admin')->orderBy('created_at')->first(),
+            'subdirectorAcademico' => User::where('email', 'subacademica@martineztorre.tecnm.mx')->first(),
+            'jefeControlEscolar'   => User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
+                                         ?? User::role('personal_administrativo')->orderBy('created_at')->first(),
+        ];
+    }
 
     // GET /api/inscripciones/{inscripcion}/solicitud-inscripcion/pdf
     public function solicitudInscripcion(Inscripcion $inscripcion): Response
@@ -42,7 +54,8 @@ class InscripcionPdfController extends Controller
             ['nombre' => 'Autorización consulta de expediente',     'entregado' => true],
         ];
 
-        $html = view('pdfs.solicitud_inscripcion', compact('inscripcion', 'documentos'))->render();
+        $cfg  = ConfiguracionInstitucional::instancia();
+        $html = view('pdfs.solicitud_inscripcion', array_merge(compact('inscripcion', 'documentos', 'cfg'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         $inscripcion->update(['solicitud_inscripcion_generada' => true]);
@@ -57,7 +70,7 @@ class InscripcionPdfController extends Controller
 
         $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno']);
 
-        $html = view('pdfs.carta_compromiso', compact('inscripcion'))->render();
+        $html = view('pdfs.carta_compromiso', array_merge(compact('inscripcion'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         $inscripcion->update(['carta_compromiso_generada' => true]);
@@ -72,7 +85,7 @@ class InscripcionPdfController extends Controller
 
         $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno']);
 
-        $html = view('pdfs.contrato_estudiante', compact('inscripcion'))->render();
+        $html = view('pdfs.contrato_estudiante', array_merge(compact('inscripcion'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         $inscripcion->update(['contrato_generado' => true]);
@@ -93,7 +106,8 @@ class InscripcionPdfController extends Controller
 
         abort_if($aspirantes->isEmpty(), 404, 'No hay aspirantes aceptados en este periodo.');
 
-        $html = view('pdfs.lista_aspirantes_aceptados', compact('periodo', 'aspirantes'))->render();
+        $cfg  = ConfiguracionInstitucional::instancia();
+        $html = view('pdfs.lista_aspirantes_aceptados', compact('periodo', 'aspirantes', 'cfg'))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         return response($pdf, 200, $this->headers("lista-aceptados-{$periodo->id}.pdf"));
@@ -112,7 +126,8 @@ class InscripcionPdfController extends Controller
 
         abort_if($aspirantes->isEmpty(), 404, 'No hay aspirantes aceptados en este periodo.');
 
-        $html = view('pdfs.lista_aspirantes_por_carrera', compact('periodo', 'aspirantes'))->render();
+        $cfg  = ConfiguracionInstitucional::instancia();
+        $html = view('pdfs.lista_aspirantes_por_carrera', compact('periodo', 'aspirantes', 'cfg'))->render();
         $pdf  = $this->gotenberg->htmlToPdfLandscape($html);
 
         return response($pdf, 200, $this->headers("lista-aceptados-por-carrera-{$periodo->id}.pdf"));
@@ -129,7 +144,7 @@ class InscripcionPdfController extends Controller
             $inscripcion->alumno->update(['pendiente_certificado_bachillerato' => true]);
         }
 
-        $html = view('pdfs.carta_compromiso_docs', compact('inscripcion'))->render();
+        $html = view('pdfs.carta_compromiso_docs', array_merge(compact('inscripcion'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         return response($pdf, 200, $this->headers("carta-compromiso-docs-{$inscripcion->numero_control}.pdf"));
@@ -142,7 +157,8 @@ class InscripcionPdfController extends Controller
 
         $alumno = $inscripcion->alumno()->with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])->firstOrFail();
 
-        $html = view('pdfs.credencial', compact('alumno'))->render();
+        $directorGeneral = \App\Models\User::role('admin')->orderBy('created_at')->first();
+        $html = view('pdfs.credencial', compact('alumno', 'directorGeneral'))->render();
 
         // Credencial: 85.6mm × 54mm (tamaño tarjeta CR-80)
         $pdf = $this->gotenberg->htmlToPdf($html, [
@@ -167,7 +183,8 @@ class InscripcionPdfController extends Controller
             ->orderBy('numero_control')
             ->get();
 
-        $html = view('pdfs.libro_registro_nc', compact('alumnos'))->render();
+        $cfg  = ConfiguracionInstitucional::instancia();
+        $html = view('pdfs.libro_registro_nc', compact('alumnos', 'cfg'))->render();
         $pdf  = $this->gotenberg->htmlToPdfLandscape($html);
 
         return response($pdf, 200, $this->headers('libro-registro-nc-' . now()->format('Ymd') . '.pdf'));
@@ -179,7 +196,7 @@ class InscripcionPdfController extends Controller
         $this->authorize('view', $alumno);
 
         $alumno->load(['carrera', 'periodoIngreso', 'inscripcion.aspirante']);
-        $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
+        $cfg = ConfiguracionInstitucional::instancia();
 
         // Grupos del alumno en el periodo
         $grupoIds = \App\Domains\Academico\Models\Grupo::whereHas('alumnos', fn($q) => $q->where('alumnos.id', $alumno->id))

@@ -1,5 +1,4 @@
 @php
-  $cfg          = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
   $logoB64      = $cfg->logoBase64();
   $porCarrera   = $aspirantes->groupBy(fn($a) => $a->carrera->nombre);
   $totalPaginas = $porCarrera->count();

@@ -20,7 +20,6 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Catalogos\CatalogoPublicoController;
 use App\Http\Controllers\Cobros\CobroInscripcionController;
-use App\Http\Controllers\Api\PdfProtoController;
 use App\Http\Controllers\Permanencia\ReinscripcionController;
 use App\Http\Controllers\Permanencia\ConstanciaController;
 use App\Http\Controllers\Permanencia\BajaController;
@@ -48,9 +47,6 @@ Route::prefix('auth')->group(function () {
         Route::get('/me',      [AuthController::class, 'me']);
     });
 });
-
-// Sprint 0 — Spike DomPDF
-Route::get('/pdf-prototipo', [PdfProtoController::class, 'constancia']);
 
 // Catálogos públicos (sin auth — para el formulario de registro)
 Route::prefix('catalogo')->group(function () {

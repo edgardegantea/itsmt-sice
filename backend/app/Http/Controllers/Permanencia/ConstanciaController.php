@@ -82,8 +82,12 @@ class ConstanciaController extends Controller
 
         $constancia->load(['alumno.inscripcion.carrera', 'alumno.periodoIngreso', 'emitidaPor']);
 
-        $cfg  = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
-        $html = view('pdfs.constancia', compact('constancia', 'cfg'))->render();
+        $cfg               = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
+        $directorGeneral   = \App\Models\User::role('admin')->orderBy('created_at')->first();
+        $jefeControlEscolar = \App\Models\User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
+                              ?? \App\Models\User::role('personal_administrativo')->orderBy('created_at')->first();
+
+        $html = view('pdfs.constancia', compact('constancia', 'cfg', 'directorGeneral', 'jefeControlEscolar'))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         $folio = $constancia->folio_unico ?? 'constancia';

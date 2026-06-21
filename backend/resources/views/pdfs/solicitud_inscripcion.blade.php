@@ -1,11 +1,8 @@
 @php
-  $cfg  = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
   $logoB64 = $cfg->logoBase64();
   $asp  = $inscripcion->aspirante;
   $carr = $inscripcion->carrera;
   $per  = $inscripcion->periodo;
-  $jefeControlEscolar = \App\Models\User::where('email', 'servescolares@martineztorre.tecnm.mx')->first()
-                        ?? \App\Models\User::role('personal_administrativo')->orderBy('created_at')->first();
   $AZUL  = '#1a3a5c';
   $LINEA = '#c8d4e0';
 @endphp

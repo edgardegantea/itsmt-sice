@@ -1,5 +1,4 @@
 @php
-  $cfg     = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
   $logoB64 = $cfg->logoBase64();
   $asp     = $alumno->inscripcion?->aspirante;
   $AZUL    = '#1a3a5c';

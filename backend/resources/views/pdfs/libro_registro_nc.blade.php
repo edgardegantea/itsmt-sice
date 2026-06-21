@@ -166,10 +166,7 @@
 </head>
 <body>
 
-@php
-  $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
-  $logoB64 = $cfg->logoBase64();
-@endphp
+@php $logoB64 = $cfg->logoBase64(); @endphp
 
 {{-- ── Encabezado ──────────────────────────────────────────────────────────── --}}
 <div class="hdr">

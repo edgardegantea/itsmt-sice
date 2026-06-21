@@ -1,7 +1,3 @@
-@php
-  $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
-  $directorGeneral = \App\Models\User::role('admin')->orderBy('created_at')->first();
-@endphp
 @include('pdfs.partials.header')
 
 <div class="folio">Art. 2 Reglamento de Estudiantes TecNM · Folio: {{ $inscripcion->numero_control }}-CC</div>
