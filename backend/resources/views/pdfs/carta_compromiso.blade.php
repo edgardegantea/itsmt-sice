@@ -6,7 +6,7 @@
 <div class="lugaryfecha">@if($cfg->ciudad){{ $cfg->ciudad }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}; a {{ now()->format('d/m/Y') }}@endif</div>
 
 
-<p style="font-size:9pt; margin-bottom:10px;">
+<p style="margin-bottom:10px;">
   En {{ $cfg->ciudad ?? 'la ciudad' }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}, a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
   el alumno <strong>{{ mb_strtoupper($inscripcion->aspirante->nombres . ' ' . $inscripcion->aspirante->apellido_paterno . ' ' . $inscripcion->aspirante->apellido_materno, 'UTF-8') }}</strong>,
   con número de control <strong>{{ $inscripcion->numero_control }}</strong>, inscrito en la carrera de
@@ -41,7 +41,7 @@
     <div class="firma-line"></div>
     <p style="font-weight:bold;">{{ mb_strtoupper($directorGeneral?->name ?? '___________________________', 'UTF-8') }}</p>
     <p>{{ $directorGeneral?->cargo ?? 'Director(a) General' }}</p>
-    <p style="">{{ $cfg->nombre_institucion }}</p>
+    <p style="font-size: 8px;">{{ $cfg->nombre_institucion }}</p>
   </div>
 </div>
 
