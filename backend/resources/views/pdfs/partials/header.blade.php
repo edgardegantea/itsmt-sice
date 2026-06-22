@@ -25,6 +25,7 @@
     .header-center p  { font-size: 8.5pt; color: #555; margin-top: 2px; }
     .header-right { text-align: right; vertical-align: top; font-size: 8pt; color: #777; white-space: nowrap; padding-left: 10px; }
     .folio { text-align: right; font-size: 8pt; color: #555; margin-bottom: 10px; }
+    .lugaryfecha { text-align: right; font-size: 10pt; color: #1a1a1a; margin-bottom: 30px; }
     .title { font-size: 12pt; font-weight: bold; text-align: center; padding: 20px; margin-bottom: 20px; }
     .section { font-size: 9pt; font-weight: bold; color: #fff;
                border-bottom: 1px solid #1a3a5c; margin: 12px 0 6px; }
