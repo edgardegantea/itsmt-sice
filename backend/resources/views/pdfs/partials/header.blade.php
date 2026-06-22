@@ -27,8 +27,7 @@
     .folio { text-align: right; font-size: 8pt; color: #555; margin-bottom: 10px; }
     .lugaryfecha { text-align: right; font-size: 10pt; color: #1a1a1a; margin-bottom: 30px; }
     .title { font-size: 12pt; font-weight: bold; text-align: center; padding: 20px; margin-bottom: 20px; }
-    .section { font-size: 9pt; font-weight: bold; color: #fff;
-               border-bottom: 1px solid #1a3a5c; margin: 12px 0 6px; }
+    .section { font-size: 9pt; font-weight: bold; margin: 12px 0 6px; }
     table.datos { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 10px; }
     table.datos td { padding: 4px 6px; border: 1px solid #ccc; }
     table.datos td.label { font-weight: bold; background: #f0f4f8; width: 38%; }
