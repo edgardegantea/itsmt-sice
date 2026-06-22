@@ -55,8 +55,7 @@
         <h1>{{ $cfg->nombre_institucion }}</h1>
         <h1>Tecnológico Nacional de México</h1>
         <!-- <p>{{ $cfg->dependencia ?? 'Tecnológico Nacional de México' }} · {{ now()->format('d/m/Y') }}</p> -->
-        @if($cfg->clave_tecnm)<strong>{{ $cfg->clave_tecnm }}</strong> | @endif
-        @if($cfg->ciudad){{ $cfg->ciudad }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }} a {{ now()->format('d/m/Y') }}@endif
+        @if($cfg->clave_tecnm)CCT: <strong>{{ $cfg->clave_tecnm }}</strong> | @endif
       </td>
       <!-- <td class="header-right">
         @if($cfg->clave_tecnm)<strong>{{ $cfg->clave_tecnm }}</strong><br>@endif
