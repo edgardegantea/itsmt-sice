@@ -4,9 +4,9 @@
 
 
 <div class="footer">
-  Original: Estudiante
-  Copia: Control Escolar
-  ...
+  <p>Original: Estudiante</p>
+  <p>Copia: Control Escolar</p>
+  <p>...</p>
 </div>
 
 </body>
