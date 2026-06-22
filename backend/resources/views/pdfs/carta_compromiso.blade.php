@@ -6,11 +6,22 @@
 <div class="lugaryfecha">@if($cfg->ciudad){{ $cfg->ciudad }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}; a {{ now()->format('d/m/Y') }}@endif</div>
 
 
+@php
+    // Obtenemos la CURP (se asume que existe en el modelo aspirante)
+    $curp = $inscripcion->aspirante->curp ?? '';
+    
+    // La letra del sexo está en la posición 11 (índice 10 en programación)
+    // Extraemos la letra y la convertimos a mayúscula por seguridad
+    $letraSexo = strlen($curp) >= 11 ? strtoupper(substr($curp, 10, 1)) : '';
+
+    // Determinamos el prefijo basado en la letra de la CURP
+    $textoAlumno = ($letraSexo === 'M') ? 'la alumna' : 'el alumno';
+@endphp
+
+
 <p style="margin-bottom:10px;">
   En {{ $cfg->ciudad ?? 'la ciudad' }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}, a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
-
-  @if($inscripcion->aspirante->curp){{ Hola }}
-
+  -- {{ $textoAlumno }} -- 
   el alumno <strong>{{ mb_strtoupper($inscripcion->aspirante->nombres . ' ' . $inscripcion->aspirante->apellido_paterno . ' ' . $inscripcion->aspirante->apellido_materno, 'UTF-8') }}</strong>,
   con número de control <strong>{{ $inscripcion->numero_control }}</strong>, inscrito en la carrera de
   <strong>{{ mb_strtoupper($inscripcion->carrera->nombre, 'UTF-8') }}</strong>, manifiesta su conocimiento y aceptación de los siguientes compromisos:
