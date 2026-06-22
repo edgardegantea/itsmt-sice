@@ -13,7 +13,7 @@
 
 <p style="font-size:9pt; margin-bottom:10px;">
   <strong>Que al momento de su inscripción formal no presentó el Certificado de Bachillerato original</strong>,
-  y que se compromete a entregarlo a Servicios Escolares del {{ $cfg->nombre_corto }}
+  y que se compromete a entregarlo a Servicios Escolares del {{ $cfg->nombre_institucion }}
   <strong>a más tardar antes del inicio del proceso de reinscripción del siguiente periodo</strong>
   ({{ $inscripcion->periodo->nombre }}, antes del {{ optional($inscripcion->periodo->fecha_limite_baja_parcial)->format('d/m/Y') ?? 'fecha por confirmar' }}).
 </p>
