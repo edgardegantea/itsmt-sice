@@ -135,49 +135,62 @@ export default function EditarAspiranteModal({ aspirante, onClose }: Props) {
     },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault()
 
-    const curp = normalizeCurp(form.curp)
-    if (!CURP_REGEX.test(curp)) {
-      toastError('La CURP debe tener 18 caracteres y un formato válido.')
-      return
-    }
+  const curp = normalizeCurp(form.curp)
 
-    const promedio =
-      typeof form.promedio_bachillerato === 'number'
-        ? form.promedio_bachillerato
-        : undefined
-
-    if (promedio === undefined || promedio < 6 || promedio > 10) {
-      toastError('El promedio de bachillerato debe estar entre 6.00 y 10.00.')
-      return
-    }
-
-    const payload: ActualizarAspirantePayload = {
-      ...form,
-      nombres: normalizeText(form.nombres),
-      apellido_paterno: normalizeText(form.apellido_paterno),
-      apellido_materno: normalizeText(form.apellido_materno) || null,
-      curp,
-      municipio_procedencia: normalizeText(form.municipio_procedencia),
-      escuela_bachillerato: normalizeText(form.escuela_bachillerato),
-      email: normalizeText(form.email),
-      telefono: normalizeText(form.telefono) || null,
-      folio_preinscripcion_tecnm:
-        normalizeText(form.folio_preinscripcion_tecnm) || null,
-      folio_exani: normalizeText(form.folio_exani) || null,
-      observaciones: normalizeText(form.observaciones) || null,
-      promedio_bachillerato: promedio,
-      puntaje_exani:
-        typeof form.puntaje_exani === 'number' && Number.isFinite(form.puntaje_exani)
-          ? form.puntaje_exani
-          : undefined,
-      carrera_id: form.carrera_id ? String(form.carrera_id) : undefined,
-      periodo_id: form.periodo_id ? String(form.periodo_id) : undefined,
-    }
-    mutate(payload)
+  if (curp.length !== 18) {
+    toastError('La CURP debe tener exactamente 18 caracteres.')
+    return
   }
+
+  if (!CURP_REGEX.test(curp)) {
+    toastError('La CURP no tiene un formato válido.')
+    return
+  }
+
+  const promedio =
+    typeof form.promedio_bachillerato === 'number' &&
+    Number.isFinite(form.promedio_bachillerato)
+      ? form.promedio_bachillerato
+      : undefined
+
+  if (promedio === undefined || promedio < 6 || promedio > 10) {
+    toastError('El promedio de bachillerato debe estar entre 6.00 y 10.00.')
+    return
+  }
+
+  const payload: ActualizarAspirantePayload = {
+    ...form,
+    nombres: normalizeText(form.nombres),
+    apellido_paterno: normalizeText(form.apellido_paterno),
+    apellido_materno: normalizeText(form.apellido_materno) || null,
+    curp,
+    fecha_nacimiento: normalizeText(form.fecha_nacimiento),
+    municipio_procedencia: normalizeText(form.municipio_procedencia),
+    escuela_bachillerato: normalizeText(form.escuela_bachillerato),
+    email: normalizeText(form.email),
+    telefono: normalizeText(form.telefono) || null,
+    folio_preinscripcion_tecnm:
+      normalizeText(form.folio_preinscripcion_tecnm) || null,
+    folio_exani: normalizeText(form.folio_exani) || null,
+    observaciones: normalizeText(form.observaciones) || null,
+    promedio_bachillerato: promedio,
+    puntaje_exani:
+      typeof form.puntaje_exani === 'number' && Number.isFinite(form.puntaje_exani)
+        ? form.puntaje_exani
+        : undefined,
+    carrera_id: form.carrera_id ? String(form.carrera_id) : undefined,
+    periodo_id: form.periodo_id ? String(form.periodo_id) : undefined,
+  }
+
+  console.log('CURP original:', form.curp)
+  console.log('CURP normalizada:', curp, curp.length)
+  console.log('Payload actualizar aspirante:', payload)
+
+  mutate(payload)
+}
 
   return (
     <Modal
