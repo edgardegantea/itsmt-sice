@@ -20,10 +20,8 @@
 
 
 <p style="margin-bottom:10px;">
-  En {{ $cfg->ciudad ?? 'la ciudad' }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}, a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }},
-  -- {{ $textoAlumno }} -- 
-  el alumno <strong>{{ mb_strtoupper($inscripcion->aspirante->nombres . ' ' . $inscripcion->aspirante->apellido_paterno . ' ' . $inscripcion->aspirante->apellido_materno, 'UTF-8') }}</strong>,
-  con número de control <strong>{{ $inscripcion->numero_control }}</strong>, inscrito en la carrera de
+  En {{ $cfg->ciudad ?? 'la ciudad' }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }}, a {{ now()->format('d') }} de {{ now()->translatedFormat('F') }} de {{ now()->format('Y') }}, {{ $textoAlumno }} <strong>{{ mb_strtoupper($inscripcion->aspirante->nombres . ' ' . $inscripcion->aspirante->apellido_paterno . ' ' . $inscripcion->aspirante->apellido_materno, 'UTF-8') }}</strong>,
+  con CURP <strong>{{ $inscripcion->aspirante->curp }}</strong> y número de control <strong>{{ $inscripcion->numero_control }}</strong>, inscrito en la carrera de
   <strong>{{ mb_strtoupper($inscripcion->carrera->nombre, 'UTF-8') }}</strong>, manifiesta su conocimiento y aceptación de los siguientes compromisos:
 </p>
 
