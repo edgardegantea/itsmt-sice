@@ -91,13 +91,30 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
     telefono:         asp?.telefono         ?? '',
   })
 
+
+  const CURP_REGEX = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/
+
+  const curpLimpia = aspForm.curp.trim().toUpperCase()
+
+  if (curpLimpia && !CURP_REGEX.test(curpLimpia)) {
+    toastError('La CURP debe tener 18 caracteres y un formato válido.')
+    return
+  }
+
+
   const aspiranteId = alumno.inscripcion?.aspirante_id
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (p: ActualizarAlumnoPayload) => {
       const promises: Promise<unknown>[] = [admisionApi.actualizarAlumno(alumno.id, p)]
       if (aspiranteId) {
-        promises.push(admisionApi.actualizarAspirante(aspiranteId, aspForm))
+        // promises.push(admisionApi.actualizarAspirante(aspiranteId, aspForm))
+        promises.push(
+          admisionApi.actualizarAspirante(aspiranteId, {
+            ...aspForm,
+            curp: curpLimpia,
+          })
+        )
       }
       await Promise.all(promises)
     },
@@ -142,7 +159,16 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
               <label className={LABEL_CLS}>CURP</label>
               <input
                 value={aspForm.curp}
-                onChange={e => setAspForm(f => ({ ...f, curp: e.target.value.toUpperCase() }))}
+                onChange={e =>
+                  setAspForm(f => ({
+                    ...f,
+                    curp: e.target.value
+                      .toUpperCase()
+                      .replace(/\s+/g, '')
+                      .replace(/[^A-Z0-9]/g, '')
+                      .slice(0, 18),
+                  }))
+                }
                 className={`${INPUT_CLS} font-mono uppercase`}
                 maxLength={18}
                 placeholder="18 caracteres"

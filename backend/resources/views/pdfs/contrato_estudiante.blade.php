@@ -44,7 +44,6 @@
 <div style="display: flex; justify-content: space-between; margin-top: 30px;">
   <div class="firma-block">
     <div class="firma-line"></div>
-    <p>El Alumno</p>
     <p style="font-size:8pt;">{{ $inscripcion->aspirante->nombres }} {{ $inscripcion->aspirante->apellido_paterno }}</p>
     <p style="font-size:8pt;">NC: {{ $inscripcion->numero_control }}</p>
   </div>
