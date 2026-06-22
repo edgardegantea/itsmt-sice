@@ -4,7 +4,7 @@
   $carr = $inscripcion->carrera;
   $per  = $inscripcion->periodo;
   $AZUL  = '#1a3a5c';
-  $LINEA = '#ff0000';
+  $LINEA = '#1a1a1a';
 @endphp
 <!DOCTYPE html>
 <html lang="es">
