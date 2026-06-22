@@ -3,7 +3,7 @@
 <div class="folio">Art. 2 Reglamento de Estudiantes TecNM · Folio: {{ $inscripcion->numero_control }}-CC</div>
 <div class="title">CARTA COMPROMISO DEL ESTUDIANTE</div>
 
-<div class="folio">@if($cfg->ciudad){{ $cfg->ciudad }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }} a {{ now()->format('d/m/Y') }}@endif</div>
+<div class="lugaryfecha">@if($cfg->ciudad){{ $cfg->ciudad }}{{ $cfg->estado ? ', ' . $cfg->estado : '' }} a {{ now()->format('d/m/Y') }}@endif</div>
 
 
 <p style="font-size:9pt; margin-bottom:10px;">
