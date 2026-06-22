@@ -54,14 +54,16 @@ const BACHILLERATOS = [
   'Prepa Veracruzana',
 ]
 
-const CURP_REGEX = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/
+const CURP_REGEX =
+  /^([A-Z][AEIOUX][A-Z]{2}\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])[HM](?:AS|BC|BS|CC|CL|CM|CS|CH|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z\d])\d$/
 
 function normalizeText(value: string | null | undefined) {
   return (value ?? '').trim()
 }
 
 function normalizeCurp(value: string | null | undefined) {
-  return normalizeText(value)
+  return (value ?? '')
+    .trim()
     .toUpperCase()
     .replace(/\s+/g, '')
     .replace(/[^A-Z0-9]/g, '')
@@ -186,8 +188,8 @@ const handleSubmit = (e: React.FormEvent) => {
   }
 
   console.log('CURP original:', form.curp)
-  console.log('CURP normalizada:', curp, curp.length)
-  console.log('Payload actualizar aspirante:', payload)
+  console.log('CURP normalizada:', curp)
+  console.log('CURP válida regex:', CURP_REGEX.test(curp))
 
   mutate(payload)
 }
