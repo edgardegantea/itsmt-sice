@@ -110,7 +110,7 @@
 
     /* ── Pie ── */
     .pie {
-      width: 100%; border-top: 1px solid {{ $LINEA }};
+      width: 100%; border-top: 0px solid {{ $LINEA }};
       padding-top: 4px; margin-top: 10px;
       border-collapse: collapse;
     }
