@@ -22,7 +22,7 @@
     .enc .inst { font-size: 9.5pt; font-weight: bold; color: {{ $AZUL }}; line-height: 1.2; }
     .enc .meta { text-align: right; font-size: 7pt; color: #888; white-space: nowrap; vertical-align: top; }
 
-    .ref { font-size: 6.5pt; color: #aaa; text-align: right; margin-bottom: 8px; border-top: 1px solid {{ $LINEA }}; padding-top: 3px; }
+    .ref { font-size: 6.5pt; color: #aaa; text-align: right; margin-bottom: 8px; border-top: 0px solid {{ $LINEA }}; padding-top: 3px; }
 
     /* ── Bloque encabezado del formato ── */
     .fmt-row { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 3px; }
