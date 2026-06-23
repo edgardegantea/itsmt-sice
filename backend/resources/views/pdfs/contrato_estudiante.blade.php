@@ -44,7 +44,7 @@
 <div style="display: flex; justify-content: space-between; margin-top: 30px;">
   <div class="firma-block">
     <div class="firma-line"></div>
-    <p style="font-size:8pt;">{{ mb_strtoupper($inscripcion->aspirante->nombres . ' '  . $inscripcion->aspirante->apellido_paterno . ' ' . $inscripcion->aspirante->apellido_paterno, 'UTF-8') }}</p>
+    <p style="font-size:8pt; font-weight:bold;">{{ mb_strtoupper($inscripcion->aspirante->nombres . ' '  . $inscripcion->aspirante->apellido_paterno . ' ' . $inscripcion->aspirante->apellido_paterno, 'UTF-8') }}</p>
     <p style="font-size:8pt;">Estudiante</p>
   </div>
   <div class="firma-block">
