@@ -7,7 +7,9 @@ use App\Domains\Academico\Models\Carrera;
 use App\Domains\Academico\Models\Periodo;
 use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class EstudiantesSeeder extends Seeder
@@ -159,6 +161,22 @@ class EstudiantesSeeder extends Seeder
                 'contrato_generado'            => (bool) random_int(0, 1),
             ]);
 
+            // ── Usuario ──────────────────────────────────────────────────────
+            $nombreCompleto = trim("$nombres $apPaterno $apMaterno");
+            $userEmail      = strtolower($numeroControl) . '@itsmt.edu.mx';
+
+            $user = User::firstOrCreate(
+                ['email' => $userEmail],
+                [
+                    'name'     => $nombreCompleto,
+                    'password' => Hash::make($numeroControl),
+                ]
+            );
+
+            if (! $user->hasRole('alumno')) {
+                $user->assignRole('alumno');
+            }
+
             // ── Alumno ───────────────────────────────────────────────────────
             Alumno::create([
                 'inscripcion_id'    => $inscripcion->id,
@@ -168,7 +186,8 @@ class EstudiantesSeeder extends Seeder
                 'semestre_actual'   => $semestre,
                 'estatus'           => $this->estatusAleatorio(),
                 'autorizacion_consulta_expediente' => ['nadie', 'padre', 'madre', 'ambos'][random_int(0, 3)],
-                'pendiente_certificado_bachillerato' => random_int(0, 10) === 0, // 10% pendiente
+                'pendiente_certificado_bachillerato' => random_int(0, 10) === 0,
+                'user_id'           => $user->id,
             ]);
 
             $this->command->getOutput()->progressAdvance();

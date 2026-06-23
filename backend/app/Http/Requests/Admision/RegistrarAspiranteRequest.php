@@ -16,6 +16,14 @@ class RegistrarAspiranteRequest extends FormRequest
         if ($this->has('curp')) {
             $this->merge(['curp' => strtoupper(trim($this->curp))]);
         }
+
+        // FormData serializa booleanos como "true"/"false" — los normalizamos
+        if ($this->has('tiene_equipo_computo')) {
+            $val = $this->tiene_equipo_computo;
+            $this->merge([
+                'tiene_equipo_computo' => in_array($val, ['true', '1', 1, true], true) ? true : false,
+            ]);
+        }
     }
 
     public function rules(): array
