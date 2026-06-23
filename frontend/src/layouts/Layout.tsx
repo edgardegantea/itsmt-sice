@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useState, useRef, type ReactNode } from 'react'
+import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { authApi } from '../features/auth/services/auth'
 import { useConfiguracion } from '../hooks/useConfiguracion'
@@ -120,6 +120,123 @@ const NAV: { to: string; label: string; roles?: string[] }[] = [
   { to: '/admin/configuracion',             label: 'Configuración',       roles: ['superadmin', 'admin'] },
 ]
 
+// ── NavItem con tooltip fixed ─────────────────────────────────────────────────
+
+function NavItem({ n, colapsado, onClose }: { n: { to: string; label: string }; colapsado: boolean; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [tip, setTip] = useState<{ top: number } | null>(null)
+  const Icon = ICONS[n.to] ?? IconTag
+
+  const showTip = () => {
+    if (!colapsado || !ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    setTip({ top: rect.top + rect.height / 2 })
+  }
+
+  return (
+    <div ref={ref} onMouseEnter={showTip} onMouseLeave={() => setTip(null)}>
+      <NavLink
+        to={n.to}
+        end={n.to === '/admin'}
+        onClick={onClose}
+        className={({ isActive }) =>
+          `group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
+            colapsado ? 'justify-center' : ''
+          } ${
+            isActive
+              ? 'bg-white/10 text-white font-medium'
+              : 'text-slate-400 hover:bg-white/10 hover:text-slate-100'
+          }`
+        }
+      >
+        {({ isActive }) => (
+          <>
+            <span className={`shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300 transition-colors'}`}>
+              <Icon />
+            </span>
+            {!colapsado && <span className="truncate">{n.label}</span>}
+            {!colapsado && isActive && (
+              <span className="ml-auto w-1 h-4 rounded-full bg-white/70 shrink-0" />
+            )}
+          </>
+        )}
+      </NavLink>
+
+      {/* Tooltip fixed — escapa cualquier overflow */}
+      {colapsado && tip && (
+        <div
+          className="fixed left-[4.5rem] z-[9999] pointer-events-none
+            whitespace-nowrap rounded-md px-2.5 py-1.5
+            bg-slate-900 text-white text-xs font-medium shadow-lg"
+          style={{ top: tip.top, transform: 'translateY(-50%)' }}
+        >
+          <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
+          {n.label}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Breadcrumbs ───────────────────────────────────────────────────────────────
+
+const ROUTE_LABELS: Record<string, string> = {
+  admin:                        'Panel',
+  aspirantes:                   'Aspirantes',
+  alumnos:                      'Alumnos',
+  'gestion-academica':          'Gestión Académica',
+  'carga-academica':            'Carga Académica PDF',
+  planeacion:                   'Mi Planeación',
+  reinscripciones:              'Reinscripciones',
+  constancias:                  'Constancias',
+  'encuestas-socioeconomicas':  'Enc. Socioeconómica',
+  periodos:                     'Periodos',
+  carreras:                     'Carreras',
+  catalogos:                    'Catálogos',
+  directorio:                   'Directorio',
+  usuarios:                     'Usuarios',
+  permisos:                     'Permisos',
+  configuracion:                'Configuración',
+  docente:                      'Docente',
+}
+
+function Breadcrumbs() {
+  const location = useLocation()
+  const segments = location.pathname.replace(/^\//, '').split('/')
+
+  // Construye las migas acumulando el path
+  const crumbs: { label: string; path: string }[] = []
+  let accumulated = ''
+  for (const seg of segments) {
+    accumulated += '/' + seg
+    const label = ROUTE_LABELS[seg]
+    if (!label) {
+      // Segmento dinámico (id) — lo omitimos si el anterior ya está
+      if (crumbs.length) crumbs[crumbs.length - 1].label += ' — Detalle'
+      continue
+    }
+    crumbs.push({ label, path: accumulated })
+  }
+
+  if (crumbs.length <= 1) return null
+
+  return (
+    <nav aria-label="breadcrumb" className="flex items-center gap-1.5 px-6 py-2.5 border-b border-slate-100 bg-white text-xs text-slate-400">
+      {crumbs.map((c, i) => (
+        <span key={c.path} className="flex items-center gap-1.5">
+          {i > 0 && <span className="text-slate-300">/</span>}
+          {i === crumbs.length - 1
+            ? <span className="text-slate-600 font-medium">{c.label}</span>
+            : <Link to={c.path} className="hover:text-slate-700 transition-colors">{c.label}</Link>
+          }
+        </span>
+      ))}
+    </nav>
+  )
+}
+
+// ── Role labels ───────────────────────────────────────────────────────────────
+
 const ROLE_LABEL: Record<string, string> = {
   superadmin:              'Superadministrador',
   admin:                   'Administrador',
@@ -181,7 +298,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* ── Sidebar ── */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-30 flex flex-col shrink-0
+          relative fixed inset-y-0 left-0 z-30 flex flex-col shrink-0
           transform transition-all duration-200 ease-in-out
           ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}
           md:static md:translate-x-0
@@ -190,6 +307,19 @@ export default function Layout({ children }: { children: ReactNode }) {
         `}
         style={{ backgroundColor: 'var(--color-sidebar-user, var(--color-primario))' }}
       >
+        {/* Botón flotante colapsar — solo desktop */}
+        <button
+          onClick={() => setColapsado(c => !c)}
+          className="hidden md:flex absolute -right-3 top-[4.5rem] z-40 w-6 h-6 items-center justify-center rounded-full bg-white border border-slate-200 shadow-md text-slate-500 hover:text-slate-800 hover:shadow-lg transition-all duration-150"
+          aria-label={colapsado ? 'Expandir menú' : 'Contraer menú'}
+        >
+          <svg
+            className={`w-3 h-3 transition-transform duration-200 ${colapsado ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
         {/* Logo / Marca */}
         <div className={`pt-5 pb-4 flex items-center gap-3 shrink-0 ${colapsado ? 'px-4 justify-center' : 'px-5 justify-between'}`}>
           <div className={`flex items-center gap-2.5 min-w-0 ${colapsado ? 'justify-center' : ''}`}>
@@ -224,59 +354,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
-          {navLinks.map((n) => {
-            const Icon = ICONS[n.to] ?? IconTag
-            return (
-              <div key={n.to} className="relative group/tip">
-                <NavLink
-                  to={n.to}
-                  end={n.to === '/admin'}
-                  onClick={() => setMenuAbierto(false)}
-                  className={({ isActive }) =>
-                    `group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
-                      colapsado ? 'justify-center' : ''
-                    } ${
-                      isActive
-                        ? 'bg-white/10 text-white font-medium'
-                        : 'text-slate-400 hover:bg-white/10 hover:text-slate-100'
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span className={`shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300 transition-colors'}`}>
-                        <Icon />
-                      </span>
-                      {!colapsado && <span className="truncate">{n.label}</span>}
-                      {!colapsado && isActive && (
-                        <span className="ml-auto w-1 h-4 rounded-full bg-white/70 shrink-0" />
-                      )}
-                    </>
-                  )}
-                </NavLink>
-
-                {/* Tooltip — solo visible cuando está contraído */}
-                {colapsado && (
-                  <div
-                    className="
-                      pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
-                      whitespace-nowrap rounded-md px-2.5 py-1.5
-                      bg-slate-900 text-white text-xs font-medium shadow-lg
-                      opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100
-                      transition-all duration-150
-                    "
-                  >
-                    {n.label}
-                    {/* Flecha */}
-                    <span
-                      className="absolute right-full top-1/2 -translate-y-1/2
-                        border-4 border-transparent border-r-slate-900"
-                    />
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          {navLinks.map((n) => (
+            <NavItem key={n.to} n={n} colapsado={colapsado} onClose={() => setMenuAbierto(false)} />
+          ))}
         </nav>
 
         {/* Divider */}
@@ -322,55 +402,27 @@ export default function Layout({ children }: { children: ReactNode }) {
             )}
           </div>
 
-          {/* Fila: Preferencias + Colapsar */}
-          <div className={`flex gap-1 ${colapsado ? 'flex-col items-center' : ''}`}>
-            {/* Preferencias — solo superadmin */}
-            <div className={`relative group/prefs flex-1 ${user?.roles.includes('superadmin') ? '' : 'hidden'}`}>
-              <button
-                onClick={() => setPrefsOpen(p => !p)}
-                className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsado ? 'justify-center' : ''}`}
-              >
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <circle cx="12" cy="12" r="3" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-                {!colapsado && 'Preferencias'}
-              </button>
-              {colapsado && (
-                <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
-                  whitespace-nowrap rounded-md px-2.5 py-1.5 bg-slate-900 text-white text-xs font-medium shadow-lg
-                  opacity-0 scale-95 group-hover/prefs:opacity-100 group-hover/prefs:scale-100
-                  transition-all duration-150">
-                  Preferencias
-                  <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
-                </div>
-              )}
-            </div>
-
-            {/* Colapsar — solo desktop */}
-            <div className="relative group/collapse hidden md:block">
-              <button
-                onClick={() => setColapsado(c => !c)}
-                className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsado ? 'justify-center' : ''}`}
-              >
-                <svg
-                  className={`w-4 h-4 shrink-0 transition-transform duration-200 ${colapsado ? 'rotate-180' : ''}`}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
-                </svg>
-                {!colapsado && 'Contraer'}
-              </button>
-              {colapsado && (
-                <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
-                  whitespace-nowrap rounded-md px-2.5 py-1.5 bg-slate-900 text-white text-xs font-medium shadow-lg
-                  opacity-0 scale-95 group-hover/collapse:opacity-100 group-hover/collapse:scale-100
-                  transition-all duration-150">
-                  Expandir menú
-                  <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
-                </div>
-              )}
-            </div>
+          {/* Preferencias — solo superadmin */}
+          <div className={`relative group/prefs ${user?.roles.includes('superadmin') ? '' : 'hidden'}`}>
+            <button
+              onClick={() => setPrefsOpen(p => !p)}
+              className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsado ? 'justify-center' : ''}`}
+            >
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="3" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+              {!colapsado && 'Preferencias'}
+            </button>
+            {colapsado && (
+              <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50
+                whitespace-nowrap rounded-md px-2.5 py-1.5 bg-slate-900 text-white text-xs font-medium shadow-lg
+                opacity-0 scale-95 group-hover/prefs:opacity-100 group-hover/prefs:scale-100
+                transition-all duration-150">
+                Preferencias
+                <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -393,6 +445,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           </button>
           <span className="text-sm font-semibold text-white tracking-wider">SICE</span>
         </header>
+
+        <Breadcrumbs />
 
         <main className="flex-1 overflow-y-auto">
           {children}

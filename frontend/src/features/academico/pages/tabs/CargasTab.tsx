@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type CargaAcademica } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, selectCls, inputCls, usePeriodos, mutationError } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, icls, usePeriodos, mutationError, extractApiErrors } from './shared'
 
 export default function CargasTab() {
   const qc = useQueryClient()
@@ -10,6 +10,7 @@ export default function CargasTab() {
   const [filtroPeriodo, setFiltroPeriodo] = useState('')
   const [filtroDocente, setFiltroDocente] = useState('')
   const [modal, setModal] = useState<Partial<CargaAcademica> | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: periodos = [] } = usePeriodos()
   const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
@@ -28,8 +29,12 @@ export default function CargasTab() {
 
   const save = useMutation({
     mutationFn: () => modal?.id ? academicoApi.updateCarga(modal.id!, modal) : academicoApi.createCarga(modal!),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cargas'] }); addToast('Carga guardada.', 'success'); setModal(null) },
-    onError: (e) => addToast(mutationError(e), 'error'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cargas'] }); addToast('Carga guardada.', 'success'); setModal(null); setErrors({}) },
+    onError: (e) => {
+      const extracted = extractApiErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else addToast(mutationError(e), 'error')
+    },
   })
 
   const del = useMutation({
@@ -98,33 +103,33 @@ export default function CargasTab() {
       </div>
 
       {modal !== null && (
-        <ModalWrap title={modal.id ? 'Editar carga' : 'Asignar carga académica'} onClose={() => setModal(null)} onSave={() => save.mutate()} saving={save.isPending}>
-          <Field label="Docente" full>
-            <select className={selectCls} value={modal.docente_id ?? ''} onChange={e => set('docente_id', e.target.value)}>
+        <ModalWrap title={modal.id ? 'Editar carga' : 'Asignar carga académica'} onClose={() => { setModal(null); setErrors({}) }} onSave={() => save.mutate()} saving={save.isPending}>
+          <Field label="Docente" full error={errors.docente_id}>
+            <select className={icls(errors.docente_id)} value={modal.docente_id ?? ''} onChange={e => set('docente_id', e.target.value)}>
               <option value="">— Seleccionar docente —</option>
               {docentes.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </Field>
-          <Field label="Materia / Asignatura" full>
-            <select className={selectCls} value={modal.materia_id ?? ''} onChange={e => set('materia_id', e.target.value)}>
+          <Field label="Materia / Asignatura" full error={errors.materia_id}>
+            <select className={icls(errors.materia_id)} value={modal.materia_id ?? ''} onChange={e => set('materia_id', e.target.value)}>
               <option value="">— Seleccionar materia —</option>
               {materias.map(m => <option key={m.id} value={m.id}>{m.nombre} ({m.clave})</option>)}
             </select>
           </Field>
-          <Field label="Grupo">
-            <select className={selectCls} value={modal.grupo_id ?? ''} onChange={e => set('grupo_id', e.target.value)}>
+          <Field label="Grupo" error={errors.grupo_id}>
+            <select className={icls(errors.grupo_id)} value={modal.grupo_id ?? ''} onChange={e => set('grupo_id', e.target.value)}>
               <option value="">— Seleccionar grupo —</option>
               {grupos.map(g => <option key={g.id} value={g.id}>{g.clave} — {g.carrera?.clave}</option>)}
             </select>
           </Field>
-          <Field label="Periodo">
-            <select className={selectCls} value={modal.periodo_id ?? ''} onChange={e => set('periodo_id', e.target.value)}>
+          <Field label="Periodo" error={errors.periodo_id}>
+            <select className={icls(errors.periodo_id)} value={modal.periodo_id ?? ''} onChange={e => set('periodo_id', e.target.value)}>
               <option value="">— Seleccionar periodo —</option>
               {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </Field>
-          <Field label="Horas por semana">
-            <input className={inputCls} type="number" min={1} max={40} value={modal.horas_semana ?? 3} onChange={e => set('horas_semana', Number(e.target.value))} />
+          <Field label="Horas por semana" error={errors.horas_semana}>
+            <input className={icls(errors.horas_semana)} type="number" min={1} max={40} value={modal.horas_semana ?? 3} onChange={e => set('horas_semana', Number(e.target.value))} />
           </Field>
         </ModalWrap>
       )}

@@ -21,13 +21,14 @@ class CarrerasSeeder extends Seeder
             ['clave' => 'IAM',     'nombre' => 'Ingeniería Ambiental',                                 'codigo_it' => '052', 'plan_clave' => 'IAM-2010-251',  'especialidad' => null],
             ['clave' => 'IIN',     'nombre' => 'Ingeniería Industrial',                                'codigo_it' => '005', 'plan_clave' => 'IIND-2010-214', 'especialidad' => 'Escolarizado'],
             ['clave' => 'IIN-SAB', 'nombre' => 'Ingeniería Industrial',                                'codigo_it' => '005', 'plan_clave' => 'IIND-2010-214', 'especialidad' => 'Sabatino'],
+            ['clave' => 'IGEM',    'nombre' => 'Ingeniería en Gestión Empresarial',                    'codigo_it' => '004', 'plan_clave' => 'IGEM-2009-201', 'especialidad' => null],
         ];
 
-        // Elimina todas las carreras existentes y las reemplaza
-        Carrera::truncate();
-
         foreach ($carreras as $datos) {
-            Carrera::create(array_merge($datos, ['activa' => true]));
+            Carrera::updateOrCreate(
+                ['clave' => $datos['clave']],
+                array_merge($datos, ['activa' => true])
+            );
         }
     }
 }

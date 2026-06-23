@@ -174,10 +174,6 @@ class InscripcionPdfController extends Controller
 
         $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno']);
 
-        if ($inscripcion->alumno) {
-            $inscripcion->alumno->update(['pendiente_certificado_bachillerato' => true]);
-        }
-
         $cfg  = ConfiguracionInstitucional::instancia();
         $html = view('pdfs.carta_compromiso_docs', array_merge(compact('inscripcion', 'cfg'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);

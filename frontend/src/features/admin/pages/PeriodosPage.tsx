@@ -29,16 +29,23 @@ const API = {
 const fmtFecha = (s: string | null) => s ? new Date(s + 'T12:00:00').toLocaleDateString('es-MX') : '—'
 const toDateInput = (s: string | null | undefined): string => s ? s.slice(0, 10) : ''
 
+const cls = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+const clsErr = (e?: string) => `${cls} ${e ? 'border-red-400' : 'border-slate-300'}`
+const FieldErr = ({ msg }: { msg?: string }) =>
+  msg ? <p className="text-xs text-red-500 mt-1">{msg}</p> : null
+
 function PeriodoForm({
   inicial,
   onGuardar,
   onCancelar,
   cargando,
+  errors = {},
 }: {
   inicial?: Partial<Periodo>
   onGuardar: (d: Partial<Periodo>) => void
   onCancelar: () => void
   cargando: boolean
+  errors?: Record<string, string>
 }) {
   const [form, setForm] = useState<Partial<Periodo>>(inicial ? {
     ...inicial,
@@ -56,16 +63,18 @@ function PeriodoForm({
           <label className="block text-xs font-medium text-slate-600 mb-1">Nombre del periodo *</label>
           <input required value={form.nombre ?? ''} onChange={e => set('nombre', e.target.value)}
             placeholder="Ej. 2025-A Agosto–Diciembre"
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30" />
+            className={clsErr(errors.nombre)} />
+          <FieldErr msg={errors.nombre} />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Tipo *</label>
           <select required value={form.tipo ?? 'ordinario'} onChange={e => set('tipo', e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30">
+            className={`${clsErr(errors.tipo)} bg-white`}>
             <option value="ordinario">Ordinario</option>
             <option value="verano">Verano</option>
             <option value="intersemestral">Intersemestral</option>
           </select>
+          <FieldErr msg={errors.tipo} />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Activo</label>
@@ -78,22 +87,26 @@ function PeriodoForm({
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Fecha inicio *</label>
           <input required type="date" value={form.fecha_inicio ?? ''} onChange={e => set('fecha_inicio', e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30" />
+            className={clsErr(errors.fecha_inicio)} />
+          <FieldErr msg={errors.fecha_inicio} />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Fecha fin *</label>
           <input required type="date" value={form.fecha_fin ?? ''} onChange={e => set('fecha_fin', e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30" />
+            className={clsErr(errors.fecha_fin)} />
+          <FieldErr msg={errors.fecha_fin} />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Límite baja parcial</label>
           <input type="date" value={form.fecha_limite_baja_parcial ?? ''} onChange={e => set('fecha_limite_baja_parcial', e.target.value || null)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30" />
+            className={clsErr(errors.fecha_limite_baja_parcial)} />
+          <FieldErr msg={errors.fecha_limite_baja_parcial} />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Límite baja temporal</label>
           <input type="date" value={form.fecha_limite_baja_temporal ?? ''} onChange={e => set('fecha_limite_baja_temporal', e.target.value || null)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30" />
+            className={clsErr(errors.fecha_limite_baja_temporal)} />
+          <FieldErr msg={errors.fecha_limite_baja_temporal} />
         </div>
       </div>
       <div className="flex justify-end gap-2 pt-1">
@@ -106,24 +119,36 @@ function PeriodoForm({
   )
 }
 
+type ApiError = { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }
+
 export default function PeriodosPage() {
   const qc = useQueryClient()
   const [modal, setModal] = useState<'nuevo' | Periodo | null>(null)
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { success, error: toastError } = useToastStore()
   const { user } = useAuthStore()
   const esSuperadmin = user?.roles?.includes('superadmin') ?? false
 
   const { data: periodos = [], isLoading } = useQuery({ queryKey: ['admin-periodos'], queryFn: API.list })
 
+  const closeModal = () => { setModal(null); setFormErrors({}) }
+
   const guardar = useMutation({
     mutationFn: (d: Partial<Periodo>) =>
       modal === 'nuevo' ? API.create(d) : API.update((modal as Periodo).id, d),
-    onSuccess: (_, __, _ctx) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-periodos'] })
       success(modal === 'nuevo' ? 'Periodo creado correctamente.' : 'Periodo actualizado correctamente.')
-      setModal(null)
+      closeModal()
     },
-    onError: () => toastError('Error al guardar el periodo. Verifica los datos e intenta de nuevo.'),
+    onError: (err: ApiError) => {
+      const errs = err.response?.data?.errors
+      if (errs) {
+        setFormErrors(Object.fromEntries(Object.entries(errs).map(([k, v]) => [k, v[0]])))
+      } else {
+        toastError(err.response?.data?.message ?? 'Error al guardar el periodo.')
+      }
+    },
   })
 
   const activar = useMutation({
@@ -152,7 +177,7 @@ export default function PeriodosPage() {
           <p className="text-sm text-slate-500 mt-0.5">Solo un periodo puede estar activo a la vez.</p>
         </div>
         <button
-          onClick={() => setModal('nuevo')}
+          onClick={() => { setModal('nuevo'); setFormErrors({}) }}
           className="shrink-0 px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors"
         >
           + Nuevo periodo
@@ -222,13 +247,14 @@ export default function PeriodosPage() {
       {modal && (
         <Modal
           title={modal === 'nuevo' ? 'Nuevo periodo' : `Editar: ${(modal as Periodo).nombre}`}
-          onClose={() => setModal(null)}
+          onClose={closeModal}
         >
           <PeriodoForm
             inicial={modal !== 'nuevo' ? modal : undefined}
             onGuardar={d => guardar.mutate(d)}
-            onCancelar={() => setModal(null)}
+            onCancelar={closeModal}
             cargando={guardar.isPending}
+            errors={formErrors}
           />
         </Modal>
       )}

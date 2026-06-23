@@ -33,8 +33,17 @@ const directorioApi = {
   borrarPuesto:(id: number) => apiClient.delete(`/admin/directorio-puestos/${id}`),
 }
 
-const INPUT = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]'
+const INPUT = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]'
 const SELECT = INPUT + ' bg-white'
+const inp = (e?: string) => `${INPUT} ${e ? 'border-red-400' : 'border-slate-300'}`
+const sel = (e?: string) => `${SELECT} ${e ? 'border-red-400' : 'border-slate-300'}`
+const FE = ({ msg }: { msg?: string }) => msg ? <p className="text-xs text-red-500 mt-1">{msg}</p> : null
+
+type CatApiError = { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }
+const extractCatErrors = (e: CatApiError) => {
+  const errs = e.response?.data?.errors
+  return errs ? Object.fromEntries(Object.entries(errs).map(([k, v]) => [k, v[0]])) : {}
+}
 
 const TIPOS_ESCUELA = [
   { value: 'preparatoria',    label: 'Preparatoria' },
@@ -54,6 +63,7 @@ function EstadosTab() {
   const { success, error: toastError } = useToastStore()
   const [modal, setModal] = useState<'nuevo' | Estado | null>(null)
   const [form, setForm]   = useState({ nombre: '', clave_curp: '' })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: estados = [], isLoading } = useQuery({ queryKey: ['cat-estados'], queryFn: catalogoAdmin.getEstados })
 
@@ -64,9 +74,13 @@ function EstadosTab() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cat-estados'] })
       success(modal === 'nuevo' ? 'Estado creado.' : 'Estado actualizado.')
-      setModal(null)
+      setModal(null); setErrors({})
     },
-    onError: () => toastError('Error al guardar el estado.'),
+    onError: (e: CatApiError) => {
+      const extracted = extractCatErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else toastError(e.response?.data?.message ?? 'Error al guardar el estado.')
+    },
   })
 
   const eliminar = useMutation({
@@ -119,20 +133,22 @@ function EstadosTab() {
       </div>
 
       {modal && (
-        <Modal title={modal === 'nuevo' ? 'Nuevo estado' : `Editar: ${(modal as Estado).nombre}`} onClose={() => setModal(null)}>
+        <Modal title={modal === 'nuevo' ? 'Nuevo estado' : `Editar: ${(modal as Estado).nombre}`} onClose={() => { setModal(null); setErrors({}) }}>
           <form onSubmit={e => { e.preventDefault(); guardar.mutate(form) }} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
-              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={INPUT} />
+              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inp(errors.nombre)} />
+              <FE msg={errors.nombre} />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Clave CURP * (2 letras)</label>
               <input required maxLength={2} value={form.clave_curp}
                 onChange={e => setForm(f => ({ ...f, clave_curp: e.target.value.toUpperCase() }))}
-                className={INPUT + ' font-mono'} placeholder="VZ" />
+                className={inp(errors.clave_curp) + ' font-mono'} placeholder="VZ" />
+              <FE msg={errors.clave_curp} />
             </div>
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
               <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
@@ -152,6 +168,7 @@ function MunicipiosTab() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const [modal, setModal] = useState<'nuevo' | Municipio | null>(null)
   const [form, setForm]   = useState({ nombre: '', estado_id: '' })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: estados = [] } = useQuery({ queryKey: ['cat-estados'], queryFn: catalogoAdmin.getEstados })
   const { data: municipios = [], isLoading } = useQuery({
@@ -166,9 +183,13 @@ function MunicipiosTab() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cat-municipios'] })
       success(modal === 'nuevo' ? 'Municipio creado.' : 'Municipio actualizado.')
-      setModal(null)
+      setModal(null); setErrors({})
     },
-    onError: () => toastError('Error al guardar el municipio.'),
+    onError: (e: CatApiError) => {
+      const extracted = extractCatErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else toastError(e.response?.data?.message ?? 'Error al guardar el municipio.')
+    },
   })
 
   const eliminar = useMutation({
@@ -227,21 +248,23 @@ function MunicipiosTab() {
       </div>
 
       {modal && (
-        <Modal title={modal === 'nuevo' ? 'Nuevo municipio' : `Editar: ${(modal as Municipio).nombre}`} onClose={() => setModal(null)}>
+        <Modal title={modal === 'nuevo' ? 'Nuevo municipio' : `Editar: ${(modal as Municipio).nombre}`} onClose={() => { setModal(null); setErrors({}) }}>
           <form onSubmit={e => { e.preventDefault(); guardar.mutate(form) }} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Estado *</label>
-              <select required value={form.estado_id} onChange={e => setForm(f => ({ ...f, estado_id: e.target.value }))} className={SELECT}>
+              <select required value={form.estado_id} onChange={e => setForm(f => ({ ...f, estado_id: e.target.value }))} className={sel(errors.estado_id)}>
                 <option value="">Selecciona…</option>
                 {estados.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
               </select>
+              <FE msg={errors.estado_id} />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Nombre del municipio *</label>
-              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={INPUT} />
+              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inp(errors.nombre)} />
+              <FE msg={errors.nombre} />
             </div>
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
               <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
@@ -261,6 +284,7 @@ function EscuelasTab() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const [modal, setModal] = useState<'nueva' | EscuelaBachillerato | null>(null)
   const [form, setForm]   = useState({ nombre: '', municipio_id: '', tipo: 'preparatoria', activa: true })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: estados = [] }    = useQuery({ queryKey: ['cat-estados'], queryFn: catalogoAdmin.getEstados })
   const { data: municipios = [] } = useQuery({
@@ -283,9 +307,13 @@ function EscuelasTab() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cat-escuelas'] })
       success(modal === 'nueva' ? 'Escuela creada.' : 'Escuela actualizada.')
-      setModal(null)
+      setModal(null); setErrors({})
     },
-    onError: () => toastError('Error al guardar.'),
+    onError: (e: CatApiError) => {
+      const extracted = extractCatErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else toastError(e.response?.data?.message ?? 'Error al guardar.')
+    },
   })
 
   const eliminar = useMutation({
@@ -349,25 +377,28 @@ function EscuelasTab() {
       </div>
 
       {modal && (
-        <Modal title={modal === 'nueva' ? 'Nueva escuela' : `Editar: ${(modal as EscuelaBachillerato).nombre}`} onClose={() => setModal(null)}>
+        <Modal title={modal === 'nueva' ? 'Nueva escuela' : `Editar: ${(modal as EscuelaBachillerato).nombre}`} onClose={() => { setModal(null); setErrors({}) }}>
           <form onSubmit={e => { e.preventDefault(); guardar.mutate(form) }} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
-              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={INPUT} />
+              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inp(errors.nombre)} />
+              <FE msg={errors.nombre} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Tipo *</label>
-                <select required value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={SELECT}>
+                <select required value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={sel(errors.tipo)}>
                   {TIPOS_ESCUELA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
+                <FE msg={errors.tipo} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Municipio</label>
-                <select value={form.municipio_id} onChange={e => setForm(f => ({ ...f, municipio_id: e.target.value }))} className={SELECT}>
+                <select value={form.municipio_id} onChange={e => setForm(f => ({ ...f, municipio_id: e.target.value }))} className={sel(errors.municipio_id)}>
                   <option value="">Sin asignar</option>
                   {municipios.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                 </select>
+                <FE msg={errors.municipio_id} />
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm text-slate-700">
@@ -375,7 +406,7 @@ function EscuelasTab() {
               Escuela activa (visible en formularios)
             </label>
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
               <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
@@ -394,6 +425,7 @@ function TurnosTab() {
   const { success, error: toastError } = useToastStore()
   const [modal, setModal] = useState<'nuevo' | Turno | null>(null)
   const [form, setForm]   = useState({ nombre: '', clave: '', activo: true })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: turnos = [], isLoading } = useQuery({ queryKey: ['cat-turnos-admin'], queryFn: catalogoAdmin.getTurnos })
 
@@ -404,9 +436,13 @@ function TurnosTab() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cat-turnos-admin'] })
       success(modal === 'nuevo' ? 'Turno creado.' : 'Turno actualizado.')
-      setModal(null)
+      setModal(null); setErrors({})
     },
-    onError: () => toastError('Error al guardar el turno.'),
+    onError: (e: CatApiError) => {
+      const extracted = extractCatErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else toastError(e.response?.data?.message ?? 'Error al guardar el turno.')
+    },
   })
 
   const eliminar = useMutation({
@@ -463,18 +499,20 @@ function TurnosTab() {
       </div>
 
       {modal && (
-        <Modal title={modal === 'nuevo' ? 'Nuevo turno' : `Editar: ${(modal as Turno).nombre}`} onClose={() => setModal(null)}>
+        <Modal title={modal === 'nuevo' ? 'Nuevo turno' : `Editar: ${(modal as Turno).nombre}`} onClose={() => { setModal(null); setErrors({}) }}>
           <form onSubmit={e => { e.preventDefault(); guardar.mutate(form) }} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
-                <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={INPUT} placeholder="Matutino" />
+                <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inp(errors.nombre)} placeholder="Matutino" />
+                <FE msg={errors.nombre} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Clave * (sin espacios)</label>
                 <input required value={form.clave}
                   onChange={e => setForm(f => ({ ...f, clave: e.target.value.toLowerCase().replace(/\s/g, '_') }))}
-                  className={INPUT + ' font-mono'} placeholder="matutino" />
+                  className={inp(errors.clave) + ' font-mono'} placeholder="matutino" />
+                <FE msg={errors.clave} />
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm text-slate-700">
@@ -482,7 +520,7 @@ function TurnosTab() {
               Turno activo
             </label>
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
               <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
@@ -507,6 +545,7 @@ function AreasTab() {
   const { success, error: toastError } = useToastStore()
   const [modal, setModal] = useState<'nueva' | DirectorioArea | null>(null)
   const [form, setForm]   = useState({ nombre: '', descripcion: '', tipo: 'departamento', orden: 0, activo: true })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: areas = [], isLoading } = useQuery({ queryKey: ['dir-areas'], queryFn: directorioApi.getAreas })
 
@@ -517,9 +556,13 @@ function AreasTab() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['dir-areas'] })
       success(modal === 'nueva' ? 'Área creada.' : 'Área actualizada.')
-      setModal(null)
+      setModal(null); setErrors({})
     },
-    onError: () => toastError('Error al guardar. Verifica que el nombre sea único.'),
+    onError: (e: CatApiError) => {
+      const extracted = extractCatErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else toastError(e.response?.data?.message ?? 'Error al guardar. Verifica que el nombre sea único.')
+    },
   })
 
   const eliminar = useMutation({
@@ -579,34 +622,38 @@ function AreasTab() {
       </div>
 
       {modal && (
-        <Modal title={modal === 'nueva' ? 'Nueva área / departamento' : `Editar: ${(modal as DirectorioArea).nombre}`} onClose={() => setModal(null)}>
+        <Modal title={modal === 'nueva' ? 'Nueva área / departamento' : `Editar: ${(modal as DirectorioArea).nombre}`} onClose={() => { setModal(null); setErrors({}) }}>
           <form onSubmit={e => { e.preventDefault(); guardar.mutate(form) }} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Nombre *</label>
-              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={INPUT} placeholder="Ej: Recursos Humanos" />
+              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inp(errors.nombre)} placeholder="Ej: Recursos Humanos" />
+              <FE msg={errors.nombre} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Tipo</label>
-                <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={SELECT}>
+                <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={sel(errors.tipo)}>
                   {TIPOS_AREA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
+                <FE msg={errors.tipo} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Orden de aparición</label>
-                <input type="number" min={0} value={form.orden} onChange={e => setForm(f => ({ ...f, orden: Number(e.target.value) }))} className={INPUT} />
+                <input type="number" min={0} value={form.orden} onChange={e => setForm(f => ({ ...f, orden: Number(e.target.value) }))} className={inp(errors.orden)} />
+                <FE msg={errors.orden} />
               </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Descripción</label>
-              <textarea rows={2} value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={INPUT} />
+              <textarea rows={2} value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inp(errors.descripcion)} />
+              <FE msg={errors.descripcion} />
             </div>
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
               Área activa
             </label>
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
               <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
@@ -625,6 +672,7 @@ function PuestosTab() {
   const { success, error: toastError } = useToastStore()
   const [modal, setModal] = useState<'nuevo' | DirectorioPuesto | null>(null)
   const [form, setForm]   = useState({ nombre: '', descripcion: '', area_id: '', firma_documentos: false, orden: 0, activo: true })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: areas = [] }   = useQuery({ queryKey: ['dir-areas'], queryFn: directorioApi.getAreas })
   const { data: puestos = [], isLoading } = useQuery({ queryKey: ['dir-puestos'], queryFn: directorioApi.getPuestos })
@@ -639,9 +687,13 @@ function PuestosTab() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['dir-puestos'] })
       success(modal === 'nuevo' ? 'Puesto creado.' : 'Puesto actualizado.')
-      setModal(null)
+      setModal(null); setErrors({})
     },
-    onError: () => toastError('Error al guardar. Verifica que el nombre sea único.'),
+    onError: (e: CatApiError) => {
+      const extracted = extractCatErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else toastError(e.response?.data?.message ?? 'Error al guardar. Verifica que el nombre sea único.')
+    },
   })
 
   const eliminar = useMutation({
@@ -707,28 +759,32 @@ function PuestosTab() {
       </div>
 
       {modal && (
-        <Modal title={modal === 'nuevo' ? 'Nuevo puesto' : `Editar: ${(modal as DirectorioPuesto).nombre}`} onClose={() => setModal(null)}>
+        <Modal title={modal === 'nuevo' ? 'Nuevo puesto' : `Editar: ${(modal as DirectorioPuesto).nombre}`} onClose={() => { setModal(null); setErrors({}) }}>
           <form onSubmit={e => { e.preventDefault(); guardar.mutate(form) }} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Nombre del puesto *</label>
-              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={INPUT} placeholder="Ej: Director General" />
+              <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inp(errors.nombre)} placeholder="Ej: Director General" />
+              <FE msg={errors.nombre} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Área / Departamento</label>
-                <select value={form.area_id} onChange={e => setForm(f => ({ ...f, area_id: e.target.value }))} className={SELECT}>
+                <select value={form.area_id} onChange={e => setForm(f => ({ ...f, area_id: e.target.value }))} className={sel(errors.area_id)}>
                   <option value="">Sin área</option>
                   {areas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
                 </select>
+                <FE msg={errors.area_id} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Orden de aparición</label>
-                <input type="number" min={0} value={form.orden} onChange={e => setForm(f => ({ ...f, orden: Number(e.target.value) }))} className={INPUT} />
+                <input type="number" min={0} value={form.orden} onChange={e => setForm(f => ({ ...f, orden: Number(e.target.value) }))} className={inp(errors.orden)} />
+                <FE msg={errors.orden} />
               </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Descripción</label>
-              <textarea rows={2} value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={INPUT} />
+              <textarea rows={2} value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inp(errors.descripcion)} />
+              <FE msg={errors.descripcion} />
             </div>
             <div className="flex flex-col gap-2">
               <label className="flex items-center gap-2 text-sm text-slate-700">
@@ -741,7 +797,7 @@ function PuestosTab() {
               </label>
             </div>
             <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
               <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>

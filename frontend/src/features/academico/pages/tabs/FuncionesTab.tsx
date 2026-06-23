@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type FuncionPersonal } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls, mutationError } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, icls, mutationError, extractApiErrors } from './shared'
 import apiClient from '../../../../config/apiClient'
 
 function usePersonal() {
@@ -30,6 +30,7 @@ export default function FuncionesTab() {
   const { toast: addToast } = useToastStore()
   const [filtroActiva, setFiltroActiva] = useState<'todas' | 'activas' | 'inactivas'>('activas')
   const [modal, setModal] = useState<Partial<FuncionPersonal> | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: personal = [] } = usePersonal()
 
@@ -45,8 +46,12 @@ export default function FuncionesTab() {
 
   const save = useMutation({
     mutationFn: () => modal?.id ? academicoApi.updateFuncion(modal.id!, modal) : academicoApi.createFuncion(modal!),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['funciones'] }); addToast('Función guardada.', 'success'); setModal(null) },
-    onError: (e) => addToast(mutationError(e), 'error'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['funciones'] }); addToast('Función guardada.', 'success'); setModal(null); setErrors({}) },
+    onError: (e) => {
+      const extracted = extractApiErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else addToast(mutationError(e), 'error')
+    },
   })
 
   const del = useMutation({
@@ -111,9 +116,9 @@ export default function FuncionesTab() {
       </div>
 
       {modal !== null && (
-        <ModalWrap title={modal.id ? 'Editar función' : 'Asignar función'} onClose={() => setModal(null)} onSave={() => save.mutate()} saving={save.isPending}>
-          <Field label="Personal" full>
-            <select className={selectCls} value={modal.user_id ?? ''} onChange={e => set('user_id', e.target.value)}>
+        <ModalWrap title={modal.id ? 'Editar función' : 'Asignar función'} onClose={() => { setModal(null); setErrors({}) }} onSave={() => save.mutate()} saving={save.isPending}>
+          <Field label="Personal" full error={errors.user_id}>
+            <select className={icls(errors.user_id)} value={modal.user_id ?? ''} onChange={e => set('user_id', e.target.value)}>
               <option value="">— Seleccionar usuario —</option>
               {personal.map(u => (
                 <option key={u.id} value={u.id}>
@@ -122,24 +127,24 @@ export default function FuncionesTab() {
               ))}
             </select>
           </Field>
-          <Field label="Función / Cargo" full>
-            <input className={inputCls} value={modal.funcion ?? ''} placeholder="Ej. Jefe de Área de Sistemas" onChange={e => set('funcion', e.target.value)} />
+          <Field label="Función / Cargo" full error={errors.funcion}>
+            <input className={icls(errors.funcion)} value={modal.funcion ?? ''} placeholder="Ej. Jefe de Área de Sistemas" onChange={e => set('funcion', e.target.value)} />
           </Field>
-          <Field label="Área" full>
-            <input className={inputCls} value={modal.area ?? ''} placeholder="Ej. Área de Cómputo" onChange={e => set('area', e.target.value)} />
+          <Field label="Área" full error={errors.area}>
+            <input className={icls(errors.area)} value={modal.area ?? ''} placeholder="Ej. Área de Cómputo" onChange={e => set('area', e.target.value)} />
           </Field>
-          <Field label="Descripción" full>
-            <textarea className={inputCls} rows={3} value={modal.descripcion ?? ''} onChange={e => set('descripcion', e.target.value)} placeholder="Responsabilidades y alcance del cargo…" />
+          <Field label="Descripción" full error={errors.descripcion}>
+            <textarea className={icls(errors.descripcion)} rows={3} value={modal.descripcion ?? ''} onChange={e => set('descripcion', e.target.value)} placeholder="Responsabilidades y alcance del cargo…" />
           </Field>
-          <Field label="Fecha inicio">
-            <input className={inputCls} type="date" value={modal.fecha_inicio ?? ''} onChange={e => set('fecha_inicio', e.target.value)} />
+          <Field label="Fecha inicio" error={errors.fecha_inicio}>
+            <input className={icls(errors.fecha_inicio)} type="date" value={modal.fecha_inicio ?? ''} onChange={e => set('fecha_inicio', e.target.value)} />
           </Field>
-          <Field label="Fecha fin (opcional)">
-            <input className={inputCls} type="date" value={modal.fecha_fin ?? ''} onChange={e => set('fecha_fin', e.target.value)} />
+          <Field label="Fecha fin (opcional)" error={errors.fecha_fin}>
+            <input className={icls(errors.fecha_fin)} type="date" value={modal.fecha_fin ?? ''} onChange={e => set('fecha_fin', e.target.value)} />
           </Field>
           {modal.id && (
             <Field label="Estado">
-              <select className={selectCls} value={modal.activa ? 'true' : 'false'} onChange={e => set('activa', e.target.value === 'true')}>
+              <select className={icls()} value={modal.activa ? 'true' : 'false'} onChange={e => set('activa', e.target.value === 'true')}>
                 <option value="true">Activa</option>
                 <option value="false">Inactiva</option>
               </select>

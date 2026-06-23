@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Tutoria } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, Th, EmptyRow, selectCls, usePeriodos, useAlumnos, mutationError } from './shared'
+import { Field, Th, EmptyRow, icls, usePeriodos, useAlumnos, mutationError, extractApiErrors } from './shared'
 
 export default function TutoriasTab() {
   const qc = useQueryClient()
@@ -10,6 +10,7 @@ export default function TutoriasTab() {
   const [filtroPeriodo, setFiltroPeriodo] = useState('')
   const [filtroTutor, setFiltroTutor] = useState('')
   const [modal, setModal] = useState<{ tutor_id: string; periodo_id: string; alumno_ids: string[] } | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: periodos = [] } = usePeriodos()
   const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
@@ -27,8 +28,12 @@ export default function TutoriasTab() {
 
   const saveMasivo = useMutation({
     mutationFn: () => academicoApi.createTutoriaMasiva(modal!),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tutorias'] }); addToast('Tutorías asignadas.', 'success'); setModal(null) },
-    onError: (e) => addToast(mutationError(e), 'error'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tutorias'] }); addToast('Tutorías asignadas.', 'success'); setModal(null); setErrors({}) },
+    onError: (e) => {
+      const extracted = extractApiErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else addToast(mutationError(e), 'error')
+    },
   })
 
   const del = useMutation({
@@ -98,21 +103,22 @@ export default function TutoriasTab() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
               <h2 className="font-semibold text-slate-900">Asignar tutorías</h2>
-              <button onClick={() => setModal(null)} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+              <button onClick={() => { setModal(null); setErrors({}) }} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
             </div>
             <div className="p-6 space-y-4 overflow-y-auto flex-1">
-              <Field label="Tutor">
-                <select className={selectCls} value={modal.tutor_id} onChange={e => setModal(m => ({ ...m!, tutor_id: e.target.value }))}>
+              <Field label="Tutor" error={errors.tutor_id}>
+                <select className={icls(errors.tutor_id)} value={modal.tutor_id} onChange={e => setModal(m => ({ ...m!, tutor_id: e.target.value }))}>
                   <option value="">— Seleccionar tutor —</option>
                   {docentes.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </Field>
-              <Field label="Periodo">
-                <select className={selectCls} value={modal.periodo_id} onChange={e => setModal(m => ({ ...m!, periodo_id: e.target.value }))}>
+              <Field label="Periodo" error={errors.periodo_id}>
+                <select className={icls(errors.periodo_id)} value={modal.periodo_id} onChange={e => setModal(m => ({ ...m!, periodo_id: e.target.value }))}>
                   <option value="">— Seleccionar periodo —</option>
                   {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                 </select>
               </Field>
+              {errors.alumno_ids && <p className="text-xs text-red-500">{errors.alumno_ids}</p>}
               <div>
                 <p className="text-xs font-medium text-slate-600 mb-2">Alumnos a asignar <span className="text-slate-400">({modal.alumno_ids.length} seleccionados)</span></p>
                 <div className="max-h-52 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-100">
@@ -128,7 +134,7 @@ export default function TutoriasTab() {
               </div>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
-              <button onClick={() => setModal(null)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cancelar</button>
+              <button onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cancelar</button>
               <button onClick={() => saveMasivo.mutate()} disabled={!modal.tutor_id || !modal.periodo_id || modal.alumno_ids.length === 0 || saveMasivo.isPending}
                 className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
                 {saveMasivo.isPending ? 'Asignando…' : `Asignar ${modal.alumno_ids.length > 0 ? `(${modal.alumno_ids.length})` : ''}`}

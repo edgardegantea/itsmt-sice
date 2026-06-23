@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import { useToastStore } from '../../../store/toastStore'
@@ -211,6 +212,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
 // ── Página principal ──────────────────────────────────────────────────────────
 
 export default function UsuariosPage() {
+  const navigate = useNavigate()
   const qc = useQueryClient()
   const { toast: addToast } = useToastStore()
 
@@ -257,7 +259,7 @@ export default function UsuariosPage() {
   const usuarios: Usuario[] = data?.data ?? []
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-5">
+    <div className="p-6 space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Gestión de usuarios</h1>
@@ -312,7 +314,7 @@ export default function UsuariosPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {usuarios.map((u) => (
-                <tr key={u.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                <tr key={u.id} onClick={() => navigate(`/admin/usuarios/${u.id}`)} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600 shrink-0">
@@ -335,8 +337,8 @@ export default function UsuariosPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setModalUsuario(u)} className="text-xs text-blue-600 hover:underline font-medium">Editar</button>
-                      <button onClick={() => confirmarEliminar(u)} className="text-xs text-red-500 hover:underline font-medium">Eliminar</button>
+                      <button onClick={e => { e.stopPropagation(); setModalUsuario(u) }} className="text-xs text-blue-600 hover:underline font-medium">Editar</button>
+                      <button onClick={e => { e.stopPropagation(); confirmarEliminar(u) }} className="text-xs text-red-500 hover:underline font-medium">Eliminar</button>
                     </div>
                   </td>
                 </tr>

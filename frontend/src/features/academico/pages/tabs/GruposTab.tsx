@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Grupo } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls, useCarreras, usePeriodos, useAlumnos, mutationError } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, icls,  useCarreras, usePeriodos, useAlumnos, mutationError, extractApiErrors } from './shared'
 
 const TURNO_LABEL = { matutino: 'Matutino', vespertino: 'Vespertino', sabatino: 'Sabatino' }
 
@@ -15,6 +15,7 @@ export default function GruposTab() {
   const [detalle, setDetalle] = useState<Grupo | null>(null)
   const [asignarOpen, setAsignarOpen] = useState(false)
   const [selAlumnos, setSelAlumnos] = useState<string[]>([])
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: carreras = [] } = useCarreras()
   const { data: periodos = [] } = usePeriodos()
@@ -32,8 +33,12 @@ export default function GruposTab() {
 
   const save = useMutation({
     mutationFn: () => modal?.id ? academicoApi.updateGrupo(modal.id!, modal) : academicoApi.createGrupo(modal!),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['grupos'] }); addToast('Grupo guardado.', 'success'); setModal(null) },
-    onError: (e) => addToast(mutationError(e), 'error'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['grupos'] }); addToast('Grupo guardado.', 'success'); setModal(null); setErrors({}) },
+    onError: (e) => {
+      const extracted = extractApiErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else addToast(mutationError(e), 'error')
+    },
   })
 
   const del = useMutation({
@@ -128,34 +133,34 @@ export default function GruposTab() {
 
       {/* Modal nuevo/editar grupo */}
       {modal !== null && (
-        <ModalWrap title={modal.id ? 'Editar grupo' : 'Nuevo grupo'} onClose={() => setModal(null)} onSave={() => save.mutate()} saving={save.isPending}>
-          <Field label="Carrera">
-            <select className={selectCls} value={modal.carrera_id ?? ''} onChange={e => set('carrera_id', e.target.value)}>
+        <ModalWrap title={modal.id ? 'Editar grupo' : 'Nuevo grupo'} onClose={() => { setModal(null); setErrors({}) }} onSave={() => save.mutate()} saving={save.isPending}>
+          <Field label="Carrera" error={errors.carrera_id}>
+            <select className={icls(errors.carrera_id)} value={modal.carrera_id ?? ''} onChange={e => set('carrera_id', e.target.value)}>
               <option value="">— Seleccionar —</option>
               {carreras.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
             </select>
           </Field>
-          <Field label="Periodo">
-            <select className={selectCls} value={modal.periodo_id ?? ''} onChange={e => set('periodo_id', e.target.value)}>
+          <Field label="Periodo" error={errors.periodo_id}>
+            <select className={icls(errors.periodo_id)} value={modal.periodo_id ?? ''} onChange={e => set('periodo_id', e.target.value)}>
               <option value="">— Seleccionar —</option>
               {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </Field>
-          <Field label="Clave del grupo">
-            <input className={inputCls} value={modal.clave ?? ''} placeholder="p.e. ISC-1A" onChange={e => set('clave', e.target.value.toUpperCase())} />
+          <Field label="Clave del grupo" error={errors.clave}>
+            <input className={icls(errors.clave)} value={modal.clave ?? ''} placeholder="p.e. ISC-1A" onChange={e => set('clave', e.target.value.toUpperCase())} />
           </Field>
-          <Field label="Semestre">
-            <select className={selectCls} value={modal.semestre ?? 1} onChange={e => set('semestre', Number(e.target.value))}>
+          <Field label="Semestre" error={errors.semestre}>
+            <select className={icls(errors.semestre)} value={modal.semestre ?? 1} onChange={e => set('semestre', Number(e.target.value))}>
               {[1,2,3,4,5,6,7,8,9,10].map(s => <option key={s} value={s}>{s}°</option>)}
             </select>
           </Field>
-          <Field label="Turno">
-            <select className={selectCls} value={modal.turno ?? 'matutino'} onChange={e => set('turno', e.target.value)}>
+          <Field label="Turno" error={errors.turno}>
+            <select className={icls(errors.turno)} value={modal.turno ?? 'matutino'} onChange={e => set('turno', e.target.value)}>
               {Object.entries(TURNO_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           </Field>
-          <Field label="Capacidad máxima">
-            <input className={inputCls} type="number" min={1} max={100} value={modal.capacidad ?? 35} onChange={e => set('capacidad', Number(e.target.value))} />
+          <Field label="Capacidad máxima" error={errors.capacidad}>
+            <input className={icls(errors.capacidad)} type="number" min={1} max={100} value={modal.capacidad ?? 35} onChange={e => set('capacidad', Number(e.target.value))} />
           </Field>
         </ModalWrap>
       )}

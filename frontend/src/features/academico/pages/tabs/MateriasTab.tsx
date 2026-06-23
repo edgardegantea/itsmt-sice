@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Materia } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, inputCls, selectCls, useCarreras, mutationError } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, icls,  useCarreras, mutationError, extractApiErrors } from './shared'
 
 const TIPO_LABEL: Record<string, string> = {
   obligatoria: 'Obligatoria', optativa: 'Optativa', taller: 'Taller', lab: 'Laboratorio',
@@ -19,6 +19,7 @@ export default function MateriasTab() {
   const [filtroCarrera, setFiltroCarrera] = useState('')
   const [filtroSemestre, setFiltroSemestre] = useState('')
   const [modal, setModal] = useState<Partial<Materia> | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: carreras = [] } = useCarreras()
   const { data: materias = [], isLoading } = useQuery({
@@ -35,8 +36,12 @@ export default function MateriasTab() {
     mutationFn: () => modal?.id
       ? academicoApi.updateMateria(modal.id!, modal)
       : academicoApi.createMateria({ ...modal, carrera_id: modal?.carrera_id ?? filtroCarrera }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['materias'] }); addToast('Materia guardada.', 'success'); setModal(null) },
-    onError:   (e) => addToast(mutationError(e), 'error'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['materias'] }); addToast('Materia guardada.', 'success'); setModal(null); setErrors({}) },
+    onError: (e) => {
+      const extracted = extractApiErrors(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else addToast(mutationError(e), 'error')
+    },
   })
 
   const del = useMutation({
@@ -94,37 +99,37 @@ export default function MateriasTab() {
       </div>
 
       {modal !== null && (
-        <ModalWrap title={modal.id ? 'Editar materia' : 'Nueva materia'} onClose={() => setModal(null)} onSave={() => save.mutate()} saving={save.isPending}>
-          <Field label="Carrera">
-            <select className={selectCls} value={modal.carrera_id ?? ''} onChange={e => set('carrera_id', e.target.value)}>
+        <ModalWrap title={modal.id ? 'Editar materia' : 'Nueva materia'} onClose={() => { setModal(null); setErrors({}) }} onSave={() => save.mutate()} saving={save.isPending}>
+          <Field label="Carrera" error={errors.carrera_id}>
+            <select className={icls(errors.carrera_id)} value={modal.carrera_id ?? ''} onChange={e => set('carrera_id', e.target.value)}>
               <option value="">— Seleccionar —</option>
               {carreras.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
             </select>
           </Field>
-          <Field label="Clave">
-            <input className={inputCls} value={modal.clave ?? ''} onChange={e => set('clave', e.target.value.toUpperCase())} placeholder="p.e. ISC-101" />
+          <Field label="Clave" error={errors.clave}>
+            <input className={icls(errors.clave)} value={modal.clave ?? ''} onChange={e => set('clave', e.target.value.toUpperCase())} placeholder="p.e. ISC-101" />
           </Field>
-          <Field label="Nombre" full>
-            <input className={inputCls} value={modal.nombre ?? ''} onChange={e => set('nombre', e.target.value)} placeholder="Cálculo Diferencial e Integral" />
+          <Field label="Nombre" full error={errors.nombre}>
+            <input className={icls(errors.nombre)} value={modal.nombre ?? ''} onChange={e => set('nombre', e.target.value)} placeholder="Cálculo Diferencial e Integral" />
           </Field>
-          <Field label="Semestre">
-            <select className={selectCls} value={modal.semestre ?? 1} onChange={e => set('semestre', Number(e.target.value))}>
+          <Field label="Semestre" error={errors.semestre}>
+            <select className={icls(errors.semestre)} value={modal.semestre ?? 1} onChange={e => set('semestre', Number(e.target.value))}>
               {[1,2,3,4,5,6,7,8,9,10].map(s => <option key={s} value={s}>{s}°</option>)}
             </select>
           </Field>
-          <Field label="Tipo">
-            <select className={selectCls} value={modal.tipo ?? 'obligatoria'} onChange={e => set('tipo', e.target.value)}>
+          <Field label="Tipo" error={errors.tipo}>
+            <select className={icls(errors.tipo)} value={modal.tipo ?? 'obligatoria'} onChange={e => set('tipo', e.target.value)}>
               {Object.entries(TIPO_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           </Field>
-          <Field label="Créditos">
-            <input className={inputCls} type="number" min={0} value={modal.creditos ?? 0} onChange={e => set('creditos', Number(e.target.value))} />
+          <Field label="Créditos" error={errors.creditos}>
+            <input className={icls(errors.creditos)} type="number" min={0} value={modal.creditos ?? 0} onChange={e => set('creditos', Number(e.target.value))} />
           </Field>
-          <Field label="Horas teoría / semana">
-            <input className={inputCls} type="number" min={0} value={modal.horas_teoria ?? 0} onChange={e => set('horas_teoria', Number(e.target.value))} />
+          <Field label="Horas teoría / semana" error={errors.horas_teoria}>
+            <input className={icls(errors.horas_teoria)} type="number" min={0} value={modal.horas_teoria ?? 0} onChange={e => set('horas_teoria', Number(e.target.value))} />
           </Field>
-          <Field label="Horas práctica / semana">
-            <input className={inputCls} type="number" min={0} value={modal.horas_practica ?? 0} onChange={e => set('horas_practica', Number(e.target.value))} />
+          <Field label="Horas práctica / semana" error={errors.horas_practica}>
+            <input className={icls(errors.horas_practica)} type="number" min={0} value={modal.horas_practica ?? 0} onChange={e => set('horas_practica', Number(e.target.value))} />
           </Field>
         </ModalWrap>
       )}

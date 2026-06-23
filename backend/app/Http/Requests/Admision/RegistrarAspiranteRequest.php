@@ -11,6 +11,13 @@ class RegistrarAspiranteRequest extends FormRequest
         return true; // endpoint público
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('curp')) {
+            $this->merge(['curp' => strtoupper(trim($this->curp))]);
+        }
+    }
+
     public function rules(): array
     {
         return [

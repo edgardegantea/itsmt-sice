@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   admisionApi,
@@ -402,6 +403,7 @@ function FilaAlumno({
   alumno,
   expanded,
   onToggle,
+  onDetail,
   onEditar,
   onCobro,
   onCredencial,
@@ -414,6 +416,7 @@ function FilaAlumno({
   alumno: Alumno
   expanded: boolean
   onToggle: () => void
+  onDetail: () => void
   onEditar: () => void
   onCobro: () => void
   onCredencial: () => void
@@ -429,7 +432,7 @@ function FilaAlumno({
     <>
       {/* ── Fila principal ── */}
       <tr
-        onClick={onToggle}
+        onClick={onDetail}
         className={`cursor-pointer select-none transition-colors ${
           expanded ? 'bg-[#1a3a5c]/10' : 'hover:bg-blue-50/60'
         }`}
@@ -445,7 +448,7 @@ function FilaAlumno({
         </td>
 
         {/* Chevron */}
-        <td className={`pl-1 pr-2 py-3.5 w-8 border-l-4 ${expanded ? 'border-[#1a3a5c]' : 'border-transparent'}`}>
+        <td className="pl-1 pr-2 py-3.5 w-8 border-l-4 border-transparent" onClick={e => { e.stopPropagation(); onToggle() }}>
           <svg
             className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-[#1a3a5c]' : 'text-slate-400'}`}
             fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
@@ -669,6 +672,7 @@ function descargarCsv(contenido: string, nombre: string) {
 // ── Página principal ───────────────────────────────────────────────────────────
 
 export default function AlumnosPage() {
+  const navigate = useNavigate()
   const [filtros, setFiltros]           = useState({ search: '', estatus: '', semestre: '', carrera_id: '', page: 1 })
   const [expandedId, setExpandedId]     = useState<string | null>(null)
   const [editando, setEditando]         = useState<Alumno | null>(null)
@@ -782,7 +786,7 @@ export default function AlumnosPage() {
   })
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8">
 
       {/* ── Header ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
@@ -977,6 +981,7 @@ export default function AlumnosPage() {
                     alumno={a}
                     expanded={expandedId === a.id}
                     onToggle={() => toggle(a.id)}
+                    onDetail={() => navigate(`/admin/alumnos/${a.id}`)}
                     onEditar={() => { setEditando(a) }}
                     onCobro={() => { setCobrando(a) }}
                     onCredencial={() => descargarCredencial(a)}

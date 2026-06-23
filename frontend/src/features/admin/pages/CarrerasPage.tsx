@@ -42,13 +42,19 @@ const API = {
 
 // ── Formulario ────────────────────────────────────────────────────────────────
 
-function CarreraForm({ inicial, onGuardar, onCancelar, cargando }: {
+const clsC = (e?: string) =>
+  `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 ${e ? 'border-red-400' : 'border-slate-300'}`
+const FErr = ({ msg }: { msg?: string }) =>
+  msg ? <p className="text-xs text-red-500 mt-1">{msg}</p> : null
+
+type CarreraApiError = { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }
+
+function CarreraForm({ inicial, onGuardar, onCancelar, cargando, errors = {} }: {
   inicial?: Partial<Carrera>; onGuardar: (d: Partial<Carrera>) => void
-  onCancelar: () => void; cargando: boolean
+  onCancelar: () => void; cargando: boolean; errors?: Record<string, string>
 }) {
   const [form, setForm] = useState<Partial<Carrera>>(inicial ?? { activa: true })
   const set = (k: keyof Carrera, v: unknown) => setForm(f => ({ ...f, [k]: v }))
-  const cls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
 
   return (
     <form onSubmit={e => { e.preventDefault(); onGuardar(form) }} className="space-y-4">
@@ -56,28 +62,33 @@ function CarreraForm({ inicial, onGuardar, onCancelar, cargando }: {
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-slate-600 mb-1">Nombre de la carrera *</label>
           <input required value={form.nombre ?? ''} onChange={e => set('nombre', e.target.value)}
-            placeholder="Ej. Ingeniería en Sistemas Computacionales" className={cls} />
+            placeholder="Ej. Ingeniería en Sistemas Computacionales" className={clsC(errors.nombre)} />
+          <FErr msg={errors.nombre} />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Clave * (siglas)</label>
           <input required value={form.clave ?? ''} onChange={e => set('clave', e.target.value.toUpperCase())}
-            placeholder="Ej. ISC" maxLength={10} className={`${cls} font-mono`} />
+            placeholder="Ej. ISC" maxLength={10} className={`${clsC(errors.clave)} font-mono`} />
+          <FErr msg={errors.clave} />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Código TecNM (2–3 dígitos) *</label>
           <input required value={form.codigo_it ?? ''} onChange={e => set('codigo_it', e.target.value.replace(/\D/g, '').slice(0, 3))}
-            placeholder="Ej. 006" maxLength={3} className={`${cls} font-mono`} />
+            placeholder="Ej. 006" maxLength={3} className={`${clsC(errors.codigo_it)} font-mono`} />
+          <FErr msg={errors.codigo_it} />
           <p className="text-xs text-slate-400 mt-1">Segmento NNN del número de control TecNM.</p>
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Clave plan de estudios</label>
           <input value={form.plan_clave ?? ''} onChange={e => set('plan_clave', e.target.value)}
-            placeholder="Ej. ISIC-2010-227" className={`${cls} font-mono`} />
+            placeholder="Ej. ISIC-2010-227" className={`${clsC(errors.plan_clave)} font-mono`} />
+          <FErr msg={errors.plan_clave} />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Especialidad</label>
           <input value={form.especialidad ?? ''} onChange={e => set('especialidad', e.target.value)}
-            placeholder="Opcional" className={cls} />
+            placeholder="Opcional" className={clsC(errors.especialidad)} />
+          <FErr msg={errors.especialidad} />
         </div>
         <div className="flex items-center gap-2 pt-4">
           <input type="checkbox" id="activa" checked={!!form.activa} onChange={e => set('activa', e.target.checked)}
@@ -301,11 +312,14 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
 
 export default function CarrerasPage() {
   const qc = useQueryClient()
-  const [modal,   setModal]   = useState<'nueva' | Carrera | null>(null)
-  const [detalle, setDetalle] = useState<Carrera | null>(null)
+  const [modal,      setModal]      = useState<'nueva' | Carrera | null>(null)
+  const [detalle,    setDetalle]    = useState<Carrera | null>(null)
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { success, error: toastError } = useToastStore()
 
   const { data: carreras = [], isLoading } = useQuery({ queryKey: ['admin-carreras'], queryFn: API.list })
+
+  const closeModal = () => { setModal(null); setFormErrors({}) }
 
   const guardar = useMutation({
     mutationFn: (d: Partial<Carrera>) =>
@@ -314,9 +328,16 @@ export default function CarrerasPage() {
       qc.invalidateQueries({ queryKey: ['admin-carreras'] })
       if (detalle) qc.invalidateQueries({ queryKey: ['carrera-detalle', detalle.id] })
       success(modal === 'nueva' ? 'Carrera creada correctamente.' : 'Carrera actualizada correctamente.')
-      setModal(null)
+      closeModal()
     },
-    onError: () => toastError('Error al guardar la carrera. Verifica que la clave no esté duplicada.'),
+    onError: (err: CarreraApiError) => {
+      const errs = err.response?.data?.errors
+      if (errs) {
+        setFormErrors(Object.fromEntries(Object.entries(errs).map(([k, v]) => [k, v[0]])))
+      } else {
+        toastError(err.response?.data?.message ?? 'Error al guardar la carrera.')
+      }
+    },
   })
 
   const toggleActiva = useMutation({
@@ -424,13 +445,14 @@ export default function CarrerasPage() {
       {modal && (
         <Modal
           title={modal === 'nueva' ? 'Nueva carrera' : `Editar: ${(modal as Carrera).clave}`}
-          onClose={() => setModal(null)}
+          onClose={closeModal}
         >
           <CarreraForm
             inicial={modal !== 'nueva' ? modal : undefined}
             onGuardar={d => guardar.mutate(d)}
-            onCancelar={() => setModal(null)}
+            onCancelar={closeModal}
             cargando={guardar.isPending}
+            errors={formErrors}
           />
         </Modal>
       )}

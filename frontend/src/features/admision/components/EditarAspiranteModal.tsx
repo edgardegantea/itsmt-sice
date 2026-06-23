@@ -16,8 +16,13 @@ interface Props {
 }
 
 const INPUT =
-  'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition bg-white'
+  'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition bg-white'
+const INPUT_OK  = `${INPUT} border-slate-300`
+const INPUT_ERR = `${INPUT} border-red-400`
+const inp = (e?: string) => e ? INPUT_ERR : INPUT_OK
 const LABEL = 'block text-xs font-medium text-slate-600 mb-1'
+const ErrMsg = ({ msg }: { msg?: string }) =>
+  msg ? <p className="text-xs text-red-500 mt-1">{msg}</p> : null
 
 const MUNICIPIOS = [
   'Cazones',
@@ -114,13 +119,15 @@ export default function EditarAspiranteModal({ aspirante, onClose }: Props) {
     [aspirante]
   )
 
-  const [form, setForm] = useState<ActualizarAspirantePayload>(initialForm)
+  const [form, setForm]     = useState<ActualizarAspirantePayload>(initialForm)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const setField = <K extends keyof ActualizarAspirantePayload>(
     key: K,
     value: ActualizarAspirantePayload[K]
   ) => {
     setForm(prev => ({ ...prev, [key]: value }))
+    if (errors[key as string]) setErrors(prev => { const n = { ...prev }; delete n[key as string]; return n })
   }
 
   const { mutate, isPending } = useMutation({
@@ -131,9 +138,13 @@ export default function EditarAspiranteModal({ aspirante, onClose }: Props) {
       success('Datos del aspirante actualizados correctamente.')
       onClose()
     },
-    onError: (error) => {
-      console.error('Error actualizando aspirante:', error)
-      toastError('Error al guardar. Verifica los datos e intenta de nuevo.')
+    onError: (err: { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }) => {
+      const errs = err.response?.data?.errors
+      if (errs) {
+        setErrors(Object.fromEntries(Object.entries(errs).map(([k, v]) => [k, v[0]])))
+      } else {
+        toastError(err.response?.data?.message ?? 'Error al guardar. Verifica los datos e intenta de nuevo.')
+      }
     },
   })
 
@@ -141,15 +152,12 @@ const handleSubmit = (e: React.FormEvent) => {
   e.preventDefault()
 
   const curp = normalizeCurp(form.curp)
+  const newErrors: Record<string, string> = {}
 
   if (curp.length !== 18) {
-    toastError('La CURP debe tener exactamente 18 caracteres.')
-    return
-  }
-
-  if (!CURP_REGEX.test(curp)) {
-    toastError('La CURP no tiene un formato válido.')
-    return
+    newErrors.curp = 'La CURP debe tener exactamente 18 caracteres.'
+  } else if (!CURP_REGEX.test(curp)) {
+    newErrors.curp = 'La CURP no tiene un formato válido (ej. ABCD991231HVZRXX09).'
   }
 
   const promedio =
@@ -159,7 +167,11 @@ const handleSubmit = (e: React.FormEvent) => {
       : undefined
 
   if (promedio === undefined || promedio < 6 || promedio > 10) {
-    toastError('El promedio de bachillerato debe estar entre 6.00 y 10.00.')
+    newErrors.promedio_bachillerato = 'El promedio debe estar entre 6.00 y 10.00.'
+  }
+
+  if (Object.keys(newErrors).length) {
+    setErrors(newErrors)
     return
   }
 
@@ -186,10 +198,6 @@ const handleSubmit = (e: React.FormEvent) => {
     carrera_id: form.carrera_id ? String(form.carrera_id) : undefined,
     periodo_id: form.periodo_id ? String(form.periodo_id) : undefined,
   }
-
-  console.log('CURP original:', form.curp)
-  console.log('CURP normalizada:', curp)
-  console.log('CURP válida regex:', CURP_REGEX.test(curp))
 
   mutate(payload)
 }
@@ -222,58 +230,63 @@ const handleSubmit = (e: React.FormEvent) => {
             <div>
               <label className={LABEL}>Apellido paterno *</label>
               <input
-                className={INPUT}
+                className={inp(errors.apellido_paterno)}
                 value={form.apellido_paterno ?? ''}
                 onChange={e => setField('apellido_paterno', e.target.value)}
                 required
               />
+              <ErrMsg msg={errors.apellido_paterno} />
             </div>
 
             <div>
               <label className={LABEL}>Apellido materno</label>
               <input
-                className={INPUT}
+                className={inp(errors.apellido_materno)}
                 value={form.apellido_materno ?? ''}
                 onChange={e => setField('apellido_materno', e.target.value)}
               />
+              <ErrMsg msg={errors.apellido_materno} />
             </div>
 
             <div>
               <label className={LABEL}>Nombre(s) *</label>
               <input
-                className={INPUT}
+                className={inp(errors.nombres)}
                 value={form.nombres ?? ''}
                 onChange={e => setField('nombres', e.target.value)}
                 required
               />
+              <ErrMsg msg={errors.nombres} />
             </div>
 
             <div>
               <label className={LABEL}>CURP *</label>
               <input
-                className={INPUT}
+                className={inp(errors.curp)}
                 value={form.curp ?? ''}
                 onChange={e => setField('curp', normalizeCurp(e.target.value))}
                 maxLength={18}
                 required
               />
+              <ErrMsg msg={errors.curp} />
             </div>
 
             <div>
               <label className={LABEL}>Fecha de nacimiento *</label>
               <input
                 type="date"
-                className={INPUT}
+                className={inp(errors.fecha_nacimiento)}
                 value={form.fecha_nacimiento ?? ''}
                 onChange={e => setField('fecha_nacimiento', e.target.value)}
                 required
               />
+              <ErrMsg msg={errors.fecha_nacimiento} />
             </div>
 
             <div>
               <label className={LABEL}>Sexo *</label>
               <select
-                className={INPUT}
+                className={inp(errors.sexo)}
                 value={form.sexo ?? ''}
                 onChange={e => setField('sexo', e.target.value)}
                 required
@@ -281,23 +294,25 @@ const handleSubmit = (e: React.FormEvent) => {
                 <option value="masculino">Masculino</option>
                 <option value="femenino">Femenino</option>
               </select>
+              <ErrMsg msg={errors.sexo} />
             </div>
 
             <div>
               <label className={LABEL}>Correo electrónico *</label>
               <input
                 type="email"
-                className={INPUT}
+                className={inp(errors.email)}
                 value={form.email ?? ''}
                 onChange={e => setField('email', e.target.value)}
                 required
               />
+              <ErrMsg msg={errors.email} />
             </div>
 
             <div>
               <label className={LABEL}>Teléfono</label>
               <input
-                className={INPUT}
+                className={inp(errors.telefono)}
                 value={form.telefono ?? ''}
                 onChange={e =>
                   setField(
@@ -307,6 +322,7 @@ const handleSubmit = (e: React.FormEvent) => {
                 }
                 maxLength={15}
               />
+              <ErrMsg msg={errors.telefono} />
             </div>
           </div>
         </fieldset>
@@ -321,12 +337,13 @@ const handleSubmit = (e: React.FormEvent) => {
               <label className={LABEL}>Municipio de procedencia *</label>
               <input
                 list="dl-municipios"
-                className={INPUT}
+                className={inp(errors.municipio_procedencia)}
                 value={form.municipio_procedencia ?? ''}
                 onChange={e => setField('municipio_procedencia', e.target.value)}
                 placeholder="Selecciona o escribe un municipio"
                 required
               />
+              <ErrMsg msg={errors.municipio_procedencia} />
             </div>
 
             <div>
@@ -336,7 +353,7 @@ const handleSubmit = (e: React.FormEvent) => {
                 step="0.01"
                 min={6}
                 max={10}
-                className={INPUT}
+                className={inp(errors.promedio_bachillerato)}
                 value={form.promedio_bachillerato ?? ''}
                 onChange={e =>
                   setField(
@@ -346,24 +363,26 @@ const handleSubmit = (e: React.FormEvent) => {
                 }
                 required
               />
+              <ErrMsg msg={errors.promedio_bachillerato} />
             </div>
 
             <div className="sm:col-span-2">
               <label className={LABEL}>Escuela de bachillerato *</label>
               <input
                 list="dl-bachilleratos"
-                className={INPUT}
+                className={inp(errors.escuela_bachillerato)}
                 value={form.escuela_bachillerato ?? ''}
                 onChange={e => setField('escuela_bachillerato', e.target.value)}
                 placeholder="Selecciona o escribe la escuela"
                 required
               />
+              <ErrMsg msg={errors.escuela_bachillerato} />
             </div>
 
             <div>
               <label className={LABEL}>Turno preferido *</label>
               <select
-                className={INPUT}
+                className={inp(errors.turno_preferido)}
                 value={form.turno_preferido ?? ''}
                 onChange={e => setField('turno_preferido', e.target.value)}
                 required
@@ -371,6 +390,7 @@ const handleSubmit = (e: React.FormEvent) => {
                 <option value="matutino">Matutino</option>
                 <option value="vespertino">Vespertino</option>
               </select>
+              <ErrMsg msg={errors.turno_preferido} />
             </div>
           </div>
         </fieldset>
@@ -384,7 +404,7 @@ const handleSubmit = (e: React.FormEvent) => {
             <div className="sm:col-span-2">
               <label className={LABEL}>Carrera *</label>
               <select
-                className={INPUT}
+                className={inp(errors.carrera_id)}
                 value={form.carrera_id ?? ''}
                 onChange={e => setField('carrera_id', e.target.value)}
                 required
@@ -395,12 +415,13 @@ const handleSubmit = (e: React.FormEvent) => {
                   </option>
                 ))}
               </select>
+              <ErrMsg msg={errors.carrera_id} />
             </div>
 
             <div>
               <label className={LABEL}>Periodo *</label>
               <select
-                className={INPUT}
+                className={inp(errors.periodo_id)}
                 value={form.periodo_id ?? ''}
                 onChange={e => setField('periodo_id', e.target.value)}
                 required
@@ -416,24 +437,27 @@ const handleSubmit = (e: React.FormEvent) => {
                   </option>
                 ))}
               </select>
+              <ErrMsg msg={errors.periodo_id} />
             </div>
 
             <div>
               <label className={LABEL}>Folio preinscripción TecNM</label>
               <input
-                className={INPUT}
+                className={inp(errors.folio_preinscripcion_tecnm)}
                 value={form.folio_preinscripcion_tecnm ?? ''}
                 onChange={e => setField('folio_preinscripcion_tecnm', e.target.value)}
               />
+              <ErrMsg msg={errors.folio_preinscripcion_tecnm} />
             </div>
 
             <div>
               <label className={LABEL}>Folio EXANI-II</label>
               <input
-                className={INPUT}
+                className={inp(errors.folio_exani)}
                 value={form.folio_exani ?? ''}
                 onChange={e => setField('folio_exani', e.target.value)}
               />
+              <ErrMsg msg={errors.folio_exani} />
             </div>
 
             <div>
@@ -442,12 +466,13 @@ const handleSubmit = (e: React.FormEvent) => {
                 type="number"
                 min={0}
                 max={1000}
-                className={INPUT}
+                className={inp(errors.puntaje_exani)}
                 value={form.puntaje_exani ?? ''}
                 onChange={e =>
                   setField('puntaje_exani', parseOptionalNumber(e.target.value))
                 }
               />
+              <ErrMsg msg={errors.puntaje_exani} />
             </div>
           </div>
         </fieldset>

@@ -174,7 +174,6 @@
           {{ mb_strtoupper($asp->apellido_materno ?? '', 'UTF-8') }},
           {{ mb_strtoupper($asp->nombres, 'UTF-8') }}
         </span>
-        <span class="hint">&nbsp;(Apellido paterno, apellido materno, nombre(s))</span>
       </td>
     </tr>
   </table>

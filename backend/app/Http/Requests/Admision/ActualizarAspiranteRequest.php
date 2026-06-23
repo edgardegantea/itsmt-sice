@@ -12,6 +12,13 @@ class ActualizarAspiranteRequest extends FormRequest
         return $this->user()->hasRole(['admin', 'superadmin', 'personal_administrativo']);
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('curp')) {
+            $this->merge(['curp' => strtoupper(trim($this->curp))]);
+        }
+    }
+
     public function rules(): array
     {
         $id = $this->route('aspirante')->id;

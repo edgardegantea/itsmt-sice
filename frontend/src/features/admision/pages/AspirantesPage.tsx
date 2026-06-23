@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { admisionApi } from '../services/admision'
 import { useAspirantes } from '../hooks/useAspirantes'
@@ -23,11 +24,12 @@ function Spinner({ className = 'w-3.5 h-3.5' }: { className?: string }) {
 
 // ── Fila expandible ───────────────────────────────────────────────────────────
 function FilaAspirante({
-  asp, expanded, onToggle, onEditar, onEstatus, onInscribir, onDoc, generandoPdf,
+  asp, expanded, onToggle, onDetail, onEditar, onEstatus, onInscribir, onDoc, generandoPdf,
 }: {
   asp: Aspirante
   expanded: boolean
   onToggle: () => void
+  onDetail: () => void
   onEditar: () => void
   onEstatus: () => void
   onInscribir: () => void
@@ -47,19 +49,19 @@ function FilaAspirante({
   return (
     <>
       <tr
-        onClick={onToggle}
+        onClick={onDetail}
         className={`cursor-pointer select-none transition-colors ${
           expanded ? 'bg-[#1a3a5c]/10' : 'hover:bg-blue-50/60'
         }`}
       >
-        <td className={`pl-4 pr-2 py-3.5 w-8 border-l-4 ${expanded ? 'border-[#1a3a5c]' : 'border-transparent'}`}>
+        <td className="pl-4 pr-2 py-3.5 w-8 border-l-4 border-transparent" onClick={e => { e.stopPropagation(); onToggle() }}>
           <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-[#1a3a5c]' : 'text-slate-400'}`}
             fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6"/>
           </svg>
         </td>
         <td className="px-3 py-3.5">
-          <p className={`font-medium text-sm ${expanded ? 'text-[#1a3a5c]' : 'text-slate-800'}`}>{nombreCompleto}</p>
+          <p className="font-medium text-sm text-slate-800 group-hover:text-[#1a3a5c]">{nombreCompleto}</p>
           <p className="text-xs text-slate-400 mt-0.5">{asp.email}</p>
         </td>
         <td className="px-3 py-3.5 hidden lg:table-cell">
@@ -166,6 +168,7 @@ function FilaAspirante({
 
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function AspirantesPage() {
+  const navigate = useNavigate()
   const [carreraId,  setCarreraId]  = useState('')
   const [periodoId,  setPeriodoId]  = useState('')
   const [estatus,    setEstatus]    = useState('')
@@ -229,7 +232,7 @@ export default function AspirantesPage() {
   ]
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8">
 
       {/* ── Header ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-6">
@@ -424,6 +427,7 @@ export default function AspirantesPage() {
                     asp={asp}
                     expanded={expandedId === asp.id}
                     onToggle={() => setExpandedId((prev) => (prev === asp.id ? null : asp.id))}
+                    onDetail={() => navigate(`/admin/aspirantes/${asp.id}`)}
                     onEditar={() => setEditandoDatos(asp)}
                     onEstatus={() => setEditando(asp)}
                     onInscribir={() => setInscribiendo(asp)}

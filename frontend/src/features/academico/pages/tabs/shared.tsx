@@ -2,15 +2,23 @@ import { useQuery } from '@tanstack/react-query'
 import apiClient from '../../../../config/apiClient'
 
 export const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-slate-50'
+export const inputErrCls = 'w-full border border-red-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-white disabled:bg-slate-50'
 export const selectCls = inputCls
+export const icls = (e?: string) => e ? inputErrCls : inputCls
 
-export function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+export function Field({ label, children, full, error }: { label: string; children: React.ReactNode; full?: boolean; error?: string }) {
   return (
     <div className={full ? 'sm:col-span-2' : ''}>
       <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
       {children}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   )
+}
+
+export function extractApiErrors(e: unknown): Record<string, string> {
+  const errs = (e as { response?: { data?: { errors?: Record<string, string[]> } } })?.response?.data?.errors
+  return errs ? Object.fromEntries(Object.entries(errs).map(([k, v]) => [k, v[0]])) : {}
 }
 
 export function ModalWrap({ title, onClose, children, onSave, saving }: {

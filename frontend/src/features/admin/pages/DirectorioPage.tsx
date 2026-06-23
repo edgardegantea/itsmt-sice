@@ -74,11 +74,19 @@ function initials(nombre: string) {
     .split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+type DirApiError = { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }
+
+function extractErrors(err: DirApiError): Record<string, string> {
+  const errs = err.response?.data?.errors
+  return errs ? Object.fromEntries(Object.entries(errs).map(([k, v]) => [k, v[0]])) : {}
+}
+
+function Field({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
   return (
     <div>
       <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
       {children}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   )
 }
@@ -213,10 +221,16 @@ function PersonaModal({ persona, areas, puestos, usuarios, onClose }: {
     }
   }
 
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   const mutation = useMutation({
     mutationFn: () => persona ? api.editarPersona(persona.id, form) : api.crearPersona(form),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['directorio'] }); success(persona ? 'Persona actualizada.' : 'Persona agregada.'); onClose() },
-    onError: () => error('Error al guardar.'),
+    onError: (err: DirApiError) => {
+      const extracted = extractErrors(err)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else error(err.response?.data?.message ?? 'Error al guardar.')
+    },
   })
 
   const puestosFiltrados = form.area_id ? puestos.filter(p => p.area_id === form.area_id) : puestos
@@ -226,7 +240,7 @@ function PersonaModal({ persona, areas, puestos, usuarios, onClose }: {
       onClose={onClose} onSave={() => mutation.mutate()} saving={mutation.isPending} canSave={!!form.nombre && !!form.cargo}>
       <div className="space-y-4">
         {/* Usuario del sistema */}
-        <Field label="Usuario del sistema">
+        <Field label="Usuario del sistema" error={errors.user_id}>
           <Select value={form.user_id} onChange={onSelectUser}>
             <option value="">— Sin vincular —</option>
             {usuarios.map(u => (
@@ -239,20 +253,20 @@ function PersonaModal({ persona, areas, puestos, usuarios, onClose }: {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <Field label="Nombre completo *">
+            <Field label="Nombre completo *" error={errors.nombre}>
               <Input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="Ej: MC. JUAN PÉREZ HERNÁNDEZ" />
             </Field>
           </div>
 
           {/* Área primero para filtrar puestos */}
-          <Field label="Área / Departamento">
+          <Field label="Área / Departamento" error={errors.area_id}>
             <Select value={form.area_id} onChange={v => { set('area_id', v); set('puesto_id', '') }}>
               <option value="">— Seleccionar área —</option>
               {areas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
             </Select>
           </Field>
 
-          <Field label="Puesto">
+          <Field label="Puesto" error={errors.puesto_id}>
             <Select value={form.puesto_id} onChange={onSelectPuesto}>
               <option value="">— Seleccionar puesto —</option>
               {puestosFiltrados.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
@@ -260,21 +274,21 @@ function PersonaModal({ persona, areas, puestos, usuarios, onClose }: {
           </Field>
 
           <div className="col-span-2">
-            <Field label="Cargo (texto libre)">
+            <Field label="Cargo (texto libre)" error={errors.cargo}>
               <Input value={form.cargo} onChange={e => set('cargo', e.target.value)} placeholder="Se autocompletará al elegir puesto" />
             </Field>
           </div>
 
-          <Field label="Correo electrónico">
+          <Field label="Correo electrónico" error={errors.email}>
             <Input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="correo@itsmt.edu.mx" />
           </Field>
-          <Field label="Teléfono">
+          <Field label="Teléfono" error={errors.telefono}>
             <Input value={form.telefono} onChange={e => set('telefono', e.target.value)} placeholder="225 253 0108" />
           </Field>
-          <Field label="Extensión">
+          <Field label="Extensión" error={errors.extension}>
             <Input value={form.extension} onChange={e => set('extension', e.target.value)} placeholder="Ext. 101" />
           </Field>
-          <Field label="Orden de aparición">
+          <Field label="Orden de aparición" error={errors.orden}>
             <Input type="number" value={form.orden} onChange={e => set('orden', Number(e.target.value))} min={0} />
           </Field>
         </div>
@@ -324,31 +338,37 @@ function AreaModal({ area, onClose }: { area: Area | null; onClose: () => void }
   const [form, setForm] = useState<AreaForm>(area ? { nombre: area.nombre, descripcion: area.descripcion ?? '', tipo: area.tipo, orden: area.orden, activo: area.activo } : { ...AREA_EMPTY })
   const set = <K extends keyof AreaForm>(k: K, v: AreaForm[K]) => setForm(f => ({ ...f, [k]: v }))
 
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   const mutation = useMutation({
     mutationFn: () => area ? api.editarArea(area.id, form) : api.crearArea(form),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['directorio-areas'] }); success(area ? 'Área actualizada.' : 'Área creada.'); onClose() },
-    onError: () => error('Error al guardar.'),
+    onError: (err: DirApiError) => {
+      const extracted = extractErrors(err)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else error(err.response?.data?.message ?? 'Error al guardar.')
+    },
   })
 
   return (
     <Modal title={area ? 'Editar área' : 'Nueva área'} subtitle="Catálogo de áreas y departamentos"
       onClose={onClose} onSave={() => mutation.mutate()} saving={mutation.isPending} canSave={!!form.nombre}>
       <div className="space-y-4">
-        <Field label="Nombre del área *">
+        <Field label="Nombre del área *" error={errors.nombre}>
           <Input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="Ej: Servicios Escolares" />
         </Field>
-        <Field label="Tipo">
+        <Field label="Tipo" error={errors.tipo}>
           <Select value={form.tipo} onChange={v => set('tipo', v)}>
             <option value="administracion">Administración</option>
             <option value="academico">Académico (Carrera)</option>
             <option value="departamento">Departamento</option>
           </Select>
         </Field>
-        <Field label="Descripción">
+        <Field label="Descripción" error={errors.descripcion}>
           <Textarea value={form.descripcion} onChange={v => set('descripcion', v)} placeholder="Descripción del área o departamento…" />
         </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Orden">
+          <Field label="Orden" error={errors.orden}>
             <Input type="number" value={form.orden} onChange={e => set('orden', Number(e.target.value))} min={0} />
           </Field>
         </div>
@@ -371,29 +391,35 @@ function PuestoModal({ puesto, areas, onClose }: { puesto: Puesto | null; areas:
   } : { ...PUESTO_EMPTY })
   const set = <K extends keyof PuestoForm>(k: K, v: PuestoForm[K]) => setForm(f => ({ ...f, [k]: v }))
 
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   const mutation = useMutation({
     mutationFn: () => puesto ? api.editarPuesto(puesto.id, form) : api.crearPuesto(form),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['directorio-puestos'] }); success(puesto ? 'Puesto actualizado.' : 'Puesto creado.'); onClose() },
-    onError: () => error('Error al guardar.'),
+    onError: (err: DirApiError) => {
+      const extracted = extractErrors(err)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else error(err.response?.data?.message ?? 'Error al guardar.')
+    },
   })
 
   return (
     <Modal title={puesto ? 'Editar puesto' : 'Nuevo puesto'} subtitle="Catálogo de puestos institucionales"
       onClose={onClose} onSave={() => mutation.mutate()} saving={mutation.isPending} canSave={!!form.nombre}>
       <div className="space-y-4">
-        <Field label="Nombre del puesto *">
+        <Field label="Nombre del puesto *" error={errors.nombre}>
           <Input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="Ej: Jefe del Departamento de Servicios Escolares" />
         </Field>
-        <Field label="Área">
+        <Field label="Área" error={errors.area_id}>
           <Select value={form.area_id} onChange={v => set('area_id', v)}>
             <option value="">— Sin área —</option>
             {areas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
           </Select>
         </Field>
-        <Field label="Descripción del puesto">
+        <Field label="Descripción del puesto" error={errors.descripcion}>
           <Textarea value={form.descripcion} onChange={v => set('descripcion', v)} placeholder="Responsabilidades generales del puesto…" />
         </Field>
-        <Field label="Funciones principales">
+        <Field label="Funciones principales" error={errors.funciones}>
           <Textarea value={form.funciones} onChange={v => set('funciones', v)} rows={5} placeholder="- Función 1&#10;- Función 2&#10;- Función 3" />
         </Field>
         <div className="grid grid-cols-2 gap-4">
@@ -778,7 +804,7 @@ export default function DirectorioPage() {
   ]
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Directorio Institucional</h1>
         <p className="text-sm text-gray-500 mt-1">Instituto Tecnológico Superior de Martínez de la Torre</p>
