@@ -298,10 +298,10 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* ── Sidebar ── */}
       <aside
         className={`
-          relative fixed inset-y-0 left-0 z-30 flex flex-col shrink-0
+          fixed inset-y-0 left-0 z-30 flex flex-col shrink-0
           transform transition-all duration-200 ease-in-out
           ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}
-          md:static md:translate-x-0
+          md:relative md:inset-auto md:z-auto md:translate-x-0
           ${colapsado ? 'md:w-16' : 'md:w-56'}
           w-56
         `}
