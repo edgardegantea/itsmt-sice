@@ -94,6 +94,17 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
 
   const aspiranteId = alumno.inscripcion?.aspirante_id
 
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  type ApiErr = { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }
+  const extractErr = (e: ApiErr) => {
+    const errs = e?.response?.data?.errors
+    return errs ? Object.fromEntries(Object.entries(errs).map(([k, v]) => [k, v[0]])) : {}
+  }
+
+  const icls = (f?: string) => `${INPUT_CLS} ${errors[f ?? ''] ? 'border-red-400' : ''}`
+  const FE = ({ f }: { f: string }) => errors[f] ? <p className="text-xs text-red-500 mt-1">{errors[f]}</p> : null
+
   const { mutate, isPending } = useMutation({
     mutationFn: async (p: ActualizarAlumnoPayload) => {
       const promises: Promise<unknown>[] = [admisionApi.actualizarAlumno(alumno.id, p)]
@@ -103,12 +114,16 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
       await Promise.all(promises)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['alumnos'] }); success('Alumno actualizado.'); onClose() },
-    onError:   () => toastError('Error al actualizar. Intenta de nuevo.'),
+    onError: (e: ApiErr) => {
+      const extracted = extractErr(e)
+      if (Object.keys(extracted).length) setErrors(extracted)
+      else toastError(e?.response?.data?.message ?? 'Error al actualizar. Intenta de nuevo.')
+    },
   })
 
   return (
-    <Modal title={`Editar alumno — ${alumno.numero_control}`} onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); mutate(form) }} className="space-y-5">
+    <Modal title={`Editar alumno — ${alumno.numero_control}`} onClose={() => { setErrors({}); onClose() }}>
+      <form onSubmit={(e) => { e.preventDefault(); setErrors({}); mutate(form) }} className="space-y-5">
 
         {/* Datos personales */}
         <div>
@@ -116,65 +131,34 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2">
               <label className={LABEL_CLS}>Nombres</label>
-              <input
-                value={aspForm.nombres}
-                onChange={e => setAspForm(f => ({ ...f, nombres: e.target.value }))}
-                className={INPUT_CLS}
-                placeholder="Nombres"
-              />
+              <input value={aspForm.nombres} onChange={e => setAspForm(f => ({ ...f, nombres: e.target.value }))} className={icls('nombres')} placeholder="Nombres" />
+              <FE f="nombres" />
             </div>
             <div>
               <label className={LABEL_CLS}>Apellido paterno</label>
-              <input
-                value={aspForm.apellido_paterno}
-                onChange={e => setAspForm(f => ({ ...f, apellido_paterno: e.target.value }))}
-                className={INPUT_CLS}
-              />
+              <input value={aspForm.apellido_paterno} onChange={e => setAspForm(f => ({ ...f, apellido_paterno: e.target.value }))} className={icls('apellido_paterno')} />
+              <FE f="apellido_paterno" />
             </div>
             <div>
               <label className={LABEL_CLS}>Apellido materno</label>
-              <input
-                value={aspForm.apellido_materno}
-                onChange={e => setAspForm(f => ({ ...f, apellido_materno: e.target.value }))}
-                className={INPUT_CLS}
-              />
+              <input value={aspForm.apellido_materno} onChange={e => setAspForm(f => ({ ...f, apellido_materno: e.target.value }))} className={icls('apellido_materno')} />
+              <FE f="apellido_materno" />
             </div>
             <div>
               <label className={LABEL_CLS}>CURP</label>
-              <input
-                value={aspForm.curp}
-                onChange={e =>
-                  setAspForm(f => ({
-                    ...f,
-                    curp: e.target.value
-                      .toUpperCase()
-                      .replace(/\s+/g, '')
-                      .replace(/[^A-Z0-9]/g, '')
-                      .slice(0, 18),
-                  }))
-                }
-                className={`${INPUT_CLS} font-mono uppercase`}
-                maxLength={18}
-                placeholder="18 caracteres"
-              />
+              <input value={aspForm.curp} onChange={e => setAspForm(f => ({ ...f, curp: e.target.value.toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9]/g,'').slice(0,18) }))}
+                className={`${icls('curp')} font-mono uppercase`} maxLength={18} placeholder="18 caracteres" />
+              <FE f="curp" />
             </div>
             <div>
               <label className={LABEL_CLS}>Teléfono</label>
-              <input
-                value={aspForm.telefono}
-                onChange={e => setAspForm(f => ({ ...f, telefono: e.target.value }))}
-                className={INPUT_CLS}
-                placeholder="10 dígitos"
-              />
+              <input value={aspForm.telefono} onChange={e => setAspForm(f => ({ ...f, telefono: e.target.value }))} className={icls('telefono')} placeholder="10 dígitos" />
+              <FE f="telefono" />
             </div>
             <div className="sm:col-span-2">
               <label className={LABEL_CLS}>Correo electrónico</label>
-              <input
-                type="email"
-                value={aspForm.email}
-                onChange={e => setAspForm(f => ({ ...f, email: e.target.value }))}
-                className={INPUT_CLS}
-              />
+              <input type="email" value={aspForm.email} onChange={e => setAspForm(f => ({ ...f, email: e.target.value }))} className={icls('email')} />
+              <FE f="email" />
             </div>
           </div>
         </div>
@@ -185,32 +169,22 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={LABEL_CLS}>Carrera</label>
-              <select
-                value={form.carrera_id ?? ''}
-                onChange={e => setForm(f => ({ ...f, carrera_id: e.target.value }))}
-                className={`${INPUT_CLS} bg-white`}
-              >
+              <select value={form.carrera_id ?? ''} onChange={e => setForm(f => ({ ...f, carrera_id: e.target.value }))} className={`${icls('carrera_id')} bg-white`}>
                 {carreras.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.clave})</option>)}
               </select>
+              <FE f="carrera_id" />
             </div>
             <div>
               <label className={LABEL_CLS}>Semestre actual</label>
-              <input
-                type="number" min={1} max={12}
-                value={form.semestre_actual}
-                onChange={e => setForm(f => ({ ...f, semestre_actual: Number(e.target.value) }))}
-                className={INPUT_CLS}
-              />
+              <input type="number" min={1} max={12} value={form.semestre_actual} onChange={e => setForm(f => ({ ...f, semestre_actual: Number(e.target.value) }))} className={icls('semestre_actual')} />
+              <FE f="semestre_actual" />
             </div>
             <div>
               <label className={LABEL_CLS}>Estatus</label>
-              <select
-                value={form.estatus}
-                onChange={e => setForm(f => ({ ...f, estatus: e.target.value as EstatusAlumno }))}
-                className={`${INPUT_CLS} bg-white`}
-              >
+              <select value={form.estatus} onChange={e => setForm(f => ({ ...f, estatus: e.target.value as EstatusAlumno }))} className={`${icls('estatus')} bg-white`}>
                 {Object.entries(ESTATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
+              <FE f="estatus" />
             </div>
           </div>
         </div>
