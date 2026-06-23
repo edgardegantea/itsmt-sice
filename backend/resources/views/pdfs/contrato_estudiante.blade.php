@@ -3,14 +3,14 @@
 <div class="folio">TecNM-AC-PO-001-03 · Folio: {{ $inscripcion->numero_control }}-CT</div>
 <div class="title">CONTRATO CON EL ESTUDIANTE</div>
 
-<p style="font-size:9pt; margin-bottom:10px;">
+<p style="font-size:9pt; margin-bottom:10px; text-align: justify;">
   Contrato bilateral celebrado entre el <strong>{{ mb_strtoupper($cfg->nombre_institucion,'UTF-8') }} ({{ mb_strtoupper($cfg->nombre_corto,'UTF-8')}})</strong>
   y el alumno <strong>{{ mb_strtoupper($inscripcion->aspirante->nombres . ' ' . $inscripcion->aspirante->apellido_paterno . ' ' . $inscripcion->aspirante->apellido_materno, 'UTF-8') }}</strong>,
   con número de control <strong>{{ $inscripcion->numero_control }}</strong>, para el periodo <strong>{{ $inscripcion->periodo->nombre }}</strong>.
 </p>
 
 <div class="section">PRIMERA — OBJETO DEL CONTRATO</div>
-<p style="font-size:9pt; margin-bottom:8px;">
+<p style="font-size:9pt; margin-bottom:8px; text-align: justify;">
   El {{ $cfg->nombre_corto }} se compromete a prestar servicios educativos de nivel superior en la carrera de
   <strong>{{ mb_strtoupper($inscripcion->carrera->nombre, 'UTF-8') }}</strong>, conforme al plan de estudios aprobado por la Secretaría de Educación Pública
   y el Tecnológico Nacional de México.
