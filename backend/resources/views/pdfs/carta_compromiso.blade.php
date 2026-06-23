@@ -7,14 +7,10 @@
 
 
 @php
-    // Obtenemos la CURP (se asume que existe en el modelo aspirante)
     $curp = $inscripcion->aspirante->curp ?? '';
-    
-    // La letra del sexo está en la posición 11 (índice 10 en programación)
-    // Extraemos la letra y la convertimos a mayúscula por seguridad
+
     $letraSexo = strlen($curp) >= 11 ? strtoupper(substr($curp, 10, 1)) : '';
 
-    // Determinamos el prefijo basado en la letra de la CURP
     $textoAlumno = ($letraSexo === 'M') ? 'la alumna' : 'el alumno';
     $textoAlumno2 = ($letraSexo === 'M') ? 'inscrita' : 'inscrito';
 @endphp

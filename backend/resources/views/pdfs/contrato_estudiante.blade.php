@@ -4,7 +4,7 @@
 <div class="title">CONTRATO CON EL ESTUDIANTE</div>
 
 <p style="font-size:9pt; margin-bottom:10px;">
-  Contrato bilateral celebrado entre el <strong>{{ $cfg->nombre_institucion }} ({{ $cfg->nombre_corto }})</strong>
+  Contrato bilateral celebrado entre el <strong>{{ mb_strtoupper($cfg->nombre_institucion,'UTF-8') }} ({{ mb_strtoupper($cfg->nombre_corto,'UTF-8')}})</strong>
   y el alumno <strong>{{ $inscripcion->aspirante->nombres }} {{ $inscripcion->aspirante->apellido_paterno }} {{ $inscripcion->aspirante->apellido_materno }}</strong>,
   con número de control <strong>{{ $inscripcion->numero_control }}</strong>, para el periodo <strong>{{ $inscripcion->periodo->nombre }}</strong>.
 </p>
