@@ -112,6 +112,7 @@ export interface Constancia {
   folio_unico: string
   estatus: 'solicitada' | 'emitida'
   emitida_en: string | null
+  url_pdf: string | null
   created_at: string
   alumno?: {
     id: string
@@ -264,6 +265,7 @@ export const permanenciaApi = {
   solicitarBajaTemporal: (data: {
     periodo_id: string
     fecha_solicitud: string
+    motivo_enum: string
     motivo_texto?: string
     numero_semestres_cursados?: number
   }): Promise<Baja> =>

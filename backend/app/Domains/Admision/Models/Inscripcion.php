@@ -31,6 +31,7 @@ class Inscripcion extends Model
         'carta_compromiso_generada',
         'solicitud_inscripcion_generada',
         'contrato_generado',
+        'carta_compromiso_docs_generada',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class Inscripcion extends Model
             'carta_compromiso_generada'      => 'boolean',
             'solicitud_inscripcion_generada' => 'boolean',
             'contrato_generado'              => 'boolean',
+            'carta_compromiso_docs_generada' => 'boolean',
         ];
     }
 

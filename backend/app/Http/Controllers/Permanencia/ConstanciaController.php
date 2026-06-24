@@ -22,6 +22,8 @@ class ConstanciaController extends Controller
     // POST /api/constancias  (alumno solicita)
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Constancia::class);
+
         $data = $request->validate([
             'tipo' => ['required', 'in:estudios,inscripcion,calificaciones'],
         ]);
@@ -38,8 +40,16 @@ class ConstanciaController extends Controller
     }
 
     // GET /api/alumnos/{alumno}/constancias
-    public function porAlumno(Alumno $alumno): JsonResponse
+    public function porAlumno(Request $request, Alumno $alumno): JsonResponse
     {
+        // Alumno solo puede ver sus propias constancias; admin/CE ven cualquiera
+        if ($request->user()->hasRole('alumno')) {
+            $propio = Alumno::where('user_id', $request->user()->id)->value('id');
+            abort_if($propio !== $alumno->id, 403, 'No autorizado.');
+        } else {
+            $this->authorize('viewAny', Constancia::class);
+        }
+
         $constancias = Constancia::with(['solicitadaPor', 'emitidaPor'])
             ->where('alumno_id', $alumno->id)
             ->latest()
@@ -78,9 +88,14 @@ class ConstanciaController extends Controller
     }
 
     // GET /api/constancias/{constancia}/pdf
-    public function pdf(Constancia $constancia): Response
+    public function pdf(Request $request, Constancia $constancia): Response
     {
-        $this->authorize('viewAny', Constancia::class);
+        if ($request->user()->hasRole('alumno')) {
+            $propio = Alumno::where('user_id', $request->user()->id)->value('id');
+            abort_if($propio !== $constancia->alumno_id, 403, 'No autorizado.');
+        } else {
+            $this->authorize('viewAny', Constancia::class);
+        }
 
         abort_if($constancia->estatus !== 'emitida', 422, 'La constancia aún no ha sido emitida.');
 

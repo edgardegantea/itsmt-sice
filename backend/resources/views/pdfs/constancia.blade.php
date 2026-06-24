@@ -108,9 +108,6 @@
       {{ $cfg->ciudad ?? 'Martínez de la Torre' }}, {{ $cfg->estado ?? 'Veracruz' }},
       a {{ $fechaEmision }}.
     </p>
-    @if($constancia->observaciones)
-      <p><strong>Observaciones:</strong> {{ $constancia->observaciones }}</p>
-    @endif
   </div>
 
   <table class="firmas">

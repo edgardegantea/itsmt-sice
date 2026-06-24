@@ -1,1 +1,0 @@
-import{t as e}from"./apiClient-q7smXMO0.js";import{l as t}from"./index-DWzR_EQd.js";import{t as n}from"./admision-BOT9PgHe.js";function r(){return t({queryKey:[`carreras`],queryFn:n.getCarreras,staleTime:1e3*60*10})}function i(){return t({queryKey:[`carreras-admin`],queryFn:()=>e.get(`/admin/carreras`).then(e=>e.data.data),staleTime:1e3*60*10})}export{i as n,r as t};

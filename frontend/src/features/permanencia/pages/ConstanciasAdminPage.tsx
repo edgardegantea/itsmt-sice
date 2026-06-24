@@ -48,7 +48,7 @@ export default function ConstanciasAdminPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['constancias-admin'] }),
   })
 
-  const constancias: Constancia[] = data?.data ?? []
+  const constancias: Constancia[] = data?.data ?? data ?? []
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">

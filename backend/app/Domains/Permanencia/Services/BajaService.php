@@ -39,6 +39,11 @@ class BajaService
 
     public function registrar(array $data, User $registradaPor): Baja
     {
+        $alumnoModel = Alumno::findOrFail($data['alumno_id']);
+        if (!in_array($alumnoModel->estatus, ['activo', 'baja_temporal'])) {
+            throw new \DomainException('El alumno no tiene un estatus que permita registrar una baja.');
+        }
+
         $periodo = Periodo::findOrFail($data['periodo_id']);
 
         $this->validarPlazo(
@@ -69,10 +74,15 @@ class BajaService
 
         $this->validarPlazo($periodo, 'temporal', Carbon::parse($data['fecha_solicitud']));
 
+        if (Baja::where('alumno_id', $alumno->id)->where('periodo_id', $data['periodo_id'])->exists()) {
+            throw new \DomainException('Ya existe una solicitud de baja para este periodo.');
+        }
+
         $baja = Baja::create([
             'alumno_id'                 => $alumno->id,
             'periodo_id'                => $data['periodo_id'],
             'tipo_baja'                 => 'temporal',
+            'motivo_enum'               => $data['motivo_enum'] ?? null,
             'motivo_texto'              => $data['motivo_texto'] ?? null,
             'fecha_solicitud'           => $data['fecha_solicitud'],
             'registrada_por'            => $alumno->user_id,

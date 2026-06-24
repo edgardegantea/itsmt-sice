@@ -5,11 +5,11 @@ import { useToastStore } from '../../../../store/toastStore'
 import { Field, ModalWrap, Th, EmptyRow, icls,  useCarreras, mutationError, extractApiErrors } from './shared'
 
 const TIPO_LABEL: Record<string, string> = {
-  obligatoria: 'Obligatoria', optativa: 'Optativa', taller: 'Taller', lab: 'Laboratorio',
+  obligatoria: 'Obligatoria', optativa: 'Optativa',
 }
 
 const BLANK: Partial<Materia> = {
-  clave: '', nombre: '', semestre: 1, creditos: 5,
+  clave: '', clave_oficial_tecnm: '', nombre: '', semestre: 1, creditos: 5,
   horas_teoria: 3, horas_practica: 2, tipo: 'obligatoria',
 }
 
@@ -106,8 +106,11 @@ export default function MateriasTab() {
               {carreras.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
             </select>
           </Field>
-          <Field label="Clave" error={errors.clave}>
+          <Field label="Clave interna" error={errors.clave}>
             <input className={icls(errors.clave)} value={modal.clave ?? ''} onChange={e => set('clave', e.target.value.toUpperCase())} placeholder="p.e. ISC-101" />
+          </Field>
+          <Field label="Clave TecNM" error={errors.clave_oficial_tecnm}>
+            <input className={icls(errors.clave_oficial_tecnm)} value={modal.clave_oficial_tecnm ?? ''} onChange={e => set('clave_oficial_tecnm', e.target.value.toUpperCase())} placeholder="p.e. AEC-1021" />
           </Field>
           <Field label="Nombre" full error={errors.nombre}>
             <input className={icls(errors.nombre)} value={modal.nombre ?? ''} onChange={e => set('nombre', e.target.value)} placeholder="Cálculo Diferencial e Integral" />

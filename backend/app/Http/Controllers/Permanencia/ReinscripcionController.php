@@ -44,11 +44,17 @@ class ReinscripcionController extends Controller
     // POST /api/reinscripciones
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Reinscripcion::class);
+
         $data = $request->validate([
             'periodo_id' => ['required', 'uuid', 'exists:periodos,id'],
         ]);
 
-        $alumno = Alumno::where('user_id', $request->user()->id)->firstOrFail();
+        $alumno = Alumno::where('user_id', $request->user()->id)->first();
+
+        if (! $alumno) {
+            return ApiResponse::error('No se encontró el expediente del alumno. Contacte a Control Escolar.', 422);
+        }
 
         try {
             $r = $this->service->solicitar($alumno, $data['periodo_id']);
@@ -93,8 +99,16 @@ class ReinscripcionController extends Controller
     }
 
     // GET /api/alumnos/{alumno}/adeudos
-    public function adeudos(Alumno $alumno): JsonResponse
+    public function adeudos(Request $request, Alumno $alumno): JsonResponse
     {
+        // Alumno solo puede ver sus propios adeudos
+        if ($request->user()->hasRole('alumno')) {
+            $propio = Alumno::where('user_id', $request->user()->id)->value('id');
+            abort_if($propio !== $alumno->id, 403, 'No autorizado.');
+        } else {
+            $this->authorize('viewAny', Reinscripcion::class);
+        }
+
         return ApiResponse::success(
             Adeudo::where('alumno_id', $alumno->id)->where('pagado', false)->get()
         );

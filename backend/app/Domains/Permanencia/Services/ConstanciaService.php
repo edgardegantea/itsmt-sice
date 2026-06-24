@@ -6,6 +6,7 @@ use App\Domains\Academico\Models\Alumno;
 use App\Domains\Permanencia\Models\Constancia;
 use App\Mail\ConstanciaSolicitadaMail;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class ConstanciaService
@@ -41,13 +42,16 @@ class ConstanciaService
             throw new \DomainException('Esta constancia ya fue emitida.');
         }
 
-        $constancia->update([
-            'estatus'    => 'emitida',
-            'emitida_por'=> $emisor->id,
-            'emitida_en' => now(),
-        ]);
+        return DB::transaction(function () use ($constancia, $emisor) {
+            $constancia->update([
+                'estatus'     => 'emitida',
+                'emitida_por' => $emisor->id,
+                'emitida_en'  => now(),
+                'url_pdf'     => "/api/constancias/{$constancia->id}/pdf",
+            ]);
 
-        return $constancia->fresh(['alumno.carrera', 'alumno.periodoIngreso', 'emitidaPor']);
+            return $constancia->fresh(['alumno.carrera', 'alumno.periodoIngreso', 'emitidaPor']);
+        });
     }
 
     public function listar(array $filtros = [])

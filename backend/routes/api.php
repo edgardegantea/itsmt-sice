@@ -34,6 +34,10 @@ use App\Http\Controllers\Academico\MallaCurricularController;
 use App\Http\Controllers\Academico\AulaController;
 use App\Http\Controllers\Academico\HorarioController;
 use App\Http\Controllers\Academico\PlaneacionDocenteController;
+use App\Http\Controllers\Academico\ConfiguracionEvaluacionController;
+use App\Http\Controllers\Academico\CalificacionController;
+use App\Http\Controllers\Academico\CierreDeCursoController;
+use App\Http\Controllers\Academico\ActaCalificacionesController;
 use Illuminate\Support\Facades\Route;
 
 // Sprint 0 — Auth
@@ -293,4 +297,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/encuestas-socioeconomicas',                        [EncuestaSocioeconomicaController::class, 'index']);
     Route::get('/admin/encuestas-socioeconomicas/{encuesta}',             [EncuestaSocioeconomicaController::class, 'show']);
     Route::patch('/admin/encuestas-socioeconomicas/{encuesta}',           [EncuestaSocioeconomicaController::class, 'adminUpdate']);
+
+    // ── Sprint 4 — Control de Aula ────────────────────────────────────────────
+
+    // Configuración de evaluación por carrera
+    Route::post('/configuraciones-evaluacion',                            [ConfiguracionEvaluacionController::class, 'store']);
+    Route::get('/configuraciones-evaluacion/{carreraId}',                 [ConfiguracionEvaluacionController::class, 'show']);
+
+    // Calificaciones — IMPORTANTE: declarar ANTES del wildcard /grupos/{grupo}
+    Route::get('/grupos/{grupo}/calificaciones',                          [CalificacionController::class, 'porGrupo']);
+    Route::get('/grupos/{grupo}/acta-calificaciones/pdf',                 [ActaCalificacionesController::class, 'pdf']);
+    Route::patch('/grupos/{grupo}/acta-calificaciones/firmar',            [ActaCalificacionesController::class, 'firmar']);
+    Route::post('/calificaciones',                                        [CalificacionController::class, 'store']);
+
+    // Cierre de curso
+    Route::post('/cierres-de-curso',                                      [CierreDeCursoController::class, 'store']);
+
+    // Situación académica del alumno (S4-06)
+    Route::get('/alumnos/{alumno}/situacion-academica',                   [CalificacionController::class, 'situacionAcademica']);
 });

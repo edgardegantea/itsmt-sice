@@ -45,8 +45,10 @@ class AspiranteController extends Controller
         $datos = $request->validated();
 
         if ($request->hasFile('constancia_bachillerato')) {
-            $datos['constancia_bachillerato'] = $request->file('constancia_bachillerato')
-                ->store('constancias', 'public');
+            $path = $request->file('constancia_bachillerato')->store('constancias', 'public');
+            $datos['constancia_bachillerato'] = $path;
+            // Registrar también en documentos JSON para que el checklist (TecNM-AC-PO-001-02) lo detecte
+            $datos['documentos'] = array_merge($datos['documentos'] ?? [], ['certificado_bachillerato' => $path]);
         }
 
         $aspirante = $this->service->crear($datos);
@@ -102,6 +104,8 @@ class AspiranteController extends Controller
     // PATCH /api/aspirantes/{aspirante}/estatus
     public function actualizarEstatus(ActualizarEstatusRequest $request, Aspirante $aspirante): JsonResponse
     {
+        $this->authorize('update', $aspirante);
+
         $aspirante = $this->service->actualizarEstatus(
             $aspirante,
             $request->validated('estatus'),

@@ -36,9 +36,16 @@ class AlumnoController extends Controller
     }
 
     // GET /api/alumnos/{alumno}
-    public function show(Alumno $alumno): JsonResponse
+    public function show(Request $request, Alumno $alumno): JsonResponse
     {
         $this->authorize('view', $alumno);
+
+        // TecNM-AC-PO-001-04: si autorizacion='nadie', solo CE/admin o el propio alumno pueden acceder
+        if ($alumno->autorizacion_consulta_expediente === 'nadie') {
+            $esPropioAlumno = $request->user()->hasRole('alumno') && $alumno->user_id === $request->user()->id;
+            $rolCE = $request->user()->hasAnyRole(['superadmin', 'admin', 'personal_administrativo']);
+            abort_if(! $esPropioAlumno && ! $rolCE, 403, 'El alumno no ha autorizado el acceso a su expediente a terceros (TecNM-AC-PO-001-04).');
+        }
 
         return ApiResponse::success(
             $alumno->load(['carrera', 'periodoIngreso', 'inscripcion.aspirante', 'user']),

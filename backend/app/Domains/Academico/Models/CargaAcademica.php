@@ -49,8 +49,8 @@ class CargaAcademica extends Model
         return $this->hasMany(Horario::class);
     }
 
-    public function planeacion(): HasMany
+    public function planeacion(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasMany(PlaneacionDocente::class);
+        return $this->hasOne(PlaneacionDocente::class);
     }
 }

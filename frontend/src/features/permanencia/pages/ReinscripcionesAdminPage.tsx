@@ -494,7 +494,7 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
   const { data: periodos = [] } = usePeriodos()
   const [form, setForm] = useState({
     alumno_id: '', periodo_id: '', tipo_baja: 'temporal',
-    motivo_texto: '', fecha_solicitud: new Date().toISOString().split('T')[0],
+    motivo_enum: '', motivo_texto: '', fecha_solicitud: new Date().toISOString().split('T')[0],
     numero_semestres_cursados: '', reingreso_posible: true,
   })
   const [busquedaNC, setBusquedaNC] = useState('')
@@ -512,6 +512,7 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
       alumno_id: form.alumno_id,
       periodo_id: form.periodo_id,
       tipo_baja: form.tipo_baja as TipoBaja,
+      motivo_enum: form.motivo_enum || undefined,
       motivo_texto: form.motivo_texto || undefined,
       fecha_solicitud: form.fecha_solicitud,
       numero_semestres_cursados: form.numero_semestres_cursados ? parseInt(form.numero_semestres_cursados) : undefined,
@@ -584,10 +585,23 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
             <input type="number" min="0" value={form.numero_semestres_cursados}
               onChange={e => f('numero_semestres_cursados', e.target.value)} className={inp} placeholder="0" />
           </div>
-          <div className="col-span-2">
+          <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Motivo</label>
+            <select value={form.motivo_enum} onChange={e => f('motivo_enum', e.target.value)} className={inp}>
+              <option value="">Seleccionar motivo…</option>
+              <option value="economico">Económico</option>
+              <option value="salud">Salud</option>
+              <option value="trabajo">Trabajo</option>
+              <option value="familiar">Familiar</option>
+              <option value="cambio_carrera">Cambio de carrera</option>
+              <option value="cambio_institucion">Cambio de institución</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Descripción del motivo</label>
             <textarea rows={2} value={form.motivo_texto} onChange={e => f('motivo_texto', e.target.value)}
-              className={inp + ' resize-none'} placeholder="Descripción del motivo…" />
+              className={inp + ' resize-none'} placeholder="Descripción adicional…" />
           </div>
           <div className="col-span-2 flex items-center gap-2">
             <input type="checkbox" id="reingreso" checked={form.reingreso_posible}

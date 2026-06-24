@@ -5,6 +5,7 @@ namespace App\Domains\Academico\Services;
 use App\Domains\Academico\Models\CargaAcademica;
 use App\Domains\Academico\Models\Horario;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class HorarioService
 {
@@ -68,6 +69,7 @@ class HorarioService
      */
     public function guardarHorarios(CargaAcademica $carga, array $bloques): Collection
     {
+        // Verificar conflictos con horarios ya existentes en DB
         foreach ($bloques as $bloque) {
             $conflictos = $this->detectarConflictos(
                 $carga->id,
@@ -80,14 +82,29 @@ class HorarioService
             }
         }
 
-        // Reemplazar horarios existentes de esta carga
-        Horario::where('carga_academica_id', $carga->id)->delete();
+        // Verificar conflictos dentro del mismo lote (ej: dos bloques del mismo docente se solapan entre sí)
+        foreach ($bloques as $i => $a) {
+            foreach ($bloques as $j => $b) {
+                if ($i >= $j) continue;
+                if ($a['dia_semana'] !== $b['dia_semana']) continue;
+                $solapan = $a['hora_inicio'] < $b['hora_fin'] && $a['hora_fin'] > $b['hora_inicio'];
+                if ($solapan) {
+                    throw new \DomainException(
+                        "Conflicto interno: los bloques {$a['dia_semana']} {$a['hora_inicio']}–{$a['hora_fin']} y {$b['hora_inicio']}–{$b['hora_fin']} se solapan entre sí."
+                    );
+                }
+            }
+        }
 
-        return collect($bloques)->map(fn($b) => Horario::create([
-            'carga_academica_id' => $carga->id,
-            'dia_semana'         => $b['dia_semana'],
-            'hora_inicio'        => $b['hora_inicio'],
-            'hora_fin'           => $b['hora_fin'],
-        ]));
+        return DB::transaction(function () use ($carga, $bloques) {
+            Horario::where('carga_academica_id', $carga->id)->delete();
+
+            return collect($bloques)->map(fn($b) => Horario::create([
+                'carga_academica_id' => $carga->id,
+                'dia_semana'         => $b['dia_semana'],
+                'hora_inicio'        => $b['hora_inicio'],
+                'hora_fin'           => $b['hora_fin'],
+            ]));
+        });
     }
 }

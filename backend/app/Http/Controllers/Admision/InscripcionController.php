@@ -20,7 +20,7 @@ class InscripcionController extends Controller
         $this->authorize('view', $inscripcion->aspirante);
 
         return ApiResponse::success(
-            $inscripcion->load(['aspirante', 'carrera', 'periodo'])
+            $inscripcion->load(['aspirante', 'carrera', 'periodo', 'alumno'])
         );
     }
 

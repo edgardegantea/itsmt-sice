@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
-import { permanenciaApi, type TipoConstancia, type Baja, type Reinscripcion } from '../services/permanencia'
+import { permanenciaApi, type TipoConstancia, type Baja, type Reinscripcion, type OrdenReinscripcion } from '../services/permanencia'
 import { mutationError } from '../../academico/pages/tabs/shared'
 import { useConstanciaPdf } from '../hooks/useConstanciaPdf'
 
@@ -68,6 +68,17 @@ export default function TramitesAlumnoPage() {
     r => r.periodo_id === periodo?.id
   )
 
+  // Orden de reinscripción (ventana por semestre)
+  const { data: ordenesReinscripcion = [] } = useQuery({
+    queryKey: ['orden-reinscripcion', periodo?.id],
+    queryFn: () => permanenciaApi.getOrdenReinscripcion(periodo!.id),
+    enabled: !!periodo?.id,
+  })
+
+  const ordenAlumno = (ordenesReinscripcion as OrdenReinscripcion[]).find(
+    o => o.semestre === user?.semestre
+  )
+
   // Adeudos
   const { data: adeudos = [] } = useQuery({
     queryKey: ['adeudos', alumnoId],
@@ -100,6 +111,7 @@ export default function TramitesAlumnoPage() {
     enabled: !!alumnoId,
   })
 
+  const [bajaMotivoEnum, setBajaMotivoEnum] = useState('')
   const [bajaMotivo, setBajaMotivo] = useState('')
   const [bajaSemestres, setBajaSemestres] = useState('')
 
@@ -107,6 +119,7 @@ export default function TramitesAlumnoPage() {
     mutationFn: () => permanenciaApi.solicitarBajaTemporal({
       periodo_id:                 periodo!.id,
       fecha_solicitud:            new Date().toISOString().split('T')[0],
+      motivo_enum:                bajaMotivoEnum,
       motivo_texto:               bajaMotivo || undefined,
       numero_semestres_cursados:  bajaSemestres ? parseInt(bajaSemestres) : undefined,
     }),
@@ -168,6 +181,16 @@ export default function TramitesAlumnoPage() {
               <p className="text-xs text-amber-700">
                 No puedes solicitar reinscripción hasta entregar tu certificado de bachillerato en Control Escolar
                 (TecNM-AC-PO-001-05). Una vez entregado, el personal actualizará tu expediente.
+              </p>
+            </div>
+          )}
+
+          {ordenAlumno && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4">
+              <p className="text-sm font-semibold text-blue-800 mb-1">Ventana de reinscripción</p>
+              <p className="text-xs text-blue-700">
+                Del <span className="font-medium">{new Date(ordenAlumno.fecha_inicio_reinscripcion + 'T12:00:00').toLocaleDateString('es-MX')}</span>
+                {' '}al <span className="font-medium">{new Date(ordenAlumno.fecha_fin_reinscripcion + 'T12:00:00').toLocaleDateString('es-MX')}</span>
               </p>
             </div>
           )}
@@ -277,7 +300,24 @@ export default function TramitesAlumnoPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Motivo (opcional)</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Motivo</label>
+                <select
+                  value={bajaMotivoEnum}
+                  onChange={e => setBajaMotivoEnum(e.target.value)}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+                >
+                  <option value="">Seleccionar motivo…</option>
+                  <option value="economico">Económico</option>
+                  <option value="salud">Salud</option>
+                  <option value="trabajo">Trabajo</option>
+                  <option value="familiar">Familiar</option>
+                  <option value="cambio_carrera">Cambio de carrera</option>
+                  <option value="cambio_institucion">Cambio de institución</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Descripción adicional (opcional)</label>
                 <textarea
                   rows={3}
                   value={bajaMotivo}
@@ -297,7 +337,7 @@ export default function TramitesAlumnoPage() {
                 </div>
               )}
               <button
-                disabled={!periodo || mutBaja.isPending || mutBaja.isSuccess}
+                disabled={!periodo || !bajaMotivoEnum || mutBaja.isPending || mutBaja.isSuccess}
                 onClick={() => mutBaja.mutate()}
                 className="w-full py-2.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
                 style={{ backgroundColor: 'var(--color-primario)' }}

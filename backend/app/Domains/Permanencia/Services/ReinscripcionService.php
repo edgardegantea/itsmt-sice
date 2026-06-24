@@ -6,9 +6,11 @@ use App\Domains\Academico\Models\Alumno;
 use App\Domains\Permanencia\Models\Adeudo;
 use App\Domains\Permanencia\Models\OrdenReinscripcion;
 use App\Domains\Permanencia\Models\Reinscripcion;
+use App\Mail\ReinscripcionEstatusMail;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class ReinscripcionService
 {
@@ -77,6 +79,8 @@ class ReinscripcionService
 
     public function actualizarEstatus(Reinscripcion $reinscripcion, string $estatus, ?string $observaciones, User $aprobadoPor): Reinscripcion
     {
+        $estatusAnterior = $reinscripcion->estatus;
+
         $reinscripcion->update([
             'estatus'       => $estatus,
             'observaciones' => $observaciones,
@@ -84,8 +88,15 @@ class ReinscripcionService
             'aprobado_en'   => now(),
         ]);
 
-        if ($estatus === 'aprobada') {
+        if ($estatus === 'aprobada' && $estatusAnterior !== 'aprobada') {
             $reinscripcion->alumno->update(['semestre_actual' => $reinscripcion->alumno->semestre_actual + 1]);
+        }
+
+        // Notificar al alumno sobre el resultado (S2-07)
+        $emailAlumno = $reinscripcion->alumno?->user?->email;
+        if ($emailAlumno && in_array($estatus, ['aprobada', 'rechazada'])) {
+            $reinscripcion->load(['alumno.user', 'periodo']);
+            Mail::to($emailAlumno)->queue(new ReinscripcionEstatusMail($reinscripcion));
         }
 
         return $reinscripcion->fresh(['alumno', 'periodo']);

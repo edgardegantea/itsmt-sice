@@ -141,6 +141,8 @@ class Sprint2Test extends TestCase
 
     public function test_admin_aprueba_reinscripcion(): void
     {
+        Mail::fake();
+
         $reinscripcion = Reinscripcion::create([
             'alumno_id'  => $this->alumno->id,
             'periodo_id' => $this->periodo->id,
@@ -155,10 +157,16 @@ class Sprint2Test extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.estatus', 'aprobada');
+
+        Mail::assertQueued(\App\Mail\ReinscripcionEstatusMail::class, fn ($m) =>
+            $m->hasTo($this->userAlumno->email)
+        );
     }
 
     public function test_admin_rechaza_reinscripcion_con_observacion(): void
     {
+        Mail::fake();
+
         $reinscripcion = Reinscripcion::create([
             'alumno_id'  => $this->alumno->id,
             'periodo_id' => $this->periodo->id,
@@ -173,6 +181,10 @@ class Sprint2Test extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.estatus', 'rechazada');
+
+        Mail::assertQueued(\App\Mail\ReinscripcionEstatusMail::class, fn ($m) =>
+            $m->hasTo($this->userAlumno->email)
+        );
     }
 
     public function test_admin_registra_resello_de_credencial(): void
@@ -220,10 +232,13 @@ class Sprint2Test extends TestCase
 
     public function test_alumno_solicita_baja_temporal_dentro_de_plazo(): void
     {
+        Mail::fake();
+
         $response = $this->actingAs($this->userAlumno, 'sanctum')
             ->postJson('/api/bajas/solicitar', [
                 'periodo_id'      => $this->periodo->id,
                 'fecha_solicitud' => '2026-09-01',
+                'motivo_enum'     => 'economico',
                 'motivo_texto'    => 'Motivo personal.',
             ]);
 
@@ -237,6 +252,7 @@ class Sprint2Test extends TestCase
             ->postJson('/api/bajas/solicitar', [
                 'periodo_id'      => $this->periodo->id,
                 'fecha_solicitud' => '2026-10-01', // después del límite (2026-09-12)
+                'motivo_enum'     => 'economico',
             ]);
 
         $response->assertStatus(422);
@@ -386,8 +402,8 @@ class Sprint2Test extends TestCase
                 'periodo_id'                  => $this->periodo->id,
                 'carrera_id'                  => $this->carrera->id,
                 'semestre'                    => 3,
-                'fecha_inicio_reinscripcion'  => '2026-07-20',
-                'fecha_fin_reinscripcion'     => '2026-08-05',
+                'fecha_inicio_reinscripcion'  => now()->addDays(10)->toDateString(),
+                'fecha_fin_reinscripcion'     => now()->addDays(20)->toDateString(),
             ]);
 
         $response->assertStatus(201)
@@ -520,6 +536,7 @@ class Sprint2Test extends TestCase
             ->postJson('/api/bajas/solicitar', [
                 'periodo_id'      => $this->periodo->id,
                 'fecha_solicitud' => '2026-09-01',
+                'motivo_enum'     => 'salud',
             ])
             ->assertStatus(201);
 
@@ -566,5 +583,106 @@ class Sprint2Test extends TestCase
             ->postJson('/api/constancias', ['tipo' => 'estudios'])
             ->assertStatus(422)
             ->assertJsonPath('message', 'Solo los alumnos con estatus activo pueden solicitar constancias.');
+    }
+
+    public function test_admin_no_puede_solicitar_reinscripcion(): void
+    {
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/reinscripciones', ['periodo_id' => $this->periodo->id])
+            ->assertStatus(403);
+    }
+
+    public function test_constancia_emitida_tiene_url_pdf(): void
+    {
+        $constancia = Constancia::create([
+            'alumno_id'      => $this->alumno->id,
+            'tipo'           => 'estudios',
+            'folio_unico'    => 'CONST-URL-TEST',
+            'estatus'        => 'solicitada',
+            'solicitada_por' => $this->userAlumno->id,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/constancias/{$constancia->id}/emitir")
+            ->assertStatus(200)
+            ->assertJsonPath('data.estatus', 'emitida')
+            ->assertJsonPath('data.url_pdf', "/api/constancias/{$constancia->id}/pdf");
+    }
+
+    public function test_semestre_no_se_incrementa_si_ya_estaba_aprobada(): void
+    {
+        $reinscripcion = \App\Domains\Permanencia\Models\Reinscripcion::create([
+            'alumno_id'  => $this->alumno->id,
+            'periodo_id' => $this->periodo->id,
+            'estatus'    => 'aprobada',
+            'aprobado_por' => $this->admin->id,
+            'aprobado_en'  => now(),
+        ]);
+
+        $semestre_antes = $this->alumno->fresh()->semestre_actual;
+
+        // Segunda aprobación no debe incrementar el semestre
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/reinscripciones/{$reinscripcion->id}/estatus", [
+                'estatus' => 'aprobada',
+            ])
+            ->assertStatus(200);
+
+        $this->assertEquals($semestre_antes, $this->alumno->fresh()->semestre_actual);
+    }
+
+    public function test_alumno_no_puede_usar_endpoint_admin_de_bajas(): void
+    {
+        // El alumno debe usar /api/bajas/mias — el endpoint admin /api/alumnos/{id}/bajas es solo para CE
+        $this->actingAs($this->userAlumno, 'sanctum')
+            ->getJson("/api/alumnos/{$this->alumno->id}/bajas")
+            ->assertStatus(403);
+    }
+
+    // ── Tests de cobertura de reglas de negocio ────────────────────────────────
+
+    public function test_rechazo_aspirante_sin_motivo_retorna_422(): void
+    {
+        $aspirante = Aspirante::create([
+            'nombres'               => 'Luis',
+            'apellido_paterno'      => 'García',
+            'curp'                  => 'GARL000101HDFRZS08',
+            'fecha_nacimiento'      => '2000-01-01',
+            'sexo'                  => 'masculino',
+            'municipio_procedencia' => 'Martínez de la Torre',
+            'escuela_bachillerato'  => 'CBTis 1',
+            'promedio_bachillerato' => 9.0,
+            'turno_preferido'       => 'matutino',
+            'email'                 => 'luis.garcia.test@example.com',
+            'carrera_id'            => $this->carrera->id,
+            'periodo_id'            => $this->periodo->id,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/aspirantes/{$aspirante->id}/estatus", [
+                'estatus' => 'rechazado',
+                // motivo_rechazo omitido — debe retornar 422
+            ])
+            ->assertStatus(422);
+    }
+
+    public function test_baja_sin_motivo_enum_retorna_422(): void
+    {
+        $this->actingAs($this->userAlumno, 'sanctum')
+            ->postJson('/api/bajas/solicitar', [
+                'periodo_id'      => $this->periodo->id,
+                'fecha_solicitud' => '2026-09-01',
+                // motivo_enum omitido
+            ])
+            ->assertStatus(422);
+    }
+
+    public function test_alumno_accede_propio_expediente_con_autorizacion_nadie(): void
+    {
+        $this->alumno->update(['autorizacion_consulta_expediente' => 'nadie']);
+
+        $this->actingAs($this->userAlumno, 'sanctum')
+            ->getJson("/api/alumnos/{$this->alumno->id}")
+            ->assertStatus(200);
     }
 }

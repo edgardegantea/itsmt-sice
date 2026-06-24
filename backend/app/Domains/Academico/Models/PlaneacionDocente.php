@@ -18,13 +18,14 @@ class PlaneacionDocente extends Model
         'carga_academica_id', 'docente_id', 'periodo_id', 'archivo_url',
         'estatus', 'caracterizacion', 'intencion_didactica', 'competencias',
         'fuentes_informacion', 'apoyos_didacticos', 'calendarizacion',
-        'fecha_entrega', 'observaciones_revision', 'revisado_por', 'revisado_en',
+        'fecha_entrega', 'entregada_en', 'observaciones_revision', 'revisado_por', 'revisado_en',
     ];
 
     protected $casts = [
         'competencias'    => 'array',
         'calendarizacion' => 'array',
         'fecha_entrega'   => 'date',
+        'entregada_en'    => 'datetime',
         'revisado_en'     => 'datetime',
     ];
 

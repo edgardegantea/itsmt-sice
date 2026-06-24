@@ -65,6 +65,7 @@ return new class extends Migration
             $table->text('apoyos_didacticos')->nullable();
             $table->json('calendarizacion')->nullable();     // 16 semanas: {semana, tp, tr, sd, tipo}
             $table->date('fecha_entrega')->nullable();       // ≥3 días hábiles antes del inicio (PO-003 §3.4)
+            $table->timestamp('entregada_en')->nullable();  // momento exacto en que el docente entregó
             $table->text('observaciones_revision')->nullable();
             $table->foreignUuid('revisado_por')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('revisado_en')->nullable();

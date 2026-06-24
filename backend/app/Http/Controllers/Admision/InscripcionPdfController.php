@@ -178,6 +178,8 @@ class InscripcionPdfController extends Controller
         $html = view('pdfs.carta_compromiso_docs', array_merge(compact('inscripcion', 'cfg'), $this->firmantes()))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
+        $inscripcion->update(['carta_compromiso_docs_generada' => true]);
+
         return response($pdf, 200, $this->headers("carta-compromiso-docs-{$inscripcion->numero_control}.pdf"));
     }
 
@@ -241,7 +243,19 @@ class InscripcionPdfController extends Controller
             ->where('periodo_id', $periodo->id)
             ->get();
 
-        $html = view('pdfs.carga_academica', compact('alumno', 'periodo', 'cargas', 'cfg'))->render();
+        // Materias en modalidad repetición (alumno ya cursó la materia antes)
+        $materiasAntes = CargaAcademica::where('periodo_id', '!=', $periodo->id)
+            ->whereIn('grupo_id', \App\Domains\Academico\Models\Grupo::whereHas(
+                'alumnos', fn($q) => $q->where('alumnos.id', $alumno->id)
+            )->pluck('id'))
+            ->pluck('materia_id')
+            ->unique();
+        $repeticion = $cargas->pluck('materia_id')
+            ->intersect($materiasAntes)
+            ->flip()
+            ->toArray(); // keyed by materia_id for O(1) lookup in blade
+
+        $html = view('pdfs.carga_academica', compact('alumno', 'periodo', 'cargas', 'cfg', 'repeticion'))->render();
         $pdf  = $this->gotenberg->htmlToPdf($html);
 
         return response($pdf, 200, $this->headers("carga-academica-{$alumno->numero_control}.pdf"));

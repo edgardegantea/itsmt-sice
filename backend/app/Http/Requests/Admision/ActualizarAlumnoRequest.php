@@ -9,7 +9,7 @@ class ActualizarAlumnoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->hasRole(['admin', 'superadmin', 'personal_administrativo']);
+        return $this->user()->hasAnyRole(['admin', 'superadmin', 'personal_administrativo']);
     }
 
     public function rules(): array

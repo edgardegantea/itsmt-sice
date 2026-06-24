@@ -41,13 +41,13 @@ class MateriaController extends Controller
         $data = $request->validate([
             'carrera_id'           => ['required', 'uuid', 'exists:carreras,id'],
             'clave'                => ['required', 'string', 'max:20', 'unique:materias,clave'],
-            'clave_oficial_tecnm'  => ['nullable', 'string', 'max:20'],
+            'clave_oficial_tecnm'  => ['required', 'string', 'max:20'],
             'nombre'               => ['required', 'string', 'max:150'],
-            'semestre'        => ['required', 'integer', 'min:1', 'max:12'],
+            'semestre'        => ['required', 'integer', 'min:1', 'max:10'],
             'creditos'        => ['required', 'integer', 'min:0'],
             'horas_teoria'    => ['required', 'integer', 'min:0'],
             'horas_practica'  => ['required', 'integer', 'min:0'],
-            'tipo'            => ['required', Rule::in(['obligatoria', 'optativa', 'taller', 'lab'])],
+            'tipo'            => ['required', Rule::in(['obligatoria', 'optativa'])],
         ]);
 
         $this->verificarCarrera($request, $data['carrera_id']);
@@ -64,13 +64,13 @@ class MateriaController extends Controller
         $data = $request->validate([
             'carrera_id'          => ['sometimes', 'uuid', 'exists:carreras,id'],
             'clave'               => ['sometimes', 'string', 'max:20', Rule::unique('materias', 'clave')->ignore($materia->id)],
-            'clave_oficial_tecnm' => ['nullable', 'string', 'max:20'],
+            'clave_oficial_tecnm' => ['sometimes', 'string', 'max:20'],
             'nombre'              => ['sometimes', 'string', 'max:150'],
-            'semestre'       => ['sometimes', 'integer', 'min:1', 'max:12'],
+            'semestre'       => ['sometimes', 'integer', 'min:1', 'max:10'],
             'creditos'       => ['sometimes', 'integer', 'min:0'],
             'horas_teoria'   => ['sometimes', 'integer', 'min:0'],
             'horas_practica' => ['sometimes', 'integer', 'min:0'],
-            'tipo'           => ['sometimes', Rule::in(['obligatoria', 'optativa', 'taller', 'lab'])],
+            'tipo'           => ['sometimes', Rule::in(['obligatoria', 'optativa'])],
             'activa'         => ['sometimes', 'boolean'],
         ]);
 
@@ -82,6 +82,10 @@ class MateriaController extends Controller
     public function destroy(Request $request, Materia $materia): JsonResponse
     {
         $this->verificarCarrera($request, $materia->carrera_id);
+
+        if ($materia->cargas()->exists()) {
+            return ApiResponse::error('No se puede eliminar: la materia tiene cargas académicas asignadas.', 422);
+        }
 
         $materia->delete();
 

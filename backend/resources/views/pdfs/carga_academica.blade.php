@@ -87,6 +87,12 @@
     <tr>
       <td class="lbl">Periodo</td>
       <td>{{ $periodo->nombre }}</td>
+      <td class="lbl">Plan de estudios</td>
+      <td>{{ $alumno->carrera?->plan_estudios ?? '—' }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Especialidad</td>
+      <td>{{ $alumno->especialidad ?? '—' }}</td>
       <td class="lbl">Tipo ingreso</td>
       <td>{{ ucfirst($alumno->tipo_ingreso ?? 'Nuevo ingreso') }}</td>
     </tr>
@@ -100,26 +106,30 @@
     <table class="cargas">
       <thead>
         <tr>
-          <th style="width:30%">Asignatura</th>
-          <th style="width:18%">Docente</th>
-          <th style="width:10%">Grupo</th>
-          <th style="width:10%">Aula</th>
-          <th style="width:8%">Hrs/sem</th>
-          <th style="width:24%">Horario</th>
+          <th style="width:8%">Clave TecNM</th>
+          <th style="width:26%">Asignatura</th>
+          <th style="width:14%">Docente</th>
+          <th style="width:8%">Grupo</th>
+          <th style="width:8%">Aula</th>
+          <th style="width:5%">Créd.</th>
+          <th style="width:6%">Hrs/sem</th>
+          <th style="width:25%">Horario</th>
         </tr>
       </thead>
       <tbody>
         @foreach($cargas as $c)
         <tr>
-          <td>{{ $c->materia?->nombre ?? '—' }}</td>
+          <td style="font-family:monospace">{{ $c->materia?->clave_oficial_tecnm ?? $c->materia?->clave ?? '—' }}</td>
+          <td>{{ $c->materia?->nombre ?? '—' }}{{ isset($repeticion[$c->materia_id]) ? ' *' : '' }}</td>
           <td>{{ $c->docente?->name ?? '—' }}</td>
-          <td>{{ $c->grupo?->nombre ?? '—' }}</td>
+          <td>{{ $c->grupo?->clave ?? '—' }}</td>
           <td>{{ $c->aula?->nombre ?? '—' }}</td>
+          <td style="text-align:center">{{ $c->materia?->creditos ?? '—' }}</td>
           <td style="text-align:center">{{ $c->horas_semana ?? '—' }}</td>
           <td>
             @forelse($c->horarios as $h)
               <span class="horario-chip">
-                {{ mb_strtoupper(mb_substr($h->dia ?? '', 0, 3, 'UTF-8'), 'UTF-8') }} {{ $h->hora_inicio ? \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_inicio)->format('H:i') : '' }}–{{ $h->hora_fin ? \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_fin)->format('H:i') : '' }}
+                {{ $DIA_LABEL[$h->dia_semana] ?? mb_strtoupper(mb_substr($h->dia_semana ?? '', 0, 3, 'UTF-8'), 'UTF-8') }} {{ $h->hora_inicio ? \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_inicio)->format('H:i') : '' }}–{{ $h->hora_fin ? \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_fin)->format('H:i') : '' }}
               </span>
             @empty
               <span style="color:#aaa">—</span>
@@ -131,19 +141,22 @@
     </table>
     <p style="font-size:7.5pt; color:#666; text-align:right; margin-top:4px;">
       Total: {{ $cargas->count() }} asignatura(s) ·
+      {{ $cargas->sum(fn($c) => $c->materia?->creditos ?? 0) }} créditos ·
       {{ $cargas->sum('horas_semana') }} hrs/sem
     </p>
+    <p style="font-size:7pt; color:#888; margin-top:3px;">* Asignatura en modalidad repetición.</p>
   @endif
 
   <table class="firmas">
     <tr>
       <td>
         <div class="firma-linea">{{ $cfg->subdirector_academico ?? '___________________________' }}</div>
-        <div class="firma-cargo">Subdirector(a) Académico(a)</div>
+        <div class="firma-cargo">Dirección Académica</div>
       </td>
       <td>
-        <div class="firma-linea">{{ $cfg->responsable_servicios_escolares ?? '___________________________' }}</div>
-        <div class="firma-cargo">Jefe(a) de Servicios Escolares</div>
+        @php $asp = $alumno->inscripcion?->aspirante; @endphp
+        <div class="firma-linea">{{ $asp ? mb_strtoupper("{$asp->apellido_paterno} {$asp->nombres}", 'UTF-8') : mb_strtoupper($alumno->user?->name ?? '___________________________', 'UTF-8') }}</div>
+        <div class="firma-cargo">Alumno(a) — N° Control {{ $alumno->numero_control }}</div>
       </td>
     </tr>
   </table>

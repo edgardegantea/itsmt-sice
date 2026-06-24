@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Academico;
 
 use App\Domains\Academico\Models\CargaAcademica;
 use App\Domains\Academico\Models\PlaneacionDocente;
+use App\Domains\Academico\Models\Periodo;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class PlaneacionDocenteController extends Controller
 {
@@ -54,7 +58,22 @@ class PlaneacionDocenteController extends Controller
             'fuentes_informacion'   => ['nullable', 'string'],
             'apoyos_didacticos'     => ['nullable', 'string'],
             'calendarizacion'       => ['nullable', 'array'],
-            'fecha_entrega'         => ['nullable', 'date'],
+            'fecha_entrega'         => ['nullable', 'date', function ($attr, $val, $fail) use ($request) {
+                if (! $val) return;
+                $periodo = Periodo::find($request->input('periodo_id'));
+                if (! $periodo) return;
+                $entrega = Carbon::parse($val);
+                $inicio  = Carbon::parse($periodo->fecha_inicio);
+                $dias    = 0;
+                $cursor  = $entrega->copy()->addDay();
+                while ($cursor->lte($inicio)) {
+                    if ($cursor->isWeekday()) $dias++;
+                    $cursor->addDay();
+                }
+                if ($dias < 3) {
+                    $fail('La fecha de entrega debe ser al menos 3 días hábiles antes del inicio del periodo (TecNM PO-003 §3.4).');
+                }
+            }],
         ]);
 
         // Validar que la carga pertenece al docente autenticado
@@ -68,7 +87,11 @@ class PlaneacionDocenteController extends Controller
             array_merge($data, ['docente_id' => $carga->docente_id])
         );
 
-        return ApiResponse::success($planeacion->load(['cargaAcademica.materia', 'periodo']), 'Planeación guardada.', 201);
+        return ApiResponse::success(
+            $planeacion->fresh(['cargaAcademica.materia', 'periodo']),
+            'Planeación guardada.',
+            201
+        );
     }
 
     // POST /api/planeaciones-docentes/{planeacion}/entregar  (docente entrega)
@@ -82,7 +105,17 @@ class PlaneacionDocenteController extends Controller
             return ApiResponse::error('Solo puedes entregar planeaciones en borrador o devueltas.', 422);
         }
 
-        $planeacionDocente->update(['estatus' => 'entregada', 'fecha_entrega' => now()->toDateString()]);
+        $planeacionDocente->update(['estatus' => 'entregada', 'entregada_en' => now()]);
+        $planeacionDocente->load(['cargaAcademica.materia', 'cargaAcademica.grupo.carrera', 'docente', 'periodo']);
+
+        // Notificar al jefe de carrera (TecNM PO-003)
+        $carreraId = $planeacionDocente->cargaAcademica?->grupo?->carrera_id;
+        $jefes = User::role('jefe_carrera')
+            ->when($carreraId, fn($q) => $q->where('carrera_id', $carreraId))
+            ->get();
+        foreach ($jefes as $jefe) {
+            Mail::to($jefe->email)->queue(new \App\Mail\PlaneacionDocenteEntregadaMail($planeacionDocente));
+        }
 
         return ApiResponse::success($planeacionDocente, 'Planeación entregada.');
     }
@@ -90,10 +123,27 @@ class PlaneacionDocenteController extends Controller
     // PATCH /api/planeaciones-docentes/{planeacion}/estatus  (jefe/admin revisa)
     public function cambiarEstatus(Request $request, PlaneacionDocente $planeacionDocente): JsonResponse
     {
+        if (! $request->user()->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', 'personal_administrativo'])) {
+            return ApiResponse::error('No tienes permiso para revisar planeaciones.', 403);
+        }
+
         $data = $request->validate([
             'estatus'                => ['required', 'in:revisada,liberada,devuelta'],
             'observaciones_revision' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        // Transiciones permitidas: solo planeaciones entregadas pueden ser revisadas
+        $transicionesPermitidas = [
+            'entregada' => ['revisada', 'liberada', 'devuelta'],
+            'revisada'  => ['liberada', 'devuelta'],
+        ];
+        $permitidas = $transicionesPermitidas[$planeacionDocente->estatus] ?? [];
+        if (! in_array($data['estatus'], $permitidas)) {
+            return ApiResponse::error(
+                "Transición no permitida: {$planeacionDocente->estatus} → {$data['estatus']}. La planeación debe estar entregada para poder revisarse.",
+                422
+            );
+        }
 
         $planeacionDocente->update([
             'estatus'                => $data['estatus'],

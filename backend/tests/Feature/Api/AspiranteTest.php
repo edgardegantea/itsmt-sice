@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Api;
 
-use App\Mail\ConfirmacionSolicitudMail;
+use App\Mail\ConfirmacionAspirante;
 use App\Domains\Admision\Models\Aspirante;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use App\Domains\Academico\Models\Carrera;
 use App\Domains\Academico\Models\Periodo;
 use App\Models\User;
@@ -60,9 +62,14 @@ class AspiranteTest extends TestCase
             'escuela_bachillerato'  => 'CBTis 76',
             'promedio_bachillerato' => 8.5,
             'turno_preferido'       => 'matutino',
-            'email'                 => 'laura@test.com',
-            'carrera_id'            => $this->carrera->id,
-            'periodo_id'            => $this->periodo->id,
+            'area_bachillerato'       => 'Físico-Matemático',
+            'estado_civil'            => 'soltero',
+            'medio_enterado'          => 'redes sociales',
+            'tiene_equipo_computo'    => true,
+            'constancia_bachillerato' => UploadedFile::fake()->create('constancia.pdf', 100, 'application/pdf'),
+            'email'                   => 'laura@test.com',
+            'carrera_id'              => $this->carrera->id,
+            'periodo_id'              => $this->periodo->id,
         ], $override);
     }
 
@@ -83,11 +90,13 @@ class AspiranteTest extends TestCase
     // S1-02 — correo de confirmación
     public function test_registro_envia_correo_de_confirmacion(): void
     {
+        Storage::fake('local');
         Mail::fake();
 
-        $this->postJson('/api/aspirantes', $this->datosAspirante())->assertStatus(201);
+        $this->post('/api/aspirantes', $this->datosAspirante(), ['Accept' => 'application/json'])
+            ->assertStatus(201);
 
-        Mail::assertQueued(ConfirmacionSolicitudMail::class, function ($mail) {
+        Mail::assertSent(ConfirmacionAspirante::class, function ($mail) {
             return $mail->hasTo('laura@test.com');
         });
     }
@@ -95,14 +104,16 @@ class AspiranteTest extends TestCase
     // S1-01 — happy path
     public function test_aspirante_puede_registrarse(): void
     {
+        Storage::fake('local');
         Mail::fake();
 
-        $response = $this->postJson('/api/aspirantes', $this->datosAspirante([
+        $response = $this->post('/api/aspirantes', $this->datosAspirante([
             'nombres'          => 'Juan',
             'apellido_paterno' => 'Pérez',
             'curp'             => 'PEPJ990101HVZRRA09',
             'email'            => 'juan@test.com',
-        ]));
+            'constancia_bachillerato' => UploadedFile::fake()->create('constancia.pdf', 100, 'application/pdf'),
+        ]), ['Accept' => 'application/json']);
 
         $response->assertStatus(201)
             ->assertJsonPath('data.estatus', 'pendiente')
@@ -117,6 +128,7 @@ class AspiranteTest extends TestCase
 
         $datos = $this->datosAspirante();
         unset($datos['email']);
+        unset($datos['constancia_bachillerato']);
 
         $response = $this->postJson('/api/aspirantes', $datos);
         $response->assertStatus(422);
@@ -195,6 +207,161 @@ class AspiranteTest extends TestCase
             'id'      => $aspirante->id,
             'estatus' => 'inscrito',
         ]);
+    }
+
+    // S1-04 — número de control tiene formato TecNM [AA][NNN][####]
+    public function test_numero_control_tiene_formato_tecnm(): void
+    {
+        $aspirante = Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'NCFM000101HVZFMX01']), [
+            'nombres' => 'Carlos', 'apellido_paterno' => 'Fuentes',
+            'email' => 'carlos.nc@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id, 'estatus' => 'aceptado',
+        ]));
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/inscripciones', ['aspirante_id' => $aspirante->id])
+            ->assertStatus(201);
+
+        $nc = $response->json('data.numero_control');
+        // Formato TecNM: [AA=2 dígitos año][NNN=3 dígitos código carrera][####=4 dígitos secuencia]
+        $this->assertMatchesRegularExpression('/^\d{2}\d{3}\d{4}$/', $nc,
+            "Número de control '{$nc}' no cumple el formato TecNM [AA][NNN][####]");
+    }
+
+    // S1-10 — alumno sin certificado_bachillerato queda con bandera activada
+    public function test_inscripcion_sin_certificado_activa_bandera_pendiente(): void
+    {
+        $aspirante = Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'BOCM000101HVZBCX02']), [
+            'nombres' => 'Mario', 'apellido_paterno' => 'Boca',
+            'email' => 'mario.boca@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id, 'estatus' => 'aceptado',
+            'documentos' => [], // sin certificado_bachillerato
+        ]));
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/inscripciones', ['aspirante_id' => $aspirante->id])
+            ->assertStatus(201);
+
+        $this->assertDatabaseHas('alumnos', [
+            'numero_control'                   => Aspirante::find($aspirante->id)->inscripcion->numero_control,
+            'pendiente_certificado_bachillerato' => true,
+        ]);
+    }
+
+    // S1-09 — autorizacion_consulta_expediente se guarda y aplica
+    public function test_actualizacion_autorizacion_expediente(): void
+    {
+        $aspirante = Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'AUTX000101HVZATX03']), [
+            'nombres' => 'Ana', 'apellido_paterno' => 'Autor',
+            'email' => 'ana.autor@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id, 'estatus' => 'aceptado',
+        ]));
+
+        $inscripcion = $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/inscripciones', ['aspirante_id' => $aspirante->id])
+            ->assertStatus(201);
+
+        $alumno = \App\Domains\Academico\Models\Alumno::where('numero_control', $inscripcion->json('data.numero_control'))->first();
+
+        // Cambiar a 'padre'
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/alumnos/{$alumno->id}/autorizacion-expediente", [
+                'autorizacion_consulta_expediente' => 'padre',
+            ])
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('alumnos', [
+            'id'                               => $alumno->id,
+            'autorizacion_consulta_expediente' => 'padre',
+        ]);
+    }
+
+    // S1-09 — si autorizacion='nadie', jefe_carrera no puede ver el expediente
+    public function test_jefe_carrera_bloqueado_si_autorizacion_nadie(): void
+    {
+        Role::firstOrCreate(['name' => 'jefe_carrera', 'guard_name' => 'web']);
+
+        $aspirante = Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'NADX000101HVZNDX04']), [
+            'nombres' => 'Juana', 'apellido_paterno' => 'Nadie',
+            'email' => 'juana.nadie@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id, 'estatus' => 'aceptado',
+        ]));
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/inscripciones', ['aspirante_id' => $aspirante->id]);
+
+        $alumno = \App\Domains\Academico\Models\Alumno::where('email', 'juana.nadie@alumnos.itsmt.edu.mx')
+            ->orWhereHas('inscripcion.aspirante', fn($q) => $q->where('email', 'juana.nadie@test.com'))
+            ->first();
+        $alumno->update(['autorizacion_consulta_expediente' => 'nadie']);
+
+        $jefe = User::factory()->create(['carrera_id' => $this->carrera->id]);
+        $jefe->assignRole('jefe_carrera');
+
+        $this->actingAs($jefe, 'sanctum')
+            ->getJson("/api/alumnos/{$alumno->id}")
+            ->assertStatus(403);
+    }
+
+    // S1-01 — folio_exani y puntaje_exani se persisten en BD
+    public function test_registro_persiste_datos_exani(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+
+        $this->post('/api/aspirantes', $this->datosAspirante([
+            'curp'                     => 'EXNM990101HVZRNA10',
+            'email'                    => 'exani@test.com',
+            'folio_exani'              => 'EXANI-2026-001234',
+            'puntaje_exani'            => 920.5,
+            'folio_preinscripcion_tecnm' => 'PRE-2026-9876',
+        ]), ['Accept' => 'application/json'])->assertStatus(201);
+
+        $this->assertDatabaseHas('aspirantes', [
+            'email'                    => 'exani@test.com',
+            'folio_exani'              => 'EXANI-2026-001234',
+            'folio_preinscripcion_tecnm' => 'PRE-2026-9876',
+        ]);
+    }
+
+    // S1-01 — constancia_bachillerato subida se refleja en documentos JSON
+    public function test_constancia_bachillerato_se_registra_en_documentos(): void
+    {
+        Storage::fake('public');
+        Mail::fake();
+
+        $this->post('/api/aspirantes', $this->datosAspirante([
+            'curp'  => 'DOCM990101HVZDCX11',
+            'email' => 'docs@test.com',
+            'constancia_bachillerato' => UploadedFile::fake()->create('cert.pdf', 100, 'application/pdf'),
+        ]), ['Accept' => 'application/json'])->assertStatus(201);
+
+        $aspirante = \App\Domains\Admision\Models\Aspirante::where('email', 'docs@test.com')->first();
+        $this->assertNotEmpty($aspirante->documentos['certificado_bachillerato'] ?? null,
+            'documentos.certificado_bachillerato debe llenarse al subir el archivo');
+    }
+
+    // S1-03 — filtro por puntaje_min devuelve solo aspirantes con score >= umbral
+    public function test_filtro_puntaje_min_aspirantes(): void
+    {
+        \App\Domains\Admision\Models\Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'ALTA000101HVZALX12']), [
+            'nombres' => 'Alta', 'apellido_paterno' => 'Score',
+            'email' => 'alta@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id, 'puntaje_exani' => 950,
+        ]));
+        \App\Domains\Admision\Models\Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'BAJA000101HVZBAX13']), [
+            'nombres' => 'Baja', 'apellido_paterno' => 'Score',
+            'email' => 'baja@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id, 'puntaje_exani' => 600,
+        ]));
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/aspirantes?puntaje_min=900')
+            ->assertStatus(200);
+
+        $emails = collect($response->json('data.data'))->pluck('email');
+        $this->assertTrue($emails->contains('alta@test.com'));
+        $this->assertFalse($emails->contains('baja@test.com'));
     }
 
     // S1-04 — no se puede inscribir si estatus != aceptado

@@ -16,6 +16,14 @@ use App\Domains\Permanencia\Policies\ReinscripcionPolicy;
 use App\Domains\Permanencia\Policies\ConstanciaPolicy;
 use App\Domains\Permanencia\Policies\BajaPolicy;
 use App\Domains\Permanencia\Policies\OrdenReinscripcionPolicy;
+use App\Domains\Academico\Models\Calificacion;
+use App\Domains\Academico\Models\CierreDeCurso;
+use App\Domains\Academico\Models\ActaCalificaciones;
+use App\Domains\Academico\Models\ConfiguracionEvaluacion;
+use App\Domains\Academico\Policies\CalificacionPolicy;
+use App\Domains\Academico\Policies\CierreDeCursoPolicy;
+use App\Domains\Academico\Policies\ActaCalificacionesPolicy;
+use App\Domains\Academico\Policies\ConfiguracionEvaluacionPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -43,6 +51,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Constancia::class, ConstanciaPolicy::class);
         Gate::policy(Baja::class, BajaPolicy::class);
         Gate::policy(OrdenReinscripcion::class, OrdenReinscripcionPolicy::class);
+        Gate::policy(Calificacion::class, CalificacionPolicy::class);
+        Gate::policy(CierreDeCurso::class, CierreDeCursoPolicy::class);
+        Gate::policy(ActaCalificaciones::class, ActaCalificacionesPolicy::class);
+        Gate::policy(ConfiguracionEvaluacion::class, ConfiguracionEvaluacionPolicy::class);
 
         // Apunta el enlace de reset al frontend
         ResetPassword::createUrlUsing(function (object $notifiable, string $token): string {

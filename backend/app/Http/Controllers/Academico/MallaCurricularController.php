@@ -32,7 +32,7 @@ class MallaCurricularController extends Controller
         $data = $request->validate([
             'carrera_id'    => ['required', 'uuid', 'exists:carreras,id'],
             'materia_id'    => ['required', 'uuid', 'exists:materias,id'],
-            'semestre'      => ['required', 'integer', 'min:1', 'max:9'],
+            'semestre'      => ['required', 'integer', 'min:1', 'max:10'],
             'es_especialidad' => ['sometimes', 'boolean'],
         ]);
 
@@ -58,7 +58,7 @@ class MallaCurricularController extends Controller
         }
 
         $data = $request->validate([
-            'semestre'       => ['sometimes', 'integer', 'min:1', 'max:9'],
+            'semestre'       => ['sometimes', 'integer', 'min:1', 'max:10'],
             'es_especialidad'=> ['sometimes', 'boolean'],
         ]);
 

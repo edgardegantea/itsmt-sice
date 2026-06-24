@@ -78,8 +78,11 @@ class BajaController extends Controller
 
         $alumno = Alumno::where('user_id', $request->user()->id)->firstOrFail();
 
+        $motivosEnum = ['economico', 'salud', 'trabajo', 'familiar', 'cambio_carrera', 'cambio_institucion', 'otro'];
+
         $data = $request->validate([
             'periodo_id'                => ['required', 'uuid', 'exists:periodos,id'],
+            'motivo_enum'               => ['required', 'in:' . implode(',', $motivosEnum)],
             'motivo_texto'              => ['nullable', 'string', 'max:500'],
             'fecha_solicitud'           => ['required', 'date'],
             'numero_semestres_cursados' => ['nullable', 'integer', 'min:0'],
@@ -97,6 +100,8 @@ class BajaController extends Controller
     // GET /api/alumnos/{alumno}/bajas
     public function porAlumno(Alumno $alumno): JsonResponse
     {
+        $this->authorize('viewAny', Baja::class);
+
         $bajas = Baja::with(['periodo', 'registradaPor'])
             ->where('alumno_id', $alumno->id)
             ->latest()
@@ -108,6 +113,8 @@ class BajaController extends Controller
     // GET /api/bajas/mias  (alumno ve sus propias bajas)
     public function mias(Request $request): JsonResponse
     {
+        abort_if(! $request->user()->hasRole('alumno'), 403, 'Solo los alumnos pueden acceder a este recurso.');
+
         $alumno = Alumno::where('user_id', $request->user()->id)->firstOrFail();
 
         $bajas = Baja::with(['periodo'])

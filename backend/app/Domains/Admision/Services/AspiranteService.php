@@ -7,6 +7,7 @@ use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -80,14 +81,18 @@ class AspiranteService
         ]);
         $userAlumno->assignRole(Role::findByName('alumno', 'web'));
 
+        $documentos = $aspirante->documentos ?? [];
+        $pendienteCertificado = empty($documentos['certificado_bachillerato']);
+
         Alumno::create([
-            'user_id'            => $userAlumno->id,
-            'inscripcion_id'     => $inscripcion->id,
-            'numero_control'     => $numero_control,
-            'carrera_id'         => $aspirante->carrera_id,
-            'periodo_ingreso_id' => $aspirante->periodo_id,
-            'semestre_actual'    => 1,
-            'estatus'            => 'activo',
+            'user_id'                          => $userAlumno->id,
+            'inscripcion_id'                   => $inscripcion->id,
+            'numero_control'                   => $numero_control,
+            'carrera_id'                       => $aspirante->carrera_id,
+            'periodo_ingreso_id'               => $aspirante->periodo_id,
+            'semestre_actual'                  => 1,
+            'estatus'                          => 'activo',
+            'pendiente_certificado_bachillerato' => $pendienteCertificado,
         ]);
 
         $aspirante->update(['estatus' => 'inscrito']);
@@ -98,13 +103,15 @@ class AspiranteService
     // Formato TecNM [AA][NNN][####]
     private function generarNumeroControl(Aspirante $aspirante): string
     {
-        $anio      = now()->format('y');
-        $codigoIt  = str_pad($aspirante->carrera->codigo_it, 3, '0', STR_PAD_LEFT);
-        $secuencia = str_pad(
-            Inscripcion::whereYear('created_at', now()->year)->count() + 1,
-            4, '0', STR_PAD_LEFT
-        );
+        $anio     = now()->format('y');
+        $anioFull = now()->year;
+        $codigoIt = str_pad($aspirante->carrera->codigo_it, 3, '0', STR_PAD_LEFT);
 
-        return "{$anio}{$codigoIt}{$secuencia}";
+        $secuencia = DB::transaction(function () use ($anioFull) {
+            DB::table('inscripciones')->whereYear('created_at', $anioFull)->lockForUpdate()->count();
+            return DB::table('inscripciones')->whereYear('created_at', $anioFull)->count() + 1;
+        });
+
+        return "{$anio}{$codigoIt}" . str_pad($secuencia, 4, '0', STR_PAD_LEFT);
     }
 }

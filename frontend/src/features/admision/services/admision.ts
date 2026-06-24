@@ -198,6 +198,7 @@ export interface RegistrarAspirantePayload {
 export interface ActualizarEstatusPayload {
   estatus: EstatusAspirante
   observaciones?: string
+  motivo_rechazo?: string
 }
 
 export interface ActualizarAspirantePayload {

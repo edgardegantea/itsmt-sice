@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Constancia extends Model
 {
@@ -50,7 +51,14 @@ class Constancia extends Model
         $prefijos = ['estudios' => 'CE', 'inscripcion' => 'CI', 'calificaciones' => 'CC'];
         $prefijo  = $prefijos[$tipo] ?? 'CX';
         $año      = now()->format('Y');
-        $seq      = static::whereYear('created_at', $año)->where('tipo', $tipo)->count() + 1;
+
+        $seq = DB::transaction(function () use ($año, $tipo) {
+            return DB::table('constancias')
+                ->whereYear('created_at', $año)
+                ->where('tipo', $tipo)
+                ->lockForUpdate()
+                ->count() + 1;
+        });
 
         return sprintf('%s-%s-%05d', $prefijo, $año, $seq);
     }
