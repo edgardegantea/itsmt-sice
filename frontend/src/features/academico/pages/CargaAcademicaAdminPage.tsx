@@ -50,9 +50,9 @@ export default function CargaAcademicaAdminPage() {
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-slate-800">Carga Académica — PDF</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
+        {/* <p className="text-sm text-slate-500 mt-0.5">
           Genera el Formato de Carga Académica (TecNM-AC-PO-001) por alumno.
-        </p>
+        </p> */}
       </div>
 
       {/* Filtros */}
