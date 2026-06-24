@@ -15,6 +15,7 @@ use App\Domains\Institucional\Policies\ConfiguracionPolicy;
 use App\Domains\Permanencia\Policies\ReinscripcionPolicy;
 use App\Domains\Permanencia\Policies\ConstanciaPolicy;
 use App\Domains\Permanencia\Policies\BajaPolicy;
+use App\Domains\Permanencia\Policies\OrdenReinscripcionPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -41,7 +42,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Reinscripcion::class, ReinscripcionPolicy::class);
         Gate::policy(Constancia::class, ConstanciaPolicy::class);
         Gate::policy(Baja::class, BajaPolicy::class);
-        Gate::policy(OrdenReinscripcion::class, ReinscripcionPolicy::class);
+        Gate::policy(OrdenReinscripcion::class, OrdenReinscripcionPolicy::class);
 
         // Apunta el enlace de reset al frontend
         ResetPassword::createUrlUsing(function (object $notifiable, string $token): string {

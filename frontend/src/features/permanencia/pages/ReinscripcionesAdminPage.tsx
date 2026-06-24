@@ -174,7 +174,16 @@ function TabReinscripciones() {
                   </td>
                   <td className="px-4 py-3">
                     {r.resello_registrado
-                      ? <span className="text-xs text-green-700">✓ {r.fecha_resello ? new Date(r.fecha_resello + 'T12:00:00').toLocaleDateString('es-MX') : ''}</span>
+                      ? <span className="flex items-center gap-2">
+                          <span className="text-xs text-green-700">✓ {r.fecha_resello ? new Date(r.fecha_resello + 'T12:00:00').toLocaleDateString('es-MX') : ''}</span>
+                          {r.alumno?.inscripcion_id && (
+                            <a
+                              href={`${import.meta.env.VITE_API_URL ?? ''}/api/inscripciones/${r.alumno.inscripcion_id}/credencial/pdf`}
+                              target="_blank" rel="noreferrer"
+                              className="text-xs text-[#1a3a5c] hover:underline"
+                            >Sticker</a>
+                          )}
+                        </span>
                       : r.estatus === 'aprobada'
                         ? <button onClick={() => mutResello.mutate(r.id)} disabled={mutResello.isPending}
                             className="text-xs text-[#1a3a5c] hover:underline disabled:opacity-50">Registrar</button>
@@ -485,17 +494,24 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
   const { data: periodos = [] } = usePeriodos()
   const [form, setForm] = useState({
     alumno_id: '', periodo_id: '', tipo_baja: 'temporal',
-    motivo_enum: '', motivo_texto: '', fecha_solicitud: '',
-    numero_semestres_cursados: '', reingreso_posible: false,
+    motivo_texto: '', fecha_solicitud: new Date().toISOString().split('T')[0],
+    numero_semestres_cursados: '', reingreso_posible: true,
   })
+  const [busquedaNC, setBusquedaNC] = useState('')
+  const [alumnoNombre, setAlumnoNombre] = useState('')
   const [error, setError] = useState('')
+
+  const { data: alumnosResult = [], isFetching: buscandoAlumno } = useQuery<{ id: string; numero_control: string; user?: { name: string }; carrera?: { nombre: string } }[]>({
+    queryKey: ['alumno-busqueda-baja', busquedaNC],
+    queryFn: () => apiClient.get('/alumnos', { params: { numero_control: busquedaNC } }).then(r => r.data.data?.data ?? r.data.data),
+    enabled: busquedaNC.length >= 3,
+  })
 
   const mut = useMutation({
     mutationFn: () => permanenciaApi.registrarBaja({
       alumno_id: form.alumno_id,
       periodo_id: form.periodo_id,
       tipo_baja: form.tipo_baja as TipoBaja,
-      motivo_enum: form.motivo_enum || undefined,
       motivo_texto: form.motivo_texto || undefined,
       fecha_solicitud: form.fecha_solicitud,
       numero_semestres_cursados: form.numero_semestres_cursados ? parseInt(form.numero_semestres_cursados) : undefined,
@@ -506,23 +522,49 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
   })
 
   const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
-  const f = (k: keyof typeof form, v: string | boolean | number) => setForm(prev => ({ ...prev, [k]: v }))
+  const f = (k: keyof typeof form, v: string | boolean) => setForm(prev => ({ ...prev, [k]: v }))
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 my-8">
         <h3 className="text-base font-semibold text-slate-800">Registrar baja</h3>
 
+        {/* Búsqueda por número de control */}
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-slate-600">Número de control del alumno</label>
+          <input
+            value={busquedaNC}
+            onChange={e => { setBusquedaNC(e.target.value); setAlumnoNombre(''); f('alumno_id', '') }}
+            className={inp}
+            placeholder="Ej. 22200100"
+          />
+          {buscandoAlumno && <p className="text-xs text-slate-400">Buscando…</p>}
+          {alumnosResult.length > 0 && !form.alumno_id && (
+            <ul className="border border-slate-200 rounded-lg divide-y divide-slate-100 bg-white shadow-sm">
+              {alumnosResult.slice(0, 5).map(a => (
+                <li
+                  key={a.id}
+                  onClick={() => { f('alumno_id', a.id); setBusquedaNC(a.numero_control); setAlumnoNombre(a.user?.name ?? '') }}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 transition-colors"
+                >
+                  <span className="font-mono text-slate-700">{a.numero_control}</span>
+                  {' — '}<span className="text-slate-600">{a.user?.name}</span>
+                  {a.carrera && <span className="text-slate-400 text-xs ml-1">({a.carrera.nombre})</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+          {form.alumno_id && (
+            <p className="text-xs text-green-600 font-medium">✓ {alumnoNombre}</p>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-600 mb-1">ID del alumno (UUID)</label>
-            <input value={form.alumno_id} onChange={e => f('alumno_id', e.target.value)} className={inp} placeholder="uuid…" />
-          </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Periodo</label>
             <select value={form.periodo_id} onChange={e => f('periodo_id', e.target.value)} className={inp}>
               <option value="">Seleccionar…</option>
-              {periodos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {periodos.map((p) => <option key={p.id} value={p.id}>{p.nombre}{p.activo ? ' (activo)' : ''}</option>)}
             </select>
           </div>
           <div>
@@ -543,7 +585,7 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
               onChange={e => f('numero_semestres_cursados', e.target.value)} className={inp} placeholder="0" />
           </div>
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-600 mb-1">Motivo (texto libre)</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Motivo</label>
             <textarea rows={2} value={form.motivo_texto} onChange={e => f('motivo_texto', e.target.value)}
               className={inp + ' resize-none'} placeholder="Descripción del motivo…" />
           </div>

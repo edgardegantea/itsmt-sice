@@ -16,7 +16,7 @@ return new class extends Migration
         // ── Mallas curriculares ───────────────────────────────────────────────
         // Permite asignar la misma materia a distintas carreras/semestres
         Schema::create('mallas_curriculares', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('carrera_id')->constrained('carreras')->cascadeOnDelete();
             $table->foreignUuid('materia_id')->constrained('materias')->cascadeOnDelete();
             $table->unsignedTinyInteger('semestre');
@@ -27,7 +27,7 @@ return new class extends Migration
 
         // ── Aulas ─────────────────────────────────────────────────────────────
         Schema::create('aulas', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->string('nombre', 50);
             $table->unsignedSmallInteger('capacidad')->default(35);
             $table->enum('tipo', ['salon', 'laboratorio', 'taller'])->default('salon');
@@ -42,7 +42,7 @@ return new class extends Migration
 
         // ── Horarios (bloques por carga académica) ────────────────────────────
         Schema::create('horarios', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('carga_academica_id')->constrained('cargas_academicas')->cascadeOnDelete();
             $table->enum('dia_semana', ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']);
             $table->time('hora_inicio');
@@ -52,7 +52,7 @@ return new class extends Migration
 
         // ── Planeaciones didácticas ────────────────────────────────────────────
         Schema::create('planeaciones_docentes', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('carga_academica_id')->constrained('cargas_academicas')->cascadeOnDelete();
             $table->foreignUuid('docente_id')->constrained('users')->cascadeOnDelete();
             $table->foreignUuid('periodo_id')->constrained('periodos');
@@ -75,7 +75,7 @@ return new class extends Migration
 
         // ── Horarios de trabajo docente (TecNM-AC-PO-003-01) ─────────────────
         Schema::create('horarios_trabajo', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('docente_id')->constrained('users')->cascadeOnDelete();
             $table->foreignUuid('periodo_id')->constrained('periodos');
             $table->json('carga_academica_json')->nullable();   // grupos asignados con asignatura, aula, nivel, horario

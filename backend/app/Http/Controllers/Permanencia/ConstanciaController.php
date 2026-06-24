@@ -28,6 +28,10 @@ class ConstanciaController extends Controller
 
         $alumno = Alumno::where('user_id', $request->user()->id)->firstOrFail();
 
+        if ($alumno->estatus !== 'activo') {
+            return ApiResponse::error('Solo los alumnos con estatus activo pueden solicitar constancias.', 422);
+        }
+
         $constancia = $this->service->solicitar($alumno, $data['tipo'], $request->user());
 
         return ApiResponse::success($constancia->load(['alumno']), 'Constancia solicitada. Control Escolar la emitirá a la brevedad.', 201);
@@ -80,7 +84,7 @@ class ConstanciaController extends Controller
 
         abort_if($constancia->estatus !== 'emitida', 422, 'La constancia aún no ha sido emitida.');
 
-        $constancia->load(['alumno.inscripcion.carrera', 'alumno.periodoIngreso', 'emitidaPor']);
+        $constancia->load(['alumno.carrera', 'alumno.inscripcion.carrera', 'alumno.periodoIngreso', 'emitidaPor']);
 
         $cfg  = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
         $mapa = \App\Domains\Institucional\Models\DirectorioPersonal::where('firma_documentos', true)

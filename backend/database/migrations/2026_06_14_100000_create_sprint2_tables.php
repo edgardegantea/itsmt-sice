@@ -10,7 +10,7 @@ return new class extends Migration
     {
         // ── adeudos ──────────────────────────────────────────────────────────
         Schema::create('adeudos', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('alumno_id')->constrained('alumnos')->cascadeOnDelete();
             $table->string('concepto');
             $table->decimal('monto', 8, 2);
@@ -21,7 +21,7 @@ return new class extends Migration
 
         // ── orden_reinscripcion ───────────────────────────────────────────────
         Schema::create('orden_reinscripcion', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('periodo_id')->constrained('periodos');
             $table->foreignUuid('carrera_id')->constrained('carreras');
             $table->smallInteger('semestre');
@@ -37,7 +37,7 @@ return new class extends Migration
 
         // ── reinscripciones ───────────────────────────────────────────────────
         Schema::create('reinscripciones', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('alumno_id')->constrained('alumnos');
             $table->foreignUuid('periodo_id')->constrained('periodos');
             $table->enum('estatus', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
@@ -56,7 +56,7 @@ return new class extends Migration
 
         // ── bajas ─────────────────────────────────────────────────────────────
         Schema::create('bajas', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('alumno_id')->constrained('alumnos');
             $table->foreignUuid('periodo_id')->constrained('periodos');
             $table->enum('tipo_baja', ['parcial', 'temporal', 'definitiva']);
@@ -73,7 +73,7 @@ return new class extends Migration
 
         // ── constancias ───────────────────────────────────────────────────────
         Schema::create('constancias', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('alumno_id')->constrained('alumnos');
             $table->enum('tipo', ['estudios', 'inscripcion', 'calificaciones']);
             $table->string('folio_unico')->unique();

@@ -2,10 +2,11 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\Alumno;
-use App\Models\Carrera;
-use App\Models\Inscripcion;
-use App\Models\Periodo;
+use App\Domains\Academico\Models\Alumno;
+use App\Domains\Academico\Models\Carrera;
+use App\Domains\Academico\Models\Periodo;
+use App\Domains\Admision\Models\Aspirante as AspiranteModel;
+use App\Domains\Admision\Models\Inscripcion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -88,7 +89,7 @@ class AuthTest extends TestCase
         ]);
         $userAlumno->assignRole('alumno');
 
-        $aspirante = \App\Models\Aspirante::create([
+        $aspirante = AspiranteModel::create([
             'nombres' => 'Ana', 'apellido_paterno' => 'García',
             'curp' => $curp, 'fecha_nacimiento' => '2000-01-01',
             'sexo' => 'femenino', 'municipio_procedencia' => 'Martínez de la Torre',
@@ -137,7 +138,7 @@ class AuthTest extends TestCase
         ]);
         $userAlumno->assignRole('alumno');
 
-        $aspirante = \App\Models\Aspirante::create([
+        $aspirante = AspiranteModel::create([
             'nombres' => 'Test', 'apellido_paterno' => 'Alumno',
             'curp' => 'AATT000101HVZRST00', 'fecha_nacimiento' => '2000-01-01',
             'sexo' => 'masculino', 'municipio_procedencia' => 'Martínez',
@@ -146,13 +147,13 @@ class AuthTest extends TestCase
             'carrera_id' => $carrera->id, 'periodo_id' => $periodo->id,
         ]);
 
-        $inscripcion = \App\Models\Inscripcion::create([
+        $inscripcion = Inscripcion::create([
             'aspirante_id' => $aspirante->id, 'numero_control' => '26006-test',
             'carrera_id' => $carrera->id, 'periodo_id' => $periodo->id,
             'semestre_ingreso' => 1, 'fecha_inscripcion' => now()->toDateString(),
         ]);
 
-        \App\Models\Alumno::create([
+        Alumno::create([
             'user_id' => $userAlumno->id, 'inscripcion_id' => $inscripcion->id,
             'numero_control' => '26006-test', 'carrera_id' => $carrera->id,
             'periodo_ingreso_id' => $periodo->id,

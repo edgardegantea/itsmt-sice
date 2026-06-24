@@ -98,6 +98,7 @@ export interface Reinscripcion {
     id: string
     numero_control: string
     semestre_actual: number
+    inscripcion_id?: string | null
     user?: { name: string; email: string }
     carrera?: { nombre: string }
   }

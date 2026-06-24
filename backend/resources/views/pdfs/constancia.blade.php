@@ -19,8 +19,8 @@
     default => "es alumno(a) de esta institución.",
   };
 
-  $fechaEmision = $constancia->emitida_at
-    ? \Carbon\Carbon::parse($constancia->emitida_at)->locale('es')->isoFormat('D [de] MMMM [de] YYYY')
+  $fechaEmision = $constancia->emitida_en
+    ? \Carbon\Carbon::parse($constancia->emitida_en)->locale('es')->isoFormat('D [de] MMMM [de] YYYY')
     : now()->locale('es')->isoFormat('D [de] MMMM [de] YYYY');
 @endphp
 <!DOCTYPE html>

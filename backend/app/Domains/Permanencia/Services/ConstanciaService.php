@@ -4,19 +4,35 @@ namespace App\Domains\Permanencia\Services;
 
 use App\Domains\Academico\Models\Alumno;
 use App\Domains\Permanencia\Models\Constancia;
+use App\Mail\ConstanciaSolicitadaMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 
 class ConstanciaService
 {
     public function solicitar(Alumno $alumno, string $tipo, User $solicitante): Constancia
     {
-        return Constancia::create([
+        $constancia = Constancia::create([
             'alumno_id'      => $alumno->id,
             'tipo'           => $tipo,
             'folio_unico'    => Constancia::generarFolio($tipo),
             'estatus'        => 'solicitada',
             'solicitada_por' => $solicitante->id,
         ]);
+
+        // Notificar al personal de Control Escolar (S2-03)
+        $ceEmails = User::role(['admin', 'personal_administrativo'])
+            ->whereNotNull('email')
+            ->pluck('email');
+
+        if ($ceEmails->isNotEmpty()) {
+            $constancia->load(['alumno.user', 'alumno.carrera']);
+            foreach ($ceEmails as $email) {
+                Mail::to($email)->queue(new ConstanciaSolicitadaMail($constancia));
+            }
+        }
+
+        return $constancia;
     }
 
     public function emitir(Constancia $constancia, User $emisor): Constancia

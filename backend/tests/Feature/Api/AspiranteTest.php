@@ -3,10 +3,10 @@
 namespace Tests\Feature\Api;
 
 use App\Mail\ConfirmacionSolicitudMail;
-use App\Models\Aspirante;
+use App\Domains\Admision\Models\Aspirante;
 use Illuminate\Support\Facades\Mail;
-use App\Models\Carrera;
-use App\Models\Periodo;
+use App\Domains\Academico\Models\Carrera;
+use App\Domains\Academico\Models\Periodo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;

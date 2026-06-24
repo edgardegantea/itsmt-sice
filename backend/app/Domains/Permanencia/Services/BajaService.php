@@ -5,8 +5,10 @@ namespace App\Domains\Permanencia\Services;
 use App\Domains\Academico\Models\Alumno;
 use App\Domains\Academico\Models\Periodo;
 use App\Domains\Permanencia\Models\Baja;
+use App\Mail\BajaSolicitadaMail;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class BajaService
 {
@@ -59,6 +61,10 @@ class BajaService
      */
     public function solicitarBajaTemporal(Alumno $alumno, array $data): Baja
     {
+        if ($alumno->estatus !== 'activo') {
+            throw new \DomainException('Solo los alumnos con estatus activo pueden solicitar baja temporal.');
+        }
+
         $periodo = Periodo::findOrFail($data['periodo_id']);
 
         $this->validarPlazo($periodo, 'temporal', Carbon::parse($data['fecha_solicitud']));
@@ -76,6 +82,14 @@ class BajaService
 
         Alumno::where('id', $alumno->id)->update(['estatus' => 'baja_temporal']);
 
-        return $baja->load(['alumno.user', 'periodo']);
+        $baja->load(['alumno.user', 'periodo']);
+
+        // Correo de confirmación al alumno (S2-06)
+        $emailAlumno = $alumno->user?->email ?? $baja->alumno?->user?->email;
+        if ($emailAlumno) {
+            Mail::to($emailAlumno)->queue(new BajaSolicitadaMail($baja));
+        }
+
+        return $baja;
     }
 }

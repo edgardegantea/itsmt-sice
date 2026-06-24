@@ -4,6 +4,7 @@ namespace App\Domains\Permanencia\Services;
 
 use App\Domains\Academico\Models\Alumno;
 use App\Domains\Permanencia\Models\Adeudo;
+use App\Domains\Permanencia\Models\OrdenReinscripcion;
 use App\Domains\Permanencia\Models\Reinscripcion;
 use App\Models\User;
 use Carbon\Carbon;
@@ -20,6 +21,10 @@ class ReinscripcionService
 
     public function solicitar(Alumno $alumno, string $periodoId): Reinscripcion
     {
+        if ($alumno->estatus !== 'activo') {
+            throw new \DomainException('Solo los alumnos con estatus activo pueden solicitar reinscripción.');
+        }
+
         if ($this->tieneAdeudos($alumno)) {
             throw new \DomainException('El alumno tiene adeudos pendientes.');
         }
@@ -29,6 +34,30 @@ class ReinscripcionService
             throw new \DomainException(
                 'No puedes reinscribirte hasta entregar el certificado de bachillerato (TecNM-AC-PO-001-05). Acude a Control Escolar.'
             );
+        }
+
+        // S2-07: validar ventana publicada del Orden de Reinscripción
+        $orden = OrdenReinscripcion::where('periodo_id', $periodoId)
+            ->where('carrera_id', $alumno->carrera_id)
+            ->where('semestre', $alumno->semestre_actual)
+            ->where('publicado', true)
+            ->first();
+
+        if ($orden) {
+            $hoy = Carbon::today();
+            $inicio = Carbon::parse($orden->fecha_inicio_reinscripcion);
+            $fin    = Carbon::parse($orden->fecha_fin_reinscripcion);
+
+            if ($hoy->lt($inicio)) {
+                throw new \DomainException(
+                    "El periodo de reinscripción para tu semestre aún no ha comenzado. Inicia el {$inicio->translatedFormat('d \de F \de Y')}."
+                );
+            }
+            if ($hoy->gt($fin)) {
+                throw new \DomainException(
+                    "El periodo de reinscripción para tu semestre ha concluido (finalizó el {$fin->translatedFormat('d \de F \de Y')})."
+                );
+            }
         }
 
         $existente = Reinscripcion::where('alumno_id', $alumno->id)
@@ -79,7 +108,7 @@ class ReinscripcionService
 
     public function listar(array $filtros = [])
     {
-        $q = Reinscripcion::with(['alumno.carrera', 'alumno.user', 'periodo', 'aprobadoPor', 'reciboCobro']);
+        $q = Reinscripcion::with(['alumno.carrera', 'alumno.user', 'alumno.inscripcion', 'periodo', 'aprobadoPor', 'reciboCobro']);
 
         if (!empty($filtros['estatus'])) {
             $q->where('estatus', $filtros['estatus']);

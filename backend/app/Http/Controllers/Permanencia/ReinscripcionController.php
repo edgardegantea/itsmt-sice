@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Permanencia;
 
 use App\Domains\Academico\Models\Alumno;
+use App\Mail\OrdenReinscripcionPublicadaMail;
+use Illuminate\Support\Facades\Mail;
 use App\Domains\Permanencia\Models\Adeudo;
 use App\Domains\Permanencia\Models\OrdenReinscripcion;
 use App\Domains\Permanencia\Models\Reinscripcion;
@@ -132,7 +134,36 @@ class ReinscripcionController extends Controller
             ])
         );
 
-        return ApiResponse::success($orden->load(['periodo', 'carrera']), 'Orden de reinscripción publicada.', 201);
+        $orden->load(['carrera', 'periodo']);
+
+        // S2-07: notificar a alumnos de la carrera y semestre afectados, y a docentes
+        $alumnosAfectados = Alumno::with('user')
+            ->where('carrera_id', $orden->carrera_id)
+            ->where('semestre_actual', $orden->semestre)
+            ->where('estatus', 'activo')
+            ->get();
+
+        $roleNames = ['docente', 'jefe_carrera'];
+        $docentesEmails = \App\Models\User::whereHas('roles', fn($q) => $q->whereIn('name', $roleNames))
+            ->whereNotNull('email')
+            ->where('carrera_id', $orden->carrera_id)
+            ->pluck('email');
+
+        foreach ($alumnosAfectados as $a) {
+            if ($a->user?->email) {
+                Mail::to($a->user->email)->queue(
+                    new OrdenReinscripcionPublicadaMail($orden, $a->user->name)
+                );
+            }
+        }
+
+        foreach ($docentesEmails as $email) {
+            Mail::to($email)->queue(
+                new OrdenReinscripcionPublicadaMail($orden, 'Docente')
+            );
+        }
+
+        return ApiResponse::success($orden, 'Orden de reinscripción publicada.', 201);
     }
 
     // GET /api/orden-reinscripcion/{periodo}
