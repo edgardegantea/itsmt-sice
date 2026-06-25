@@ -69,10 +69,10 @@ class CalificacionController extends Controller
         $promedio = null;
         $acreditado = null;
 
-        if (! empty($data['parciales']) && isset($data['calificacion_final'])) {
+        if (! empty($data['parciales'])) {
             [$promedio, $acreditado] = $this->calcularPromedio(
                 $data['parciales'],
-                (float) $data['calificacion_final'],
+                (float) ($data['calificacion_final'] ?? 0),
                 $grupo
             );
         }
@@ -99,17 +99,17 @@ class CalificacionController extends Controller
         $config = ConfiguracionEvaluacion::where('carrera_id', $grupo->carrera_id)->first();
 
         if (! $config || empty($config->peso_parciales)) {
-            // Sin configuración: promedio simple entre todos los parciales
-            $sumaParciales = collect($parciales)->avg('calificacion');
-            $promedio = round(($sumaParciales + $calFinal) / 2, 2);
+            // Sin configuración: promedio simple de los parciales (calificacion_final se almacena
+            // como referencia pero el promedio se calcula solo con los parciales para coherencia)
+            $promedio = round((float) collect($parciales)->avg('calificacion'), 2);
         } else {
+            // Con configuración: suma ponderada; los pesos_parciales deben sumar 1.0
+            // calificacion_final se almacena como campo adicional pero los pesos ya cubren el 100%
             $pesos = collect($config->peso_parciales)->keyBy('parcial');
-            $sumaPonderada = collect($parciales)->sum(function ($p) use ($pesos) {
+            $promedio = round(collect($parciales)->sum(function ($p) use ($pesos) {
                 $peso = $pesos->get($p['parcial'])['peso'] ?? 0;
                 return $p['calificacion'] * $peso;
-            });
-            // Los pesos suman 1.0 (validado en ConfiguracionEvaluacion), promedio = suma ponderada
-            $promedio = round($sumaPonderada, 2);
+            }), 2);
         }
 
         $min = $config?->calificacion_minima ?? 70;

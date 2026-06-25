@@ -128,9 +128,10 @@ class ReinscripcionController extends Controller
         ]);
 
         // Política 3.3 PO-002: publicación con al menos 5 días hábiles de anticipación
-        $inicio = \Carbon\Carbon::parse($data['fecha_inicio_reinscripcion']);
+        // Comparamos fechas (sin hora) para evitar falsos rechazos por hora del día
+        $inicio = \Carbon\Carbon::parse($data['fecha_inicio_reinscripcion'])->startOfDay();
         $diasHabiles = 0;
-        $fecha = now();
+        $fecha = now()->startOfDay();
         while ($diasHabiles < 5) {
             $fecha->addDay();
             if ($fecha->isWeekday()) $diasHabiles++;

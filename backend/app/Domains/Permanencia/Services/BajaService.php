@@ -52,10 +52,13 @@ class BajaService
             Carbon::parse($data['fecha_solicitud'])
         );
 
-        $baja = Baja::create(array_merge($data, ['registrada_por' => $registradaPor->id]));
+        $baja = Baja::create(array_merge($data, [
+            'registrada_por' => $registradaPor->id,
+            'estatus'        => 'aprobada', // admin registra directamente: aprobada
+        ]));
 
-        $estatus = $data['tipo_baja'] === 'definitiva' ? 'baja_definitiva' : 'baja_temporal';
-        Alumno::where('id', $data['alumno_id'])->update(['estatus' => $estatus]);
+        $estatusAlumno = $data['tipo_baja'] === 'definitiva' ? 'baja_definitiva' : 'baja_temporal';
+        Alumno::where('id', $data['alumno_id'])->update(['estatus' => $estatusAlumno]);
 
         return $baja->load(['alumno.user', 'alumno.carrera', 'periodo']);
     }
@@ -82,6 +85,7 @@ class BajaService
             'alumno_id'                 => $alumno->id,
             'periodo_id'                => $data['periodo_id'],
             'tipo_baja'                 => 'temporal',
+            'estatus'                   => 'pendiente', // S2-06: queda pendiente hasta que admin apruebe
             'motivo_enum'               => $data['motivo_enum'] ?? null,
             'motivo_texto'              => $data['motivo_texto'] ?? null,
             'fecha_solicitud'           => $data['fecha_solicitud'],
@@ -90,7 +94,7 @@ class BajaService
             'numero_semestres_cursados' => $data['numero_semestres_cursados'] ?? null,
         ]);
 
-        Alumno::where('id', $alumno->id)->update(['estatus' => 'baja_temporal']);
+        // El estatus del alumno se actualiza cuando el admin apruebe la baja
 
         $baja->load(['alumno.user', 'periodo']);
 

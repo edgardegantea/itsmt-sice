@@ -119,7 +119,8 @@ class BajaController extends Controller
         ]);
 
         if ($data['estatus'] === 'aprobada') {
-            $baja->alumno->update(['estatus' => 'baja_temporal']);
+            $estatusAlumno = $baja->tipo_baja === 'definitiva' ? 'baja_definitiva' : 'baja_temporal';
+            $baja->alumno->update(['estatus' => $estatusAlumno]);
         }
 
         return ApiResponse::success($baja->fresh(['alumno.user', 'periodo']), 'Baja actualizada.');
