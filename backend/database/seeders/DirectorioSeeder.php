@@ -9,8 +9,6 @@ class DirectorioSeeder extends Seeder
 {
     public function run(): void
     {
-        DirectorioPersonal::truncate();
-
         $personas = [
             // Administración General
             ['nombre' => 'MC. ALEJANDRO HERNÁNDEZ LOZANO',          'cargo' => 'Director General',                                    'area' => 'Administración General',            'email' => 'direccion@itsmt.edu.mx',              'telefono' => '225 253 0108', 'extension' => '101', 'orden' => 1,  'firma_documentos' => true],
@@ -46,7 +44,10 @@ class DirectorioSeeder extends Seeder
         ];
 
         foreach ($personas as $datos) {
-            DirectorioPersonal::create(array_merge(['activo' => true], $datos));
+            DirectorioPersonal::firstOrCreate(
+                ['email' => $datos['email']],
+                array_merge(['activo' => true], $datos)
+            );
         }
     }
 }
