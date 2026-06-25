@@ -191,6 +191,9 @@ export interface RegistrarAspirantePayload {
   tiene_equipo_computo: boolean
   campus_preferido?: string
   modalidad_preferida?: string
+  plantel?: 'martinez_de_la_torre' | 'vega_de_alatorre'
+  modalidad?: 'escolarizado' | 'sabatino'
+  nivel?: 'licenciatura' | 'maestria'
   constancia_bachillerato: File   // archivo — se enviará como FormData
   documentos?: Record<string, boolean>
 }

@@ -5,6 +5,7 @@ import { usePeriodoActivo } from '../hooks/usePeriodoActivo'
 import { useRegistrarAspirante } from '../hooks/useRegistrarAspirante'
 import { validarCurp, validarEmail, validarTelefono, extraerErroresApi } from '../../../utils/validaciones'
 import { catalogoPublico } from '../services/catalogo'
+import { useConfiguracion } from '../../../hooks/useConfiguracion'
 
 // ── CURP → datos derivados ────────────────────────────────────────────────────
 const parsearCurp = (curp: string) => {
@@ -196,6 +197,7 @@ export default function RegistroAspirantePage() {
   const { data: carreras = [], isLoading: cargandoCarreras } = useCarreras()
   const { data: periodo,  isLoading: cargandoPeriodo }       = usePeriodoActivo()
   const { mutate, isPending, isSuccess, error, data: aspiranteRegistrado } = useRegistrarAspirante()
+  const { config } = useConfiguracion()
 
   // Catálogos
   const { data: estados = [] }  = useQuery({ queryKey: ['pub-estados'],  queryFn: catalogoPublico.getEstados })
@@ -238,6 +240,9 @@ export default function RegistroAspirantePage() {
     carrera_vega: '',       // carrera sede Vega de Alatorre (texto completo)
     turno_preferido: '', email: '', telefono: '',
     carrera_id: '',
+    plantel: '' as '' | 'martinez_de_la_torre' | 'vega_de_alatorre',
+    modalidad: '' as '' | 'escolarizado' | 'sabatino',
+    nivel: 'licenciatura' as 'licenciatura' | 'maestria',
     medio_enterado: '', medio_enterado_otro: '',
     tiene_equipo_computo: '',
   })
@@ -438,11 +443,8 @@ export default function RegistroAspirantePage() {
     return Object.keys(e).length === 0
   }
 
-  // Determina campus y modalidad desde la selección de carrera
+  // campus_preferido sigue derivándose de la carrera elegida (compatibilidad)
   const campusPreferido = form.carrera_martinez ? 'martinez_de_la_torre' : form.carrera_vega ? 'vega_de_alatorre' : undefined
-  const carreraTexto    = form.carrera_martinez || form.carrera_vega || ''
-  const modalidad       = carreraTexto.toLowerCase().includes('sabatino') ? 'sabatino'
-    : carreraTexto.toLowerCase().includes('escolarizado') ? 'escolarizado' : undefined
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -460,7 +462,10 @@ export default function RegistroAspirantePage() {
       tiene_equipo_computo:   form.tiene_equipo_computo === '1',
       medio_enterado:         form.medio_enterado === 'Otros' ? form.medio_enterado_otro : form.medio_enterado,
       campus_preferido:       campusPreferido,
-      modalidad_preferida:    modalidad,
+      modalidad_preferida:    form.modalidad || undefined,
+      plantel:                form.plantel   || undefined,
+      modalidad:              form.modalidad || undefined,
+      nivel:                  form.nivel,
       constancia_bachillerato: constanciaFile!,
       documentos:             Object.keys(documentos).length ? documentos : undefined,
     }, {
@@ -807,6 +812,11 @@ export default function RegistroAspirantePage() {
                       const nombre = v.split(' (')[0].trim()
                       const c = carreras.find(c => c.nombre.toLowerCase().includes(nombre.toLowerCase().split(' ').slice(0,3).join(' ')))
                       set('carrera_id', c?.id ?? '')
+                      // Auto-establece plantel y modalidad
+                      if (v) {
+                        set('plantel', 'martinez_de_la_torre')
+                        set('modalidad', v.toLowerCase().includes('sabatino') ? 'sabatino' : 'escolarizado')
+                      }
                     }}
                     options={[
                       { value: 'Ingeniería en Gestión Empresarial (Escolarizado)', label: 'Ingeniería en Gestión Empresarial (Escolarizado)' },
@@ -836,6 +846,11 @@ export default function RegistroAspirantePage() {
                       const nombre = v.split(' (')[0].trim()
                       const c = carreras.find(c => c.nombre.toLowerCase().includes(nombre.toLowerCase().split(' ').slice(0,3).join(' ')))
                       set('carrera_id', c?.id ?? '')
+                      // Auto-establece plantel y modalidad
+                      if (v) {
+                        set('plantel', 'vega_de_alatorre')
+                        set('modalidad', v.toLowerCase().includes('sabatino') ? 'sabatino' : 'escolarizado')
+                      }
                     }}
                     options={[
                       { value: 'Ingeniería en Gestión Empresarial (Sabatino) — Vega',      label: 'Ingeniería en Gestión Empresarial (Sabatino)' },
@@ -852,6 +867,69 @@ export default function RegistroAspirantePage() {
                 <SelectField label="Turno preferido *" value={form.turno_preferido}
                   onChange={v => set('turno_preferido', v)} onBlur={() => tocar('turno_preferido')}
                   options={turnosOpciones} required error={err('turno_preferido')} />
+
+                {/* Plantel */}
+                <div className="mt-5">
+                  <p className="text-xs font-medium text-slate-600 mb-2">Plantel *</p>
+                  <div className="flex flex-wrap gap-4">
+                    {[
+                      { value: 'martinez_de_la_torre', label: 'Martínez de la Torre' },
+                      { value: 'vega_de_alatorre',     label: 'Vega de Alatorre' },
+                    ].map(opt => (
+                      <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="plantel" value={opt.value}
+                          checked={form.plantel === opt.value}
+                          onChange={() => { set('plantel', opt.value); tocar('plantel') }}
+                          className="accent-[#1a3a5c]" />
+                        <span className="text-sm text-slate-700">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {err('plantel') && <p className="mt-1 text-xs text-red-600">{err('plantel')}</p>}
+                </div>
+
+                {/* Modalidad */}
+                <div className="mt-5">
+                  <p className="text-xs font-medium text-slate-600 mb-2">Modalidad *</p>
+                  <div className="flex flex-wrap gap-4">
+                    {[
+                      { value: 'escolarizado', label: 'Escolarizado' },
+                      { value: 'sabatino',     label: 'Sabatino' },
+                    ].map(opt => (
+                      <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="modalidad" value={opt.value}
+                          checked={form.modalidad === opt.value}
+                          onChange={() => { set('modalidad', opt.value); tocar('modalidad') }}
+                          className="accent-[#1a3a5c]" />
+                        <span className="text-sm text-slate-700">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {err('modalidad') && <p className="mt-1 text-xs text-red-600">{err('modalidad')}</p>}
+                </div>
+
+                {/* Nivel */}
+                <div className="mt-5">
+                  <p className="text-xs font-medium text-slate-600 mb-2">Nivel *</p>
+                  <div className="flex flex-wrap gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="nivel" value="licenciatura"
+                        checked={form.nivel === 'licenciatura'}
+                        onChange={() => set('nivel', 'licenciatura')}
+                        className="accent-[#1a3a5c]" />
+                      <span className="text-sm text-slate-700">Licenciatura</span>
+                    </label>
+                    {config.maestria_habilitada && (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="nivel" value="maestria"
+                          checked={form.nivel === 'maestria'}
+                          onChange={() => set('nivel', 'maestria')}
+                          className="accent-[#1a3a5c]" />
+                        <span className="text-sm text-slate-700">Maestría</span>
+                      </label>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Información complementaria */}

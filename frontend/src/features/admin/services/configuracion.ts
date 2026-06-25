@@ -31,6 +31,7 @@ export interface ConfiguracionInstitucional {
   url_logo_secundario: string | null
   url_login_imagen_fondo: string | null
   logo_base64: string | null
+  maestria_habilitada?: boolean
 }
 
 export const configuracionApi = {
