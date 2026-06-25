@@ -15,9 +15,12 @@ class MateriaController extends Controller
     {
         $carreraForzada = $request->user()?->carreraRestringida();
 
+        $carreraParam = $request->query('carrera_id');
+        $carreraValida = $carreraParam && preg_match('/^[0-9a-f-]{36}$/i', $carreraParam) ? $carreraParam : null;
+
         $materias = Materia::with('carrera')
-            ->when($carreraForzada,                                    fn($q, $v) => $q->where('carrera_id', $v))
-            ->when(! $carreraForzada && $request->query('carrera_id'), fn($q, $c) => $q->where('carrera_id', $c))
+            ->when($carreraForzada,                        fn($q, $v) => $q->where('carrera_id', $v))
+            ->when(! $carreraForzada && $carreraValida,    fn($q)     => $q->where('carrera_id', $carreraValida))
             ->when($request->query('semestre'),   fn($q, $s) => $q->where('semestre', $s))
             ->when($request->query('q'),          fn($q, $s) => $q->where(fn($q) =>
                 $q->where('nombre', 'ilike', "%$s%")->orWhere('clave', 'ilike', "%$s%")
