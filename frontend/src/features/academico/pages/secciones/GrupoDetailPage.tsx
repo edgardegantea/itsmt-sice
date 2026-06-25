@@ -62,23 +62,7 @@ export default function GrupoDetailPage() {
     onError: (e) => addToast(mutationError(e), 'error'),
   })
 
-  if (isLoading) {
-    return (
-      <div className="min-h-full bg-slate-50 p-6 flex items-center justify-center text-slate-400 text-sm">
-        Cargando grupo…
-      </div>
-    )
-  }
-
-  if (!grupo) {
-    return (
-      <div className="min-h-full bg-slate-50 p-6">
-        <p className="text-slate-500 text-sm">No se encontró el grupo.</p>
-      </div>
-    )
-  }
-
-  const alumnosEnGrupo = new Set((grupo.alumnos ?? []).map(a => a.id))
+  const alumnosEnGrupo = new Set((grupo?.alumnos ?? []).map(a => a.id))
   const alumnosDisponibles = useMemo(() => {
     const base = todosAlumnos.filter(a => !alumnosEnGrupo.has(a.id))
     if (!busqueda.trim()) return base
@@ -96,6 +80,22 @@ export default function GrupoDetailPage() {
       )
     })
   }, [todosAlumnos, alumnosEnGrupo, busqueda])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-full bg-slate-50 p-6 flex items-center justify-center text-slate-400 text-sm">
+        Cargando grupo…
+      </div>
+    )
+  }
+
+  if (!grupo) {
+    return (
+      <div className="min-h-full bg-slate-50 p-6">
+        <p className="text-slate-500 text-sm">No se encontró el grupo.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-full bg-slate-50 p-6">
