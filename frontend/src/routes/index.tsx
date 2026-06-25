@@ -31,6 +31,17 @@ const UsuarioDetailPage               = lazy(() => import('../features/admin/pag
 const DirectorioPage                  = lazy(() => import('../features/admin/pages/DirectorioPage'))
 const PermisosPage                    = lazy(() => import('../features/admin/pages/PermisosPage'))
 const GestionAcademicaPage            = lazy(() => import('../features/academico/pages/GestionAcademicaPage'))
+const GestionAcademicaIndexPage       = lazy(() => import('../features/academico/pages/GestionAcademicaIndexPage'))
+const MateriasPage                    = lazy(() => import('../features/academico/pages/secciones/MateriasPage'))
+const MallaPage                       = lazy(() => import('../features/academico/pages/secciones/MallaPage'))
+const GruposPage                      = lazy(() => import('../features/academico/pages/secciones/GruposPage'))
+const GrupoDetailPage                 = lazy(() => import('../features/academico/pages/secciones/GrupoDetailPage'))
+const AulasPage                       = lazy(() => import('../features/academico/pages/secciones/AulasPage'))
+const CargasPage                      = lazy(() => import('../features/academico/pages/secciones/CargasPage'))
+const HorariosPage                    = lazy(() => import('../features/academico/pages/secciones/HorariosPage'))
+const PlaneacionesPage                = lazy(() => import('../features/academico/pages/secciones/PlaneacionesPage'))
+const TutoriasPage                    = lazy(() => import('../features/academico/pages/secciones/TutoriasPage'))
+const FuncionesPage                   = lazy(() => import('../features/academico/pages/secciones/FuncionesPage'))
 const CargaAcademicaAdminPage         = lazy(() => import('../features/academico/pages/CargaAcademicaAdminPage'))
 const PlaneacionDocentePage           = lazy(() => import('../features/academico/pages/PlaneacionDocentePage'))
 
@@ -82,7 +93,19 @@ export default function AppRoutes() {
         <Route path="/admin/usuarios/:id"              element={<AdminLayout><UsuarioDetailPage /></AdminLayout>} />
         <Route path="/admin/directorio"               element={<AdminLayout><DirectorioPage /></AdminLayout>} />
         <Route path="/admin/permisos"                  element={<AdminLayout><PermisosPage /></AdminLayout>} />
-        <Route path="/admin/gestion-academica"         element={<AdminLayout><GestionAcademicaPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica"              element={<AdminLayout><GestionAcademicaIndexPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/materias"     element={<AdminLayout><MateriasPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/malla"        element={<AdminLayout><MallaPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/grupos"       element={<AdminLayout><GruposPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/grupos/:id"   element={<AdminLayout><GrupoDetailPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/aulas"        element={<AdminLayout><AulasPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/cargas"       element={<AdminLayout><CargasPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/horarios"     element={<AdminLayout><HorariosPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/planeaciones" element={<AdminLayout><PlaneacionesPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/tutorias"     element={<AdminLayout><TutoriasPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/funciones"    element={<AdminLayout><FuncionesPage /></AdminLayout>} />
+        {/* Legacy tab view — kept for reference */}
+        <Route path="/admin/gestion-academica/legacy"       element={<AdminLayout><GestionAcademicaPage /></AdminLayout>} />
         <Route path="/admin/carga-academica"           element={<AdminLayout><CargaAcademicaAdminPage /></AdminLayout>} />
         <Route path="/docente/planeacion"              element={<AdminLayout><PlaneacionDocentePage /></AdminLayout>} />
 
