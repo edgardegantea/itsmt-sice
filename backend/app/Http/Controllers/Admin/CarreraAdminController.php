@@ -44,8 +44,10 @@ class CarreraAdminController extends Controller
 
         // Personal en directorio relacionado con el área de la carrera
         $personal = DirectorioPersonal::with(['directorio_area', 'puesto'])
-            ->whereHas('directorio_area', fn($q) => $q->where('nombre', 'LIKE', '%' . $carrera->nombre . '%'))
-            ->orWhereHas('puesto', fn($q) => $q->whereHas('area', fn($q2) => $q2->where('nombre', 'LIKE', '%' . $carrera->nombre . '%')))
+            ->where(function ($q) use ($carrera) {
+                $q->whereHas('directorio_area', fn($q2) => $q2->where('nombre', 'LIKE', '%' . $carrera->nombre . '%'))
+                  ->orWhereHas('puesto', fn($q2) => $q2->whereHas('area', fn($q3) => $q3->where('nombre', 'LIKE', '%' . $carrera->nombre . '%')));
+            })
             ->get();
 
         // Alumnos activos por semestre
