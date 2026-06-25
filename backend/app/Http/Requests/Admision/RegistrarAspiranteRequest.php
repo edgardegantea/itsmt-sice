@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admision;
 
+use App\Domains\Institucional\Models\ConfiguracionInstitucional;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -65,12 +66,21 @@ class RegistrarAspiranteRequest extends FormRequest
             'tiene_equipo_computo'  => ['required', 'boolean'],
             'campus_preferido'      => ['nullable', 'string', 'max:40'],
             'modalidad_preferida'   => ['nullable', 'string', 'max:20'],
-            // Plantel y modalidad oficiales
+            // Plantel, modalidad y nivel oficiales
             'plantel'               => ['nullable', 'in:martinez_de_la_torre,vega_de_alatorre'],
             'modalidad'             => ['nullable', 'in:escolarizado,sabatino'],
+            'nivel'                 => $this->reglaNivel(),
             // Archivo de constancia (multipart/form-data)
             'constancia_bachillerato' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp'],
         ];
+    }
+
+    private function reglaNivel(): array
+    {
+        $maestriaHabilitada = ConfiguracionInstitucional::instancia()->maestria_habilitada ?? false;
+        $niveles = $maestriaHabilitada ? ['licenciatura', 'maestria'] : ['licenciatura'];
+
+        return ['nullable', Rule::in($niveles)];
     }
 
     public function messages(): array

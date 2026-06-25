@@ -95,6 +95,26 @@ class ConfiguracionController extends Controller
         ], 'Logo actualizado.');
     }
 
+    // PATCH /api/admin/configuracion/maestria  (solo superadmin)
+    public function toggleMaestria(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->hasRole('superadmin'), 403, 'Solo el superadmin puede habilitar o deshabilitar la opción de maestría.');
+
+        $datos = $request->validate([
+            'maestria_habilitada' => ['required', 'boolean'],
+        ]);
+
+        $config = ConfiguracionInstitucional::instancia();
+        $config->update(['maestria_habilitada' => $datos['maestria_habilitada']]);
+
+        $estado = $datos['maestria_habilitada'] ? 'habilitada' : 'deshabilitada';
+
+        return ApiResponse::success(
+            ['maestria_habilitada' => $config->fresh()->maestria_habilitada],
+            "Opción de maestría {$estado}."
+        );
+    }
+
     // DELETE /api/admin/configuracion/logo
     public function eliminarLogo(Request $request): JsonResponse
     {

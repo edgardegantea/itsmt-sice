@@ -193,6 +193,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/admin/configuracion',            [ConfiguracionController::class, 'update']);
     Route::post('/admin/configuracion/logo',        [ConfiguracionController::class, 'subirLogo']);
     Route::delete('/admin/configuracion/logo',      [ConfiguracionController::class, 'eliminarLogo']);
+    Route::patch('/admin/configuracion/maestria',   [ConfiguracionController::class, 'toggleMaestria']);
 
 
     // Admin — Dashboard

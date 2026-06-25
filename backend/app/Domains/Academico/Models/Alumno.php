@@ -26,6 +26,7 @@ class Alumno extends Model
         'pendiente_certificado_bachillerato',
         'plantel',
         'modalidad',
+        'nivel',
         'observaciones_estatus',
     ];
 

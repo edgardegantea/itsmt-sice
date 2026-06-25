@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admision;
 
+use App\Domains\Institucional\Models\ConfiguracionInstitucional;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -43,7 +44,16 @@ class ActualizarAspiranteRequest extends FormRequest
             'periodo_id'            => ['sometimes', 'uuid', 'exists:periodos,id'],
             'plantel'               => ['sometimes', 'in:martinez_de_la_torre,vega_de_alatorre'],
             'modalidad'             => ['sometimes', 'in:escolarizado,sabatino'],
+            'nivel'                 => $this->reglaNivel(),
             'observaciones'         => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
+    }
+
+    private function reglaNivel(): array
+    {
+        $maestriaHabilitada = ConfiguracionInstitucional::instancia()->maestria_habilitada ?? false;
+        $niveles = $maestriaHabilitada ? ['licenciatura', 'maestria'] : ['licenciatura'];
+
+        return ['sometimes', Rule::in($niveles)];
     }
 }

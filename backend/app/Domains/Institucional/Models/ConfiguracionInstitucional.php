@@ -35,6 +35,10 @@ class ConfiguracionInstitucional extends Model
         'login_subtitulo',
         'login_imagen_fondo',
         'login_opacidad_fondo',
+        'color_acento',
+        'color_sidebar',
+        'radio_bordes',
+        'maestria_habilitada',
     ];
 
     protected function casts(): array
@@ -43,6 +47,7 @@ class ConfiguracionInstitucional extends Model
             'fecha_inicio_actualizacion_datos' => 'date',
             'fecha_fin_actualizacion_datos'    => 'date',
             'login_opacidad_fondo'             => 'float',
+            'maestria_habilitada'              => 'boolean',
         ];
     }
 

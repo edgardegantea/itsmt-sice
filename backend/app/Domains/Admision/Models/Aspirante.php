@@ -50,6 +50,7 @@ class Aspirante extends Model
         'modalidad_preferida',
         'plantel',
         'modalidad',
+        'nivel',
         'constancia_bachillerato',
     ];
 
