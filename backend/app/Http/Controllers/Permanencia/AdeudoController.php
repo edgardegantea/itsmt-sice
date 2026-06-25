@@ -23,8 +23,8 @@ class AdeudoController extends Controller
             ->when($request->query('pagado') !== null, fn($q) =>
                 $q->where('pagado', filter_var($request->query('pagado'), FILTER_VALIDATE_BOOLEAN))
             )
-            ->when($request->query('carrera_id'), fn($q, $v) =>
-                $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $v))
+            ->when(($cp = $request->query('carrera_id')) && preg_match('/^[0-9a-f-]{36}$/i', $cp), fn($q) =>
+                $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $cp))
             )
             ->latest()
             ->paginate(20);

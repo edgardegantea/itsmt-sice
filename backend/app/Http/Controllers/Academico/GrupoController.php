@@ -16,10 +16,13 @@ class GrupoController extends Controller
     {
         $carreraForzada = $request->user()?->carreraRestringida();
 
+        $carreraParam  = $request->query('carrera_id');
+        $carreraValida = $carreraParam && preg_match('/^[0-9a-f-]{36}$/i', $carreraParam) ? $carreraParam : null;
+
         $grupos = Grupo::with(['carrera', 'periodo'])
             ->withCount('alumnos')
-            ->when($carreraForzada,                                              fn($q, $v) => $q->where('carrera_id', $v))
-            ->when(! $carreraForzada && $request->query('carrera_id'),           fn($q, $c) => $q->where('carrera_id', $c))
+            ->when($carreraForzada,                                    fn($q, $v) => $q->where('carrera_id', $v))
+            ->when(! $carreraForzada && $carreraValida,                fn($q)     => $q->where('carrera_id', $carreraValida))
             ->when($request->query('periodo_id'), fn($q, $p) => $q->where('periodo_id', $p))
             ->when($request->query('semestre'),   fn($q, $s) => $q->where('semestre', $s))
             ->orderBy('semestre')->orderBy('clave')

@@ -27,8 +27,8 @@ class BajaController extends Controller
             )
             ->when($request->query('tipo_baja'),  fn($q, $v) => $q->where('tipo_baja', $v))
             ->when($request->query('periodo_id'), fn($q, $v) => $q->where('periodo_id', $v))
-            ->when($request->query('carrera_id'), fn($q, $v) =>
-                $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $v))
+            ->when(($cp = $request->query('carrera_id')) && preg_match('/^[0-9a-f-]{36}$/i', $cp), fn($q) =>
+                $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $cp))
             )
             ->latest()
             ->paginate(20);
