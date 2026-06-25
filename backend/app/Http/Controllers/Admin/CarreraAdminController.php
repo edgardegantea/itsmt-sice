@@ -59,9 +59,9 @@ class CarreraAdminController extends Controller
             ->get();
 
         // Malla curricular si existe
-        $mallas = MallaCurricular::where('carrera_id', $carrera->id)
+        $mallas = MallaCurricular::with('materia')
+            ->where('carrera_id', $carrera->id)
             ->orderBy('semestre')
-            ->orderBy('nombre_materia')
             ->get();
 
         return ApiResponse::success([
