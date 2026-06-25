@@ -37,6 +37,7 @@ class GrupoController extends Controller
             $grupo->load([
                 'carrera', 'periodo',
                 'alumnos.user',
+                'alumnos.inscripcion.aspirante',
                 'cargas.docente', 'cargas.materia',
             ])
         );
@@ -111,7 +112,7 @@ class GrupoController extends Controller
         $grupo->alumnos()->syncWithoutDetaching($sync->all());
 
         return ApiResponse::success(
-            $grupo->load('alumnos.user')->alumnos,
+            $grupo->load(['alumnos.user', 'alumnos.inscripcion.aspirante'])->alumnos,
             count($data['alumno_ids']) . ' alumno(s) asignado(s).'
         );
     }

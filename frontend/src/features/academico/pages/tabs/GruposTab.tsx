@@ -196,7 +196,12 @@ export default function GruposTab() {
                         <input type="checkbox" checked={selAlumnos.includes(a.id)}
                           onChange={e => setSelAlumnos(prev => e.target.checked ? [...prev, a.id] : prev.filter(x => x !== a.id))} />
                         <span className="font-mono text-xs text-slate-500 w-28 shrink-0">{a.numero_control}</span>
-                        <span>{a.user?.name ?? '—'}</span>
+                        <span>{
+                          a.user?.name
+                            ?? (a.inscripcion?.aspirante
+                              ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()
+                              : '—')
+                        }</span>
                       </label>
                     ))}
                   </div>
@@ -219,7 +224,12 @@ export default function GruposTab() {
                   {(grupoDetalle?.alumnos ?? []).map(a => (
                     <tr key={a.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                       <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{a.numero_control}</td>
-                      <td className="px-4 py-2.5 text-slate-900">{a.user?.name ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-slate-900">{
+                        a.user?.name
+                          ?? (a.inscripcion?.aspirante
+                            ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()
+                            : '—')
+                      }</td>
                       <td className="px-4 py-2.5 text-center text-slate-600">{a.semestre_actual}°</td>
                       <td className="px-4 py-2.5 text-right">
                         <button onClick={() => window.confirm('¿Retirar alumno del grupo?') && quitar.mutate({ grupoId: detalle.id, alumnoId: a.id })}
