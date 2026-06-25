@@ -38,6 +38,7 @@ export interface AlumnoGrupo {
   numero_control: string
   semestre_actual: number
   user?: { name: string; email: string }
+  inscripcion?: { aspirante?: { nombres: string; apellido_paterno: string; apellido_materno?: string } }
   pivot?: { fecha_asignacion: string }
 }
 
