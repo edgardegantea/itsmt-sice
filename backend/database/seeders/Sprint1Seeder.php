@@ -15,21 +15,21 @@ class Sprint1Seeder extends Seeder
         $carreras = [
             [
                 'nombre'     => 'Ingeniería en Sistemas Computacionales',
-                'clave'      => 'ISC',
+                'clave'      => 'ISIC',
                 'codigo_it'  => '006',
                 'plan_clave' => 'ISIC-2010-227',
                 'activa'     => true,
             ],
             [
                 'nombre'     => 'Ingeniería Industrial',
-                'clave'      => 'IIN',
+                'clave'      => 'IIND',
                 'codigo_it'  => '012',
                 'plan_clave' => 'IIC-2010-230',
                 'activa'     => true,
             ],
             [
                 'nombre'     => 'Ingeniería en Gestión Empresarial',
-                'clave'      => 'IGE',
+                'clave'      => 'IGEM',
                 'codigo_it'  => '011',
                 'plan_clave' => 'IGEC-2009-203',
                 'activa'     => true,
@@ -57,7 +57,7 @@ class Sprint1Seeder extends Seeder
             ],
             [
                 'nombre'     => 'Ingeniería Ambiental',
-                'clave'      => 'IAM',
+                'clave'      => 'IAMB',
                 'codigo_it'  => '002',
                 'plan_clave' => 'IAMC-2010-225',
                 'activa'     => true,

@@ -14,19 +14,19 @@ class MateriasSeeder extends Seeder
         $carrerasNuevas = [
             [
                 'nombre'     => 'Ingeniería Mecatrónica',
-                'clave'      => 'IMT',
+                'clave'      => 'IMCT',
                 'codigo_it'  => '000',
                 'plan_clave' => 'IMCT-2010-229',
             ],
             [
                 'nombre'     => 'Ingeniería en Innovación Agrícola Sustentable',
-                'clave'      => 'IAS',
+                'clave'      => 'IIAS',
                 'codigo_it'  => '000',
                 'plan_clave' => 'IIAS-2010-221',
             ],
             [
                 'nombre'     => 'Ingeniería en Industrias Alimentarias',
-                'clave'      => 'IAL',
+                'clave'      => 'IIAL',
                 'codigo_it'  => '000',
                 'plan_clave' => 'IIAL-2010-219',
             ],
@@ -43,7 +43,7 @@ class MateriasSeeder extends Seeder
             // ────────────────────────────────────────────────────────────────────
             // ISC – Ingeniería en Sistemas Computacionales (ISIC-2010-224)
             // ────────────────────────────────────────────────────────────────────
-            'ISC' => [
+            'ISIC' => [
                 // Semestre 1
                 ['Cálculo Diferencial',                          'ACF-0901', 1, 3, 2, 5],
                 ['Fundamentos de Programación',                  'AED-1285', 1, 2, 3, 5],
@@ -104,7 +104,7 @@ class MateriasSeeder extends Seeder
             // ────────────────────────────────────────────────────────────────────
             // IIN – Ingeniería Industrial (IIND-2010-227)
             // ────────────────────────────────────────────────────────────────────
-            'IIN' => [
+            'IIND' => [
                 // Semestre 1
                 ['Fundamentos de Investigación',                 'ACC-0906', 1, 2, 2, 4],
                 ['Taller de Ética',                              'ACA-0907', 1, 0, 4, 4],
@@ -165,7 +165,7 @@ class MateriasSeeder extends Seeder
             // ────────────────────────────────────────────────────────────────────
             // IGE – Ingeniería en Gestión Empresarial (IGEM-2009-201)
             // ────────────────────────────────────────────────────────────────────
-            'IGE' => [
+            'IGEM' => [
                 // Semestre 1
                 ['Fundamentos de Investigación',                 'ACC-0906', 1, 2, 2, 4],
                 ['Cálculo Diferencial',                          'ACF-0901', 1, 3, 2, 5],
@@ -222,7 +222,7 @@ class MateriasSeeder extends Seeder
             // ────────────────────────────────────────────────────────────────────
             // IAM – Ingeniería Ambiental (IAMB-2010-206)
             // ────────────────────────────────────────────────────────────────────
-            'IAM' => [
+            'IAMB' => [
                 // Semestre 1
                 ['Química Inorgánica',                           'AEF-1060', 1, 3, 2, 5],
                 ['Cálculo Diferencial',                          'ACF-0901', 1, 3, 2, 5],
@@ -279,7 +279,7 @@ class MateriasSeeder extends Seeder
             // ────────────────────────────────────────────────────────────────────
             // IMT – Ingeniería Mecatrónica (IMCT-2010-229)
             // ────────────────────────────────────────────────────────────────────
-            'IMT' => [
+            'IMCT' => [
                 // Semestre 1
                 ['Química',                                      'AEC-1058', 1, 2, 2, 4],
                 ['Cálculo Diferencial',                          'ACF-0901', 1, 3, 2, 5],
@@ -338,7 +338,7 @@ class MateriasSeeder extends Seeder
             // ────────────────────────────────────────────────────────────────────
             // IAS – Ingeniería en Innovación Agrícola Sustentable (IIAS-2010-221)
             // ────────────────────────────────────────────────────────────────────
-            'IAS' => [
+            'IIAS' => [
                 // Semestre 1
                 ['Álgebra Lineal',                               'ACF-0903', 1, 3, 2, 5],
                 ['Química',                                      'AEF-1056', 1, 3, 2, 5],
@@ -396,7 +396,7 @@ class MateriasSeeder extends Seeder
             // ────────────────────────────────────────────────────────────────────
             // IAL – Ingeniería en Industrias Alimentarias (IIAL-2010-219)
             // ────────────────────────────────────────────────────────────────────
-            'IAL' => [
+            'IIAL' => [
                 // Semestre 1
                 ['Biología',                                     'AEF-1005', 1, 3, 2, 5],
                 ['Química Inorgánica',                           'ALF-1021', 1, 3, 2, 5],
