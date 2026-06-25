@@ -101,23 +101,50 @@ const ICONS: Record<string, () => React.JSX.Element> = {
   '/docente/planeacion':                 IconBook,
 }
 
-const NAV: { to: string; label: string; roles?: string[] }[] = [
-  { to: '/admin',                           label: 'Panel',               roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
-  { to: '/admin/aspirantes',                label: 'Aspirantes',          roles: ['superadmin', 'admin', 'jefe_carrera', 'personal_administrativo'] },
-  { to: '/admin/alumnos',                   label: 'Alumnos',             roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
-  { to: '/admin/gestion-academica',         label: 'Gestión Académica',   roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera'] },
-  { to: '/admin/carga-academica',           label: 'Carga Académica PDF', roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera'] },
-  { to: '/docente/planeacion',              label: 'Mi Planeación',       roles: ['docente', 'jefe_carrera'] },
-  { to: '/admin/reinscripciones',           label: 'Reinscripciones',     roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera'] },
-  { to: '/admin/constancias',               label: 'Constancias',         roles: ['superadmin', 'admin', 'personal_administrativo'] },
-  { to: '/admin/encuestas-socioeconomicas', label: 'Enc. Socioeconómica', roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'jefe_carrera'] },
-  { to: '/admin/periodos',                  label: 'Periodos',            roles: ['superadmin', 'admin'] },
-  { to: '/admin/carreras',                  label: 'Carreras',            roles: ['superadmin', 'admin', 'director_academico'] },
-  { to: '/admin/catalogos',                 label: 'Catálogos',           roles: ['superadmin', 'admin'] },
-  { to: '/admin/directorio',                label: 'Directorio',          roles: ['superadmin'] },
-  { to: '/admin/usuarios',                  label: 'Usuarios',            roles: ['superadmin', 'admin'] },
-  { to: '/admin/permisos',                  label: 'Permisos',            roles: ['superadmin'] },
-  { to: '/admin/configuracion',             label: 'Configuración',       roles: ['superadmin', 'admin'] },
+type NavItem = { to: string; label: string; roles?: string[] }
+type NavGroup = { id: string; label: string; items: NavItem[] }
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'general',
+    label: '',
+    items: [
+      { to: '/admin', label: 'Panel', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
+    ],
+  },
+  {
+    id: 'aspirantes',
+    label: 'Aspirantes',
+    items: [
+      { to: '/admin/aspirantes', label: 'Aspirantes', roles: ['superadmin', 'admin', 'jefe_carrera', 'personal_administrativo'] },
+    ],
+  },
+  {
+    id: 'estudiantes',
+    label: 'Estudiantes',
+    items: [
+      { to: '/admin/alumnos',                   label: 'Alumnos',             roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
+      { to: '/admin/reinscripciones',           label: 'Reinscripciones',     roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera'] },
+      { to: '/admin/constancias',               label: 'Constancias',         roles: ['superadmin', 'admin', 'personal_administrativo'] },
+      { to: '/admin/encuestas-socioeconomicas', label: 'Enc. Socioeconómica', roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'jefe_carrera'] },
+      { to: '/admin/carga-academica',           label: 'Carga Académica PDF', roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera'] },
+    ],
+  },
+  {
+    id: 'personal',
+    label: 'Personal',
+    items: [
+      { to: '/admin/gestion-academica', label: 'Gestión Académica', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera'] },
+      { to: '/docente/planeacion',      label: 'Mi Planeación',     roles: ['docente', 'jefe_carrera'] },
+      { to: '/admin/directorio',        label: 'Directorio',        roles: ['superadmin'] },
+      { to: '/admin/usuarios',          label: 'Usuarios',          roles: ['superadmin', 'admin'] },
+      { to: '/admin/permisos',          label: 'Permisos',          roles: ['superadmin'] },
+      { to: '/admin/periodos',          label: 'Periodos',          roles: ['superadmin', 'admin'] },
+      { to: '/admin/carreras',          label: 'Carreras',          roles: ['superadmin', 'admin', 'director_academico'] },
+      { to: '/admin/catalogos',         label: 'Catálogos',         roles: ['superadmin', 'admin'] },
+      { to: '/admin/configuracion',     label: 'Configuración',     roles: ['superadmin', 'admin'] },
+    ],
+  },
 ]
 
 // ── NavItem con tooltip fixed ─────────────────────────────────────────────────
@@ -269,9 +296,9 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }
 
-  const navLinks = NAV.filter(
-    (n) => !n.roles || n.roles.some((r) => user?.roles.includes(r))
-  )
+  const navGroups = NAV_GROUPS
+    .map(g => ({ ...g, items: g.items.filter(n => !n.roles || n.roles.some(r => user?.roles.includes(r))) }))
+    .filter(g => g.items.length > 0)
 
   const initials = user?.name
     .split(' ')
@@ -353,9 +380,23 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div className="mx-4 h-px bg-white/8 shrink-0" />
 
         {/* Nav */}
-        <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
-          {navLinks.map((n) => (
-            <NavItem key={n.to} n={n} colapsado={colapsado} onClose={() => setMenuAbierto(false)} />
+        <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-4">
+          {navGroups.map((g) => (
+            <div key={g.id}>
+              {g.label && !colapsado && (
+                <p className="px-3 mb-1 text-[10px] font-semibold tracking-widest uppercase text-slate-500 select-none">
+                  {g.label}
+                </p>
+              )}
+              {g.label && colapsado && (
+                <div className="mx-3 mb-1 h-px bg-white/10" />
+              )}
+              <div className="space-y-0.5">
+                {g.items.map((n) => (
+                  <NavItem key={n.to} n={n} colapsado={colapsado} onClose={() => setMenuAbierto(false)} />
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
