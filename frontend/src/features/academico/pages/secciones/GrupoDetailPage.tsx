@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Th, EmptyRow, mutationError } from '../tabs/shared'
+import { Th, EmptyRow, mutationError, inputCls } from '../tabs/shared'
 import { useAlumnos } from '../tabs/shared'
 
 const TURNO_LABEL: Record<string, string> = {
@@ -30,6 +30,7 @@ export default function GrupoDetailPage() {
   const { toast: addToast } = useToastStore()
   const [asignarOpen, setAsignarOpen] = useState(false)
   const [selAlumnos, setSelAlumnos] = useState<string[]>([])
+  const [busqueda, setBusqueda] = useState('')
 
   const { data: grupo, isLoading } = useQuery({
     queryKey: ['grupo-detalle', id],
@@ -76,7 +77,23 @@ export default function GrupoDetailPage() {
   }
 
   const alumnosEnGrupo = new Set((grupo.alumnos ?? []).map(a => a.id))
-  const alumnosDisponibles = todosAlumnos.filter(a => !alumnosEnGrupo.has(a.id))
+  const alumnosDisponibles = useMemo(() => {
+    const base = todosAlumnos.filter(a => !alumnosEnGrupo.has(a.id))
+    if (!busqueda.trim()) return base
+    const q = busqueda.toLowerCase()
+    return base.filter(a => {
+      const nombre = a.user?.name
+        ?? (a.inscripcion?.aspirante
+          ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()
+          : '')
+      return (
+        a.numero_control.toLowerCase().includes(q) ||
+        nombre.toLowerCase().includes(q) ||
+        (a.carrera?.clave ?? '').toLowerCase().includes(q) ||
+        (a.carrera?.nombre ?? '').toLowerCase().includes(q)
+      )
+    })
+  }, [todosAlumnos, alumnosEnGrupo, busqueda])
 
   return (
     <div className="min-h-full bg-slate-50 p-6">
@@ -145,44 +162,91 @@ export default function GrupoDetailPage() {
           {/* Panel inline de asignación */}
           {asignarOpen && (
             <div className="border-b border-slate-100 bg-slate-50 p-5 space-y-3">
-              <p className="text-xs font-medium text-slate-600">Seleccionar alumnos a agregar:</p>
-              <div className="max-h-48 overflow-y-auto space-y-1">
-                {alumnosDisponibles.length === 0 && (
-                  <p className="text-xs text-slate-400">No hay alumnos disponibles.</p>
-                )}
-                {alumnosDisponibles.map(a => (
-                  <label key={a.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-white rounded px-2 py-1">
-                    <input
-                      type="checkbox"
-                      checked={selAlumnos.includes(a.id)}
-                      onChange={e => setSelAlumnos(prev =>
-                        e.target.checked ? [...prev, a.id] : prev.filter(x => x !== a.id)
-                      )}
-                    />
-                    <span className="font-mono text-xs text-slate-500 w-28 shrink-0">{a.numero_control}</span>
-                    <span>{
-                      a.user?.name
-                        ?? (a.inscripcion?.aspirante
-                          ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()
-                          : '—')
-                    }</span>
-                  </label>
-                ))}
+              {/* Búsqueda y controles */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex-1 min-w-48">
+                  <input
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)}
+                    placeholder="Buscar por nombre, N° control o carrera…"
+                    className={inputCls}
+                  />
+                </div>
+                <div className="flex items-center gap-3 text-xs text-slate-500 shrink-0">
+                  <span>{alumnosDisponibles.length} disponible{alumnosDisponibles.length !== 1 ? 's' : ''}</span>
+                  {alumnosDisponibles.length > 0 && (
+                    <button
+                      onClick={() =>
+                        setSelAlumnos(prev =>
+                          prev.length === alumnosDisponibles.length
+                            ? []
+                            : alumnosDisponibles.map(a => a.id)
+                        )
+                      }
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      {selAlumnos.length === alumnosDisponibles.length ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => { setAsignarOpen(false); setSelAlumnos([]) }}
-                  className="text-xs text-slate-500 hover:underline"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => asignar.mutate()}
-                  disabled={selAlumnos.length === 0 || asignar.isPending}
-                  className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg disabled:opacity-50"
-                >
-                  {asignar.isPending ? 'Asignando…' : `Asignar${selAlumnos.length > 0 ? ` (${selAlumnos.length})` : ''}`}
-                </button>
+
+              {/* Lista de alumnos */}
+              <div className="max-h-72 overflow-y-auto border border-slate-200 rounded-lg bg-white divide-y divide-slate-50">
+                {alumnosDisponibles.length === 0 ? (
+                  <p className="px-4 py-6 text-xs text-slate-400 text-center">
+                    {busqueda ? 'Sin resultados para la búsqueda.' : 'No hay alumnos disponibles para asignar.'}
+                  </p>
+                ) : (
+                  alumnosDisponibles.map(a => {
+                    const nombre = a.user?.name
+                      ?? (a.inscripcion?.aspirante
+                        ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()
+                        : '—')
+                    const seleccionado = selAlumnos.includes(a.id)
+                    return (
+                      <label
+                        key={a.id}
+                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${seleccionado ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={seleccionado}
+                          onChange={e => setSelAlumnos(prev =>
+                            e.target.checked ? [...prev, a.id] : prev.filter(x => x !== a.id)
+                          )}
+                          className="w-4 h-4 accent-blue-600 shrink-0"
+                        />
+                        <span className="font-mono text-xs text-slate-500 w-24 shrink-0">{a.numero_control}</span>
+                        <span className="flex-1 font-medium text-slate-800 text-sm">{nombre}</span>
+                        <span className="text-xs text-slate-400 shrink-0">{a.carrera?.clave ?? '—'}</span>
+                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full shrink-0">{a.semestre_actual}° sem</span>
+                      </label>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Acciones */}
+              <div className="flex gap-2 justify-between items-center">
+                <span className="text-xs text-slate-500">
+                  {selAlumnos.length > 0 ? `${selAlumnos.length} alumno${selAlumnos.length !== 1 ? 's' : ''} seleccionado${selAlumnos.length !== 1 ? 's' : ''}` : ''}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setAsignarOpen(false); setSelAlumnos([]); setBusqueda('') }}
+                    className="text-xs text-slate-500 hover:underline px-3 py-1.5"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => asignar.mutate()}
+                    disabled={selAlumnos.length === 0 || asignar.isPending}
+                    className="px-4 py-1.5 text-xs bg-blue-600 text-white rounded-lg disabled:opacity-50 font-medium"
+                  >
+                    {asignar.isPending ? 'Asignando…' : `Asignar${selAlumnos.length > 0 ? ` (${selAlumnos.length})` : ''}`}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -192,18 +256,24 @@ export default function GrupoDetailPage() {
               <tr>
                 <Th>N° Control</Th>
                 <Th>Nombre</Th>
-                <Th>Sem.</Th>
+                <Th>Semestre</Th>
+                <Th>Fecha asignación</Th>
                 <Th />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {(grupo.alumnos ?? []).length === 0 && <EmptyRow cols={4} msg="Sin alumnos asignados." />}
+              {(grupo.alumnos ?? []).length === 0 && <EmptyRow cols={5} msg="Sin alumnos asignados." />}
               {(grupo.alumnos ?? []).map(a => (
                 <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
-                  <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{a.numero_control}</td>
-                  <td className="px-4 py-2.5 text-slate-900">{alumnoNombre(a)}</td>
-                  <td className="px-4 py-2.5 text-center text-slate-600">{a.semestre_actual}°</td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="px-4 py-3 font-mono text-xs text-slate-600">{a.numero_control}</td>
+                  <td className="px-4 py-3 font-medium text-slate-900">{alumnoNombre(a)}</td>
+                  <td className="px-4 py-3 text-center text-slate-600">{a.semestre_actual}°</td>
+                  <td className="px-4 py-3 text-xs text-slate-400">
+                    {a.pivot?.fecha_asignacion
+                      ? new Date(a.pivot.fecha_asignacion).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => window.confirm('¿Retirar alumno del grupo?') && quitar.mutate(a.id)}
                       className="text-xs text-red-500 hover:underline"

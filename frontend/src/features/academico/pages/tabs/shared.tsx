@@ -79,7 +79,7 @@ export function useAlumnos() {
     queryKey: ['alumnos-select'],
     queryFn: () => apiClient.get('/alumnos').then(r => {
       const d = r.data.data
-      return (Array.isArray(d) ? d : d.data ?? []) as { id: string; numero_control: string; semestre_actual: number; user?: { name: string }; inscripcion?: { aspirante?: { nombres: string; apellido_paterno: string; apellido_materno?: string } } }[]
+      return (Array.isArray(d) ? d : d.data ?? []) as { id: string; numero_control: string; semestre_actual: number; user?: { name: string }; carrera?: { id: string; nombre: string; clave: string }; inscripcion?: { aspirante?: { nombres: string; apellido_paterno: string; apellido_materno?: string } } }[]
     }),
     staleTime: 30_000,
   })
