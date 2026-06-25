@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             EscuelasSeeder::class,
             ConfiguracionSeeder::class,
             EstudiantesSeeder::class,
+            MateriasSeeder::class,
         ]);
     }
 }

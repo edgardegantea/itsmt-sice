@@ -31,7 +31,7 @@ class InscripcionController extends Controller
 
         $this->authorize('inscribir', $aspirante);
 
-        if ($aspirante->estatus !== 'Aceptado') {
+        if ($aspirante->estatus !== 'aceptado') {
             return ApiResponse::error('El aspirante debe tener estatus "aceptado" para ser inscrito.', 422);
         }
 
