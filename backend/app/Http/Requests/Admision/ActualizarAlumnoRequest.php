@@ -19,6 +19,8 @@ class ActualizarAlumnoRequest extends FormRequest
             'semestre_actual'                    => ['sometimes', 'integer', 'min:1', 'max:12'],
             'carrera_id'                         => ['sometimes', 'uuid', 'exists:carreras,id'],
             'pendiente_certificado_bachillerato' => ['sometimes', 'boolean'],
+            'plantel'                            => ['sometimes', 'in:martinez_de_la_torre,vega_de_alatorre'],
+            'modalidad'                          => ['sometimes', 'in:escolarizado,sabatino'],
             'observaciones_estatus'              => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
     }

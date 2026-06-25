@@ -102,6 +102,8 @@ class AspiranteService
             'semestre_actual'                  => 1,
             'estatus'                          => 'activo',
             'pendiente_certificado_bachillerato' => $pendienteCertificado,
+            'plantel'                          => $aspirante->plantel ?? 'martinez_de_la_torre',
+            'modalidad'                        => $aspirante->modalidad ?? 'escolarizado',
         ]);
 
         $aspirante->update(['estatus' => 'inscrito']);

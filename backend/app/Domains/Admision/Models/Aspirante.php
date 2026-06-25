@@ -48,6 +48,8 @@ class Aspirante extends Model
         'tiene_equipo_computo',
         'campus_preferido',
         'modalidad_preferida',
+        'plantel',
+        'modalidad',
         'constancia_bachillerato',
     ];
 

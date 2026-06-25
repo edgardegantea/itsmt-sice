@@ -41,6 +41,8 @@ class ActualizarAspiranteRequest extends FormRequest
             'puntaje_exani'         => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:1000'],
             'carrera_id'            => ['sometimes', 'uuid', 'exists:carreras,id'],
             'periodo_id'            => ['sometimes', 'uuid', 'exists:periodos,id'],
+            'plantel'               => ['sometimes', 'in:martinez_de_la_torre,vega_de_alatorre'],
+            'modalidad'             => ['sometimes', 'in:escolarizado,sabatino'],
             'observaciones'         => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
     }

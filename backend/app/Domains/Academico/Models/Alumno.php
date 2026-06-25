@@ -24,6 +24,8 @@ class Alumno extends Model
         'fecha_cambio_estatus',
         'autorizacion_consulta_expediente',
         'pendiente_certificado_bachillerato',
+        'plantel',
+        'modalidad',
         'observaciones_estatus',
     ];
 

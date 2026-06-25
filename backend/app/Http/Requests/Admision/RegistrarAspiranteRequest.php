@@ -65,6 +65,9 @@ class RegistrarAspiranteRequest extends FormRequest
             'tiene_equipo_computo'  => ['required', 'boolean'],
             'campus_preferido'      => ['nullable', 'string', 'max:40'],
             'modalidad_preferida'   => ['nullable', 'string', 'max:20'],
+            // Plantel y modalidad oficiales
+            'plantel'               => ['nullable', 'in:martinez_de_la_torre,vega_de_alatorre'],
+            'modalidad'             => ['nullable', 'in:escolarizado,sabatino'],
             // Archivo de constancia (multipart/form-data)
             'constancia_bachillerato' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp'],
         ];
