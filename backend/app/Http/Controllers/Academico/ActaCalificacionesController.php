@@ -73,7 +73,9 @@ class ActaCalificacionesController extends Controller
 
         $grupo = Grupo::findOrFail($grupoId);
 
-        $acta = ActaCalificaciones::where('grupo_id', $grupoId)->firstOrFail();
+        $acta = ActaCalificaciones::where('grupo_id', $grupoId)
+            ->where('periodo_id', $grupo->periodo_id)
+            ->firstOrFail();
 
         if ($acta->firmada) {
             return ApiResponse::error('El acta ya fue firmada.', 422);

@@ -96,7 +96,7 @@ class AspiranteTest extends TestCase
         $this->post('/api/aspirantes', $this->datosAspirante(), ['Accept' => 'application/json'])
             ->assertStatus(201);
 
-        Mail::assertSent(ConfirmacionAspirante::class, function ($mail) {
+        Mail::assertQueued(ConfirmacionAspirante::class, function ($mail) {
             return $mail->hasTo('laura@test.com');
         });
     }
@@ -362,6 +362,38 @@ class AspiranteTest extends TestCase
         $emails = collect($response->json('data.data'))->pluck('email');
         $this->assertTrue($emails->contains('alta@test.com'));
         $this->assertFalse($emails->contains('baja@test.com'));
+    }
+
+    // S1-03 — aceptar aspirante envía correo de aceptación
+    public function test_aceptar_aspirante_envia_correo(): void
+    {
+        Mail::fake();
+
+        $aspirante = Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'CORA000101MVZRRA05']), [
+            'nombres' => 'Ana', 'apellido_paterno' => 'Correo',
+            'email' => 'ana.correo@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id,
+        ]));
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/aspirantes/{$aspirante->id}/estatus", ['estatus' => 'aceptado'])
+            ->assertStatus(200);
+
+        Mail::assertQueued(\App\Mail\AceptacionAspiranteMail::class, fn($m) => $m->aspirante->id === $aspirante->id);
+    }
+
+    // S1-03 — rechazar aspirante requiere motivo y envía correo de rechazo
+    public function test_rechazar_aspirante_sin_motivo_retorna_422(): void
+    {
+        $aspirante = Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'MORP000101HVZDRX04']), [
+            'nombres' => 'Luis', 'apellido_paterno' => 'Mora',
+            'email' => 'luis.mora@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id,
+        ]));
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/aspirantes/{$aspirante->id}/estatus", ['estatus' => 'rechazado'])
+            ->assertStatus(422);
     }
 
     // S1-04 — no se puede inscribir si estatus != aceptado

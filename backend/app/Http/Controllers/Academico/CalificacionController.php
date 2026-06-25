@@ -108,11 +108,8 @@ class CalificacionController extends Controller
                 $peso = $pesos->get($p['parcial'])['peso'] ?? 0;
                 return $p['calificacion'] * $peso;
             });
-            $promedio = round($sumaPonderada + ($calFinal * 0), 2);
-            // Si los pesos de parciales no suman 1, la cal_final se agrega sin ponderar
-            // Nota: según TecNM la calificacion_final puede ser examen final con peso propio
-            // Usar suma ponderada completa donde el último "peso" cubre cal_final
-            $promedio = round($sumaPonderada + $calFinal * (1 - collect($config->peso_parciales)->sum('peso')), 2);
+            // Los pesos suman 1.0 (validado en ConfiguracionEvaluacion), promedio = suma ponderada
+            $promedio = round($sumaPonderada, 2);
         }
 
         $min = $config?->calificacion_minima ?? 70;

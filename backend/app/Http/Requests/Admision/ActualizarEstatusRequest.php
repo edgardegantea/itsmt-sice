@@ -17,7 +17,7 @@ class ActualizarEstatusRequest extends FormRequest
         return [
             'estatus'         => ['required', Rule::in(['pendiente', 'aceptado', 'rechazado'])],
             'observaciones'   => ['nullable', 'string', 'max:500'],
-            'motivo_rechazo'  => [Rule::requiredIf(fn () => $this->input('estatus') === 'rechazado'), 'nullable', 'string', 'max:500'],
+            'motivo_rechazo'  => ['required_if:estatus,rechazado', 'string', 'max:500'],
         ];
     }
 }

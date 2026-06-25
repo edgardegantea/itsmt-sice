@@ -5,6 +5,8 @@
   $fechaHoy = Carbon::now()->locale('es')->isoFormat('D [de] MMMM [de] YYYY');
   $materia  = $carga?->materia;
   $alumnos  = $grupo->alumnos->sortBy(fn($a) => $a->user?->apellido_paterno);
+  $config   = \App\Domains\Academico\Models\ConfiguracionEvaluacion::where('carrera_id', $carrera?->id)->first();
+  $numParciales = $config?->num_parciales ?? 3;
 
   $DIA = ['lunes'=>'Lun','martes'=>'Mar','miercoles'=>'Mié','jueves'=>'Jue','viernes'=>'Vie','sabado'=>'Sáb'];
   $horarioStr = $carga?->horarios?->map(fn($h) => ($DIA[$h->dia_semana] ?? $h->dia_semana).' '.$h->hora_inicio.'-'.$h->hora_fin)->implode(', ');
@@ -87,9 +89,9 @@
       <th style="width:30px;">#</th>
       <th style="width:100px;">N° Control</th>
       <th>Nombre del Alumno</th>
-      <th>Parcial 1</th>
-      <th>Parcial 2</th>
-      <th>Parcial 3</th>
+      @for($p = 1; $p <= $numParciales; $p++)
+      <th>Parcial {{ $p }}</th>
+      @endfor
       <th>Cal. Final</th>
       <th>Promedio</th>
       <th>Acreditado</th>
@@ -99,18 +101,15 @@
     @foreach($alumnos as $i => $alumno)
       @php
         $cal = $calificaciones[$alumno->id] ?? null;
-        $parciales = collect($cal?->parciales ?? []);
-        $p1 = $parciales->firstWhere('parcial', 1)['calificacion'] ?? '—';
-        $p2 = $parciales->firstWhere('parcial', 2)['calificacion'] ?? '—';
-        $p3 = $parciales->firstWhere('parcial', 3)['calificacion'] ?? '—';
+        $parcialesCol = collect($cal?->parciales ?? []);
       @endphp
       <tr>
         <td>{{ $i + 1 }}</td>
         <td>{{ $alumno->numero_control }}</td>
         <td class="nombre">{{ $alumno->user?->apellido_paterno }} {{ $alumno->user?->apellido_materno }}, {{ $alumno->user?->nombre }}</td>
-        <td>{{ $p1 }}</td>
-        <td>{{ $p2 }}</td>
-        <td>{{ $p3 }}</td>
+        @for($p = 1; $p <= $numParciales; $p++)
+        <td>{{ $parcialesCol->firstWhere('parcial', $p)['calificacion'] ?? '—' }}</td>
+        @endfor
         <td>{{ $cal?->calificacion_final ?? '—' }}</td>
         <td style="font-weight:bold;">{{ $cal?->promedio ?? '—' }}</td>
         <td style="color:{{ $cal?->acreditado ? 'green' : ($cal ? 'red' : '#999') }};">

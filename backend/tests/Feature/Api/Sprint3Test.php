@@ -209,7 +209,7 @@ class Sprint3Test extends TestCase
 
         // Segunda materia para el mismo docente — mismo bloque
         $materia2 = Materia::create([
-            'carrera_id' => $this->carrera->id, 'clave' => 'SC099',
+            'carrera_id' => $this->carrera->id, 'clave' => 'SC099', 'clave_oficial_tecnm' => 'AEC-1022',
             'nombre' => 'Álgebra', 'semestre' => 1, 'creditos' => 4,
             'horas_teoria' => 2, 'horas_practica' => 2, 'tipo' => 'obligatoria',
         ]);
@@ -249,7 +249,7 @@ class Sprint3Test extends TestCase
         $docente2 = User::factory()->create();
         $docente2->assignRole('docente');
         $materia2 = Materia::create([
-            'carrera_id' => $this->carrera->id, 'clave' => 'SC098',
+            'carrera_id' => $this->carrera->id, 'clave' => 'SC098', 'clave_oficial_tecnm' => 'AEC-1023',
             'nombre' => 'Física', 'semestre' => 1, 'creditos' => 4,
             'horas_teoria' => 2, 'horas_practica' => 2, 'tipo' => 'obligatoria',
         ]);

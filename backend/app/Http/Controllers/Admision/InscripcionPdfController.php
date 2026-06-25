@@ -213,8 +213,11 @@ class InscripcionPdfController extends Controller
     {
         $this->authorize('viewAny', Alumno::class);
 
+        $periodoId = request('periodo_id');
+
         $alumnos = Alumno::withTrashed()
             ->with(['inscripcion.aspirante', 'carrera', 'periodoIngreso'])
+            ->when($periodoId, fn($q) => $q->where('periodo_ingreso_id', $periodoId))
             ->orderBy('numero_control')
             ->get();
 

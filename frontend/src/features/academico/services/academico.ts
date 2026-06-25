@@ -11,7 +11,7 @@ export interface Materia {
   creditos: number
   horas_teoria: number
   horas_practica: number
-  tipo: 'obligatoria' | 'optativa' | 'taller' | 'lab'
+  tipo: 'obligatoria' | 'optativa'
   activa: boolean
   clave_oficial_tecnm?: string
   carrera?: { id: string; nombre: string; clave: string }

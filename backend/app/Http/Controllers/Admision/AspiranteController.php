@@ -55,7 +55,7 @@ class AspiranteController extends Controller
         $aspirante->load(['carrera', 'periodo']);
 
         try {
-            Mail::to($aspirante->email)->send(new ConfirmacionAspirante($aspirante));
+            Mail::to($aspirante->email)->queue(new ConfirmacionAspirante($aspirante));
         } catch (\Throwable) {
             // El correo falla silenciosamente para no bloquear el registro
         }

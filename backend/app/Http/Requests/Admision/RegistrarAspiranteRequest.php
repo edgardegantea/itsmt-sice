@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admision;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RegistrarAspiranteRequest extends FormRequest
 {
@@ -47,7 +48,7 @@ class RegistrarAspiranteRequest extends FormRequest
             'promedio_bachillerato' => ['required', 'numeric', 'min:6', 'max:10'],
             'turno_preferido'       => ['required', 'string', 'max:30'],
             // Contacto
-            'email'                 => ['required', 'email', 'unique:aspirantes,email'],
+            'email'                 => ['required', 'email', Rule::unique('aspirantes')->where(fn($q) => $q->where('periodo_id', $this->periodo_id))],
             'telefono'              => ['nullable', 'string', 'max:15', 'regex:/^\d{10}$/'],
             // Preinscripción TecNM (opcionales — se mantienen en BD pero no se muestran en el formulario público)
             'folio_preinscripcion_tecnm' => ['nullable', 'string', 'max:50'],

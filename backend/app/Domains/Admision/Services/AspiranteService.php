@@ -7,8 +7,11 @@ use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Mail\AceptacionAspiranteMail;
+use App\Mail\RechazoAspiranteMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 class AspiranteService
@@ -44,6 +47,12 @@ class AspiranteService
             'observaciones'  => $observaciones ?? $aspirante->observaciones,
             'motivo_rechazo' => $estatus === 'rechazado' ? $motivo_rechazo : null,
         ]);
+
+        if ($estatus === 'aceptado') {
+            Mail::to($aspirante->email)->queue(new AceptacionAspiranteMail($aspirante));
+        } elseif ($estatus === 'rechazado') {
+            Mail::to($aspirante->email)->queue(new RechazoAspiranteMail($aspirante));
+        }
 
         return $aspirante->fresh(['carrera', 'periodo']);
     }
@@ -108,8 +117,10 @@ class AspiranteService
         $codigoIt = str_pad($aspirante->carrera->codigo_it, 3, '0', STR_PAD_LEFT);
 
         $secuencia = DB::transaction(function () use ($anioFull) {
-            DB::table('inscripciones')->whereYear('created_at', $anioFull)->lockForUpdate()->count();
-            return DB::table('inscripciones')->whereYear('created_at', $anioFull)->count() + 1;
+            return DB::table('inscripciones')
+                ->whereYear('created_at', $anioFull)
+                ->lockForUpdate()
+                ->count() + 1;
         });
 
         return "{$anio}{$codigoIt}" . str_pad($secuencia, 4, '0', STR_PAD_LEFT);

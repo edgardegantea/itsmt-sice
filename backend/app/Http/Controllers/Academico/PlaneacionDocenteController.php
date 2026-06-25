@@ -123,7 +123,7 @@ class PlaneacionDocenteController extends Controller
     // PATCH /api/planeaciones-docentes/{planeacion}/estatus  (jefe/admin revisa)
     public function cambiarEstatus(Request $request, PlaneacionDocente $planeacionDocente): JsonResponse
     {
-        if (! $request->user()->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', 'personal_administrativo'])) {
+        if (! $request->user()->hasAnyRole(['superadmin', 'admin', 'jefe_carrera'])) {
             return ApiResponse::error('No tienes permiso para revisar planeaciones.', 403);
         }
 

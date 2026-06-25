@@ -97,6 +97,34 @@ class BajaController extends Controller
         return ApiResponse::success($baja, 'Baja temporal solicitada.', 201);
     }
 
+    // PATCH /api/bajas/{baja}/estatus  (admin/jefe aprueba o rechaza baja temporal solicitada)
+    public function actualizarEstatus(Request $request, Baja $baja): JsonResponse
+    {
+        $this->authorize('create', Baja::class);
+
+        if ($baja->estatus !== 'pendiente') {
+            return ApiResponse::error('Solo se pueden aprobar o rechazar bajas en estado pendiente.', 422);
+        }
+
+        $data = $request->validate([
+            'estatus'        => ['required', 'in:aprobada,rechazada'],
+            'motivo_rechazo' => ['required_if:estatus,rechazada', 'string', 'max:500'],
+        ]);
+
+        $baja->update([
+            'estatus'        => $data['estatus'],
+            'motivo_rechazo' => $data['motivo_rechazo'] ?? null,
+            'revisada_por'   => $request->user()->id,
+            'revisada_en'    => now(),
+        ]);
+
+        if ($data['estatus'] === 'aprobada') {
+            $baja->alumno->update(['estatus' => 'baja_temporal']);
+        }
+
+        return ApiResponse::success($baja->fresh(['alumno.user', 'periodo']), 'Baja actualizada.');
+    }
+
     // GET /api/alumnos/{alumno}/bajas
     public function porAlumno(Alumno $alumno): JsonResponse
     {

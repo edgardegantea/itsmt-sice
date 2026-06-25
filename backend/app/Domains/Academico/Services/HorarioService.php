@@ -78,7 +78,7 @@ class HorarioService
                 $bloque['hora_fin'],
             );
             if (!empty($conflictos)) {
-                throw new \DomainException($conflictos[0]['mensaje']);
+                throw new \DomainException(implode(' | ', array_column($conflictos, 'mensaje')));
             }
         }
 

@@ -279,6 +279,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bajas',                                                 [BajaController::class, 'store']);
     Route::post('/bajas/solicitar',                                       [BajaController::class, 'solicitar']);
     Route::get('/bajas/mias',                                             [BajaController::class, 'mias']);
+    Route::patch('/bajas/{baja}/estatus',                                 [BajaController::class, 'actualizarEstatus']);
     Route::get('/alumnos/{alumno}/bajas',                                 [BajaController::class, 'porAlumno']);
 
     // Constancias
