@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type PlaneacionDocente, type EstatusPlaneacion } from '../../services/academico'
-import { Th, EmptyRow, selectCls, mutationError, usePeriodos } from '../tabs/shared'
+import { Th, SkeletonRows, EmptyRow, selectCls, mutationError, usePeriodos } from '../tabs/shared'
 
 const ESTATUS_COLOR: Record<EstatusPlaneacion, string> = {
   borrador:  'bg-slate-100 text-slate-600',
@@ -175,7 +175,7 @@ export default function PlaneacionesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <EmptyRow cols={7} msg="Cargando…" />
+                <SkeletonRows cols={7} />
               ) : planeaciones.length === 0 ? (
                 <EmptyRow cols={7} msg="No hay planeaciones." />
               ) : (

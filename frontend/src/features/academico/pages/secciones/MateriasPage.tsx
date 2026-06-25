@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useConfirm } from '../../../../components/ConfirmDialog'
 import { academicoApi, type Materia } from '../../services/academico'
-import { Field, Th, EmptyRow, inputCls, selectCls, icls, ModalWrap, extractApiErrors, mutationError, useCarreras } from '../tabs/shared'
+import { Field, SortableTh, SkeletonRows, EmptyRow, inputCls, selectCls, icls, ModalWrap, extractApiErrors, mutationError, useCarreras, useSorted } from '../tabs/shared'
 import { useToastStore } from '../../../../store/toastStore'
 
 const SEMESTRES = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -16,6 +17,7 @@ export default function MateriasPage() {
   const [busqueda, setBusqueda] = useState('')
   const [modal, setModal] = useState<Partial<Materia> | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const { data: materias = [], isLoading } = useQuery({
     queryKey: ['materias', filtroCarrera, filtroSemestre],
@@ -27,7 +29,7 @@ export default function MateriasPage() {
     },
   })
 
-  const materiasVistas = useMemo(() => {
+  const materiasBase = useMemo(() => {
     if (!busqueda.trim()) return materias as Materia[]
     const q = busqueda.toLowerCase()
     return (materias as Materia[]).filter(m =>
@@ -37,8 +39,10 @@ export default function MateriasPage() {
     )
   }, [materias, busqueda])
 
-  const totalObligatorias = materiasVistas.filter(m => m.tipo === 'obligatoria').length
-  const totalOptativas = materiasVistas.filter(m => m.tipo === 'optativa').length
+  const { sorted: materiasVistas, sort, onSort } = useSorted(materiasBase, 'nombre', 'asc')
+
+  const totalObligatorias = materiasBase.filter(m => m.tipo === 'obligatoria').length
+  const totalOptativas = materiasBase.filter(m => m.tipo === 'optativa').length
 
   const save = useMutation({
     mutationFn: () =>
@@ -147,19 +151,19 @@ export default function MateriasPage() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <Th>Clave</Th>
-                <Th>Nombre</Th>
-                <Th>Carrera</Th>
-                <Th>Sem.</Th>
-                <Th>Cred.</Th>
-                <Th>H.T / H.P</Th>
-                <Th>Tipo</Th>
-                <Th />
+                <SortableTh field="clave" sort={sort} onSort={onSort}>Clave</SortableTh>
+                <SortableTh field="nombre" sort={sort} onSort={onSort}>Nombre</SortableTh>
+                <SortableTh field="carrera.clave" sort={sort} onSort={onSort}>Carrera</SortableTh>
+                <SortableTh field="semestre" sort={sort} onSort={onSort}>Sem.</SortableTh>
+                <SortableTh field="creditos" sort={sort} onSort={onSort}>Créd.</SortableTh>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">H.T / H.P</th>
+                <SortableTh field="tipo" sort={sort} onSort={onSort}>Tipo</SortableTh>
+                <th />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {isLoading && <EmptyRow cols={8} msg="Cargando…" />}
-              {!isLoading && materiasVistas.length === 0 && <EmptyRow cols={8} />}
+              {isLoading && <SkeletonRows cols={8} />}
+              {!isLoading && materiasVistas.length === 0 && <EmptyRow cols={8} msg={busqueda ? 'Sin resultados para la búsqueda.' : 'No hay materias registradas.'} />}
               {materiasVistas.map(m => (
                 <tr key={m.id} className="hover:bg-blue-50/60 transition-colors">
                   <td className="px-4 py-3 font-mono text-xs text-slate-700">{m.clave}</td>
@@ -176,7 +180,12 @@ export default function MateriasPage() {
                   <td className="px-4 py-3 text-right space-x-2">
                     <button onClick={() => openEditar(m)} className="text-xs text-blue-600 hover:underline">Editar</button>
                     <button
-                      onClick={() => window.confirm(`¿Eliminar "${m.nombre}"?`) && del.mutate(m.id)}
+                      onClick={() => confirm({
+                        title: `¿Eliminar "${m.nombre}"?`,
+                        description: 'Se eliminará permanentemente del catálogo.',
+                        confirmLabel: 'Eliminar materia',
+                        onConfirm: () => del.mutateAsync(m.id),
+                      })}
                       className="text-xs text-red-500 hover:underline"
                     >
                       Eliminar
@@ -188,6 +197,8 @@ export default function MateriasPage() {
           </table>
         </div>
       </div>
+
+      {confirmDialog}
 
       {/* Modal crear/editar */}
       {modal !== null && (

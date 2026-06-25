@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Tutoria } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, Th, EmptyRow, icls, selectCls, usePeriodos, useAlumnos, mutationError, extractApiErrors } from '../tabs/shared'
+import { Field, Th, SkeletonRows, EmptyRow, icls, selectCls, usePeriodos, useAlumnos, mutationError, extractApiErrors } from '../tabs/shared'
+import { useConfirm } from '../../../../components/ConfirmDialog'
 
 type Vista = 'lista' | 'por-tutor'
 
@@ -15,6 +16,7 @@ export default function TutoriasPage() {
   const [vista, setVista] = useState<Vista>('por-tutor')
   const [modal, setModal] = useState<{ tutor_id: string; periodo_id: string; alumno_ids: string[] } | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const { data: periodos = [] } = usePeriodos()
   const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
@@ -172,7 +174,7 @@ export default function TutoriasPage() {
                             <td className="px-4 py-2.5 text-slate-400 text-xs">{t.periodo?.nombre ?? '—'}</td>
                             <td className="px-4 py-2.5 text-right">
                               <button
-                                onClick={() => window.confirm('¿Eliminar tutoría?') && del.mutate(t.id)}
+                                onClick={() => confirm({ title: '¿Eliminar tutoría?', description: `Se eliminará la tutoría de ${t.alumno?.user?.name ?? t.alumno?.numero_control}.`, confirmLabel: 'Eliminar', onConfirm: () => del.mutateAsync(t.id) })}
                                 className="text-xs text-red-500 hover:underline"
                               >
                                 Eliminar
@@ -195,7 +197,7 @@ export default function TutoriasPage() {
                 <tr><Th>Tutor</Th><Th>Alumno</Th><Th>Carrera</Th><Th>Periodo</Th><Th /></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {isLoading && <EmptyRow cols={5} msg="Cargando…" />}
+                {isLoading && <SkeletonRows cols={5} />}
                 {!isLoading && tutorias.length === 0 && <EmptyRow cols={5} />}
                 {tutorias.map(t => (
                   <tr key={t.id} className="hover:bg-blue-50/60 transition-colors">
@@ -216,6 +218,8 @@ export default function TutoriasPage() {
           </div>
         )}
       </div>
+
+      {confirmDialog}
 
       {modal !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type FuncionPersonal } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, Th, EmptyRow, icls, selectCls, ModalWrap, mutationError, extractApiErrors } from '../tabs/shared'
+import { Field, Th, SkeletonRows, EmptyRow, icls, selectCls, ModalWrap, mutationError, extractApiErrors } from '../tabs/shared'
+import { useConfirm } from '../../../../components/ConfirmDialog'
 import apiClient from '../../../../config/apiClient'
 
 function usePersonal() {
@@ -31,6 +32,7 @@ export default function FuncionesPage() {
   const [filtroActiva, setFiltroActiva] = useState<FiltroActiva>('activas')
   const [modal, setModal] = useState<Partial<FuncionPersonal> | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const { data: personal = [] } = usePersonal()
 
@@ -115,7 +117,7 @@ export default function FuncionesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {isLoading && <EmptyRow cols={7} msg="Cargando…" />}
+              {isLoading && <SkeletonRows cols={7} />}
               {!isLoading && (funciones as FuncionPersonal[]).length === 0 && <EmptyRow cols={7} />}
               {(funciones as FuncionPersonal[]).map(f => (
                 <tr key={f.id} className="hover:bg-blue-50/60 transition-colors">
@@ -150,7 +152,12 @@ export default function FuncionesPage() {
                       Editar
                     </button>
                     <button
-                      onClick={() => window.confirm('¿Eliminar función?') && del.mutate(f.id)}
+                      onClick={() => confirm({
+                        title: '¿Eliminar esta función?',
+                        description: `Se eliminará la función "${f.funcion}" asignada a ${f.user?.name ?? 'este usuario'}.`,
+                        confirmLabel: 'Eliminar función',
+                        onConfirm: () => del.mutateAsync(f.id),
+                      })}
                       className="text-xs text-red-500 hover:underline"
                     >
                       Eliminar
@@ -162,6 +169,8 @@ export default function FuncionesPage() {
           </table>
         </div>
       </div>
+
+      {confirmDialog}
 
       {modal !== null && (
         <ModalWrap

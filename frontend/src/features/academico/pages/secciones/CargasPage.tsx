@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type CargaAcademica } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, Th, EmptyRow, icls, selectCls, ModalWrap, usePeriodos, mutationError, extractApiErrors } from '../tabs/shared'
+import { Field, Th, SkeletonRows, EmptyRow, icls, selectCls, ModalWrap, usePeriodos, mutationError, extractApiErrors } from '../tabs/shared'
+import { useConfirm } from '../../../../components/ConfirmDialog'
 
 export default function CargasPage() {
   const qc = useQueryClient()
@@ -12,6 +13,7 @@ export default function CargasPage() {
   const [filtroDocente, setFiltroDocente] = useState('')
   const [modal, setModal] = useState<Partial<CargaAcademica> | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const { data: periodos = [] } = usePeriodos()
   const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
@@ -135,7 +137,7 @@ export default function CargasPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {isLoading && <EmptyRow cols={6} msg="Cargando…" />}
+              {isLoading && <SkeletonRows cols={6} />}
               {!isLoading && (cargas as CargaAcademica[]).length === 0 && <EmptyRow cols={6} />}
               {(cargas as CargaAcademica[]).map(c => (
                 <tr key={c.id} className="hover:bg-blue-50/60 transition-colors">
@@ -153,7 +155,15 @@ export default function CargasPage() {
                   </td>
                   <td className="px-4 py-3 text-right space-x-2">
                     <button onClick={() => setModal(c)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                    <button onClick={() => window.confirm('¿Eliminar carga?') && del.mutate(c.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                    <button
+                      onClick={() => confirm({
+                        title: '¿Eliminar esta carga académica?',
+                        description: 'Se eliminará la asignación del docente a esta materia y grupo.',
+                        confirmLabel: 'Eliminar carga',
+                        onConfirm: () => del.mutateAsync(c.id),
+                      })}
+                      className="text-xs text-red-500 hover:underline"
+                    >Eliminar</button>
                   </td>
                 </tr>
               ))}
@@ -161,6 +171,8 @@ export default function CargasPage() {
           </table>
         </div>
       </div>
+
+      {confirmDialog}
 
       {modal !== null && (
         <ModalWrap

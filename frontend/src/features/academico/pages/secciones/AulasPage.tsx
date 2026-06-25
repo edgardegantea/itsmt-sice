@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Aula } from '../../services/academico'
-import { Field, Th, EmptyRow, inputCls, selectCls, ModalWrap } from '../tabs/shared'
+import { Field, SortableTh, SkeletonRows, EmptyRow, inputCls, selectCls, ModalWrap, useSorted } from '../tabs/shared'
+import { useConfirm } from '../../../../components/ConfirmDialog'
 
 type AulaForm = { nombre: string; capacidad: number; tipo: Aula['tipo']; activa: boolean }
 type TipoFiltro = 'todas' | 'salon' | 'laboratorio' | 'taller'
@@ -19,6 +20,7 @@ export default function AulasPage() {
   const [modal, setModal] = useState<null | 'nuevo' | Aula>(null)
   const [form, setForm] = useState<Partial<AulaForm>>({ tipo: 'salon', capacidad: 35, activa: true })
   const set = (k: keyof AulaForm, v: unknown) => setForm(f => ({ ...f, [k]: v }))
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const { data: aulas = [], isLoading } = useQuery({
     queryKey: ['aulas'],
@@ -42,6 +44,8 @@ export default function AulasPage() {
   const aulasFiltradas = filtroTipo === 'todas'
     ? (aulas as Aula[])
     : (aulas as Aula[]).filter(a => a.tipo === filtroTipo)
+
+  const { sorted: aulasSorted, sort, onSort } = useSorted(aulasFiltradas, 'nombre', 'asc')
 
   const conteoTipo = (t: Aula['tipo']) => (aulas as Aula[]).filter(a => a.tipo === t).length
 
@@ -91,20 +95,20 @@ export default function AulasPage() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <Th>Nombre</Th>
-                <Th>Tipo</Th>
-                <Th>Capacidad</Th>
-                <Th>Estado</Th>
-                <Th />
+                <SortableTh field="nombre" sort={sort} onSort={onSort}>Nombre</SortableTh>
+                <SortableTh field="tipo" sort={sort} onSort={onSort}>Tipo</SortableTh>
+                <SortableTh field="capacidad" sort={sort} onSort={onSort}>Capacidad</SortableTh>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
+                <th />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <EmptyRow cols={5} msg="Cargando…" />
-              ) : aulasFiltradas.length === 0 ? (
+                <SkeletonRows cols={5} />
+              ) : aulasSorted.length === 0 ? (
                 <EmptyRow cols={5} />
               ) : (
-                aulasFiltradas.map(a => (
+                aulasSorted.map(a => (
                   <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
                     <td className="px-4 py-3">
@@ -124,7 +128,15 @@ export default function AulasPage() {
                     </td>
                     <td className="px-4 py-3 flex gap-3 justify-end">
                       <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                      <button onClick={() => { if (confirm(`¿Eliminar ${a.nombre}?`)) mutDelete.mutate(a.id) }} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                      <button
+                      onClick={() => confirm({
+                        title: `¿Eliminar ${a.nombre}?`,
+                        description: 'El espacio será eliminado permanentemente.',
+                        confirmLabel: 'Eliminar',
+                        onConfirm: () => mutDelete.mutateAsync(a.id),
+                      })}
+                      className="text-xs text-red-500 hover:underline"
+                    >Eliminar</button>
                     </td>
                   </tr>
                 ))
@@ -133,6 +145,8 @@ export default function AulasPage() {
           </table>
         </div>
       </div>
+
+      {confirmDialog}
 
       {modal && (
         <ModalWrap

@@ -5,6 +5,7 @@ import { academicoApi } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
 import { Th, EmptyRow, mutationError, inputCls } from '../tabs/shared'
 import { useAlumnos } from '../tabs/shared'
+import { useConfirm } from '../../../../components/ConfirmDialog'
 
 const TURNO_LABEL: Record<string, string> = {
   matutino: 'Matutino',
@@ -31,6 +32,7 @@ export default function GrupoDetailPage() {
   const [asignarOpen, setAsignarOpen] = useState(false)
   const [selAlumnos, setSelAlumnos] = useState<string[]>([])
   const [busqueda, setBusqueda] = useState('')
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const { data: grupo, isLoading } = useQuery({
     queryKey: ['grupo-detalle', id],
@@ -275,7 +277,13 @@ export default function GrupoDetailPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
-                      onClick={() => window.confirm('¿Retirar alumno del grupo?') && quitar.mutate(a.id)}
+                      onClick={() => confirm({
+                        title: '¿Retirar alumno del grupo?',
+                        description: `${alumnoNombre(a)} será desvinculado de este grupo.`,
+                        confirmLabel: 'Retirar',
+                        variant: 'warning',
+                        onConfirm: () => quitar.mutateAsync(a.id),
+                      })}
                       className="text-xs text-red-500 hover:underline"
                     >
                       Retirar
@@ -286,6 +294,8 @@ export default function GrupoDetailPage() {
             </tbody>
           </table>
         </div>
+
+        {confirmDialog}
 
         {/* Sección: Cargas académicas */}
         {(grupo.cargas ?? []).length > 0 && (
