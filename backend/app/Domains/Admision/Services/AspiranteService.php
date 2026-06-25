@@ -117,10 +117,12 @@ class AspiranteService
         $codigoIt = str_pad($aspirante->carrera->codigo_it, 3, '0', STR_PAD_LEFT);
 
         $secuencia = DB::transaction(function () use ($anioFull) {
-            return DB::table('inscripciones')
+            $ids = DB::table('inscripciones')
                 ->whereYear('created_at', $anioFull)
                 ->lockForUpdate()
-                ->count() + 1;
+                ->pluck('id');
+
+            return $ids->count() + 1;
         });
 
         return "{$anio}{$codigoIt}" . str_pad($secuencia, 4, '0', STR_PAD_LEFT);
