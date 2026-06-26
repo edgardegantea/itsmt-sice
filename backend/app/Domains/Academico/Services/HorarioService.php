@@ -35,7 +35,10 @@ class HorarioService
             ->where('hora_inicio', '<', $horaFin)
             ->where('hora_fin', '>', $horaInicio)
             ->when($excluirHorarioId, fn($q) => $q->where('id', '!=', $excluirHorarioId))
-            ->whereHas('cargaAcademica', fn($q) => $q->where('periodo_id', $periodoId))
+            ->whereHas('cargaAcademica', fn($q) =>
+                $q->where('periodo_id', $periodoId)
+                  ->where('id', '!=', $cargaAcademicaId)  // excluir la propia carga
+            )
             ->with(['cargaAcademica.docente', 'cargaAcademica.aula', 'cargaAcademica.materia', 'cargaAcademica.grupo'])
             ->get();
 
