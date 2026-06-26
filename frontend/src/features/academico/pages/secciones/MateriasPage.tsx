@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useConfirm } from '../../../../components/ConfirmDialog'
@@ -21,16 +21,169 @@ function Chevron({ open }: { open: boolean }) {
   )
 }
 
+// ── Panel de detalle ──────────────────────────────────────────────────────────
+
+function MateriaDetail({
+  materia,
+  onClose,
+  onEditar,
+  onEliminar,
+}: {
+  materia: Materia
+  onClose: () => void
+  onEditar: (m: Materia) => void
+  onEliminar: (m: Materia) => void
+}) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true))
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  function handleClose() {
+    setVisible(false)
+    setTimeout(onClose, 250)
+  }
+
+  const row = (label: string, value: React.ReactNode) => (
+    <div className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0">
+      <span className="text-xs text-slate-400 w-32 shrink-0 pt-0.5">{label}</span>
+      <span className="text-sm text-slate-900 font-medium flex-1">{value}</span>
+    </div>
+  )
+
+  const totalHoras = materia.horas_teoria + materia.horas_practica
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity duration-250 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        onClick={handleClose}
+      />
+
+      {/* Drawer */}
+      <div
+        className={`fixed top-0 right-0 h-full z-50 w-full max-w-md bg-white shadow-2xl flex flex-col transition-transform duration-250 ease-out ${visible ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        {/* Cabecera */}
+        <div className="flex items-start justify-between px-6 py-5 border-b border-slate-100 shrink-0">
+          <div className="flex-1 min-w-0 pr-4">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-xs font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-mono">{materia.clave}</span>
+              {materia.clave_oficial_tecnm && (
+                <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-mono">{materia.clave_oficial_tecnm}</span>
+              )}
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${materia.tipo === 'obligatoria' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                {materia.tipo === 'obligatoria' ? 'Obligatoria' : 'Optativa'}
+              </span>
+            </div>
+            <h2 className="text-base font-bold text-slate-900 leading-tight">{materia.nombre}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {materia.carrera?.clave} — {materia.carrera?.nombre} · {materia.semestre}° semestre
+            </p>
+          </div>
+          <button onClick={handleClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none shrink-0 mt-0.5">&times;</button>
+        </div>
+
+        {/* Contenido */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+
+          {/* Créditos y horas — tarjetas destacadas */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="bg-blue-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-blue-700">{materia.creditos}</div>
+              <div className="text-xs text-blue-500 mt-0.5">Créditos</div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-slate-700">{materia.horas_teoria}</div>
+              <div className="text-xs text-slate-500 mt-0.5">H. Teoría</div>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-slate-700">{materia.horas_practica}</div>
+              <div className="text-xs text-slate-500 mt-0.5">H. Práctica</div>
+            </div>
+          </div>
+
+          {/* Barra total de horas */}
+          <div className="bg-slate-50 rounded-xl px-4 py-3 mb-6">
+            <div className="flex justify-between text-xs text-slate-500 mb-2">
+              <span>Distribución de horas</span>
+              <span className="font-medium text-slate-700">{totalHoras}h semanales</span>
+            </div>
+            <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
+              {totalHoras > 0 && (
+                <>
+                  <div
+                    className="h-full bg-blue-500 rounded-l-full"
+                    style={{ width: `${(materia.horas_teoria / totalHoras) * 100}%` }}
+                    title={`Teoría: ${materia.horas_teoria}h`}
+                  />
+                  <div
+                    className="h-full bg-teal-400 rounded-r-full"
+                    style={{ width: `${(materia.horas_practica / totalHoras) * 100}%` }}
+                    title={`Práctica: ${materia.horas_practica}h`}
+                  />
+                </>
+              )}
+            </div>
+            <div className="flex gap-4 mt-2">
+              <span className="flex items-center gap-1 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />Teoría</span>
+              <span className="flex items-center gap-1 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-teal-400 inline-block" />Práctica</span>
+            </div>
+          </div>
+
+          {/* Detalles en lista */}
+          <div className="divide-y divide-slate-100">
+            {row('Carrera', materia.carrera ? `${materia.carrera.clave} — ${materia.carrera.nombre}` : '—')}
+            {row('Semestre', `${materia.semestre}° semestre`)}
+            {row('Tipo', materia.tipo === 'obligatoria' ? 'Obligatoria' : 'Optativa')}
+            {row('Clave interna', <span className="font-mono">{materia.clave}</span>)}
+            {materia.clave_oficial_tecnm && row('Clave TecNM', <span className="font-mono">{materia.clave_oficial_tecnm}</span>)}
+            {row('Estado', (
+              <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${materia.activa ? 'text-emerald-700' : 'text-slate-400'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${materia.activa ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                {materia.activa ? 'Activa' : 'Inactiva'}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Acciones */}
+        <div className="flex gap-2 px-6 py-4 border-t border-slate-100 shrink-0">
+          <button
+            onClick={() => { handleClose(); setTimeout(() => onEditar(materia), 260) }}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => { handleClose(); setTimeout(() => onEliminar(materia), 260) }}
+            className="px-4 py-2 border border-red-200 text-red-500 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ── Sección de semestre ───────────────────────────────────────────────────────
 
 function SemestreSection({
   semestre,
   materias,
+  onVerDetalle,
   onEditar,
   onEliminar,
 }: {
   semestre: number
   materias: Materia[]
+  onVerDetalle: (m: Materia) => void
   onEditar: (m: Materia) => void
   onEliminar: (m: Materia) => void
 }) {
@@ -65,7 +218,11 @@ function SemestreSection({
               .slice()
               .sort((a, b) => a.nombre.localeCompare(b.nombre))
               .map(m => (
-                <tr key={m.id} className="hover:bg-blue-50/40 transition-colors">
+                <tr
+                  key={m.id}
+                  onClick={() => onVerDetalle(m)}
+                  className="hover:bg-blue-50/50 transition-colors cursor-pointer"
+                >
                   <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{m.clave}</td>
                   <td className="px-4 py-2.5 font-medium text-slate-900">
                     {m.nombre}
@@ -80,7 +237,7 @@ function SemestreSection({
                       {m.tipo === 'obligatoria' ? 'Obligatoria' : 'Optativa'}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-right space-x-2">
+                  <td className="px-4 py-2.5 text-right space-x-2" onClick={e => e.stopPropagation()}>
                     <button onClick={() => onEditar(m)} className="text-xs text-blue-600 hover:underline">Editar</button>
                     <button onClick={() => onEliminar(m)} className="text-xs text-red-500 hover:underline">Eliminar</button>
                   </td>
@@ -98,11 +255,13 @@ function SemestreSection({
 function CarreraSection({
   carrera,
   materias,
+  onVerDetalle,
   onEditar,
   onEliminar,
 }: {
   carrera: { id: string; nombre: string; clave: string }
   materias: Materia[]
+  onVerDetalle: (m: Materia) => void
   onEditar: (m: Materia) => void
   onEliminar: (m: Materia) => void
 }) {
@@ -140,6 +299,7 @@ function CarreraSection({
               key={sem}
               semestre={sem}
               materias={mats}
+              onVerDetalle={onVerDetalle}
               onEditar={onEditar}
               onEliminar={onEliminar}
             />
@@ -160,6 +320,7 @@ export default function MateriasPage() {
   const [filtroSemestre, setFiltroSemestre] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [modal, setModal] = useState<Partial<Materia> | null>(null)
+  const [detalle, setDetalle] = useState<Materia | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { confirm, dialog: confirmDialog } = useConfirm()
 
@@ -229,6 +390,7 @@ export default function MateriasPage() {
     setModal({ tipo: 'obligatoria', semestre: 1, creditos: 6, horas_teoria: 2, horas_practica: 2, activa: true })
     setErrors({})
   }
+  const openDetalle = (m: Materia) => setDetalle(m)
   const openEditar = (m: Materia) => { setModal(m); setErrors({}) }
   const openEliminar = (m: Materia) => confirm({
     title: `¿Eliminar "${m.nombre}"?`,
@@ -335,6 +497,7 @@ export default function MateriasPage() {
             key={carrera.id}
             carrera={carrera}
             materias={mats}
+            onVerDetalle={openDetalle}
             onEditar={openEditar}
             onEliminar={openEliminar}
           />
@@ -342,6 +505,16 @@ export default function MateriasPage() {
       </div>
 
       {confirmDialog}
+
+      {/* Panel de detalle */}
+      {detalle && (
+        <MateriaDetail
+          materia={detalle}
+          onClose={() => setDetalle(null)}
+          onEditar={openEditar}
+          onEliminar={openEliminar}
+        />
+      )}
 
       {/* Modal crear/editar */}
       {modal !== null && (
