@@ -149,16 +149,27 @@ function CargaDocenteView({
           </svg>
           Volver a la lista
         </button>
-        <button
-          onClick={descargarPdf}
-          disabled={descargando}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 disabled:opacity-60"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          {descargando ? 'Generando PDF…' : 'Descargar PDF'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-300 bg-white text-slate-700 text-sm rounded-lg hover:bg-slate-50"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Imprimir
+          </button>
+          <button
+            onClick={descargarPdf}
+            disabled={descargando}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 disabled:opacity-60"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {descargando ? 'Generando PDF…' : 'Descargar PDF'}
+          </button>
+        </div>
       </div>
 
       {/* Documento de carga */}
@@ -365,11 +376,13 @@ function CargaCard({
   onEdit,
   onDelete,
   onHorarios,
+  onVerHorario,
 }: {
   carga: CargaAcademica
   onEdit: () => void
   onDelete: () => void
   onHorarios: () => void
+  onVerHorario: () => void
 }) {
   const turno = carga.grupo?.turno ?? ''
   const carrera = carga.materia?.carrera ?? carga.grupo?.carrera
@@ -473,15 +486,80 @@ function CargaCard({
       </div>
 
       <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-t border-slate-100">
-        <button onClick={onHorarios} className="text-xs text-blue-600 hover:underline font-medium">
-          {(carga.horarios ?? []).length > 0 ? 'Editar horario' : '+ Horario'}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={onHorarios} className="text-xs text-blue-600 hover:underline font-medium">
+            {(carga.horarios ?? []).length > 0 ? 'Editar horario' : '+ Horario'}
+          </button>
+          {carga.docente && (
+            <button onClick={onVerHorario} className="text-xs text-violet-600 hover:underline font-medium">
+              Ver carga
+            </button>
+          )}
+        </div>
         <div className="flex gap-3">
           <button onClick={onEdit} className="text-xs text-slate-600 hover:text-slate-900">Editar</button>
           <button onClick={onDelete} className="text-xs text-red-500 hover:text-red-700">Eliminar</button>
         </div>
       </div>
     </div>
+  )
+}
+
+// ── Modal: visualizar carga completa del docente ──────────────────────────────
+
+function HorarioDocenteModal({
+  docente,
+  cargas,
+  periodo,
+  onClose,
+}: {
+  docente: Docente
+  cargas: CargaAcademica[]
+  periodo?: { id: string; nombre: string; activo: boolean }
+  onClose: () => void
+}) {
+  return (
+    <>
+      {/* Estilos de impresión: oculta todo excepto el modal */}
+      <style>{`
+        @media print {
+          body > * { display: none !important; }
+          #horario-docente-print { display: block !important; position: static !important; }
+          #horario-docente-print .no-print { display: none !important; }
+        }
+      `}</style>
+
+      <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm overflow-y-auto py-6 px-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl" id="horario-docente-print">
+          {/* Toolbar — se oculta al imprimir */}
+          <div className="no-print flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <h2 className="font-semibold text-slate-900">Carga Académica · {docente.name}</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 text-sm rounded-lg hover:bg-slate-50"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Imprimir
+              </button>
+              <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+            </div>
+          </div>
+
+          {/* Contenido del documento */}
+          <div className="p-6">
+            <CargaDocenteView
+              docente={docente}
+              cargas={cargas}
+              periodo={periodo}
+              onBack={onClose}
+            />
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -576,6 +654,7 @@ export default function CargasPage() {
   const [vistaDocente, setVistaDocente] = useState(false)
   const [modal, setModal] = useState<Partial<CargaAcademica> | null>(null)
   const [horariosModal, setHorariosModal] = useState<CargaAcademica | null>(null)
+  const [horarioDocenteModal, setHorarioDocenteModal] = useState<Docente | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { confirm, dialog: confirmDialog } = useConfirm()
 
@@ -849,7 +928,8 @@ export default function CargasPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-center font-semibold text-slate-900">{c.horas_semana}h</td>
-                    <td className="px-4 py-3 text-right space-x-2">
+                    <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                      {c.docente && <button onClick={() => setHorarioDocenteModal(c.docente as Docente)} className="text-xs text-violet-600 hover:underline">Ver carga</button>}
                       <button onClick={() => setHorariosModal(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
                       <button onClick={() => setModal(c)} className="text-xs text-slate-600 hover:underline">Editar</button>
                       <button onClick={() => confirm({ title: '¿Eliminar carga?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar', onConfirm: () => del.mutateAsync(c.id) })} className="text-xs text-red-500 hover:underline">Eliminar</button>
@@ -868,6 +948,7 @@ export default function CargasPage() {
                 onEdit={() => setModal(c)}
                 onDelete={() => confirm({ title: '¿Eliminar carga académica?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar carga', onConfirm: () => del.mutateAsync(c.id) })}
                 onHorarios={() => setHorariosModal(c)}
+                onVerHorario={() => c.docente && setHorarioDocenteModal(c.docente as Docente)}
               />
             ))}
           </div>
@@ -877,6 +958,15 @@ export default function CargasPage() {
       {confirmDialog}
 
       {horariosModal && <HorariosModal carga={horariosModal} onClose={() => setHorariosModal(null)} />}
+
+      {horarioDocenteModal && (
+        <HorarioDocenteModal
+          docente={horarioDocenteModal}
+          cargas={cargasFiltradas.filter(c => c.docente_id === horarioDocenteModal.id)}
+          periodo={periodoSeleccionado ?? undefined}
+          onClose={() => setHorarioDocenteModal(null)}
+        />
+      )}
 
       {modal !== null && (
         <ModalWrap
