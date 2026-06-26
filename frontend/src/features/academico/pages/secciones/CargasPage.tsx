@@ -63,6 +63,192 @@ function toMin(t: string) {
 
 // ── Accordion carrera → semestre ─────────────────────────────────────────────
 
+// ── Drawer de detalle de una carga ───────────────────────────────────────────
+
+function CargaDetailDrawer({
+  carga,
+  colorCls,
+  onClose,
+  onEdit,
+  onHorarios,
+  onDelete,
+  onVerHorario,
+}: {
+  carga: CargaAcademica
+  colorCls: string
+  onClose: () => void
+  onEdit: () => void
+  onHorarios: () => void
+  onDelete: () => void
+  onVerHorario: () => void
+}) {
+  // Cerrar con Escape
+  useState(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  })
+
+  const horariosPorDia = useMemo(() => {
+    const map = new Map<string, Horario[]>()
+    for (const h of carga.horarios ?? []) {
+      if (!map.has(h.dia_semana)) map.set(h.dia_semana, [])
+      map.get(h.dia_semana)!.push(h)
+    }
+    return DIAS.filter(d => map.has(d)).map(d => ({ dia: d, bloques: map.get(d)!.sort((a,b) => a.hora_inicio.localeCompare(b.hora_inicio)) }))
+  }, [carga.horarios])
+
+  const totalHoras = useMemo(() => {
+    return (carga.horarios ?? []).reduce((s, h) => {
+      const [hi, mi] = h.hora_inicio.split(':').map(Number)
+      const [hf, mf] = h.hora_fin.split(':').map(Number)
+      return s + (hf * 60 + mf) - (hi * 60 + mi)
+    }, 0) / 60
+  }, [carga.horarios])
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col">
+        {/* Header con color de la materia */}
+        <div className={`px-5 pt-5 pb-4 border-b border-slate-100 ${colorCls.replace('border-', 'border-b-').split(' ')[0]}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-mono text-slate-400 mb-0.5">{carga.materia?.clave}</p>
+              <h2 className="font-bold text-slate-900 text-base leading-tight">{carga.materia?.nombre ?? '—'}</h2>
+              {carga.materia?.tipo && (
+                <span className={`inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${carga.materia.tipo === 'obligatoria' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'}`}>
+                  {carga.materia.tipo}
+                </span>
+              )}
+            </div>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none shrink-0 mt-0.5">&times;</button>
+          </div>
+        </div>
+
+        {/* Contenido scrollable */}
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+
+          {/* Docente */}
+          <div className="px-5 py-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#1a3a5c] flex items-center justify-center text-white text-xs font-bold shrink-0">
+              {(carga.docente?.name ?? '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-400">Docente</p>
+              <p className="text-sm font-semibold text-slate-900 truncate">{carga.docente?.name ?? <span className="text-slate-400 font-normal italic">Sin asignar</span>}</p>
+              {carga.docente?.email && <p className="text-xs text-slate-400 truncate">{carga.docente.email}</p>}
+            </div>
+            {carga.docente && (
+              <button onClick={onVerHorario} className="ml-auto text-xs text-violet-600 hover:underline shrink-0">Ver carga →</button>
+            )}
+          </div>
+
+          {/* Grupo */}
+          <div className="px-5 py-4 grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-slate-400 mb-0.5">Grupo</p>
+              <p className="text-sm font-semibold font-mono text-slate-800">{carga.grupo?.clave ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 mb-0.5">Semestre</p>
+              <p className="text-sm font-semibold text-slate-800">{carga.grupo?.semestre ? `${carga.grupo.semestre}°` : '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 mb-0.5">Turno</p>
+              {carga.grupo?.turno ? (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TURNO_COLOR[carga.grupo.turno] ?? 'bg-slate-100 text-slate-600'}`}>
+                  {carga.grupo.turno}
+                </span>
+              ) : <span className="text-sm text-slate-400">—</span>}
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 mb-0.5">Horas / semana</p>
+              <p className="text-sm font-bold text-slate-800">{carga.horas_semana}h</p>
+            </div>
+          </div>
+
+          {/* Aula */}
+          {carga.aula && (
+            <div className="px-5 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Aula</p>
+                <p className="text-sm font-semibold text-slate-800">{carga.aula.nombre}</p>
+                <p className="text-xs text-slate-400">{carga.aula.tipo} · cap. {carga.aula.capacidad}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Periodo */}
+          <div className="px-5 py-4">
+            <p className="text-xs text-slate-400 mb-0.5">Periodo</p>
+            <p className="text-sm font-medium text-slate-800">{carga.periodo?.nombre ?? '—'}</p>
+          </div>
+
+          {/* Horario semanal */}
+          <div className="px-5 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Horario semanal</p>
+              {totalHoras > 0 && <span className="text-xs text-slate-400">{totalHoras.toFixed(1)}h totales</span>}
+            </div>
+            {horariosPorDia.length === 0 ? (
+              <button onClick={onHorarios} className="w-full py-3 border-2 border-dashed border-amber-200 bg-amber-50 rounded-lg text-xs text-amber-600 hover:border-amber-400 transition-colors">
+                + Asignar horario
+              </button>
+            ) : (
+              <div className="space-y-2">
+                {horariosPorDia.map(({ dia, bloques }) => (
+                  <div key={dia} className="flex items-start gap-3">
+                    <span className="text-xs font-semibold text-slate-500 w-10 shrink-0 pt-1 text-right">{DIA_SHORT[dia]}</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {bloques.map(h => (
+                        <span key={h.id} className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 rounded-lg px-2.5 py-1 text-xs font-medium">
+                          {fmt12(h.hora_inicio)} – {fmt12(h.hora_fin)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Carrera */}
+          {(carga.grupo?.carrera ?? carga.materia?.carrera) && (
+            <div className="px-5 py-4">
+              <p className="text-xs text-slate-400 mb-0.5">Carrera</p>
+              <p className="text-sm font-medium text-slate-800">
+                {(carga.grupo?.carrera ?? carga.materia?.carrera)?.nombre}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer acciones */}
+        <div className="flex items-center gap-2 px-5 py-4 border-t border-slate-100 shrink-0">
+          <button onClick={onHorarios}
+            className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+            {(carga.horarios ?? []).length > 0 ? 'Editar horario' : '+ Horario'}
+          </button>
+          <button onClick={onEdit}
+            className="px-3 py-2 border border-slate-200 text-slate-600 text-sm rounded-lg hover:bg-slate-50">
+            Editar
+          </button>
+          <button onClick={onDelete}
+            className="px-3 py-2 border border-red-200 text-red-500 text-sm rounded-lg hover:bg-red-50">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ── Cuadrícula semanal de un grupo ───────────────────────────────────────────
 
 const DIAS_SEMANA = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const
@@ -98,6 +284,7 @@ function GrupoSemanaGrid({
   onHorarios: (c: CargaAcademica) => void
   onVerHorario: (c: CargaAcademica) => void
 }) {
+  const [detalle, setDetalle] = useState<CargaAcademica | null>(null)
   // Asignar color fijo a cada carga
   const colorMap = useMemo(() => {
     const m = new Map<string, string>()
@@ -157,26 +344,18 @@ function GrupoSemanaGrid({
                 {/* Bloques de ese día */}
                 <div className="space-y-1.5">
                   {(bloquesPorDia.get(dia) ?? []).map(({ carga: c, h }) => (
-                    <div
+                    <button
                       key={h.id}
-                      className={`group border rounded-lg px-3 py-2 cursor-default ${colorMap.get(c.id)}`}
+                      onClick={() => setDetalle(c)}
+                      className={`w-full text-left border rounded-lg px-3 py-2 cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-[0.99] transition-all ${colorMap.get(c.id)}`}
                     >
-                      {/* Hora */}
                       <p className="text-xs font-mono font-semibold mb-1 opacity-70">
                         {fmt12(h.hora_inicio)} – {fmt12(h.hora_fin)}
                       </p>
-                      {/* Materia */}
-                      <p className="text-xs font-semibold leading-tight truncate">{c.materia?.nombre ?? '—'}</p>
-                      {/* Docente */}
+                      <p className="text-xs font-semibold leading-tight">{c.materia?.nombre ?? '—'}</p>
                       <p className="text-xs opacity-60 truncate mt-0.5">{c.docente?.name ?? <span className="italic">Sin docente</span>}</p>
-                      {/* Acciones hover */}
-                      <div className="mt-1.5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => onHorarios(c)} className="text-[10px] underline opacity-80">Horario</button>
-                        <button onClick={() => onEdit(c)} className="text-[10px] underline opacity-80">Editar</button>
-                        {c.docente && <button onClick={() => onVerHorario(c)} className="text-[10px] underline opacity-80">Carga</button>}
-                        <button onClick={() => onDelete(c)} className="text-[10px] underline opacity-80 text-red-600">✕</button>
-                      </div>
-                    </div>
+                      {c.aula && <p className="text-[10px] opacity-50 mt-0.5">{c.aula.nombre}</p>}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -191,18 +370,27 @@ function GrupoSemanaGrid({
           <p className="text-xs text-amber-600 font-medium mb-1.5">Sin horario asignado:</p>
           <div className="flex flex-wrap gap-2">
             {sinHorario.map(c => (
-              <div key={c.id} className="border border-amber-200 bg-amber-50 rounded-lg px-3 py-2 max-w-[200px]">
+              <button key={c.id} onClick={() => setDetalle(c)}
+                className="text-left border border-amber-200 bg-amber-50 rounded-lg px-3 py-2 max-w-[200px] hover:shadow-md hover:scale-[1.02] transition-all">
                 <p className="text-xs font-semibold text-amber-800 truncate">{c.materia?.nombre ?? '—'}</p>
                 <p className="text-xs text-amber-600 truncate mt-0.5">{c.docente?.name ?? 'Sin docente'}</p>
-                <div className="flex gap-2 mt-1.5">
-                  <button onClick={() => onHorarios(c)} className="text-[10px] text-amber-700 underline">+ Horario</button>
-                  <button onClick={() => onEdit(c)} className="text-[10px] text-slate-500 underline">Editar</button>
-                  <button onClick={() => onDelete(c)} className="text-[10px] text-red-400 underline">✕</button>
-                </div>
-              </div>
+                <p className="text-[10px] text-amber-500 mt-1">Toca para ver detalle</p>
+              </button>
             ))}
           </div>
         </div>
+      )}
+
+      {detalle && (
+        <CargaDetailDrawer
+          carga={detalle}
+          colorCls={colorMap.get(detalle.id) ?? ''}
+          onClose={() => setDetalle(null)}
+          onEdit={() => { onEdit(detalle); setDetalle(null) }}
+          onHorarios={() => { onHorarios(detalle); setDetalle(null) }}
+          onDelete={() => { onDelete(detalle); setDetalle(null) }}
+          onVerHorario={() => { onVerHorario(detalle); setDetalle(null) }}
+        />
       )}
     </div>
   )
