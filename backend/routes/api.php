@@ -163,6 +163,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Horarios (con detección de conflictos)
     Route::get('/horarios',                                        [HorarioController::class, 'index']);
+    Route::get('/horarios/disponibilidad',                         [HorarioController::class, 'disponibilidad']);
     Route::get('/horarios/conflictos',                             [HorarioController::class, 'conflictos']);
     Route::post('/horarios',                                       [HorarioController::class, 'store']);
     Route::delete('/horarios/{horario}',                           [HorarioController::class, 'destroy']);

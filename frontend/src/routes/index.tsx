@@ -38,6 +38,7 @@ const GruposPage                      = lazy(() => import('../features/academico
 const GrupoDetailPage                 = lazy(() => import('../features/academico/pages/secciones/GrupoDetailPage'))
 const AulasPage                       = lazy(() => import('../features/academico/pages/secciones/AulasPage'))
 const CargasPage                      = lazy(() => import('../features/academico/pages/secciones/CargasPage'))
+const CargaBuilderPage                = lazy(() => import('../features/academico/pages/secciones/CargaBuilderPage'))
 const HorariosPage                    = lazy(() => import('../features/academico/pages/secciones/HorariosPage'))
 const PlaneacionesPage                = lazy(() => import('../features/academico/pages/secciones/PlaneacionesPage'))
 const TutoriasPage                    = lazy(() => import('../features/academico/pages/secciones/TutoriasPage'))
@@ -100,6 +101,7 @@ export default function AppRoutes() {
         <Route path="/admin/gestion-academica/grupos/:id"   element={<AdminLayout><GrupoDetailPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/aulas"        element={<AdminLayout><AulasPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/cargas"       element={<AdminLayout><CargasPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/cargas/builder" element={<AdminLayout><CargaBuilderPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/horarios"     element={<AdminLayout><HorariosPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/planeaciones" element={<AdminLayout><PlaneacionesPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/tutorias"     element={<AdminLayout><TutoriasPage /></AdminLayout>} />

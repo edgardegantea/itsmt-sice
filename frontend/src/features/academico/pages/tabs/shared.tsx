@@ -23,7 +23,7 @@ export function extractApiErrors(e: unknown): Record<string, string> {
 }
 
 export function ModalWrap({ title, onClose, children, onSave, saving }: {
-  title: string; onClose: () => void; children: React.ReactNode; onSave: () => void; saving?: boolean
+  title: string; onClose: () => void; children: React.ReactNode; onSave?: () => void; saving?: boolean
 }) {
   return (
     <div
@@ -36,12 +36,14 @@ export function ModalWrap({ title, onClose, children, onSave, saving }: {
           <button onClick={onClose} disabled={saving} className="text-slate-400 hover:text-slate-700 text-2xl leading-none disabled:opacity-40">&times;</button>
         </div>
         <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto">{children}</div>
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
-          <button onClick={onClose} disabled={saving} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50 disabled:opacity-40">Cancelar</button>
-          <button onClick={onSave} disabled={saving} className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-            {saving ? 'Guardando…' : 'Guardar'}
-          </button>
-        </div>
+        {onSave && (
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
+            <button onClick={onClose} disabled={saving} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50 disabled:opacity-40">Cancelar</button>
+            <button onClick={onSave} disabled={saving} className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+              {saving ? 'Guardando…' : 'Guardar'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -37,6 +37,65 @@ class HorarioController extends Controller
         return ApiResponse::success($horarios);
     }
 
+    // GET /api/horarios/disponibilidad?docente_id=&periodo_id=&dia_semana=&hora_inicio=&hora_fin=[&aula_id=][&excluir_carga_id=]
+    public function disponibilidad(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'docente_id'       => ['required', 'uuid', 'exists:users,id'],
+            'periodo_id'       => ['required', 'uuid', 'exists:periodos,id'],
+            'dia_semana'       => ['required', 'in:lunes,martes,miercoles,jueves,viernes,sabado'],
+            'hora_inicio'      => ['required', 'date_format:H:i'],
+            'hora_fin'         => ['required', 'date_format:H:i', 'after:hora_inicio'],
+            'aula_id'          => ['nullable', 'uuid', 'exists:aulas,id'],
+            'excluir_carga_id' => ['nullable', 'uuid'],
+        ]);
+
+        $conflictos = [];
+
+        $baseQuery = Horario::query()
+            ->where('dia_semana', $data['dia_semana'])
+            ->where('hora_inicio', '<', $data['hora_fin'])
+            ->where('hora_fin', '>', $data['hora_inicio']);
+
+        $docenteOcupado = (clone $baseQuery)
+            ->whereHas('cargaAcademica', fn($q) =>
+                $q->where('docente_id', $data['docente_id'])
+                  ->where('periodo_id', $data['periodo_id'])
+                  ->when($data['excluir_carga_id'] ?? null, fn($q2, $v) => $q2->where('id', '!=', $v))
+            )
+            ->with(['cargaAcademica.materia', 'cargaAcademica.grupo'])
+            ->get();
+
+        foreach ($docenteOcupado as $h) {
+            $ca = $h->cargaAcademica;
+            $conflictos[] = [
+                'tipo'    => 'docente',
+                'mensaje' => "Docente ocupado: {$ca->materia?->nombre} / {$ca->grupo?->clave} ({$h->hora_inicio}–{$h->hora_fin})",
+            ];
+        }
+
+        if (!empty($data['aula_id'])) {
+            $aulaOcupada = (clone $baseQuery)
+                ->whereHas('cargaAcademica', fn($q) =>
+                    $q->where('aula_id', $data['aula_id'])
+                      ->where('periodo_id', $data['periodo_id'])
+                      ->when($data['excluir_carga_id'] ?? null, fn($q2, $v) => $q2->where('id', '!=', $v))
+                )
+                ->with(['cargaAcademica.materia', 'cargaAcademica.grupo'])
+                ->get();
+
+            foreach ($aulaOcupada as $h) {
+                $ca = $h->cargaAcademica;
+                $conflictos[] = [
+                    'tipo'    => 'aula',
+                    'mensaje' => "Aula ocupada: {$ca->materia?->nombre} / {$ca->grupo?->clave} ({$h->hora_inicio}–{$h->hora_fin})",
+                ];
+            }
+        }
+
+        return ApiResponse::success(['conflictos' => $conflictos, 'tiene_conflictos' => !empty($conflictos)]);
+    }
+
     // GET /api/horarios/conflictos?carga_academica_id=&dia_semana=&hora_inicio=&hora_fin=
     public function conflictos(Request $request): JsonResponse
     {
