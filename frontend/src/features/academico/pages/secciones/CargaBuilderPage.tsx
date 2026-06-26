@@ -877,19 +877,36 @@ export default function CargaBuilderPage() {
             {/* ── Cuadrícula horaria ── */}
             <div className="flex-1 overflow-auto">
               <div className="min-w-[700px]">
-                {/* Encabezado de días */}
+                {/* Encabezado de días con indicador de horas acumuladas */}
                 <div className="grid sticky top-0 z-20 bg-white border-b-2 border-slate-200 shadow-sm"
                   style={{ gridTemplateColumns: '64px repeat(6, 1fr)' }}
                 >
                   <div className="py-2 px-2 text-xs text-slate-400 font-medium text-center border-r border-slate-200">
                     Hora
                   </div>
-                  {DIAS.map(dia => (
-                    <div key={dia} className="py-2 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide border-r border-slate-200 last:border-r-0">
-                      <span className="hidden sm:block">{DIA_LABEL[dia]}</span>
-                      <span className="block sm:hidden">{DIA_SHORT[dia]}</span>
-                    </div>
-                  ))}
+                  {DIAS.map(dia => {
+                    const horasDia = draftBlocks
+                      .filter(b => b.dia === dia)
+                      .reduce((s, b) => s + (toMin(b.horaFin) - toMin(b.horaInicio)) / 60, 0)
+                    const limite = dia !== 'sabado' ? 8 : null
+                    const excede = limite !== null && horasDia > limite
+                    const cerca  = limite !== null && !excede && horasDia >= limite - 1
+
+                    return (
+                      <div key={dia} className="py-1.5 text-center border-r border-slate-200 last:border-r-0">
+                        <div className={`text-xs font-semibold uppercase tracking-wide ${excede ? 'text-red-600' : cerca ? 'text-amber-600' : 'text-slate-600'}`}>
+                          <span className="hidden sm:block">{DIA_LABEL[dia]}</span>
+                          <span className="block sm:hidden">{DIA_SHORT[dia]}</span>
+                        </div>
+                        {horasDia > 0 && (
+                          <div className={`text-[10px] font-medium mt-0.5 ${excede ? 'text-red-500' : cerca ? 'text-amber-500' : 'text-slate-400'}`}>
+                            {horasDia}h{limite ? `/${limite}h` : ''}
+                            {excede && ' ⚠'}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
 
                 {/* Filas de horas */}

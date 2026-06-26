@@ -93,6 +93,36 @@ class HorarioController extends Controller
             }
         }
 
+        // Límite de 8 horas diarias (sábado no tiene límite)
+        if ($data['dia_semana'] !== 'sabado') {
+            $toMin = fn(string $t) => (int) explode(':', $t)[0] * 60 + (int) explode(':', $t)[1];
+
+            $minutosBloque = $toMin($data['hora_fin']) - $toMin($data['hora_inicio']);
+
+            $minutosExistentes = Horario::query()
+                ->where('dia_semana', $data['dia_semana'])
+                ->whereHas('cargaAcademica', fn($q) =>
+                    $q->where('docente_id', $data['docente_id'])
+                      ->where('periodo_id', $data['periodo_id'])
+                      ->when($data['excluir_carga_id'] ?? null, fn($q2, $v) => $q2->where('id', '!=', $v))
+                )
+                ->get()
+                ->sum(fn($h) => $toMin($h->hora_fin) - $toMin($h->hora_inicio));
+
+            $totalMin = $minutosExistentes + $minutosBloque;
+            $limiteMin = 8 * 60;
+
+            if ($totalMin > $limiteMin) {
+                $existentesH = round($minutosExistentes / 60, 1);
+                $bloqueH     = round($minutosBloque / 60, 1);
+                $totalH      = round($totalMin / 60, 1);
+                $conflictos[] = [
+                    'tipo'    => 'limite_diario',
+                    'mensaje' => "El {$data['dia_semana']}, el docente ya acumula {$existentesH}h; agregar {$bloqueH}h llegaría a {$totalH}h (límite: 8h).",
+                ];
+            }
+        }
+
         return ApiResponse::success(['conflictos' => $conflictos, 'tiene_conflictos' => !empty($conflictos)]);
     }
 
