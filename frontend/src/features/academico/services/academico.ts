@@ -168,6 +168,13 @@ export const academicoApi = {
   },
   eliminarDocumentoMateria: (id: string) =>
     apiClient.delete(`/materias/${id}/documento`),
+  extraerProgramaPdf: (file: File) => {
+    const fd = new FormData()
+    fd.append('pdf', file)
+    return apiClient.post('/materias/extraer-programa', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data.data as Partial<Materia>)
+  },
 
   // Grupos
   getGrupos: (params?: Record<string, string>) =>

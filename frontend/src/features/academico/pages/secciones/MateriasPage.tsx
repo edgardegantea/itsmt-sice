@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useConfirm } from '../../../../components/ConfirmDialog'
@@ -182,7 +182,7 @@ function MateriaDetail({
                   ['Clave interna', materia.clave],
                   materia.clave_oficial_tecnm ? ['Clave TecNM', materia.clave_oficial_tecnm] : null,
                   materia.satca ? ['SATCA', materia.satca] : null,
-                ].filter(Boolean).map(([label, val]) => (
+                ].filter((x): x is [string, string] => x !== null).map(([label, val]) => (
                   <div key={label as string} className="flex items-start gap-3 py-2.5">
                     <span className="text-xs text-slate-400 w-32 shrink-0 pt-0.5">{label}</span>
                     <span className="text-sm text-slate-900 font-medium flex-1 font-mono">{val}</span>
@@ -523,6 +523,8 @@ export default function MateriasPage() {
   const [detalle, setDetalle] = useState<Materia | null>(null)
   const [modalTab, setModalTab] = useState<'basico' | 'programa' | 'temario' | 'biblio'>('basico')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [extrayendo, setExtrayendo] = useState(false)
+  const pdfExtractRef = useRef<HTMLInputElement>(null)
   const { confirm, dialog: confirmDialog } = useConfirm()
 
   const { data: materias = [], isLoading } = useQuery({
@@ -578,6 +580,34 @@ export default function MateriasPage() {
   })
 
   const set = (k: keyof Materia, v: unknown) => setModal(m => ({ ...m, [k]: v }))
+
+  const handleExtractPdf = useCallback(async (file: File) => {
+    setExtrayendo(true)
+    try {
+      const data = await academicoApi.extraerProgramaPdf(file)
+      setModal(prev => {
+        const merged: Partial<Materia> = { ...prev }
+        const keys: (keyof Materia)[] = [
+          'nombre', 'clave_oficial_tecnm', 'satca', 'creditos',
+          'horas_teoria', 'horas_practica', 'caracterizacion',
+          'intencion_didactica', 'competencia_especifica',
+          'competencias_previas', 'temario', 'fuentes_informacion',
+        ]
+        for (const k of keys) {
+          const val = data[k]
+          if (val !== null && val !== undefined && val !== '') {
+            (merged as Record<string, unknown>)[k] = val
+          }
+        }
+        return merged
+      })
+      addToast('Información extraída del PDF. Revisa y completa los campos.', 'success')
+    } catch {
+      addToast('No se pudo extraer información del PDF. Verifica la clave ANTHROPIC_API_KEY.', 'error')
+    } finally {
+      setExtrayendo(false)
+    }
+  }, [addToast])
 
   const openNuevo = () => {
     setModal({ tipo: 'obligatoria', semestre: 1, creditos: 6, horas_teoria: 2, horas_practica: 2, activa: true, temario: [], fuentes_informacion: [] })
@@ -693,14 +723,42 @@ export default function MateriasPage() {
           onSave={() => save.mutate()}
           saving={save.isPending}
         >
-          {/* Tabs del modal */}
-          <div className="sm:col-span-2 flex gap-1 -mt-1 mb-1">
-            {modalTabs.map(t => (
-              <button key={t.id} type="button" onClick={() => setModalTab(t.id)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${modalTab === t.id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
-                {t.label}
+          {/* Extractor PDF + Tabs */}
+          <div className="sm:col-span-2 -mt-1 mb-1 space-y-2">
+            {/* Botón extraer */}
+            <div className="flex items-center gap-2 p-3 bg-violet-50 border border-violet-200 rounded-xl">
+              <svg className="w-5 h-5 text-violet-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-violet-800">Extraer información del PDF</p>
+                <p className="text-xs text-violet-500">Sube el programa TecNM y se rellenarán los campos automáticamente</p>
+              </div>
+              <button
+                type="button"
+                disabled={extrayendo}
+                onClick={() => pdfExtractRef.current?.click()}
+                className="shrink-0 px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {extrayendo ? (
+                  <><svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Extrayendo…</>
+                ) : (
+                  <><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>Subir PDF</>
+                )}
               </button>
-            ))}
+              <input ref={pdfExtractRef} type="file" accept=".pdf" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleExtractPdf(f); e.target.value = '' }} />
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1">
+              {modalTabs.map(t => (
+                <button key={t.id} type="button" onClick={() => setModalTab(t.id)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${modalTab === t.id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* ── Datos básicos ── */}

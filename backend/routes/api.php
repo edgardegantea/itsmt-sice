@@ -114,6 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Gestión Académica (superadmin / admin) ────────────────────────────────
 
     // Materias / Asignaturas
+    Route::post('/materias/extraer-programa',            \App\Http\Controllers\Academico\ExtraerProgramaController::class);
     Route::get('/materias',                              [MateriaController::class, 'index']);
     Route::post('/materias',                             [MateriaController::class, 'store']);
     Route::get('/materias/{materia}',                    [MateriaController::class, 'show']);
