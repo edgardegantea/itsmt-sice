@@ -69,13 +69,13 @@ page { size: letter portrait; }
 /* ── Encabezado institucional ── */
 .doc-header { width:100%; }
 .doc-header td { padding:3px 5px; vertical-align:middle; }
-.inst-name  { text-align:center; font-size:10pt; font-weight:bold; border-bottom:1.5px solid #222; padding:4px; }
-.tec-logo   { font-size:14pt; font-weight:bold; color:#006837; width:60px; text-align:center; border-right:1px solid #222; }
+.inst-name  { text-align:center; font-size:10pt; font-weight:bold; padding:4px; }
+.tec-logo   { font-size:14pt; font-weight:bold; color:#006837; width:60px; text-align:center; }
 .doc-title  { font-size:7pt; font-weight:bold; text-align:center; color:#555; }
 
 /* ── Filas de info del docente ── */
-.info-table { width:100%; border-collapse:collapse; border:1px solid #222; border-top:none; }
-.info-table td, .info-table th { border:1px solid #aaa; padding:2px 4px; vertical-align:middle; }
+.info-table { width:100%; border-collapse:collapse; }
+.info-table td, .info-table th { padding:2px 4px; vertical-align:middle; }
 .lbl { font-weight:bold; font-size:6.5pt; color:#555; background:#f5f5f5; white-space:nowrap; }
 .val { font-weight:bold; font-size:8pt; }
 
