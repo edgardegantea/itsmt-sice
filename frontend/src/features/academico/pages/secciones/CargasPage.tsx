@@ -249,27 +249,38 @@ function CargaDetailDrawer({
   )
 }
 
-// ── Cuadrícula semanal de un grupo ───────────────────────────────────────────
+// ── Constantes de la cuadrícula horaria ──────────────────────────────────────
 
 const DIAS_SEMANA = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const
 const DIA_LABEL_CORTO: Record<string, string> = {
   lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
   jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
 }
+const START_HOUR = 7
+const END_HOUR   = 20
+const SLOT_PX    = 56  // px por hora
+const TOTAL_HOURS = END_HOUR - START_HOUR
+const HOURS_RANGE = Array.from({ length: TOTAL_HOURS }, (_, i) => START_HOUR + i)
 
-// Paleta de colores por materia (ciclica)
 const MATERIA_COLORS = [
-  'bg-blue-50 border-blue-200 text-blue-900',
-  'bg-violet-50 border-violet-200 text-violet-900',
-  'bg-emerald-50 border-emerald-200 text-emerald-900',
-  'bg-amber-50 border-amber-200 text-amber-900',
-  'bg-rose-50 border-rose-200 text-rose-900',
-  'bg-cyan-50 border-cyan-200 text-cyan-900',
-  'bg-orange-50 border-orange-200 text-orange-900',
-  'bg-teal-50 border-teal-200 text-teal-900',
-  'bg-indigo-50 border-indigo-200 text-indigo-900',
-  'bg-pink-50 border-pink-200 text-pink-900',
+  { bg: 'bg-blue-100',    border: 'border-blue-300',    text: 'text-blue-900',    chip: 'bg-blue-100 border-blue-200 text-blue-900' },
+  { bg: 'bg-violet-100',  border: 'border-violet-300',  text: 'text-violet-900',  chip: 'bg-violet-100 border-violet-200 text-violet-900' },
+  { bg: 'bg-emerald-100', border: 'border-emerald-300', text: 'text-emerald-900', chip: 'bg-emerald-100 border-emerald-200 text-emerald-900' },
+  { bg: 'bg-amber-100',   border: 'border-amber-300',   text: 'text-amber-900',   chip: 'bg-amber-100 border-amber-200 text-amber-900' },
+  { bg: 'bg-rose-100',    border: 'border-rose-300',    text: 'text-rose-900',    chip: 'bg-rose-100 border-rose-200 text-rose-900' },
+  { bg: 'bg-cyan-100',    border: 'border-cyan-300',    text: 'text-cyan-900',    chip: 'bg-cyan-100 border-cyan-200 text-cyan-900' },
+  { bg: 'bg-orange-100',  border: 'border-orange-300',  text: 'text-orange-900',  chip: 'bg-orange-100 border-orange-200 text-orange-900' },
+  { bg: 'bg-teal-100',    border: 'border-teal-300',    text: 'text-teal-900',    chip: 'bg-teal-100 border-teal-200 text-teal-900' },
+  { bg: 'bg-indigo-100',  border: 'border-indigo-300',  text: 'text-indigo-900',  chip: 'bg-indigo-100 border-indigo-200 text-indigo-900' },
+  { bg: 'bg-pink-100',    border: 'border-pink-300',    text: 'text-pink-900',    chip: 'bg-pink-100 border-pink-200 text-pink-900' },
 ]
+
+function toMinOfDay(t: string): number {
+  const [h, m] = t.split(':').map(Number)
+  return h * 60 + m
+}
+
+// ── Cuadrícula horaria de un grupo ───────────────────────────────────────────
 
 function GrupoSemanaGrid({
   cargas,
@@ -285,106 +296,189 @@ function GrupoSemanaGrid({
   onVerHorario: (c: CargaAcademica) => void
 }) {
   const [detalle, setDetalle] = useState<CargaAcademica | null>(null)
-  // Asignar color fijo a cada carga
+  // Estado para picker de materia al hacer clic en celda vacía
+  const [slotPick, setSlotPick] = useState<{ dia: string; hora: number } | null>(null)
+
   const colorMap = useMemo(() => {
-    const m = new Map<string, string>()
+    const m = new Map<string, typeof MATERIA_COLORS[0]>()
     cargas.forEach((c, i) => m.set(c.id, MATERIA_COLORS[i % MATERIA_COLORS.length]))
     return m
   }, [cargas])
 
-  // Días que tienen al menos un horario
-  const diasActivos = useMemo(() => {
-    const set = new Set<string>()
-    for (const c of cargas) for (const h of c.horarios ?? []) set.add(h.dia_semana)
-    return DIAS_SEMANA.filter(d => set.has(d))
-  }, [cargas])
+  // Todos los días de lun–sáb
+  const diasMostrados = DIAS_SEMANA as unknown as string[]
 
-  // Cargas sin horario
-  const sinHorario = cargas.filter(c => (c.horarios ?? []).length === 0)
-
-  // Bloques por día: { dia → [{carga, horario}] } ordenados por hora_inicio
+  // Bloques indexados por día
   const bloquesPorDia = useMemo(() => {
     const map = new Map<string, { carga: CargaAcademica; h: Horario }[]>()
-    for (const dia of diasActivos) map.set(dia, [])
+    for (const dia of diasMostrados) map.set(dia, [])
     for (const c of cargas) {
       for (const h of c.horarios ?? []) {
         map.get(h.dia_semana)?.push({ carga: c, h })
       }
     }
-    for (const [, arr] of map) arr.sort((a, b) => a.h.hora_inicio.localeCompare(b.h.hora_inicio))
     return map
-  }, [cargas, diasActivos])
+  }, [cargas, diasMostrados])
 
-  if (diasActivos.length === 0 && sinHorario.length === 0) return null
+  const sinHorario = useMemo(() => cargas.filter(c => (c.horarios ?? []).length === 0), [cargas])
+
+  const gridHeight = TOTAL_HOURS * SLOT_PX
 
   return (
-    <div className="border-t border-slate-50 bg-slate-50/40">
-      {/* Leyenda de materias */}
-      <div className="pl-16 pr-4 pt-3 pb-1 flex flex-wrap gap-1.5">
-        {cargas.map(c => (
-          <span key={c.id} className={`inline-flex items-center gap-1 border rounded-full px-2 py-0.5 text-xs font-medium ${colorMap.get(c.id)}`}>
-            <span className="truncate max-w-[160px]">{c.materia?.nombre ?? '—'}</span>
-            {(c.horarios ?? []).length === 0 && (
-              <button onClick={() => onHorarios(c)} className="text-amber-600 hover:text-amber-800 ml-0.5" title="Sin horario">⚠</button>
-            )}
+    <div className="border-t border-slate-100 bg-white">
+      {/* ── Leyenda de materias ── */}
+      <div className="px-4 pt-3 pb-2 flex flex-wrap gap-1.5 border-b border-slate-50">
+        {cargas.map(c => {
+          const col = colorMap.get(c.id)!
+          const sinH = (c.horarios ?? []).length === 0
+          return (
+            <button key={c.id} onClick={() => setDetalle(c)}
+              className={`inline-flex items-center gap-1.5 border rounded-full px-2.5 py-0.5 text-xs font-medium hover:opacity-80 transition-opacity ${col.chip}`}>
+              <span className="truncate max-w-[150px]">{c.materia?.nombre ?? '—'}</span>
+              {sinH && <span className="text-amber-500" title="Sin horario">⚠</span>}
+            </button>
+          )
+        })}
+        {sinHorario.length > 0 && (
+          <span className="text-xs text-amber-500 self-center ml-1">
+            {sinHorario.length} sin horario — haz clic en una celda vacía para asignar
           </span>
-        ))}
+        )}
       </div>
 
-      {/* Cuadrícula días */}
-      {diasActivos.length > 0 && (
-        <div className="pl-16 pr-4 pb-3 pt-2 overflow-x-auto">
-          <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${diasActivos.length}, minmax(160px, 1fr))` }}>
-            {diasActivos.map(dia => (
-              <div key={dia} className="min-w-0">
-                {/* Cabecera día */}
-                <div className="text-center text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 py-1 bg-white rounded border border-slate-100">
-                  {DIA_LABEL_CORTO[dia]}
-                </div>
-                {/* Bloques de ese día */}
-                <div className="space-y-1.5">
-                  {(bloquesPorDia.get(dia) ?? []).map(({ carga: c, h }) => (
-                    <button
-                      key={h.id}
-                      onClick={() => setDetalle(c)}
-                      className={`w-full text-left border rounded-lg px-3 py-2 cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-[0.99] transition-all ${colorMap.get(c.id)}`}
-                    >
-                      <p className="text-xs font-mono font-semibold mb-1 opacity-70">
-                        {fmt12(h.hora_inicio)} – {fmt12(h.hora_fin)}
-                      </p>
-                      <p className="text-xs font-semibold leading-tight">{c.materia?.nombre ?? '—'}</p>
-                      <p className="text-xs opacity-60 truncate mt-0.5">{c.docente?.name ?? <span className="italic">Sin docente</span>}</p>
-                      {c.aula && <p className="text-[10px] opacity-50 mt-0.5">{c.aula.nombre}</p>}
-                    </button>
-                  ))}
-                </div>
+      {/* ── Cuadrícula ── */}
+      <div className="overflow-x-auto">
+        <div className="min-w-[700px]">
+          {/* Cabecera días */}
+          <div className="flex border-b border-slate-100 bg-slate-50">
+            <div className="w-14 shrink-0" /> {/* espacio columna HORA */}
+            {diasMostrados.map(dia => (
+              <div key={dia} className="flex-1 text-center py-2 text-xs font-bold text-slate-500 uppercase tracking-wide border-l border-slate-100">
+                {DIA_LABEL_CORTO[dia]}
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* Materias sin horario */}
-      {sinHorario.length > 0 && (
-        <div className="pl-16 pr-4 pb-3">
-          <p className="text-xs text-amber-600 font-medium mb-1.5">Sin horario asignado:</p>
-          <div className="flex flex-wrap gap-2">
-            {sinHorario.map(c => (
-              <button key={c.id} onClick={() => setDetalle(c)}
-                className="text-left border border-amber-200 bg-amber-50 rounded-lg px-3 py-2 max-w-[200px] hover:shadow-md hover:scale-[1.02] transition-all">
-                <p className="text-xs font-semibold text-amber-800 truncate">{c.materia?.nombre ?? '—'}</p>
-                <p className="text-xs text-amber-600 truncate mt-0.5">{c.docente?.name ?? 'Sin docente'}</p>
-                <p className="text-[10px] text-amber-500 mt-1">Toca para ver detalle</p>
-              </button>
-            ))}
+          {/* Cuerpo: columna HORA + columnas de días */}
+          <div className="flex" style={{ height: gridHeight }}>
+
+            {/* Columna HORA */}
+            <div className="w-14 shrink-0 relative border-r border-slate-100">
+              {HOURS_RANGE.map(h => (
+                <div key={h} className="absolute w-full flex items-start justify-end pr-2"
+                  style={{ top: (h - START_HOUR) * SLOT_PX, height: SLOT_PX }}>
+                  <span className="text-[10px] text-slate-400 font-mono leading-none pt-1">{h}:00</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Columnas de días */}
+            {diasMostrados.map(dia => {
+              const bloques = bloquesPorDia.get(dia) ?? []
+              return (
+                <div key={dia} className="flex-1 relative border-l border-slate-100">
+                  {/* Líneas de hora (fondo) */}
+                  {HOURS_RANGE.map(h => (
+                    <div key={h} className="absolute w-full border-t border-slate-100 border-dashed"
+                      style={{ top: (h - START_HOUR) * SLOT_PX }} />
+                  ))}
+
+                  {/* Celdas clicables por hora (detrás de las tarjetas) */}
+                  {HOURS_RANGE.map(h => {
+                    const ocupado = bloques.some(({ h: bh }) => {
+                      const ini = toMinOfDay(bh.hora_inicio) / 60
+                      const fin = toMinOfDay(bh.hora_fin) / 60
+                      return h >= ini && h < fin
+                    })
+                    return (
+                      <div key={h}
+                        onClick={() => !ocupado && setSlotPick({ dia, hora: h })}
+                        className={`absolute w-full transition-colors ${!ocupado ? 'hover:bg-blue-50/60 cursor-pointer group' : ''}`}
+                        style={{ top: (h - START_HOUR) * SLOT_PX, height: SLOT_PX }}>
+                        {!ocupado && (
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-blue-400 text-lg font-light leading-none">+</span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+
+                  {/* Tarjetas de bloques */}
+                  {bloques.map(({ carga: c, h }) => {
+                    const iniMin = toMinOfDay(h.hora_inicio)
+                    const finMin = toMinOfDay(h.hora_fin)
+                    const top    = (iniMin - START_HOUR * 60) / 60 * SLOT_PX
+                    const height = (finMin - iniMin) / 60 * SLOT_PX - 3
+                    const col    = colorMap.get(c.id)!
+                    return (
+                      <button
+                        key={h.id}
+                        onClick={() => setDetalle(c)}
+                        className={`absolute left-0.5 right-0.5 rounded-lg border px-2 py-1 text-left hover:shadow-md hover:z-10 hover:scale-[1.01] active:scale-[0.99] transition-all overflow-hidden ${col.bg} ${col.border} ${col.text}`}
+                        style={{ top, height }}
+                      >
+                        <p className="text-[10px] font-mono font-semibold opacity-70 leading-tight">
+                          {fmt12(h.hora_inicio)}–{fmt12(h.hora_fin)}
+                        </p>
+                        {height > 40 && (
+                          <p className="text-xs font-semibold leading-tight mt-0.5 line-clamp-2">
+                            {c.materia?.nombre ?? '—'}
+                          </p>
+                        )}
+                        {height > 68 && (
+                          <p className="text-[10px] opacity-60 truncate mt-0.5">{c.docente?.name}</p>
+                        )}
+                        {height > 88 && c.aula && (
+                          <p className="text-[10px] opacity-50 truncate">{c.aula.nombre}</p>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Picker de materia para celda vacía ── */}
+      {slotPick && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
+          onClick={() => setSlotPick(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-semibold text-slate-900">Asignar horario</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {DIA_LABEL_CORTO[slotPick.dia]} · {slotPick.hora}:00 – {slotPick.hora + 1}:00
+                </p>
+              </div>
+              <button onClick={() => setSlotPick(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">¿A qué materia asignar este bloque?</p>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {cargas.map(c => {
+                const col = colorMap.get(c.id)!
+                return (
+                  <button key={c.id}
+                    onClick={() => { setSlotPick(null); onHorarios(c) }}
+                    className={`w-full text-left border rounded-xl px-4 py-3 hover:shadow-md transition-all ${col.chip}`}>
+                    <p className="text-sm font-semibold">{c.materia?.nombre ?? '—'}</p>
+                    <p className="text-xs opacity-60 mt-0.5">{c.docente?.name ?? 'Sin docente'}</p>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
       )}
 
+      {/* ── Drawer de detalle ── */}
       {detalle && (
         <CargaDetailDrawer
           carga={detalle}
-          colorCls={colorMap.get(detalle.id) ?? ''}
+          colorCls={`${colorMap.get(detalle.id)?.bg} ${colorMap.get(detalle.id)?.border} ${colorMap.get(detalle.id)?.text}`}
           onClose={() => setDetalle(null)}
           onEdit={() => { onEdit(detalle); setDetalle(null) }}
           onHorarios={() => { onHorarios(detalle); setDetalle(null) }}
