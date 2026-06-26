@@ -34,9 +34,8 @@ export async function extractTextFromPdf(file: File): Promise<string> {
   // Importación dinámica para evitar problemas con SSR / chunk inicial
   const pdfjsLib = await import('pdfjs-dist')
 
-  // Worker: usa el CDN de Mozilla para no bundlear el worker pesado (~800 kB)
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+  // Worker servido localmente (copiado a /public) para evitar bloqueos CORS/CSP
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 
   const arrayBuffer = await file.arrayBuffer()
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
