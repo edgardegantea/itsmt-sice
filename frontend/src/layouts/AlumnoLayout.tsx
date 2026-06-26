@@ -76,6 +76,7 @@ export default function AlumnoLayout({ children }: Props) {
         <div className="w-full px-4 sm:px-6 lg:px-8 flex gap-1">
           {[
             { to: '/alumno/dashboard',                label: 'Inicio' },
+            { to: '/alumno/precarga-academica',       label: 'Precarga Académica' },
             { to: '/alumno/tramites',                 label: 'Trámites' },
             { to: '/alumno/encuesta-socioeconomica',  label: 'Encuesta Socioeconómica' },
           ].map(({ to, label }) => (

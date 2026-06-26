@@ -15,6 +15,7 @@ class Periodo extends Model
     protected $fillable = [
         'nombre', 'fecha_inicio', 'fecha_fin', 'activo', 'tipo',
         'fecha_limite_baja_parcial', 'fecha_limite_baja_temporal',
+        'horarios_liberados',
     ];
 
     protected function casts(): array
@@ -23,6 +24,7 @@ class Periodo extends Model
             'fecha_inicio'               => 'date',
             'fecha_fin'                  => 'date',
             'activo'                     => 'boolean',
+            'horarios_liberados'         => 'boolean',
             'fecha_limite_baja_parcial'  => 'date',
             'fecha_limite_baja_temporal' => 'date',
         ];

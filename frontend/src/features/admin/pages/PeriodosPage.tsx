@@ -12,6 +12,7 @@ interface Periodo {
   fecha_inicio: string
   fecha_fin: string
   activo: boolean
+  horarios_liberados: boolean
   fecha_limite_baja_parcial: string | null
   fecha_limite_baja_temporal: string | null
   aspirantes_count?: number
@@ -19,11 +20,12 @@ interface Periodo {
 }
 
 const API = {
-  list:    () => apiClient.get('/admin/periodos').then(r => r.data.data as Periodo[]),
-  create:  (d: Partial<Periodo>) => apiClient.post('/admin/periodos', d).then(r => r.data.data as Periodo),
-  update:  (id: string, d: Partial<Periodo>) => apiClient.patch(`/admin/periodos/${id}`, d).then(r => r.data.data as Periodo),
-  activar:  (id: string) => apiClient.patch(`/admin/periodos/${id}/activar`).then(r => r.data.data as Periodo),
-  eliminar: (id: string) => apiClient.delete(`/admin/periodos/${id}`).then(r => r.data),
+  list:              () => apiClient.get('/admin/periodos').then(r => r.data.data as Periodo[]),
+  create:            (d: Partial<Periodo>) => apiClient.post('/admin/periodos', d).then(r => r.data.data as Periodo),
+  update:            (id: string, d: Partial<Periodo>) => apiClient.patch(`/admin/periodos/${id}`, d).then(r => r.data.data as Periodo),
+  activar:           (id: string) => apiClient.patch(`/admin/periodos/${id}/activar`).then(r => r.data.data as Periodo),
+  liberarHorarios:   (id: string, liberar: boolean) => apiClient.patch(`/admin/periodos/${id}/liberar-horarios`, { liberar }).then(r => r.data.data as Periodo),
+  eliminar:          (id: string) => apiClient.delete(`/admin/periodos/${id}`).then(r => r.data),
 }
 
 const fmtFecha = (s: string | null) => s ? new Date(s + 'T12:00:00').toLocaleDateString('es-MX') : '—'
@@ -160,6 +162,17 @@ export default function PeriodosPage() {
     onError: () => toastError('Error al activar el periodo.'),
   })
 
+  const liberar = useMutation({
+    mutationFn: ({ id, liberar }: { id: string; liberar: boolean }) => API.liberarHorarios(id, liberar),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['admin-periodos'] })
+      success(data.horarios_liberados
+        ? `Horarios del periodo "${data.nombre}" liberados a los alumnos.`
+        : `Horarios del periodo "${data.nombre}" ocultados a los alumnos.`)
+    },
+    onError: () => toastError('Error al cambiar el estado de liberación.'),
+  })
+
   const eliminar = useMutation({
     mutationFn: (id: string) => API.eliminar(id),
     onSuccess: () => {
@@ -198,6 +211,11 @@ export default function PeriodosPage() {
                       Activo
                     </span>
                   )}
+                  {p.horarios_liberados && (
+                    <span className="text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-medium">
+                      Horarios liberados
+                    </span>
+                  )}
                   <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full capitalize">
                     {p.tipo}
                   </span>
@@ -213,7 +231,7 @@ export default function PeriodosPage() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0">
+              <div className="flex gap-2 shrink-0 flex-wrap">
                 {!p.activo && (
                   <button
                     onClick={() => activar.mutate(p.id)}
@@ -223,6 +241,17 @@ export default function PeriodosPage() {
                     Activar
                   </button>
                 )}
+                <button
+                  onClick={() => liberar.mutate({ id: p.id, liberar: !p.horarios_liberados })}
+                  disabled={liberar.isPending}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors disabled:opacity-60 ${
+                    p.horarios_liberados
+                      ? 'text-violet-700 border-violet-300 hover:bg-violet-50'
+                      : 'text-slate-600 border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {p.horarios_liberados ? 'Ocultar horarios' : 'Liberar horarios'}
+                </button>
                 <button
                   onClick={() => setModal(p)}
                   className="px-3 py-1.5 text-xs text-[#1a3a5c] border border-[#1a3a5c]/30 rounded-lg hover:bg-[#1a3a5c]/5 transition-colors"

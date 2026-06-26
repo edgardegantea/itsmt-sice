@@ -123,11 +123,15 @@ function parseDatosGenerales(sec: string) {
   const claveRaw        = get(/Clave de la asignatura[:\s]+(.+)/i)
   const satcaRaw        = get(/SATCA\s*\d*[:\s]+(.+)/i)
 
-  // Normalizar clave: "SCA – 1025" → "SCA-1025"
-  const clave_oficial_tecnm = claveRaw?.replace(/\s*[–—-]\s*/g, '-').replace(/\s+/g, '')
+  // Normalizar clave: "SCA – 1025" → "SCA-1025", truncar a 20 chars
+  const clave_oficial_tecnm = claveRaw
+    ?.replace(/\s*[–—-]\s*/g, '-').replace(/\s+/g, '').slice(0, 20)
 
-  // SATCA "0 – 4 – 4" → "0-4-4"
-  const satca = satcaRaw?.replace(/\s*[–—-]\s*/g, '-').replace(/\s+/g, '')
+  // SATCA "0 – 4 – 4" → "0-4-4"; solo tomar los primeros 3 segmentos numéricos
+  const satcaNorm = satcaRaw?.replace(/\s*[–—-]\s*/g, '-').replace(/\s+/g, '')
+  // Extraer solo el patrón "N-N-N" y descartar texto posterior (ej. "Créditos:4")
+  const satcaMatch = satcaNorm?.match(/^(\d+)-(\d+)-(\d+)/)
+  const satca = satcaMatch ? `${satcaMatch[1]}-${satcaMatch[2]}-${satcaMatch[3]}` : satcaNorm?.slice(0, 20)
 
   let horas_teoria: number | undefined
   let horas_practica: number | undefined

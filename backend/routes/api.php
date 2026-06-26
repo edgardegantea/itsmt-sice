@@ -38,6 +38,7 @@ use App\Http\Controllers\Academico\ConfiguracionEvaluacionController;
 use App\Http\Controllers\Academico\CalificacionController;
 use App\Http\Controllers\Academico\CierreDeCursoController;
 use App\Http\Controllers\Academico\ActaCalificacionesController;
+use App\Http\Controllers\Academico\PrecargaController;
 use Illuminate\Support\Facades\Route;
 
 // Sprint 0 — Auth
@@ -230,11 +231,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/admin/directorio-puestos/{puesto}',     [DirectorioPuestoController::class, 'destroy']);
 
     // Admin — Periodos CRUD
-    Route::get('/admin/periodos',                    [PeriodoAdminController::class, 'index']);
-    Route::post('/admin/periodos',                   [PeriodoAdminController::class, 'store']);
-    Route::patch('/admin/periodos/{periodo}',         [PeriodoAdminController::class, 'update']);
-    Route::patch('/admin/periodos/{periodo}/activar', [PeriodoAdminController::class, 'activar']);
-    Route::delete('/admin/periodos/{periodo}',        [PeriodoAdminController::class, 'destroy']);
+    Route::get('/admin/periodos',                              [PeriodoAdminController::class, 'index']);
+    Route::post('/admin/periodos',                             [PeriodoAdminController::class, 'store']);
+    Route::patch('/admin/periodos/{periodo}',                  [PeriodoAdminController::class, 'update']);
+    Route::patch('/admin/periodos/{periodo}/activar',          [PeriodoAdminController::class, 'activar']);
+    Route::patch('/admin/periodos/{periodo}/liberar-horarios', [PeriodoAdminController::class, 'liberarHorarios']);
+    Route::delete('/admin/periodos/{periodo}',                 [PeriodoAdminController::class, 'destroy']);
+
+    // Alumno — Precarga académica (1er semestre: asignada; 2+: selección)
+    Route::get('/alumno/precarga-academica',                              [PrecargaController::class, 'index']);
+    Route::get('/alumno/precarga-academica/pdf',                          [PrecargaController::class, 'pdf']);
+    Route::post('/alumno/precarga-academica/selecciones',                 [PrecargaController::class, 'seleccionar']);
+    Route::delete('/alumno/precarga-academica/selecciones/{carga_id}',   [PrecargaController::class, 'deseleccionar']);
 
     // Admin — Catálogos CRUD
     Route::prefix('admin/catalogos')->group(function () {

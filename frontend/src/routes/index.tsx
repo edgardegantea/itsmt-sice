@@ -19,7 +19,8 @@ const PeriodosPage          = lazy(() => import('../features/admin/pages/Periodo
 const CarrerasPage          = lazy(() => import('../features/admin/pages/CarrerasPage'))
 const CatalogosPage         = lazy(() => import('../features/admin/pages/CatalogosPage'))
 const ConfiguracionPage     = lazy(() => import('../features/admin/pages/ConfiguracionPage'))
-const DashboardAlumnoPage      = lazy(() => import('../features/alumno/pages/DashboardAlumnoPage'))
+const DashboardAlumnoPage         = lazy(() => import('../features/alumno/pages/DashboardAlumnoPage'))
+const PrecargaAcademicaPage       = lazy(() => import('../features/alumno/pages/PrecargaAcademicaPage'))
 const ConsultaAspirantePage    = lazy(() => import('../features/admision/pages/ConsultaAspirantePage'))
 const TramitesAlumnoPage       = lazy(() => import('../features/permanencia/pages/TramitesAlumnoPage'))
 const ReinscripcionesAdminPage        = lazy(() => import('../features/permanencia/pages/ReinscripcionesAdminPage'))
@@ -127,6 +128,14 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute requiredRole="alumno">
               <AlumnoLayout><TramitesAlumnoPage /></AlumnoLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/alumno/precarga-academica"
+          element={
+            <ProtectedRoute requiredRole="alumno">
+              <AlumnoLayout><PrecargaAcademicaPage /></AlumnoLayout>
             </ProtectedRoute>
           }
         />

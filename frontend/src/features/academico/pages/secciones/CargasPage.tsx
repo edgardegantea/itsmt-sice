@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type CargaAcademica, type Horario } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
+import { useAuthStore } from '../../../../store/authStore'
 import { Field, SkeletonRows, icls, selectCls, inputCls, ModalWrap, usePeriodos, mutationError, extractApiErrors } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
 import apiClient from '../../../../config/apiClient'
@@ -1127,6 +1128,9 @@ export default function CargasPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { confirm, dialog: confirmDialog } = useConfirm()
 
+  const { user } = useAuthStore()
+  const esSuperadmin = user?.roles?.includes('superadmin') ?? false
+
   const { data: periodos = [] } = usePeriodos()
   const { data: aulas = [] } = useAulas()
   const { data: carreras = [] } = useCarreras()
@@ -1182,6 +1186,21 @@ export default function CargasPage() {
     mutationFn: (id: string) => academicoApi.deleteCarga(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cargas'] }); addToast('Carga eliminada.', 'success') },
     onError: (e) => addToast(mutationError(e), 'error'),
+  })
+
+  const liberarHorariosMut = useMutation({
+    mutationFn: ({ id, liberar }: { id: string; liberar: boolean }) =>
+      apiClient.patch(`/admin/periodos/${id}/liberar-horarios`, { liberar }).then(r => r.data.data),
+    onSuccess: (data: { nombre: string; horarios_liberados: boolean }) => {
+      qc.invalidateQueries({ queryKey: ['periodos'] })
+      addToast(
+        data.horarios_liberados
+          ? `Horarios del periodo "${data.nombre}" liberados a los alumnos.`
+          : `Horarios del periodo "${data.nombre}" ocultados.`,
+        'success'
+      )
+    },
+    onError: () => addToast('Error al cambiar el estado de liberación.', 'error'),
   })
 
   const set = (k: keyof CargaAcademica, v: unknown) => setModal(m => ({ ...m, [k]: v }))
@@ -1269,6 +1288,25 @@ export default function CargasPage() {
                   </svg>
                 )}
               </button>
+              {esSuperadmin && periodoSeleccionado && (
+                <button
+                  onClick={() => liberarHorariosMut.mutate({
+                    id: periodoSeleccionado.id,
+                    liberar: !periodoSeleccionado?.horarios_liberados,
+                  })}
+                  disabled={liberarHorariosMut.isPending}
+                  className={`px-3 py-2 text-sm rounded-lg border transition-colors disabled:opacity-60 ${
+                    periodoSeleccionado?.horarios_liberados
+                      ? 'text-violet-700 border-violet-300 bg-violet-50 hover:bg-violet-100'
+                      : 'text-slate-600 border-slate-300 bg-white hover:bg-slate-50'
+                  }`}
+                  title={periodoSeleccionado?.horarios_liberados
+                    ? 'Ocultar horarios a los alumnos'
+                    : 'Liberar horarios a los alumnos de 1er semestre'}
+                >
+                  {periodoSeleccionado?.horarios_liberados ? '🔓 Ocultar horarios' : '🔒 Liberar horarios'}
+                </button>
+              )}
               <button
                 onClick={() => setModal({ ...BLANK })}
                 className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"

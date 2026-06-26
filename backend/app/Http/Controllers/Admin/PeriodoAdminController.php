@@ -70,6 +70,23 @@ class PeriodoAdminController extends Controller
         return ApiResponse::success(null, 'Periodo eliminado correctamente.');
     }
 
+    // PATCH /api/admin/periodos/{periodo}/liberar-horarios
+    public function liberarHorarios(Request $request, Periodo $periodo): JsonResponse
+    {
+        if (! $request->user()?->hasRole(['admin', 'superadmin'])) {
+            return ApiResponse::error('No autorizado.', 403);
+        }
+
+        $liberar = $request->boolean('liberar', true);
+        $periodo->update(['horarios_liberados' => $liberar]);
+
+        $msg = $liberar
+            ? "Horarios del periodo '{$periodo->nombre}' liberados a los alumnos."
+            : "Horarios del periodo '{$periodo->nombre}' ocultados a los alumnos.";
+
+        return ApiResponse::success($periodo->fresh(), $msg);
+    }
+
     // PATCH /api/admin/periodos/{periodo}/activar
     public function activar(Request $request, Periodo $periodo): JsonResponse
     {

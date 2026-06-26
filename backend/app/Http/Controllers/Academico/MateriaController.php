@@ -50,7 +50,7 @@ class MateriaController extends Controller
         $data = $request->validate([
             'carrera_id'           => ['required', 'uuid', 'exists:carreras,id'],
             'clave'                => ['required', 'string', 'max:20', 'unique:materias,clave'],
-            'clave_oficial_tecnm'  => ['nullable', 'string', 'max:20'],
+            'clave_oficial_tecnm'  => ['nullable', 'string', 'max:50'],
             'nombre'               => ['required', 'string', 'max:200'],
             'semestre'             => ['required', 'integer', 'min:1', 'max:10'],
             'creditos'             => ['required', 'integer', 'min:0'],
@@ -58,7 +58,7 @@ class MateriaController extends Controller
             'horas_practica'       => ['required', 'integer', 'min:0'],
             'tipo'                 => ['required', Rule::in(['obligatoria', 'optativa'])],
             // Programa TecNM
-            'satca'                   => ['nullable', 'string', 'max:20'],
+            'satca'                   => ['nullable', 'string', 'max:50'],
             'caracterizacion'         => ['nullable', 'string'],
             'intencion_didactica'     => ['nullable', 'string'],
             'competencia_especifica'  => ['nullable', 'string'],
@@ -89,7 +89,7 @@ class MateriaController extends Controller
         $data = $request->validate([
             'carrera_id'          => ['sometimes', 'uuid', 'exists:carreras,id'],
             'clave'               => ['sometimes', 'string', 'max:20', Rule::unique('materias', 'clave')->ignore($materia->id)],
-            'clave_oficial_tecnm' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'clave_oficial_tecnm' => ['sometimes', 'nullable', 'string', 'max:50'],
             'nombre'              => ['sometimes', 'string', 'max:200'],
             'semestre'            => ['sometimes', 'integer', 'min:1', 'max:10'],
             'creditos'            => ['sometimes', 'integer', 'min:0'],
@@ -98,7 +98,7 @@ class MateriaController extends Controller
             'tipo'                => ['sometimes', Rule::in(['obligatoria', 'optativa'])],
             'activa'              => ['sometimes', 'boolean'],
             // Programa TecNM
-            'satca'                   => ['sometimes', 'nullable', 'string', 'max:20'],
+            'satca'                   => ['sometimes', 'nullable', 'string', 'max:50'],
             'caracterizacion'         => ['sometimes', 'nullable', 'string'],
             'intencion_didactica'     => ['sometimes', 'nullable', 'string'],
             'competencia_especifica'  => ['sometimes', 'nullable', 'string'],

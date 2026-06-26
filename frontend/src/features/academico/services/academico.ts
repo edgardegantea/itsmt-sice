@@ -157,10 +157,42 @@ export const academicoApi = {
     apiClient.get('/materias', { params }).then(r => r.data.data as Materia[]),
   getMateria: (id: string) =>
     apiClient.get(`/materias/${id}`).then(r => r.data.data as Materia),
-  createMateria: (d: Partial<Materia>) =>
-    apiClient.post('/materias', d).then(r => r.data.data as Materia),
-  updateMateria: (id: string, d: Partial<Materia>) =>
-    apiClient.patch(`/materias/${id}`, d).then(r => r.data.data as Materia),
+  createMateria: (d: Partial<Materia>) => {
+    const {
+      carrera, carrera_id, clave, nombre, semestre, creditos, horas_teoria, horas_practica,
+      tipo, activa, satca, clave_oficial_tecnm, caracterizacion, intencion_didactica,
+      competencia_especifica, competencias_previas, temario, actividades_aprendizaje,
+      practicas, proyecto_asignatura, evaluacion, fuentes_informacion,
+    } = d as Materia
+    const payload: Record<string, unknown> = {
+      carrera_id: carrera_id ?? (carrera as { id?: string } | undefined)?.id,
+      clave, nombre, semestre, creditos, horas_teoria, horas_practica,
+      tipo, activa, satca, clave_oficial_tecnm, caracterizacion, intencion_didactica,
+      competencia_especifica, competencias_previas, temario, actividades_aprendizaje,
+      practicas, proyecto_asignatura, evaluacion, fuentes_informacion,
+    }
+    Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k])
+    return apiClient.post('/materias', payload).then(r => r.data.data as Materia)
+  },
+  updateMateria: (id: string, d: Partial<Materia>) => {
+    // Enviar solo campos que el backend acepta, omitir relaciones y metadatos
+    const {
+      carrera, carrera_id, clave, nombre, semestre, creditos, horas_teoria, horas_practica,
+      tipo, activa, satca, clave_oficial_tecnm, caracterizacion, intencion_didactica,
+      competencia_especifica, competencias_previas, temario, actividades_aprendizaje,
+      practicas, proyecto_asignatura, evaluacion, fuentes_informacion,
+    } = d as Materia
+    const payload: Record<string, unknown> = {
+      carrera_id: carrera_id ?? (carrera as { id?: string } | undefined)?.id,
+      clave, nombre, semestre, creditos, horas_teoria, horas_practica,
+      tipo, activa, satca, clave_oficial_tecnm, caracterizacion, intencion_didactica,
+      competencia_especifica, competencias_previas, temario, actividades_aprendizaje,
+      practicas, proyecto_asignatura, evaluacion, fuentes_informacion,
+    }
+    // Eliminar undefined para no mandar campos vacíos innecesarios
+    Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k])
+    return apiClient.patch(`/materias/${id}`, payload).then(r => r.data.data as Materia)
+  },
   deleteMateria: (id: string) =>
     apiClient.delete(`/materias/${id}`),
   subirDocumentoMateria: (id: string, file: File) => {
@@ -261,6 +293,33 @@ export const academicoApi = {
     apiClient.post('/horarios', { carga_academica_id, bloques }).then(r => r.data.data as Horario[]),
   deleteHorario: (id: string) =>
     apiClient.delete(`/horarios/${id}`),
+
+  // Admin — Periodos
+  getPeriodos: () =>
+    apiClient.get('/admin/periodos').then(r => r.data.data as { id: string; nombre: string; activo: boolean; horarios_liberados: boolean }[]),
+  liberarHorarios: (periodoId: string, liberar: boolean) =>
+    apiClient.patch(`/admin/periodos/${periodoId}/liberar-horarios`, { liberar }).then(r => r.data.data),
+
+  // Alumno — Precarga académica
+  getPrecargaAcademica: () =>
+    apiClient.get('/alumno/precarga-academica').then(r => r.data.data as {
+      liberado: boolean
+      semestre: number
+      modo?: 'asignado' | 'seleccion'
+      periodo: { id: string; nombre: string }
+      alumno?: { nombre: string; numero_control: string; carrera: string; semestre: number }
+      cargas?: CargaAcademica[]
+      cargas_semestre?: CargaAcademica[]
+      cargas_pendientes?: CargaAcademica[]
+      tiene_pendientes?: boolean
+      seleccion_ids?: string[]
+    }),
+  seleccionarCarga: (cargaAcademicaId: string) =>
+    apiClient.post('/alumno/precarga-academica/selecciones', { carga_academica_id: cargaAcademicaId }).then(r => r.data),
+  deseleccionarCarga: (cargaAcademicaId: string) =>
+    apiClient.delete(`/alumno/precarga-academica/selecciones/${cargaAcademicaId}`).then(r => r.data),
+  downloadPrecargaPdf: () =>
+    apiClient.get('/alumno/precarga-academica/pdf', { responseType: 'blob' }).then(r => r.data as Blob),
 
   // Planeaciones didácticas
   getPlaneaciones: (params?: Record<string, string>) =>

@@ -181,7 +181,7 @@ export function useCarreras() {
 export function usePeriodos() {
   return useQuery({
     queryKey: ['periodos-select'],
-    queryFn: () => apiClient.get('/admin/periodos').then(r => r.data.data as { id: string; nombre: string; activo: boolean }[]),
+    queryFn: () => apiClient.get('/admin/periodos').then(r => r.data.data as { id: string; nombre: string; activo: boolean; horarios_liberados: boolean }[]),
     staleTime: 60_000,
   })
 }
