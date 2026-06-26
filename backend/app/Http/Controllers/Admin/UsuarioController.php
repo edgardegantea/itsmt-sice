@@ -93,16 +93,25 @@ class UsuarioController extends Controller
         $this->denegarSiSuperadminOculto($request, $usuario);
 
         $data = $request->validate([
-            'name'       => ['sometimes', 'string', 'max:255'],
-            'email'      => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],
-            'password'   => ['sometimes', 'nullable', Password::min(8)->letters()->numbers()],
-            'role'       => ['sometimes', 'string', Rule::exists('roles', 'name')],
-            'carrera_id' => ['sometimes', 'nullable', 'uuid', 'exists:carreras,id'],
+            'name'            => ['sometimes', 'string', 'max:255'],
+            'email'           => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],
+            'password'        => ['sometimes', 'nullable', Password::min(8)->letters()->numbers()],
+            'role'            => ['sometimes', 'string', Rule::exists('roles', 'name')],
+            'carrera_id'      => ['sometimes', 'nullable', 'uuid', 'exists:carreras,id'],
+            // Datos de docente
+            'clave_empleado'  => ['sometimes', 'nullable', 'string', 'max:30'],
+            'no_huella'       => ['sometimes', 'nullable', 'string', 'max:30'],
+            'nombramiento'    => ['sometimes', 'nullable', 'string', 'max:100'],
+            'tipo_horas'      => ['sometimes', 'nullable', 'string', 'max:30'],
         ]);
 
         if (isset($data['name']))       $usuario->name       = $data['name'];
         if (isset($data['email']))      $usuario->email      = $data['email'];
-        if (array_key_exists('carrera_id', $data)) $usuario->carrera_id = $data['carrera_id'];
+        if (array_key_exists('carrera_id',     $data)) $usuario->carrera_id     = $data['carrera_id'];
+        if (array_key_exists('clave_empleado', $data)) $usuario->clave_empleado = $data['clave_empleado'];
+        if (array_key_exists('no_huella',      $data)) $usuario->no_huella      = $data['no_huella'];
+        if (array_key_exists('nombramiento',   $data)) $usuario->nombramiento   = $data['nombramiento'];
+        if (array_key_exists('tipo_horas',     $data)) $usuario->tipo_horas     = $data['tipo_horas'];
         if (!empty($data['password'])) $usuario->password   = Hash::make($data['password']);
         $usuario->save();
 

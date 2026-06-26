@@ -33,6 +33,7 @@ const PermisosPage                    = lazy(() => import('../features/admin/pag
 const GestionAcademicaPage            = lazy(() => import('../features/academico/pages/GestionAcademicaPage'))
 const GestionAcademicaIndexPage       = lazy(() => import('../features/academico/pages/GestionAcademicaIndexPage'))
 const MateriasPage                    = lazy(() => import('../features/academico/pages/secciones/MateriasPage'))
+const DocentesPage                    = lazy(() => import('../features/academico/pages/secciones/DocentesPage'))
 const MallaPage                       = lazy(() => import('../features/academico/pages/secciones/MallaPage'))
 const GruposPage                      = lazy(() => import('../features/academico/pages/secciones/GruposPage'))
 const GrupoDetailPage                 = lazy(() => import('../features/academico/pages/secciones/GrupoDetailPage'))
@@ -96,6 +97,7 @@ export default function AppRoutes() {
         <Route path="/admin/permisos"                  element={<AdminLayout><PermisosPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica"              element={<AdminLayout><GestionAcademicaIndexPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/materias"     element={<AdminLayout><MateriasPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/docentes"     element={<AdminLayout><DocentesPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/malla"        element={<AdminLayout><MallaPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/grupos"       element={<AdminLayout><GruposPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/grupos/:id"   element={<AdminLayout><GrupoDetailPage /></AdminLayout>} />

@@ -166,17 +166,7 @@ class HorarioService
      */
     public function guardarHorarios(CargaAcademica $carga, array $bloques): Collection
     {
-        // Conflictos con horarios ya existentes en DB
-        foreach ($bloques as $bloque) {
-            $conflictos = $this->detectarConflictos(
-                $carga->id, $bloque['dia_semana'], $bloque['hora_inicio'], $bloque['hora_fin']
-            );
-            if (!empty($conflictos)) {
-                throw new \DomainException(implode(' | ', array_column($conflictos, 'mensaje')));
-            }
-        }
-
-        // Empalmes dentro del mismo lote
+        // Empalmes dentro del mismo lote (validación sin DB)
         foreach ($bloques as $i => $a) {
             foreach ($bloques as $j => $b) {
                 if ($i >= $j) continue;
@@ -189,65 +179,74 @@ class HorarioService
             }
         }
 
-        // Span diario del lote completo (lote + lo que ya hay en DB de otras cargas)
-        $diasEnLote = array_unique(array_column($bloques, 'dia_semana'));
+        return DB::transaction(function () use ($carga, $bloques) {
+            // Borrar horarios actuales ANTES de validar para que no colisionen consigo mismos
+            Horario::where('carga_academica_id', $carga->id)->delete();
 
-        foreach ($diasEnLote as $dia) {
-            // Recopilar inicios y fines de los bloques de este día
-            $iniciosLote = [];
-            $finesLote   = [];
-            foreach ($bloques as $b) {
-                if ($b['dia_semana'] !== $dia) continue;
-                $iniciosLote[] = $this->toMin($b['hora_inicio']);
-                $finesLote[]   = $this->toMin($b['hora_fin']);
+            // Conflictos con horarios de otras cargas (ya sin los propios)
+            foreach ($bloques as $bloque) {
+                $conflictos = $this->detectarConflictos(
+                    $carga->id, $bloque['dia_semana'], $bloque['hora_inicio'], $bloque['hora_fin']
+                );
+                if (!empty($conflictos)) {
+                    throw new \DomainException(implode(' | ', array_column($conflictos, 'mensaje')));
+                }
             }
 
-            // Horarios de otras cargas del mismo docente ese día
-            $existentes = Horario::query()
-                ->where('dia_semana', $dia)
-                ->whereHas('cargaAcademica', fn($q) =>
-                    $q->where('docente_id', $carga->docente_id)
-                      ->where('periodo_id', $carga->periodo_id)
-                      ->where('id', '!=', $carga->id)
-                )
-                ->get();
+            // Span diario del lote completo (lote + lo que ya hay en DB de otras cargas)
+            $diasEnLote = array_unique(array_column($bloques, 'dia_semana'));
 
-            foreach ($existentes as $h) {
-                $iniciosLote[] = $this->toMin($h->hora_inicio);
-                $finesLote[]   = $this->toMin($h->hora_fin);
+            foreach ($diasEnLote as $dia) {
+                $iniciosLote = [];
+                $finesLote   = [];
+                foreach ($bloques as $b) {
+                    if ($b['dia_semana'] !== $dia) continue;
+                    $iniciosLote[] = $this->toMin($b['hora_inicio']);
+                    $finesLote[]   = $this->toMin($b['hora_fin']);
+                }
+
+                $existentes = Horario::query()
+                    ->where('dia_semana', $dia)
+                    ->whereHas('cargaAcademica', fn($q) =>
+                        $q->where('docente_id', $carga->docente_id)
+                          ->where('periodo_id', $carga->periodo_id)
+                          ->where('id', '!=', $carga->id)
+                    )
+                    ->get();
+
+                foreach ($existentes as $h) {
+                    $iniciosLote[] = $this->toMin($h->hora_inicio);
+                    $finesLote[]   = $this->toMin($h->hora_fin);
+                }
+
+                $entradaMin = min($iniciosLote);
+                $salidaMin  = max($finesLote);
+                $span       = $salidaMin - $entradaMin;
+                if ($span > self::LIMITE_SPAN_DIA_MIN) {
+                    $salidaMax = $this->minToStr($entradaMin + self::LIMITE_SPAN_DIA_MIN);
+                    throw new \DomainException(sprintf(
+                        'El %s, el docente entra a las %s — no se puede asignar nada después de las %s (propuesto hasta las %s).',
+                        $dia,
+                        $this->minToStr($entradaMin),
+                        $salidaMax,
+                        $this->minToStr($salidaMin)
+                    ));
+                }
             }
 
-            $entradaMin = min($iniciosLote);
-            $salidaMin  = max($finesLote);
-            $span       = $salidaMin - $entradaMin;
-            if ($span > self::LIMITE_SPAN_DIA_MIN) {
-                $salidaMax = $this->minToStr($entradaMin + self::LIMITE_SPAN_DIA_MIN);
+            // Horas semanales frente a grupo
+            $minLoteSemana  = array_sum(array_map(
+                fn($b) => $this->toMin($b['hora_fin']) - $this->toMin($b['hora_inicio']), $bloques
+            ));
+            $minOtrasSemana = $this->minutosSemanaEnDB($carga->docente_id, $carga->periodo_id, $carga->id);
+            $totalSemana    = $minOtrasSemana + $minLoteSemana;
+
+            if ($totalSemana > self::LIMITE_HORAS_SEMANA * 60) {
                 throw new \DomainException(sprintf(
-                    'El %s, el docente entra a las %s — no se puede asignar nada después de las %s (propuesto hasta las %s).',
-                    $dia,
-                    $this->minToStr($entradaMin),
-                    $salidaMax,
-                    $this->minToStr($salidaMin)
+                    'El docente acumularía %.1fh/sem frente a grupo (límite: %dh/sem).',
+                    $totalSemana / 60, self::LIMITE_HORAS_SEMANA
                 ));
             }
-        }
-
-        // Horas semanales frente a grupo
-        $minLoteSemana  = array_sum(array_map(
-            fn($b) => $this->toMin($b['hora_fin']) - $this->toMin($b['hora_inicio']), $bloques
-        ));
-        $minOtrasSemana = $this->minutosSemanaEnDB($carga->docente_id, $carga->periodo_id, $carga->id);
-        $totalSemana    = $minOtrasSemana + $minLoteSemana;
-
-        if ($totalSemana > self::LIMITE_HORAS_SEMANA * 60) {
-            throw new \DomainException(sprintf(
-                'El docente acumularía %.1fh/sem frente a grupo (límite: %dh/sem).',
-                $totalSemana / 60, self::LIMITE_HORAS_SEMANA
-            ));
-        }
-
-        return DB::transaction(function () use ($carga, $bloques) {
-            Horario::where('carga_academica_id', $carga->id)->delete();
 
             return collect($bloques)->map(fn($b) => Horario::create([
                 'carga_academica_id' => $carga->id,
