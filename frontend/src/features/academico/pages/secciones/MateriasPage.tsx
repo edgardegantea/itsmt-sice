@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useConfirm } from '../../../../components/ConfirmDialog'
 import { academicoApi, type Materia, type MateriaTemaTema } from '../../services/academico'
+import { parseTecnmPdf } from '../../utils/tecnmPdfParser'
 import { Field, SkeletonRows, inputCls, selectCls, icls, ModalWrap, extractApiErrors, mutationError, useCarreras } from '../tabs/shared'
 import { useToastStore } from '../../../../store/toastStore'
 
@@ -321,6 +322,37 @@ function MateriaDetail({
                   </ol>
                 </section>
               )}
+              {materia.practicas && materia.practicas.length > 0 && (
+                <section>
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Prácticas</h3>
+                  <div className="space-y-3">
+                    {materia.practicas.map((p, i) => (
+                      <div key={i} className="bg-slate-50 rounded-xl p-4">
+                        <div className="text-xs font-semibold text-slate-600 mb-2">{p.tema}</div>
+                        <ul className="space-y-1">
+                          {p.lista.map((item, j) => (
+                            <li key={j} className="text-xs text-slate-600 flex items-start gap-1.5">
+                              <span className="text-slate-300 mt-0.5 shrink-0">·</span>{item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+              {materia.proyecto_asignatura && (
+                <section>
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Proyecto de asignatura</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{materia.proyecto_asignatura}</p>
+                </section>
+              )}
+              {materia.evaluacion && (
+                <section>
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Evaluación</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{materia.evaluacion}</p>
+                </section>
+              )}
               {!materia.competencia_especifica && !materia.temario?.length && (
                 <div className="py-12 text-center text-slate-400 text-sm">
                   No hay información del programa cargada.
@@ -521,7 +553,7 @@ export default function MateriasPage() {
   const [busqueda, setBusqueda] = useState('')
   const [modal, setModal] = useState<Partial<Materia> | null>(null)
   const [detalle, setDetalle] = useState<Materia | null>(null)
-  const [modalTab, setModalTab] = useState<'basico' | 'programa' | 'temario' | 'biblio'>('basico')
+  const [modalTab, setModalTab] = useState<'basico' | 'programa' | 'temario' | 'practicas' | 'biblio'>('basico')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [extrayendo, setExtrayendo] = useState(false)
   const pdfExtractRef = useRef<HTMLInputElement>(null)
@@ -584,17 +616,18 @@ export default function MateriasPage() {
   const handleExtractPdf = useCallback(async (file: File) => {
     setExtrayendo(true)
     try {
-      const data = await academicoApi.extraerProgramaPdf(file)
+      const data = await parseTecnmPdf(file)
       setModal(prev => {
         const merged: Partial<Materia> = { ...prev }
         const keys: (keyof Materia)[] = [
           'nombre', 'clave_oficial_tecnm', 'satca', 'creditos',
           'horas_teoria', 'horas_practica', 'caracterizacion',
           'intencion_didactica', 'competencia_especifica',
-          'competencias_previas', 'temario', 'fuentes_informacion',
+          'competencias_previas', 'temario', 'actividades_aprendizaje',
+          'practicas', 'proyecto_asignatura', 'evaluacion', 'fuentes_informacion',
         ]
         for (const k of keys) {
-          const val = data[k]
+          const val = (data as Record<string, unknown>)[k]
           if (val !== null && val !== undefined && val !== '') {
             (merged as Record<string, unknown>)[k] = val
           }
@@ -602,8 +635,9 @@ export default function MateriasPage() {
         return merged
       })
       addToast('Información extraída del PDF. Revisa y completa los campos.', 'success')
-    } catch {
-      addToast('No se pudo extraer información del PDF. Verifica la clave ANTHROPIC_API_KEY.', 'error')
+    } catch (e) {
+      console.error(e)
+      addToast('No se pudo leer el PDF. Verifica que no esté escaneado o protegido.', 'error')
     } finally {
       setExtrayendo(false)
     }
@@ -626,6 +660,7 @@ export default function MateriasPage() {
     { id: 'basico' as const, label: 'Datos básicos' },
     { id: 'programa' as const, label: 'Presentación' },
     { id: 'temario' as const, label: 'Temario' },
+    { id: 'practicas' as const, label: 'Prácticas' },
     { id: 'biblio' as const, label: 'Bibliografía' },
   ]
 
@@ -837,6 +872,53 @@ export default function MateriasPage() {
               <TemarioEditor value={modal.temario ?? []} onChange={v => set('temario', v)} />
             </div>
           )}
+
+          {/* ── Prácticas / Proyecto / Evaluación ── */}
+          {modalTab === 'practicas' && (<>
+            <div className="sm:col-span-2 space-y-3">
+              <p className="text-xs text-slate-500">Las prácticas se extraen automáticamente del PDF. Puedes editarlas aquí como texto libre por tema.</p>
+              {(modal.practicas ?? []).map((p, i) => (
+                <div key={i} className="border border-slate-200 rounded-lg p-3 space-y-2">
+                  <div className="flex gap-2 items-center">
+                    <input className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-sm font-medium"
+                      value={p.tema} placeholder="Tema N"
+                      onChange={e => {
+                        const next = [...(modal.practicas ?? [])]
+                        next[i] = { ...next[i], tema: e.target.value }
+                        set('practicas', next)
+                      }} />
+                    <button onClick={() => set('practicas', (modal.practicas ?? []).filter((_, idx) => idx !== i))}
+                      className="text-slate-300 hover:text-red-400 text-lg leading-none">×</button>
+                  </div>
+                  <textarea className="w-full border border-slate-100 rounded px-2 py-1.5 text-xs text-slate-600 resize-none" rows={4}
+                    placeholder="Una práctica por línea…"
+                    value={(p.lista ?? []).join('\n')}
+                    onChange={e => {
+                      const next = [...(modal.practicas ?? [])]
+                      next[i] = { ...next[i], lista: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }
+                      set('practicas', next)
+                    }} />
+                </div>
+              ))}
+              <button type="button"
+                onClick={() => set('practicas', [...(modal.practicas ?? []), { tema: `Tema ${(modal.practicas ?? []).length + 1}`, lista: [] }])}
+                className="w-full py-2 border-2 border-dashed border-slate-200 rounded-lg text-xs text-slate-400 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                + Agregar tema de prácticas
+              </button>
+            </div>
+            <Field label="Proyecto de asignatura" full error={errors.proyecto_asignatura}>
+              <textarea className={`${icls(errors.proyecto_asignatura)} resize-none`} rows={4}
+                value={modal.proyecto_asignatura ?? ''}
+                placeholder="El objetivo del proyecto…"
+                onChange={e => set('proyecto_asignatura', e.target.value)} />
+            </Field>
+            <Field label="Evaluación por competencias" full error={errors.evaluacion}>
+              <textarea className={`${icls(errors.evaluacion)} resize-none`} rows={4}
+                value={modal.evaluacion ?? ''}
+                placeholder="La evaluación debe ser permanente y continua…"
+                onChange={e => set('evaluacion', e.target.value)} />
+            </Field>
+          </>)}
 
           {/* ── Bibliografía ── */}
           {modalTab === 'biblio' && (

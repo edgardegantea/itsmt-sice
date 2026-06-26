@@ -63,10 +63,16 @@ class MateriaController extends Controller
             'intencion_didactica'     => ['nullable', 'string'],
             'competencia_especifica'  => ['nullable', 'string'],
             'competencias_previas'    => ['nullable', 'string'],
-            'temario'                 => ['nullable', 'array'],
-            'temario.*.tema'          => ['required_with:temario', 'string'],
-            'temario.*.subtemas'      => ['nullable', 'array'],
-            'fuentes_informacion'     => ['nullable', 'array'],
+            'temario'                       => ['nullable', 'array'],
+            'temario.*.tema'                => ['required_with:temario', 'string'],
+            'temario.*.subtemas'            => ['nullable', 'array'],
+            'actividades_aprendizaje'       => ['nullable', 'array'],
+            'practicas'                     => ['nullable', 'array'],
+            'practicas.*.tema'              => ['required_with:practicas', 'string'],
+            'practicas.*.lista'             => ['nullable', 'array'],
+            'proyecto_asignatura'           => ['nullable', 'string'],
+            'evaluacion'                    => ['nullable', 'string'],
+            'fuentes_informacion'           => ['nullable', 'array'],
         ]);
 
         $this->verificarCarrera($request, $data['carrera_id']);
@@ -97,10 +103,16 @@ class MateriaController extends Controller
             'intencion_didactica'     => ['sometimes', 'nullable', 'string'],
             'competencia_especifica'  => ['sometimes', 'nullable', 'string'],
             'competencias_previas'    => ['sometimes', 'nullable', 'string'],
-            'temario'                 => ['sometimes', 'nullable', 'array'],
-            'temario.*.tema'          => ['required_with:temario', 'string'],
-            'temario.*.subtemas'      => ['nullable', 'array'],
-            'fuentes_informacion'     => ['sometimes', 'nullable', 'array'],
+            'temario'                       => ['sometimes', 'nullable', 'array'],
+            'temario.*.tema'                => ['required_with:temario', 'string'],
+            'temario.*.subtemas'            => ['nullable', 'array'],
+            'actividades_aprendizaje'       => ['sometimes', 'nullable', 'array'],
+            'practicas'                     => ['sometimes', 'nullable', 'array'],
+            'practicas.*.tema'              => ['required_with:practicas', 'string'],
+            'practicas.*.lista'             => ['nullable', 'array'],
+            'proyecto_asignatura'           => ['sometimes', 'nullable', 'string'],
+            'evaluacion'                    => ['sometimes', 'nullable', 'string'],
+            'fuentes_informacion'           => ['sometimes', 'nullable', 'array'],
         ]);
 
         $materia->update($data);

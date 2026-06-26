@@ -19,15 +19,19 @@ class Materia extends Model
         // Programa TecNM
         'satca', 'caracterizacion', 'intencion_didactica',
         'competencia_especifica', 'competencias_previas',
-        'temario', 'fuentes_informacion', 'documento_path',
+        'temario', 'actividades_aprendizaje', 'practicas',
+        'proyecto_asignatura', 'evaluacion',
+        'fuentes_informacion', 'documento_path',
     ];
 
     protected function casts(): array
     {
         return [
             'activa'             => 'boolean',
-            'temario'            => 'array',
-            'fuentes_informacion' => 'array',
+            'temario'                 => 'array',
+            'actividades_aprendizaje' => 'array',
+            'practicas'               => 'array',
+            'fuentes_informacion'     => 'array',
         ];
     }
 

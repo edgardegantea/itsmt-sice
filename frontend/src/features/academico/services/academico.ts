@@ -27,6 +27,10 @@ export interface Materia {
   competencia_especifica?: string
   competencias_previas?: string
   temario?: MateriaTemaTema[]
+  actividades_aprendizaje?: { tema: string; competencias: string; actividades: string[] }[]
+  practicas?: { tema: string; lista: string[] }[]
+  proyecto_asignatura?: string
+  evaluacion?: string
   fuentes_informacion?: string[]
   documento_path?: string
   documento_url?: string
