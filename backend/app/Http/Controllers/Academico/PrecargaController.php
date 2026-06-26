@@ -114,18 +114,9 @@ class PrecargaController extends Controller
             return ApiResponse::success(null, 'No hay periodo activo.');
         }
 
-        if (! $periodo->horarios_liberados) {
-            return ApiResponse::success([
-                'liberado' => false,
-                'semestre' => $alumno->semestre_actual,
-                'periodo'  => $periodo->only(['id', 'nombre']),
-            ], 'Los horarios aún no han sido liberados por la administración.');
-        }
-
         $semestre = $alumno->semestre_actual ?? 1;
 
         $base = [
-            'liberado' => true,
             'semestre' => $semestre,
             'periodo'  => $periodo->only(['id', 'nombre']),
             'alumno'   => [
@@ -138,28 +129,36 @@ class PrecargaController extends Controller
 
         // ── Semestre 1: lectura ────────────────────────────────────────────────
         if ($semestre === 1) {
-            $grupos = Grupo::where('carrera_id', $alumno->carrera_id)
+            $gruposObj = Grupo::where('carrera_id', $alumno->carrera_id)
                 ->where('semestre', 1)
                 ->where('periodo_id', $periodo->id)
-                ->pluck('id');
+                ->where('horarios_liberados', true)
+                ->get();
+
+            if ($gruposObj->isEmpty()) {
+                return ApiResponse::success(array_merge($base, ['liberado' => false]),
+                    'Los horarios aún no han sido liberados por la administración.');
+            }
 
             $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
-                ->whereIn('grupo_id', $grupos)
+                ->whereIn('grupo_id', $gruposObj->pluck('id'))
                 ->where('periodo_id', $periodo->id)
                 ->get();
 
             return ApiResponse::success(array_merge($base, [
-                'modo'   => 'asignado',
-                'cargas' => $cargas,
+                'liberado' => true,
+                'modo'     => 'asignado',
+                'cargas'   => $cargas,
             ]));
         }
 
         // ── Semestre 2+: selección con soporte para repetidores ───────────────
 
-        // 1. Cargas del semestre actual del alumno
+        // 1. Cargas del semestre actual del alumno (solo grupos liberados)
         $gruposSemActual = Grupo::where('carrera_id', $alumno->carrera_id)
             ->where('semestre', $semestre)
             ->where('periodo_id', $periodo->id)
+            ->where('horarios_liberados', true)
             ->pluck('id');
 
         $cargasSemActual = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
@@ -187,18 +186,24 @@ class PrecargaController extends Controller
         }
 
         // 3. Selección actual del alumno
+        // Si no hay grupos liberados para el semestre actual, no hay nada que mostrar
+        if ($gruposSemActual->isEmpty()) {
+            return ApiResponse::success(array_merge($base, ['liberado' => false]),
+                'Los horarios aún no han sido liberados por la administración.');
+        }
+
         $seleccionIds = AlumnoCargaSeleccion::where('alumno_id', $alumno->id)
             ->where('periodo_id', $periodo->id)
             ->pluck('carga_academica_id')
             ->toArray();
 
         return ApiResponse::success(array_merge($base, [
+            'liberado'             => true,
             'modo'                 => 'seleccion',
             'cargas_semestre'      => $cargasSemActual,
             'cargas_pendientes'    => $cargasPendientes,
             'tiene_pendientes'     => $cargasPendientes->isNotEmpty(),
             'seleccion_ids'        => $seleccionIds,
-            // cargas = unión de ambos grupos (para compatibilidad)
             'cargas'               => $cargasSemActual->merge($cargasPendientes)->values(),
         ]));
     }
@@ -228,8 +233,8 @@ class PrecargaController extends Controller
 
         $periodo = Periodo::where('activo', true)->first();
 
-        if (! $periodo || ! $periodo->horarios_liberados) {
-            return ApiResponse::error('Los horarios no están liberados.', 422);
+        if (! $periodo) {
+            return ApiResponse::error('No hay periodo activo.', 422);
         }
 
         $carga = CargaAcademica::with(['horarios', 'materia'])->findOrFail($data['carga_academica_id']);
@@ -238,6 +243,10 @@ class PrecargaController extends Controller
 
         if (! $grupo || $grupo->carrera_id !== $alumno->carrera_id) {
             return ApiResponse::error('La carga no pertenece a tu carrera.', 422);
+        }
+
+        if (! $grupo->horarios_liberados) {
+            return ApiResponse::error('Los horarios de ese grupo aún no han sido liberados.', 422);
         }
 
         // Carga del semestre actual → siempre permitida
@@ -323,8 +332,8 @@ class PrecargaController extends Controller
 
         $periodo = Periodo::where('activo', true)->first();
 
-        if (! $periodo || ! $periodo->horarios_liberados) {
-            abort(403, 'Horarios no liberados.');
+        if (! $periodo) {
+            abort(403, 'No hay periodo activo.');
         }
 
         $semestre = $alumno->semestre_actual ?? 1;
@@ -333,7 +342,12 @@ class PrecargaController extends Controller
             $grupos = Grupo::where('carrera_id', $alumno->carrera_id)
                 ->where('semestre', 1)
                 ->where('periodo_id', $periodo->id)
+                ->where('horarios_liberados', true)
                 ->pluck('id');
+
+            if ($grupos->isEmpty()) {
+                abort(403, 'Horarios no liberados.');
+            }
 
             $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
                 ->whereIn('grupo_id', $grupos)

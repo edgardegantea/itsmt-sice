@@ -127,9 +127,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Grupos
     Route::get('/grupos',                                           [GrupoController::class, 'index']);
     Route::post('/grupos',                                          [GrupoController::class, 'store']);
+    // Liberar bulk ANTES de los wildcards {grupo}
+    Route::post('/grupos/liberar-horarios-bulk',                    [GrupoController::class, 'liberarHorariosBulk']);
     Route::get('/grupos/{grupo}',                                   [GrupoController::class, 'show']);
     Route::patch('/grupos/{grupo}',                                 [GrupoController::class, 'update']);
     Route::delete('/grupos/{grupo}',                                [GrupoController::class, 'destroy']);
+    Route::patch('/grupos/{grupo}/liberar-horarios',                [GrupoController::class, 'liberarHorarios']);
     Route::post('/grupos/{grupo}/alumnos',                          [GrupoController::class, 'asignarAlumnos']);
     Route::delete('/grupos/{grupo}/alumnos/{alumno}',               [GrupoController::class, 'quitarAlumno']);
 

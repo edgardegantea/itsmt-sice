@@ -45,6 +45,7 @@ export interface Grupo {
   turno: 'matutino' | 'vespertino' | 'sabatino'
   capacidad: number
   activo: boolean
+  horarios_liberados: boolean
   alumnos_count?: number
   carrera?: { id: string; nombre: string; clave: string }
   periodo?: { id: string; nombre: string }
@@ -227,6 +228,10 @@ export const academicoApi = {
     apiClient.post(`/grupos/${grupoId}/alumnos`, { alumno_ids: alumnoIds }).then(r => r.data.data),
   quitarAlumno: (grupoId: string, alumnoId: string) =>
     apiClient.delete(`/grupos/${grupoId}/alumnos/${alumnoId}`),
+  liberarGrupoHorarios: (grupoId: string, liberar: boolean) =>
+    apiClient.patch(`/grupos/${grupoId}/liberar-horarios`, { liberar }).then(r => r.data.data as Grupo),
+  liberarHorariosBulk: (params: { periodo_id?: string; carrera_id?: string; semestre?: number; liberar: boolean }) =>
+    apiClient.post('/grupos/liberar-horarios-bulk', params).then(r => r.data),
 
   // Cargas académicas
   getCargas: (params?: Record<string, string>) =>

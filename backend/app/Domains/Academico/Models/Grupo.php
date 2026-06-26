@@ -15,12 +15,15 @@ class Grupo extends Model
 
     protected $fillable = [
         'carrera_id', 'periodo_id', 'clave', 'semestre',
-        'turno', 'capacidad', 'activo',
+        'turno', 'capacidad', 'activo', 'horarios_liberados',
     ];
 
     protected function casts(): array
     {
-        return ['activo' => 'boolean'];
+        return [
+            'activo'             => 'boolean',
+            'horarios_liberados' => 'boolean',
+        ];
     }
 
     public function carrera(): BelongsTo

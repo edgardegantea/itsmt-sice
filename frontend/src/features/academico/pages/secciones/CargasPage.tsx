@@ -492,7 +492,7 @@ function GrupoSemanaGrid({
 }
 
 // Tipos internos del accordion
-type GrupoEntry = { id: string; clave: string; turno: string; cargas: CargaAcademica[] }
+type GrupoEntry = { id: string; clave: string; turno: string; cargas: CargaAcademica[]; horarios_liberados: boolean }
 type SemestreEntry = { semestre: number; grupos: Map<string, GrupoEntry> }
 type CarreraEntry = { id: string; nombre: string; clave: string; semestres: Map<number, SemestreEntry> }
 
@@ -502,12 +502,18 @@ function CargasAccordion({
   onDelete,
   onHorarios,
   onVerHorario,
+  onLiberarGrupo,
+  onLiberarBulk,
+  esSuperadmin = false,
 }: {
   cargas: CargaAcademica[]
   onEdit: (c: CargaAcademica) => void
   onDelete: (c: CargaAcademica) => void
   onHorarios: (c: CargaAcademica) => void
   onVerHorario: (c: CargaAcademica) => void
+  onLiberarGrupo?: (grupoId: string, liberar: boolean) => void
+  onLiberarBulk?: (params: { carrera_id?: string; semestre?: number; liberar: boolean }) => void
+  esSuperadmin?: boolean
 }) {
   const [openCarreras, setOpenCarreras] = useState<Set<string>>(() => new Set())
   const [openSemestres, setOpenSemestres] = useState<Set<string>>(() => new Set())
@@ -542,7 +548,7 @@ function CargasAccordion({
       if (!ce.semestres.has(semestre)) ce.semestres.set(semestre, { semestre, grupos: new Map() })
       const se = ce.semestres.get(semestre)!
 
-      if (!se.grupos.has(grupoId)) se.grupos.set(grupoId, { id: grupoId, clave: grupoClave, turno: grupoTurno, cargas: [] })
+      if (!se.grupos.has(grupoId)) se.grupos.set(grupoId, { id: grupoId, clave: grupoClave, turno: grupoTurno, cargas: [], horarios_liberados: c.grupo?.horarios_liberados ?? false })
       se.grupos.get(grupoId)!.cargas.push(c)
     }
 
@@ -576,17 +582,33 @@ function CargasAccordion({
           <div key={carrera.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
 
             {/* ── Nivel 1: Carrera ── */}
-            <button
-              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
-              onClick={() => toggle(setOpenCarreras, carrera.id)}
-            >
-              <Chevron open={isOpenC} />
-              <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">
-                {carrera.clave}
-              </span>
-              <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
-              <span className="ml-auto shrink-0 text-xs text-slate-400">{totalCargas} carga{totalCargas !== 1 ? 's' : ''}</span>
-            </button>
+            <div className="flex items-center gap-2 px-5 py-4 hover:bg-slate-50 transition-colors">
+              <button
+                className="flex items-center gap-3 flex-1 text-left min-w-0"
+                onClick={() => toggle(setOpenCarreras, carrera.id)}
+              >
+                <Chevron open={isOpenC} />
+                <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">
+                  {carrera.clave}
+                </span>
+                <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
+                <span className="ml-auto shrink-0 text-xs text-slate-400">{totalCargas} carga{totalCargas !== 1 ? 's' : ''}</span>
+              </button>
+              {esSuperadmin && onLiberarBulk && (
+                <div className="flex gap-1 shrink-0">
+                  <button
+                    onClick={() => onLiberarBulk({ carrera_id: carrera.id, liberar: true })}
+                    className="text-xs px-2 py-1 rounded bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 whitespace-nowrap"
+                    title="Liberar todos los grupos de esta carrera"
+                  >Liberar carrera</button>
+                  <button
+                    onClick={() => onLiberarBulk({ carrera_id: carrera.id, liberar: false })}
+                    className="text-xs px-2 py-1 rounded bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100"
+                    title="Ocultar todos los grupos de esta carrera"
+                  >Ocultar</button>
+                </div>
+              )}
+            </div>
 
             {isOpenC && (
               <div className="border-t border-slate-100 divide-y divide-slate-100">
@@ -600,17 +622,32 @@ function CargasAccordion({
                     <div key={semKey}>
 
                       {/* ── Nivel 2: Semestre ── */}
-                      <button
-                        className="w-full flex items-center gap-3 pl-10 pr-5 py-2.5 hover:bg-slate-50/80 transition-colors text-left"
-                        onClick={() => toggle(setOpenSemestres, semKey)}
-                      >
-                        <Chevron open={isOpenS} size="w-3.5 h-3.5" />
-                        <span className="text-xs font-semibold text-slate-600">
-                          {semEntry.semestre > 0 ? `${semEntry.semestre}° Semestre` : 'Sin semestre'}
-                        </span>
-                        <span className="text-xs text-slate-400 ml-1">· {sortedGrupos.length} grupo{sortedGrupos.length !== 1 ? 's' : ''}</span>
-                        <span className="ml-auto text-xs text-slate-400">{totalSem} asignatura{totalSem !== 1 ? 's' : ''}</span>
-                      </button>
+                      <div className="flex items-center gap-2 pl-10 pr-5 py-2.5 hover:bg-slate-50/80 transition-colors">
+                        <button
+                          className="flex items-center gap-3 flex-1 text-left min-w-0"
+                          onClick={() => toggle(setOpenSemestres, semKey)}
+                        >
+                          <Chevron open={isOpenS} size="w-3.5 h-3.5" />
+                          <span className="text-xs font-semibold text-slate-600">
+                            {semEntry.semestre > 0 ? `${semEntry.semestre}° Semestre` : 'Sin semestre'}
+                          </span>
+                          <span className="text-xs text-slate-400 ml-1">· {sortedGrupos.length} grupo{sortedGrupos.length !== 1 ? 's' : ''}</span>
+                          <span className="ml-auto text-xs text-slate-400">{totalSem} asignatura{totalSem !== 1 ? 's' : ''}</span>
+                        </button>
+                        {esSuperadmin && onLiberarBulk && semEntry.semestre > 0 && (
+                          <div className="flex gap-1 shrink-0">
+                            <button
+                              onClick={() => onLiberarBulk({ carrera_id: carrera.id, semestre: semEntry.semestre, liberar: true })}
+                              className="text-xs px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                              title={`Liberar ${semEntry.semestre}° semestre`}
+                            >Liberar sem.</button>
+                            <button
+                              onClick={() => onLiberarBulk({ carrera_id: carrera.id, semestre: semEntry.semestre, liberar: false })}
+                              className="text-xs px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"
+                            >Ocultar</button>
+                          </div>
+                        )}
+                      </div>
 
                       {isOpenS && (
                         <div className="border-t border-slate-50 divide-y divide-slate-50">
@@ -622,23 +659,40 @@ function CargasAccordion({
                               <div key={grupoKey}>
 
                                 {/* ── Nivel 3: Grupo ── */}
-                                <button
-                                  className="w-full flex items-center gap-3 pl-16 pr-5 py-2 hover:bg-blue-50/30 transition-colors text-left"
-                                  onClick={() => toggle(setOpenGrupos, grupoKey)}
-                                >
-                                  <Chevron open={isOpenG} size="w-3 h-3" />
-                                  <span className="font-mono text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded shrink-0">
-                                    {grupo.clave}
-                                  </span>
-                                  {grupo.turno && (
-                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${TURNO_COLOR[grupo.turno] ?? 'bg-slate-100 text-slate-600'}`}>
-                                      {grupo.turno}
+                                <div className="flex items-center gap-2 pl-16 pr-5 py-2 hover:bg-blue-50/30 transition-colors">
+                                  <button
+                                    className="flex items-center gap-3 flex-1 text-left min-w-0"
+                                    onClick={() => toggle(setOpenGrupos, grupoKey)}
+                                  >
+                                    <Chevron open={isOpenG} size="w-3 h-3" />
+                                    <span className="font-mono text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded shrink-0">
+                                      {grupo.clave}
                                     </span>
+                                    {grupo.turno && (
+                                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${TURNO_COLOR[grupo.turno] ?? 'bg-slate-100 text-slate-600'}`}>
+                                        {grupo.turno}
+                                      </span>
+                                    )}
+                                    {grupo.horarios_liberados && (
+                                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">liberado</span>
+                                    )}
+                                    <span className="ml-auto text-xs text-slate-400">
+                                      {grupo.cargas.length} materia{grupo.cargas.length !== 1 ? 's' : ''}
+                                    </span>
+                                  </button>
+                                  {esSuperadmin && onLiberarGrupo && (
+                                    <button
+                                      onClick={() => onLiberarGrupo(grupo.id, !grupo.horarios_liberados)}
+                                      className={`text-xs px-2 py-0.5 rounded border shrink-0 transition-colors ${
+                                        grupo.horarios_liberados
+                                          ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                      }`}
+                                    >
+                                      {grupo.horarios_liberados ? 'Ocultar' : 'Liberar'}
+                                    </button>
                                   )}
-                                  <span className="ml-auto text-xs text-slate-400">
-                                    {grupo.cargas.length} materia{grupo.cargas.length !== 1 ? 's' : ''}
-                                  </span>
-                                </button>
+                                </div>
 
                                 {/* ── Horario semanal del grupo ── */}
                                 {isOpenG && (
@@ -1203,6 +1257,27 @@ export default function CargasPage() {
     onError: () => addToast('Error al cambiar el estado de liberación.', 'error'),
   })
 
+  const liberarGrupoMut = useMutation({
+    mutationFn: ({ grupoId, liberar }: { grupoId: string; liberar: boolean }) =>
+      academicoApi.liberarGrupoHorarios(grupoId, liberar),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cargas'] })
+      qc.invalidateQueries({ queryKey: ['grupos'] })
+    },
+    onError: () => addToast('Error al cambiar el estado del grupo.', 'error'),
+  })
+
+  const liberarBulkMut = useMutation({
+    mutationFn: (params: { periodo_id?: string; carrera_id?: string; semestre?: number; liberar: boolean }) =>
+      academicoApi.liberarHorariosBulk(params),
+    onSuccess: (data: { data: { grupos_afectados: number }; message: string }) => {
+      qc.invalidateQueries({ queryKey: ['cargas'] })
+      qc.invalidateQueries({ queryKey: ['grupos'] })
+      addToast(data.message ?? 'Grupos actualizados.', 'success')
+    },
+    onError: () => addToast('Error al liberar horarios.', 'error'),
+  })
+
   const set = (k: keyof CargaAcademica, v: unknown) => setModal(m => ({ ...m, [k]: v }))
 
   const totalHoras = cargasFiltradas.reduce((s, c) => s + c.horas_semana, 0)
@@ -1453,6 +1528,9 @@ export default function CargasPage() {
             onDelete={c => confirm({ title: '¿Eliminar carga académica?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar carga', onConfirm: () => del.mutateAsync(c.id) })}
             onHorarios={c => setHorariosModal(c)}
             onVerHorario={c => c.docente && setHorarioDocenteModal(c.docente as Docente)}
+            esSuperadmin={esSuperadmin}
+            onLiberarGrupo={(grupoId, liberar) => liberarGrupoMut.mutate({ grupoId, liberar })}
+            onLiberarBulk={(params) => liberarBulkMut.mutate({ ...params, periodo_id: periodoSeleccionado?.id })}
           />
         )}
       </div>

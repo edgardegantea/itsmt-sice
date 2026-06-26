@@ -126,4 +126,44 @@ class GrupoController extends Controller
 
         return ApiResponse::success(null, 'Alumno retirado del grupo.');
     }
+
+    // PATCH /api/grupos/{grupo}/liberar-horarios
+    public function liberarHorarios(Request $request, Grupo $grupo): JsonResponse
+    {
+        if (! $request->user()?->hasRole(['admin', 'superadmin'])) {
+            return ApiResponse::error('No autorizado.', 403);
+        }
+
+        $liberar = $request->boolean('liberar', true);
+        $grupo->update(['horarios_liberados' => $liberar]);
+
+        $estado = $liberar ? 'liberados' : 'ocultados';
+        return ApiResponse::success($grupo->fresh(), "Horarios del grupo «{$grupo->clave}» {$estado}.");
+    }
+
+    // POST /api/grupos/liberar-horarios-bulk
+    public function liberarHorariosBulk(Request $request): JsonResponse
+    {
+        if (! $request->user()?->hasRole(['admin', 'superadmin'])) {
+            return ApiResponse::error('No autorizado.', 403);
+        }
+
+        $data = $request->validate([
+            'liberar'    => ['required', 'boolean'],
+            'periodo_id' => ['sometimes', 'uuid', 'exists:periodos,id'],
+            'carrera_id' => ['sometimes', 'uuid', 'exists:carreras,id'],
+            'semestre'   => ['sometimes', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $query = Grupo::query();
+
+        if (isset($data['periodo_id'])) $query->where('periodo_id', $data['periodo_id']);
+        if (isset($data['carrera_id'])) $query->where('carrera_id', $data['carrera_id']);
+        if (isset($data['semestre']))   $query->where('semestre', $data['semestre']);
+
+        $count = $query->update(['horarios_liberados' => $data['liberar']]);
+
+        $estado = $data['liberar'] ? 'liberados' : 'ocultados';
+        return ApiResponse::success(['grupos_afectados' => $count], "{$count} grupo(s) {$estado}.");
+    }
 }
