@@ -169,7 +169,7 @@ export const academicoApi = {
   deleteCarga: (id: string) =>
     apiClient.delete(`/cargas-academicas/${id}`),
   getDocentes: () =>
-    apiClient.get('/admin/docentes').then(r => r.data.data as { id: string; name: string; email: string }[]),
+    apiClient.get('/admin/docentes').then(r => r.data.data as { id: string; name: string; email: string; clave_empleado?: string; no_huella?: string; nombramiento?: string; tipo_horas?: string }[]),
 
   // Tutorías
   getTutorias: (params?: Record<string, string>) =>

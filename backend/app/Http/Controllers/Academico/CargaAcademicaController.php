@@ -106,7 +106,7 @@ class CargaAcademicaController extends Controller
     {
         $docentes = User::role(['docente', 'jefe_carrera', 'director_academico'])
             ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+            ->get(['id', 'name', 'email', 'clave_empleado', 'no_huella', 'nombramiento', 'tipo_horas']);
 
         return ApiResponse::success($docentes);
     }

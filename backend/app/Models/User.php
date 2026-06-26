@@ -24,6 +24,10 @@ class User extends Authenticatable
         'email',
         'password',
         'carrera_id',
+        'clave_empleado',
+        'no_huella',
+        'nombramiento',
+        'tipo_horas',
     ];
 
     public function carrera(): BelongsTo

@@ -10,17 +10,28 @@ import apiClient from '../../../../config/apiClient'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const
-const DIA_LABEL: Record<string, string> = {
+type DiaKey = typeof DIAS[number]
+
+const DIA_SHORT: Record<string, string> = {
   lunes: 'Lun', martes: 'Mar', miercoles: 'Mié', jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb',
 }
 const DIA_FULL: Record<string, string> = {
   lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
+}
+const DIA_HEADER: Record<string, string> = {
+  lunes: 'LUNES', martes: 'MARTES', miercoles: 'MIÉRCOLES', jueves: 'JUEVES', viernes: 'VIERNES', sabado: 'SÁBADO',
 }
 const TURNO_COLOR: Record<string, string> = {
   matutino: 'bg-sky-100 text-sky-700',
   vespertino: 'bg-violet-100 text-violet-700',
   sabatino: 'bg-orange-100 text-orange-700',
 }
+const HORA_SLOTS = [
+  '07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00',
+  '15:00','16:00','17:00','18:00','19:00','20:00','21:00',
+]
+
+type Docente = { id: string; name: string; email: string; clave_empleado?: string; no_huella?: string; nombramiento?: string; tipo_horas?: string }
 
 function useAulas() {
   return useQuery({
@@ -38,10 +49,16 @@ function useCarreras() {
   })
 }
 
-function fmt(t: string) {
+function fmt12(t: string) {
   const [h, m] = t.split(':')
   const hr = parseInt(h)
-  return `${hr > 12 ? hr - 12 : hr}:${m} ${hr >= 12 ? 'pm' : 'am'}`
+  return `${hr > 12 ? hr - 12 : hr === 0 ? 12 : hr}:${m} ${hr >= 12 ? 'pm' : 'am'}`
+}
+
+// Convierte "07:00" a minutos desde medianoche
+function toMin(t: string) {
+  const [h, m] = t.split(':').map(Number)
+  return h * 60 + m
 }
 
 // ── Chip de horario ───────────────────────────────────────────────────────────
@@ -49,10 +66,278 @@ function fmt(t: string) {
 function HorarioChip({ h }: { h: Horario }) {
   return (
     <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-700 rounded px-1.5 py-0.5 text-xs font-medium">
-      <span className="font-semibold">{DIA_LABEL[h.dia_semana]}</span>
+      <span className="font-semibold">{DIA_SHORT[h.dia_semana]}</span>
       <span className="text-blue-400">·</span>
-      {fmt(h.hora_inicio)}–{fmt(h.hora_fin)}
+      {fmt12(h.hora_inicio)}–{fmt12(h.hora_fin)}
     </span>
+  )
+}
+
+// ── Vista de carga docente (estilo documento oficial) ─────────────────────────
+
+function CargaDocenteView({
+  docente,
+  cargas,
+  periodo,
+  onBack,
+}: {
+  docente: Docente
+  cargas: CargaAcademica[]
+  periodo?: { id: string; nombre: string; activo: boolean }
+  onBack: () => void
+}) {
+  const totalHorasGrupo = cargas.reduce((s, c) => s + c.horas_semana, 0)
+  const [imprimiendo, setImprimiendo] = useState(false)
+
+  // Construir cuadrícula horaria
+  type CeldaHorario = { label: string; color: string } | null
+  const grid: Record<string, Record<string, CeldaHorario>> = {}
+
+  // Paleta de colores por carga (índice)
+  const COLORS = [
+    'bg-blue-100 text-blue-800 border-blue-200',
+    'bg-emerald-100 text-emerald-800 border-emerald-200',
+    'bg-violet-100 text-violet-800 border-violet-200',
+    'bg-amber-100 text-amber-800 border-amber-200',
+    'bg-rose-100 text-rose-800 border-rose-200',
+    'bg-cyan-100 text-cyan-800 border-cyan-200',
+    'bg-orange-100 text-orange-800 border-orange-200',
+  ]
+
+  cargas.forEach((carga, idx) => {
+    const color = COLORS[idx % COLORS.length]
+    const label = `${carga.grupo?.clave ?? '?'}${carga.aula ? `-${carga.aula.nombre}` : ''}`
+    ;(carga.horarios ?? []).forEach(h => {
+      const inicioMin = toMin(h.hora_inicio)
+      const finMin = toMin(h.hora_fin)
+      HORA_SLOTS.forEach(slot => {
+        const slotMin = toMin(slot)
+        if (slotMin >= inicioMin && slotMin < finMin) {
+          if (!grid[slot]) grid[slot] = {}
+          grid[slot][h.dia_semana] = { label, color }
+        }
+      })
+    })
+  })
+
+  return (
+    <div className="space-y-5">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Volver a la lista
+        </button>
+        <button
+          onClick={() => { setImprimiendo(true); setTimeout(() => { window.print(); setImprimiendo(false) }, 100) }}
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          {imprimiendo ? 'Preparando…' : 'Imprimir / PDF'}
+        </button>
+      </div>
+
+      {/* Documento de carga */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden print:shadow-none print:border-0" id="carga-doc">
+
+        {/* Encabezado institucional */}
+        <div className="border-b-2 border-slate-800 px-6 py-3 text-center">
+          <p className="text-xs text-slate-500 uppercase tracking-widest">Instituto Tecnológico Superior de Teziutlán</p>
+          <p className="text-lg font-bold text-slate-900 mt-0.5">Carga Académica y/o Administrativa</p>
+        </div>
+
+        {/* Info del docente */}
+        <div className="grid grid-cols-3 gap-0 border-b border-slate-200">
+          {/* Columna izquierda */}
+          <div className="col-span-2 divide-y divide-slate-200 border-r border-slate-200">
+            <div className="flex items-center px-4 py-2.5 gap-3">
+              <span className="text-xs font-semibold text-slate-500 w-24 shrink-0">NOMBRE</span>
+              <span className="font-bold text-slate-900 uppercase tracking-wide">{docente.name}</span>
+            </div>
+            {periodo && (
+              <div className="flex items-center px-4 py-2.5 gap-3">
+                <span className="text-xs font-semibold text-slate-500 w-24 shrink-0">PERIODO</span>
+                <span className="text-slate-800">{periodo.nombre}</span>
+                {periodo.activo && <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Activo</span>}
+              </div>
+            )}
+            <div className="grid grid-cols-3 divide-x divide-slate-200">
+              <div className="flex items-center px-4 py-2.5 gap-2">
+                <span className="text-xs text-slate-500 shrink-0">CLAVE EMPLEADO</span>
+                <span className="font-mono font-bold text-slate-800">{docente.clave_empleado ?? '—'}</span>
+              </div>
+              <div className="flex items-center px-4 py-2.5 gap-2">
+                <span className="text-xs text-slate-500 shrink-0">NO. HUELLA</span>
+                <span className="font-mono font-bold text-slate-800">{docente.no_huella ?? '—'}</span>
+              </div>
+              <div className="flex items-center px-4 py-2.5 gap-2">
+                <span className="text-xs text-slate-500 shrink-0">NOMBRAMIENTO</span>
+                <span className="text-slate-800 text-sm">{docente.nombramiento ?? '—'}</span>
+              </div>
+            </div>
+          </div>
+          {/* Columna derecha: resumen de horas */}
+          <div className="divide-y divide-slate-200">
+            <div className="px-3 py-2 bg-slate-50">
+              <p className="text-xs font-bold text-slate-600 text-center uppercase tracking-wide">Tipo de Horas</p>
+            </div>
+            <div className="grid grid-cols-2 divide-x divide-slate-200 text-center">
+              <div className="px-2 py-2">
+                <p className="text-xs text-slate-400">Tipo A</p>
+                <p className="font-bold text-slate-900">0</p>
+              </div>
+              <div className="px-2 py-2">
+                <p className="text-xs text-slate-400">Tipo B</p>
+                <p className="font-bold text-blue-700">{docente.tipo_horas === 'B' ? totalHorasGrupo : totalHorasGrupo}</p>
+              </div>
+            </div>
+            <div className="flex justify-between items-center px-4 py-2">
+              <span className="text-xs text-slate-500">Horas Frente a Grupo</span>
+              <span className="font-bold text-slate-900">{totalHorasGrupo}</span>
+            </div>
+            <div className="flex justify-between items-center px-4 py-2 bg-blue-50">
+              <span className="text-xs font-semibold text-slate-700">Total de Horas</span>
+              <span className="font-bold text-blue-700 text-lg">{totalHorasGrupo}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabla de asignaturas */}
+        <div className="border-b border-slate-200">
+          <div className="bg-slate-800 text-white text-xs font-semibold text-center py-1.5 uppercase tracking-widest">
+            Carga General
+          </div>
+          <table className="w-full text-sm">
+            <thead className="bg-slate-100">
+              <tr className="divide-x divide-slate-200">
+                <th className="px-3 py-2 text-xs font-semibold text-slate-600 text-left w-24">Carr. y Sem.</th>
+                <th className="px-3 py-2 text-xs font-semibold text-slate-600 text-left w-24">Grupo</th>
+                <th className="px-3 py-2 text-xs font-semibold text-slate-600 text-left w-28">Clave</th>
+                <th className="px-3 py-2 text-xs font-semibold text-slate-600 text-left">Asignatura</th>
+                <th className="px-3 py-2 text-xs font-semibold text-slate-600 text-center w-16">Horas</th>
+                <th className="px-3 py-2 text-xs font-semibold text-slate-600 text-center w-16">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {cargas.length === 0 ? (
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-sm">Sin asignaturas asignadas.</td></tr>
+              ) : (
+                cargas.map((c, idx) => {
+                  const carreraClave = c.grupo?.carrera?.clave ?? c.materia?.carrera?.clave ?? 'N/A'
+                  const semestre = c.grupo?.semestre ?? '?'
+                  const isLast = idx === cargas.length - 1
+                  return (
+                    <tr key={c.id} className="divide-x divide-slate-100 hover:bg-blue-50/40">
+                      <td className="px-3 py-2.5 font-mono text-xs font-semibold text-slate-700">
+                        {carreraClave}/{String(semestre).padStart(2, '0')}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{c.grupo?.clave ?? '—'}</span>
+                          {c.grupo?.turno && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full ${TURNO_COLOR[c.grupo.turno] ?? ''}`}>
+                              {c.grupo.turno.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-xs text-slate-600">{c.materia?.clave ?? '—'}</td>
+                      <td className="px-3 py-2.5 text-slate-800">{c.materia?.nombre ?? '—'}</td>
+                      <td className="px-3 py-2.5 text-center font-semibold text-slate-900">{c.horas_semana}</td>
+                      <td className="px-3 py-2.5 text-center font-bold text-blue-700">
+                        {isLast ? totalHorasGrupo : ''}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Horarios semanales */}
+        <div>
+          <div className="bg-slate-800 text-white text-xs font-semibold text-center py-1.5 uppercase tracking-widest">
+            Horarios
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="divide-x divide-slate-200 bg-slate-100">
+                  <th className="px-3 py-2 text-slate-600 font-semibold text-left w-20">Hora</th>
+                  {DIAS.map(d => (
+                    <th key={d} className="px-2 py-2 text-slate-600 font-semibold text-center">{DIA_HEADER[d]}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {HORA_SLOTS.slice(0, -1).map((slot, i) => {
+                  const nextSlot = HORA_SLOTS[i + 1]
+                  const row = grid[slot] ?? {}
+                  const hasAny = DIAS.some(d => row[d])
+                  return (
+                    <tr key={slot} className={`divide-x divide-slate-100 ${hasAny ? '' : 'bg-slate-50/50'}`}>
+                      <td className="px-3 py-1.5 font-mono text-slate-500 text-xs font-medium whitespace-nowrap">
+                        {slot}–{nextSlot}
+                      </td>
+                      {DIAS.map(d => {
+                        const cell = row[d]
+                        return (
+                          <td key={d} className="px-1.5 py-1">
+                            {cell ? (
+                              <div className={`border rounded px-1.5 py-1 text-center font-semibold leading-tight ${cell.color}`}>
+                                {cell.label}
+                              </div>
+                            ) : null}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })}
+                {/* Fila de totales de horas al día */}
+                <tr className="bg-slate-100 divide-x divide-slate-200 font-semibold">
+                  <td className="px-3 py-1.5 text-xs text-slate-600">Horas al día</td>
+                  {DIAS.map(d => {
+                    let hrs = 0
+                    cargas.forEach(c => {
+                      ;(c.horarios ?? []).forEach(h => {
+                        if (h.dia_semana === d) {
+                          hrs += (toMin(h.hora_fin) - toMin(h.hora_inicio)) / 60
+                        }
+                      })
+                    })
+                    return (
+                      <td key={d} className="px-2 py-1.5 text-center text-slate-800">
+                        {hrs > 0 ? hrs : ''}
+                      </td>
+                    )
+                  })}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Footer: firmas */}
+        <div className="border-t border-slate-200 grid grid-cols-3 divide-x divide-slate-200 px-0">
+          {['Personal Docente', 'División Académica', 'Subdirección Académica'].map(f => (
+            <div key={f} className="px-4 py-6 text-center">
+              <div className="border-t border-slate-400 mt-8 pt-2">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">{f}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -74,7 +359,6 @@ function CargaCard({
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-      {/* Header: materia + carrera */}
       <div className="px-4 pt-4 pb-3 border-b border-slate-100">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -94,14 +378,10 @@ function CargaCard({
             )}
           </div>
         </div>
-        {carrera && (
-          <p className="text-xs text-slate-400 mt-1">{carrera.nombre}</p>
-        )}
+        {carrera && <p className="text-xs text-slate-400 mt-1">{carrera.nombre}</p>}
       </div>
 
-      {/* Body: datos de la asignación */}
       <div className="px-4 py-3 space-y-2.5">
-        {/* Docente */}
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
             <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -114,7 +394,6 @@ function CargaCard({
           </div>
         </div>
 
-        {/* Grupo + Semestre */}
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
             <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -130,7 +409,6 @@ function CargaCard({
           </div>
         </div>
 
-        {/* Periodo */}
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
             <svg className="w-3.5 h-3.5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -143,7 +421,6 @@ function CargaCard({
           </div>
         </div>
 
-        {/* Aula */}
         {carga.aula && (
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
@@ -158,34 +435,26 @@ function CargaCard({
           </div>
         )}
 
-        {/* Horarios */}
         <div>
           <p className="text-xs text-slate-400 mb-1.5">Horario semanal</p>
           {(carga.horarios ?? []).length === 0 ? (
-            <button
-              onClick={onHorarios}
-              className="text-xs text-blue-500 hover:underline"
-            >
-              + Agregar horario
-            </button>
+            <button onClick={onHorarios} className="text-xs text-blue-500 hover:underline">+ Agregar horario</button>
           ) : (
             <div className="flex flex-wrap gap-1">
               {(carga.horarios ?? [])
                 .slice()
-                .sort((a, b) => DIAS.indexOf(a.dia_semana as typeof DIAS[number]) - DIAS.indexOf(b.dia_semana as typeof DIAS[number]))
+                .sort((a, b) => DIAS.indexOf(a.dia_semana as DiaKey) - DIAS.indexOf(b.dia_semana as DiaKey))
                 .map(h => <HorarioChip key={h.id} h={h} />)}
             </div>
           )}
         </div>
 
-        {/* Horas/sem */}
         <div className="flex items-center justify-between pt-1 border-t border-slate-100">
           <span className="text-xs text-slate-400">Horas / semana</span>
           <span className="text-sm font-bold text-slate-800">{carga.horas_semana}h</span>
         </div>
       </div>
 
-      {/* Footer: acciones */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-t border-slate-100">
         <button onClick={onHorarios} className="text-xs text-blue-600 hover:underline font-medium">
           {(carga.horarios ?? []).length > 0 ? 'Editar horario' : '+ Horario'}
@@ -205,31 +474,15 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
   const qc = useQueryClient()
   const { toast: addToast } = useToastStore()
 
-  const [bloques, setBloques] = useState<{ dia_semana: string; hora_inicio: string; hora_fin: string }[]>(
+  const [bloques, setBloques] = useState(
     (carga.horarios ?? []).map(h => ({ dia_semana: h.dia_semana, hora_inicio: h.hora_inicio.slice(0, 5), hora_fin: h.hora_fin.slice(0, 5) }))
   )
 
   const save = useMutation({
     mutationFn: () => academicoApi.saveHorarios(carga.id, bloques),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['cargas'] })
-      addToast('Horarios guardados.', 'success')
-      onClose()
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cargas'] }); addToast('Horarios guardados.', 'success'); onClose() },
     onError: (e) => addToast(mutationError(e), 'error'),
   })
-
-  function addBloque() {
-    setBloques(b => [...b, { dia_semana: 'lunes', hora_inicio: '07:00', hora_fin: '08:00' }])
-  }
-
-  function removeBloque(i: number) {
-    setBloques(b => b.filter((_, idx) => idx !== i))
-  }
-
-  function setBloque(i: number, k: string, v: string) {
-    setBloques(b => b.map((bl, idx) => idx === i ? { ...bl, [k]: v } : bl))
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onKeyDown={e => { if (e.key === 'Escape') onClose() }}>
@@ -244,40 +497,35 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
 
         <div className="p-5 overflow-y-auto space-y-3">
           {bloques.length === 0 && (
-            <p className="text-sm text-slate-400 text-center py-4">No hay bloques de horario. Agrega uno abajo.</p>
+            <p className="text-sm text-slate-400 text-center py-4">Sin bloques de horario. Agrega uno abajo.</p>
           )}
           {bloques.map((bl, i) => (
             <div key={i} className="flex items-center gap-2 bg-slate-50 rounded-lg p-3">
               <select
                 value={bl.dia_semana}
-                onChange={e => setBloque(i, 'dia_semana', e.target.value)}
+                onChange={e => setBloques(b => b.map((x, j) => j === i ? { ...x, dia_semana: e.target.value as DiaKey } : x))}
                 className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-28"
               >
                 {DIAS.map(d => <option key={d} value={d}>{DIA_FULL[d]}</option>)}
               </select>
-              <input
-                type="time"
-                value={bl.hora_inicio}
-                onChange={e => setBloque(i, 'hora_inicio', e.target.value)}
+              <input type="time" value={bl.hora_inicio}
+                onChange={e => setBloques(b => b.map((x, j) => j === i ? { ...x, hora_inicio: e.target.value } : x))}
                 className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-28"
               />
-              <span className="text-slate-400 text-sm">–</span>
-              <input
-                type="time"
-                value={bl.hora_fin}
-                onChange={e => setBloque(i, 'hora_fin', e.target.value)}
+              <span className="text-slate-400">–</span>
+              <input type="time" value={bl.hora_fin}
+                onChange={e => setBloques(b => b.map((x, j) => j === i ? { ...x, hora_fin: e.target.value } : x))}
                 className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-28"
               />
-              <button onClick={() => removeBloque(i)} className="text-red-400 hover:text-red-600 ml-auto shrink-0">
+              <button onClick={() => setBloques(b => b.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 ml-auto">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           ))}
-
           <button
-            onClick={addBloque}
+            onClick={() => setBloques(b => [...b, { dia_semana: 'lunes' as DiaKey, hora_inicio: '07:00', hora_fin: '08:00' }])}
             className="w-full py-2 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg text-sm hover:border-blue-400 hover:text-blue-500 transition-colors"
           >
             + Agregar bloque de horario
@@ -286,11 +534,8 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
           <button onClick={onClose} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cancelar</button>
-          <button
-            onClick={() => save.mutate()}
-            disabled={save.isPending}
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-          >
+          <button onClick={() => save.mutate()} disabled={save.isPending}
+            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
             {save.isPending ? 'Guardando…' : 'Guardar horarios'}
           </button>
         </div>
@@ -311,6 +556,7 @@ export default function CargasPage() {
   const [filtroCarrera, setFiltroCarrera] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [vistaTabla, setVistaTabla] = useState(false)
+  const [vistaDocente, setVistaDocente] = useState(false)
   const [modal, setModal] = useState<Partial<CargaAcademica> | null>(null)
   const [horariosModal, setHorariosModal] = useState<CargaAcademica | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -347,6 +593,16 @@ export default function CargasPage() {
     return list
   }, [cargas, filtroCarrera, busqueda])
 
+  const docenteSeleccionado = useMemo(
+    () => docentes.find(d => d.id === filtroDocente) ?? null,
+    [docentes, filtroDocente]
+  )
+
+  const periodoSeleccionado = useMemo(
+    () => periodos.find(p => p.id === filtroPeriodo) ?? periodos.find(p => p.activo) ?? null,
+    [periodos, filtroPeriodo]
+  )
+
   const save = useMutation({
     mutationFn: () => modal?.id ? academicoApi.updateCarga(modal.id!, modal) : academicoApi.createCarga(modal!),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cargas'] }); addToast('Carga guardada.', 'success'); setModal(null); setErrors({}) },
@@ -365,9 +621,34 @@ export default function CargasPage() {
 
   const set = (k: keyof CargaAcademica, v: unknown) => setModal(m => ({ ...m, [k]: v }))
 
-  const totalHoras = cargasFiltradas.reduce((sum, c) => sum + c.horas_semana, 0)
+  const totalHoras = cargasFiltradas.reduce((s, c) => s + c.horas_semana, 0)
   const docentesActivos = new Set(cargasFiltradas.map(c => c.docente_id)).size
   const sinHorario = cargasFiltradas.filter(c => (c.horarios ?? []).length === 0).length
+
+  // Vista de carga por docente
+  if (vistaDocente && docenteSeleccionado) {
+    return (
+      <div className="min-h-full bg-slate-50 p-6">
+        <div className="max-w-5xl mx-auto space-y-5">
+          <div>
+            <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              Gestión Académica
+            </Link>
+            <h1 className="text-xl font-bold text-slate-900">Carga Académica · Documento</h1>
+          </div>
+          <CargaDocenteView
+            docente={docenteSeleccionado}
+            cargas={cargasFiltradas}
+            periodo={periodoSeleccionado ?? undefined}
+            onBack={() => setVistaDocente(false)}
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-full bg-slate-50 p-6">
@@ -387,9 +668,20 @@ export default function CargasPage() {
               <p className="text-sm text-slate-500 mt-0.5">Asignación de materias, grupos y horarios a docentes por periodo</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {docenteSeleccionado && (
+                <button
+                  onClick={() => setVistaDocente(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 text-sm rounded-lg hover:bg-blue-100"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Ver documento
+                </button>
+              )}
               <button
                 onClick={() => setVistaTabla(v => !v)}
-                className="px-3 py-2 border border-slate-200 bg-white rounded-lg text-xs text-slate-600 hover:bg-slate-50"
+                className="px-3 py-2 border border-slate-200 bg-white rounded-lg text-slate-600 hover:bg-slate-50"
                 title={vistaTabla ? 'Vista tarjetas' : 'Vista tabla'}
               >
                 {vistaTabla ? (
@@ -439,12 +731,7 @@ export default function CargasPage() {
           <div className="flex flex-wrap gap-3">
             <div className="flex-1 min-w-44">
               <label className="block text-xs font-medium text-slate-600 mb-1">Buscar</label>
-              <input
-                className={inputCls}
-                placeholder="Docente, materia, grupo…"
-                value={busqueda}
-                onChange={e => setBusqueda(e.target.value)}
-              />
+              <input className={inputCls} placeholder="Docente, materia, grupo…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
             </div>
             <div className="flex-1 min-w-40">
               <label className="block text-xs font-medium text-slate-600 mb-1">Periodo</label>
@@ -468,28 +755,26 @@ export default function CargasPage() {
               </select>
             </div>
           </div>
+          {docenteSeleccionado && (
+            <div className="mt-3 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="text-sm text-blue-800 font-medium">{docenteSeleccionado.name}</span>
+              {docenteSeleccionado.nombramiento && <span className="text-xs text-blue-600">· {docenteSeleccionado.nombramiento}</span>}
+              {docenteSeleccionado.clave_empleado && <span className="text-xs text-blue-500 font-mono">({docenteSeleccionado.clave_empleado})</span>}
+              <button onClick={() => setVistaDocente(true)} className="ml-auto text-xs text-blue-600 hover:underline font-medium">
+                Ver documento de carga →
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Contenido */}
         {isLoading ? (
-          vistaTabla ? (
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <table className="w-full text-sm">
-                <tbody><SkeletonRows cols={7} /></tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 animate-pulse">
-                  <div className="h-4 bg-slate-200 rounded w-3/4" />
-                  <div className="h-3 bg-slate-100 rounded w-1/3" />
-                  <div className="h-3 bg-slate-100 rounded w-full" />
-                  <div className="h-3 bg-slate-100 rounded w-2/3" />
-                </div>
-              ))}
-            </div>
-          )
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm"><tbody><SkeletonRows cols={7} /></tbody></table>
+          </div>
         ) : cargasFiltradas.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-xl py-16 flex flex-col items-center gap-3 text-slate-400">
             <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -498,7 +783,6 @@ export default function CargasPage() {
             <p className="text-sm">No hay cargas académicas con los filtros seleccionados.</p>
           </div>
         ) : vistaTabla ? (
-          /* Vista tabla */
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -509,7 +793,7 @@ export default function CargasPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Carrera</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Periodo</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Horario</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">H/sem</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">H/sem</th>
                   <th />
                 </tr>
               </thead>
@@ -541,15 +825,7 @@ export default function CargasPage() {
                     <td className="px-4 py-3 text-right space-x-2">
                       <button onClick={() => setHorariosModal(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
                       <button onClick={() => setModal(c)} className="text-xs text-slate-600 hover:underline">Editar</button>
-                      <button
-                        onClick={() => confirm({
-                          title: '¿Eliminar esta carga académica?',
-                          description: `Se eliminará la asignación de ${c.docente?.name ?? 'el docente'} a ${c.materia?.nombre ?? 'la materia'}.`,
-                          confirmLabel: 'Eliminar carga',
-                          onConfirm: () => del.mutateAsync(c.id),
-                        })}
-                        className="text-xs text-red-500 hover:underline"
-                      >Eliminar</button>
+                      <button onClick={() => confirm({ title: '¿Eliminar carga?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar', onConfirm: () => del.mutateAsync(c.id) })} className="text-xs text-red-500 hover:underline">Eliminar</button>
                     </td>
                   </tr>
                 ))}
@@ -557,19 +833,13 @@ export default function CargasPage() {
             </table>
           </div>
         ) : (
-          /* Vista tarjetas */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {cargasFiltradas.map(c => (
               <CargaCard
                 key={c.id}
                 carga={c}
                 onEdit={() => setModal(c)}
-                onDelete={() => confirm({
-                  title: '¿Eliminar esta carga académica?',
-                  description: `Se eliminará la asignación de ${c.docente?.name ?? 'el docente'} a ${c.materia?.nombre ?? 'la materia'}.`,
-                  confirmLabel: 'Eliminar carga',
-                  onConfirm: () => del.mutateAsync(c.id),
-                })}
+                onDelete={() => confirm({ title: '¿Eliminar carga académica?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar carga', onConfirm: () => del.mutateAsync(c.id) })}
                 onHorarios={() => setHorariosModal(c)}
               />
             ))}
@@ -579,9 +849,7 @@ export default function CargasPage() {
 
       {confirmDialog}
 
-      {horariosModal && (
-        <HorariosModal carga={horariosModal} onClose={() => setHorariosModal(null)} />
-      )}
+      {horariosModal && <HorariosModal carga={horariosModal} onClose={() => setHorariosModal(null)} />}
 
       {modal !== null && (
         <ModalWrap
@@ -593,7 +861,7 @@ export default function CargasPage() {
           <Field label="Docente *" full error={errors.docente_id}>
             <select className={icls(errors.docente_id)} value={modal.docente_id ?? ''} onChange={e => set('docente_id', e.target.value)}>
               <option value="">— Seleccionar docente —</option>
-              {docentes.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              {docentes.map(d => <option key={d.id} value={d.id}>{d.name}{d.nombramiento ? ` · ${d.nombramiento}` : ''}</option>)}
             </select>
           </Field>
           <Field label="Materia / Asignatura" full error={errors.materia_id}>
@@ -625,12 +893,8 @@ export default function CargasPage() {
             </select>
           </Field>
           <Field label="Horas por semana" error={errors.horas_semana}>
-            <input
-              className={icls(errors.horas_semana)}
-              type="number" min={1} max={40}
-              value={modal.horas_semana ?? 3}
-              onChange={e => set('horas_semana', Number(e.target.value))}
-            />
+            <input className={icls(errors.horas_semana)} type="number" min={1} max={40}
+              value={modal.horas_semana ?? 3} onChange={e => set('horas_semana', Number(e.target.value))} />
           </Field>
         </ModalWrap>
       )}
