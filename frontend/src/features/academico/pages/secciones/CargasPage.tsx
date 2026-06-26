@@ -162,7 +162,7 @@ function CargaDocenteView({
       </div>
 
       {/* Documento de carga */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden print:shadow-none print:border-0" id="carga-doc">
+      <div className="bg-white rounded-xl overflow-hidden print:shadow-none print:border-0" id="carga-doc">
 
         {/* Encabezado institucional */}
         <div className="border-b-2 border-slate-800 px-6 py-3 text-center">
