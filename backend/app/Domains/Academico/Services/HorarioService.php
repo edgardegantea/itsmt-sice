@@ -127,14 +127,15 @@ class HorarioService
         );
 
         if ($span['span'] > self::LIMITE_SPAN_DIA_MIN) {
+            $salidaMax = $this->minToStr($span['inicio'] + self::LIMITE_SPAN_DIA_MIN);
             $conflictos[] = [
                 'tipo'    => 'limite_diario',
                 'mensaje' => sprintf(
-                    'El %s, el docente estaría de %s a %s (%.1fh); excede el límite de 8h diarias.',
+                    'El %s, el docente entra a las %s — la jornada máxima es de 8h, por lo que no se puede asignar nada después de las %s (propuesto hasta las %s).',
                     $diaSemana,
                     $this->minToStr($span['inicio']),
-                    $this->minToStr($span['fin']),
-                    $span['span'] / 60
+                    $salidaMax,
+                    $this->minToStr($span['fin'])
                 ),
             ];
         }
@@ -216,14 +217,17 @@ class HorarioService
                 $finesLote[]   = $this->toMin($h->hora_fin);
             }
 
-            $span = max($finesLote) - min($iniciosLote);
+            $entradaMin = min($iniciosLote);
+            $salidaMin  = max($finesLote);
+            $span       = $salidaMin - $entradaMin;
             if ($span > self::LIMITE_SPAN_DIA_MIN) {
+                $salidaMax = $this->minToStr($entradaMin + self::LIMITE_SPAN_DIA_MIN);
                 throw new \DomainException(sprintf(
-                    'El %s, el docente estaría de %s a %s (%.1fh); excede el límite de 8h/día.',
+                    'El %s, el docente entra a las %s — no se puede asignar nada después de las %s (propuesto hasta las %s).',
                     $dia,
-                    $this->minToStr(min($iniciosLote)),
-                    $this->minToStr(max($finesLote)),
-                    $span / 60
+                    $this->minToStr($entradaMin),
+                    $salidaMax,
+                    $this->minToStr($salidaMin)
                 ));
             }
         }

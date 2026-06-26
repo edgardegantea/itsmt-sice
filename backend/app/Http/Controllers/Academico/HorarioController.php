@@ -113,11 +113,12 @@ class HorarioController extends Controller
         $spanMin = $fines->max() - $inicios->min();
 
         if ($spanMin > 8 * 60) {
+            $salidaMax = $minToStr($inicios->min() + 8 * 60);
             $conflictos[] = [
                 'tipo'    => 'limite_diario',
                 'mensaje' => sprintf(
-                    'El %s, el docente estaría de %s a %s (%.1fh); excede el límite de 8h/día.',
-                    $data['dia_semana'], $minToStr($inicios->min()), $minToStr($fines->max()), $spanMin / 60
+                    'El %s, el docente entra a las %s — no se puede asignar nada después de las %s (propuesto hasta las %s).',
+                    $data['dia_semana'], $minToStr($inicios->min()), $salidaMax, $minToStr($fines->max())
                 ),
             ];
         }
