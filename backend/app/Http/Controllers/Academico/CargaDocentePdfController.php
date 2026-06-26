@@ -48,7 +48,7 @@ class CargaDocentePdfController extends Controller
             'docente'          => $docente,
             'periodo'          => $periodo,
             'cargas'           => $cargas,
-            'nombreInstitucion' => $cfg?->nombre_institucion ?? 'Instituto Tecnológico Superior de Teziutlán',
+            'nombreInstitucion' => $cfg?->nombre_institucion ?? 'Instituto Tecnológico Superior de Martínez de la Torre',
         ])->setPaper('letter', 'portrait');
 
         $filename = 'CargaAcademica_' . str_replace(' ', '_', $docente->name) . '_' . $periodo->nombre . '.pdf';
