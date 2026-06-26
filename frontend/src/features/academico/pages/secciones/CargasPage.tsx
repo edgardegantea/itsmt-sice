@@ -166,7 +166,7 @@ function CargaDocenteView({
 
         {/* Encabezado institucional */}
         <div className="border-b-2 border-slate-800 px-6 py-3 text-center">
-          <p className="text-xs text-slate-500 uppercase tracking-widest">Instituto Tecnológico Superior de Teziutlán</p>
+          <p className="text-xs text-slate-500 uppercase tracking-widest">Instituto Tecnológico Superior de Martínez de la Torre</p>
           <p className="text-lg font-bold text-slate-900 mt-0.5">Carga Académica y/o Administrativa</p>
         </div>
 

@@ -1,2 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/index--1EwFRZ7.js","assets/react-B8IZ02wI.js","assets/QueryClientProvider-e3P4jsHC.js","assets/jsx-runtime-fBfwind-.js","assets/apiClient-DlL7N6-c.js","assets/react-C8v9AR8h.js","assets/index-DRFYzJ4z.css"])))=>i.map(i=>d[i]);
-import{h as e}from"./index--1EwFRZ7.js";function t(t,n){e(async()=>{let{usePdfPreviewStore:e}=await import(`./index--1EwFRZ7.js`).then(e=>e.i);return{usePdfPreviewStore:e}},__vite__mapDeps([0,1,2,3,4,5,6])).then(({usePdfPreviewStore:e})=>{e.getState().open(t,n)})}export{t};
