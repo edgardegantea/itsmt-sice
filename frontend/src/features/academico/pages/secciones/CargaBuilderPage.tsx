@@ -639,36 +639,44 @@ export default function CargaBuilderPage() {
 
   // ── Guardar todo ──
   const [saving, setSaving] = useState(false)
+  const [saveErrors, setSaveErrors] = useState<string[]>([])
 
   async function handleSaveAll() {
     setSaving(true)
-    const cargaIds = [...new Set(draftBlocks.map(b => b.cargaId))]
-    let errors = 0
+    setSaveErrors([])
 
-    for (const cargaId of cargaIds) {
+    // Solo guardar cargas que tienen al menos un bloque nuevo (no guardado aún)
+    const unsavedCargaIds = [...new Set(draftBlocks.filter(b => !b.saved).map(b => b.cargaId))]
+    const errMessages: string[] = []
+
+    for (const cargaId of unsavedCargaIds) {
+      // Enviar TODOS los bloques de esa carga (nuevos + ya guardados) para que el backend los reemplace
       const bloques = draftBlocks
         .filter(b => b.cargaId === cargaId)
         .map(b => ({ dia_semana: b.dia, hora_inicio: b.horaInicio, hora_fin: b.horaFin }))
 
       try {
         await apiClient.post('/horarios', { carga_academica_id: cargaId, bloques })
-      } catch {
-        errors++
-      }
 
-      // Actualizar aula si fue modificada
-      const carga = cargas.find(c => c.id === cargaId)
-      const bloque = draftBlocks.find(b => b.cargaId === cargaId && b.aulaId)
-      if (bloque?.aulaId && bloque.aulaId !== carga?.aula_id) {
-        try {
+        // Actualizar aula si fue asignada en un bloque nuevo
+        const carga = cargas.find(c => c.id === cargaId)
+        const bloque = draftBlocks.find(b => b.cargaId === cargaId && b.aulaId)
+        if (bloque?.aulaId && bloque.aulaId !== carga?.aula_id) {
           await apiClient.patch(`/cargas-academicas/${cargaId}`, { aula_id: bloque.aulaId })
-        } catch { /* no crítico */ }
+            .catch(() => { /* aula es opcional, no es crítico */ })
+        }
+      } catch (e: unknown) {
+        const err = e as { response?: { data?: { message?: string } } }
+        const msg = err?.response?.data?.message ?? 'Error desconocido'
+        const carga = cargas.find(c => c.id === cargaId)
+        errMessages.push(`${carga?.materia?.nombre ?? cargaId}: ${msg}`)
       }
     }
 
     setSaving(false)
-    if (errors > 0) {
-      toast.toast(`${errors} carga(s) con error al guardar`, 'error')
+    if (errMessages.length > 0) {
+      setSaveErrors(errMessages)
+      toast.toast(`${errMessages.length} carga(s) con conflicto`, 'error')
     } else {
       toast.toast('Horarios guardados correctamente', 'success')
       refetchCargas()
@@ -771,6 +779,23 @@ export default function CargaBuilderPage() {
             </button>
           </div>
         </div>
+
+        {/* ── Errores de guardado ── */}
+        {saveErrors.length > 0 && (
+          <div className="bg-red-50 border-b border-red-200 px-6 py-3">
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1 space-y-0.5">
+                {saveErrors.map((msg, i) => (
+                  <p key={i} className="text-sm text-red-700">{msg}</p>
+                ))}
+              </div>
+              <button onClick={() => setSaveErrors([])} className="text-red-400 hover:text-red-600 text-lg leading-none">&times;</button>
+            </div>
+          </div>
+        )}
 
         {/* ── Cuerpo ── */}
         {!docenteId || !periodoId ? (
