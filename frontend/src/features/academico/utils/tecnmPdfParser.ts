@@ -7,8 +7,6 @@
  */
 
 import type { Materia, MateriaTemaTema } from '../services/academico'
-// Vite copia este archivo a /assets/ con MIME type correcto (application/javascript)
-import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
 // ── Tipos de salida ───────────────────────────────────────────────────────────
 
@@ -36,8 +34,8 @@ export async function extractTextFromPdf(file: File): Promise<string> {
   // Importación dinámica para evitar problemas con SSR / chunk inicial
   const pdfjsLib = await import('pdfjs-dist')
 
-  // URL resuelta por Vite en build time → archivo en /assets/ con MIME correcto
-  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl
+  // Worker con extensión .js → nginx lo sirve como application/javascript sin config extra
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
 
   const arrayBuffer = await file.arrayBuffer()
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
