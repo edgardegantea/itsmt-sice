@@ -99,7 +99,7 @@ export default function GrupoDetailPage() {
 
   return (
     <div className="min-h-full bg-slate-50 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="space-y-6">
         {/* Breadcrumb interno */}
         <nav className="flex items-center gap-1.5 text-xs text-slate-500">
           <Link to="/admin/gestion-academica" className="hover:text-slate-800 transition-colors">Gestión Académica</Link>

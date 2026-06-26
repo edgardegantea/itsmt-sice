@@ -65,7 +65,7 @@ export default function FuncionesPage() {
   const set = (k: keyof FuncionPersonal, v: unknown) => setModal(m => ({ ...m, [k]: v }))
   return (
     <div className="min-h-full bg-slate-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-5">
+      <div className="space-y-5">
 
         {/* Header */}
         <div>

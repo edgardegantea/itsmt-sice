@@ -159,7 +159,7 @@ const SECCIONES: SeccionCard[] = [
 export default function GestionAcademicaIndexPage() {
   return (
     <div className="min-h-full bg-slate-50 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Gestión Académica</h1>
