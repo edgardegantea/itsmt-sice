@@ -7,6 +7,8 @@
  */
 
 import type { Materia, MateriaTemaTema } from '../services/academico'
+// Vite copia este archivo a /assets/ con MIME type correcto (application/javascript)
+import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
 // ── Tipos de salida ───────────────────────────────────────────────────────────
 
@@ -34,8 +36,8 @@ export async function extractTextFromPdf(file: File): Promise<string> {
   // Importación dinámica para evitar problemas con SSR / chunk inicial
   const pdfjsLib = await import('pdfjs-dist')
 
-  // Worker servido localmente (copiado a /public) para evitar bloqueos CORS/CSP
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
+  // URL resuelta por Vite en build time → archivo en /assets/ con MIME correcto
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl
 
   const arrayBuffer = await file.arrayBuffer()
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
