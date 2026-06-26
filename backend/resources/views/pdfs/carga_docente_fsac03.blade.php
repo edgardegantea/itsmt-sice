@@ -127,7 +127,7 @@ page { size: letter portrait; }
     </tr>
     <tr>
         <td class="tec-logo" rowspan="2" style="width:55px;">TEC</td>
-        <td style="width:55%; border-right:1px solid #222; border-bottom:1px solid #aaa; padding:2px 6px;">
+        <td style="width:55%; padding:2px 6px;">
             <span class="lbl">NOMBRE</span>
             <div class="val" style="font-size:9pt;">{{ strtoupper($docente->name) }}</div>
         </td>
@@ -166,17 +166,17 @@ page { size: letter portrait; }
         </td>
     </tr>
     <tr>
-        <td style="border-right:1px solid #222; padding:2px 6px;">
+        <td style="padding:2px 6px;">
             <span class="lbl">PERIODO</span>
             <div class="val" style="font-size:8pt;">{{ strtoupper($periodo->nombre) }}</div>
         </td>
     </tr>
     <tr>
-        <td class="doc-title" style="border-right:1px solid #555; border-top:1px solid #555; padding:4px;">
+        <td class="doc-title" style="padding:4px;">
             <div style="font-size:7pt; font-weight:bold; color:#006837;">Carga Académica y/o</div>
             <div style="font-size:7pt; font-weight:bold; color:#006837;">Administrativa</div>
         </td>
-        <td colspan="2" style="border-top:1px solid #aaa; padding:2px 6px;">
+        <td colspan="2" style="padding:2px 6px;">
             <table style="width:100%; border-collapse:collapse;">
                 <tr>
                     <td style="width:33%; padding:2px;">
