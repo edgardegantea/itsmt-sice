@@ -114,10 +114,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Gestión Académica (superadmin / admin) ────────────────────────────────
 
     // Materias / Asignaturas
-    Route::get('/materias',                    [MateriaController::class, 'index']);
-    Route::post('/materias',                   [MateriaController::class, 'store']);
-    Route::patch('/materias/{materia}',        [MateriaController::class, 'update']);
-    Route::delete('/materias/{materia}',       [MateriaController::class, 'destroy']);
+    Route::get('/materias',                              [MateriaController::class, 'index']);
+    Route::post('/materias',                             [MateriaController::class, 'store']);
+    Route::get('/materias/{materia}',                    [MateriaController::class, 'show']);
+    Route::patch('/materias/{materia}',                  [MateriaController::class, 'update']);
+    Route::delete('/materias/{materia}',                 [MateriaController::class, 'destroy']);
+    Route::post('/materias/{materia}/documento',         [MateriaController::class, 'subirDocumento']);
+    Route::delete('/materias/{materia}/documento',       [MateriaController::class, 'eliminarDocumento']);
 
     // Grupos
     Route::get('/grupos',                                           [GrupoController::class, 'index']);

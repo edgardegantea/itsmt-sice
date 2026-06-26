@@ -182,12 +182,12 @@ function CargaDocenteView({
         </div>
 
         {/* Info del docente */}
-        <div className="grid grid-cols-3 gap-0 border-b border-slate-200">
+        <div className="grid grid-cols-3 gap-0">
           {/* Columna izquierda */}
-          <div className="col-span-2 divide-y divide-slate-200 border-r border-slate-200">
+          <div className="col-span-2 divide-y">
             <div className="flex items-center px-4 py-2.5 gap-3">
-              <span className="text-xs font-semibold text-slate-500 w-24 shrink-0">NOMBRE</span>
-              <span className="font-bold text-slate-900 uppercase tracking-wide">{docente.name}</span>
+              <span className="text-xs font-semiboldw-24 shrink-0">NOMBRE</span>
+              <span className="font-bold uppercase tracking-wide">{docente.name}</span>
             </div>
             {periodo && (
               <div className="flex items-center px-4 py-2.5 gap-3">

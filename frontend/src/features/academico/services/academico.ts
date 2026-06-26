@@ -2,6 +2,11 @@ import apiClient from '../../../config/apiClient'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
+export interface MateriaTemaTema {
+  tema: string
+  subtemas?: string[]
+}
+
 export interface Materia {
   id: string
   carrera_id: string
@@ -15,6 +20,16 @@ export interface Materia {
   activa: boolean
   clave_oficial_tecnm?: string
   carrera?: { id: string; nombre: string; clave: string }
+  // Programa TecNM
+  satca?: string
+  caracterizacion?: string
+  intencion_didactica?: string
+  competencia_especifica?: string
+  competencias_previas?: string
+  temario?: MateriaTemaTema[]
+  fuentes_informacion?: string[]
+  documento_path?: string
+  documento_url?: string
 }
 
 export interface Grupo {
@@ -136,12 +151,23 @@ export const academicoApi = {
   // Materias
   getMaterias: (params?: Record<string, string>) =>
     apiClient.get('/materias', { params }).then(r => r.data.data as Materia[]),
+  getMateria: (id: string) =>
+    apiClient.get(`/materias/${id}`).then(r => r.data.data as Materia),
   createMateria: (d: Partial<Materia>) =>
     apiClient.post('/materias', d).then(r => r.data.data as Materia),
   updateMateria: (id: string, d: Partial<Materia>) =>
     apiClient.patch(`/materias/${id}`, d).then(r => r.data.data as Materia),
   deleteMateria: (id: string) =>
     apiClient.delete(`/materias/${id}`),
+  subirDocumentoMateria: (id: string, file: File) => {
+    const fd = new FormData()
+    fd.append('documento', file)
+    return apiClient.post(`/materias/${id}/documento`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data.data as { documento_url: string })
+  },
+  eliminarDocumentoMateria: (id: string) =>
+    apiClient.delete(`/materias/${id}/documento`),
 
   // Grupos
   getGrupos: (params?: Record<string, string>) =>
