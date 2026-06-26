@@ -173,7 +173,7 @@ function DroppableCell({
 }: {
   dia: DiaKey; hora: string; children?: React.ReactNode
 }) {
-  const id = `${dia}:${hora}`
+  const id = `${dia}|${hora}`   // "|" para no romper "07:00" al parsear
   const { setNodeRef, isOver } = useDroppable({ id })
 
   return (
@@ -572,7 +572,9 @@ export default function CargaBuilderPage() {
     aulas.find(a => a.id === aulaId)?.nombre, [aulas])
 
   // ── Drag state ──
+  // pendingCargaId conserva el id tras soltar hasta que el modal termine
   const [activeCargaId, setActiveCargaId] = useState<string | null>(null)
+  const [pendingCargaId, setPendingCargaId] = useState<string | null>(null)
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null)
   const [showDropModal, setShowDropModal] = useState(false)
   const [editingBlock, setEditingBlock] = useState<DraftBlock | null>(null)
@@ -587,16 +589,22 @@ export default function CargaBuilderPage() {
   }
 
   function handleDragEnd(e: DragEndEvent) {
+    const draggedId = e.active.id as string
     setActiveCargaId(null)
     if (!e.over) return
-    const [dia, hora] = (e.over.id as string).split(':') as [DiaKey, string]
+    // El id es "lunes|07:00" — usamos "|" como separador para no romper "07:00"
+    const raw = e.over.id as string
+    const pipeIdx = raw.indexOf('|')
+    const dia = raw.slice(0, pipeIdx) as DiaKey
+    const hora = raw.slice(pipeIdx + 1)
+    setPendingCargaId(draggedId)
     setDropTarget({ dia, hora })
     setShowDropModal(true)
   }
 
   function handleDropConfirm(horaFin: string, aulaId: string | undefined, conflictos: Conflicto[]) {
-    if (!activeCargaId && !editingBlock) return
-    const cargaId = editingBlock?.cargaId ?? activeCargaId!
+    const cargaId = editingBlock?.cargaId ?? pendingCargaId
+    if (!cargaId) return
     const dia = editingBlock?.dia ?? dropTarget!.dia
     const horaInicio = editingBlock?.horaInicio ?? dropTarget!.hora
 
@@ -616,6 +624,7 @@ export default function CargaBuilderPage() {
 
     setShowDropModal(false)
     setEditingBlock(null)
+    setPendingCargaId(null)
     setDropTarget(null)
   }
 
@@ -667,7 +676,7 @@ export default function CargaBuilderPage() {
     }
   }
 
-  // ── Carga activa para el overlay ──
+  // ── Carga activa para el overlay y modal ──
   const activeCarga = cargas.find(c => c.id === activeCargaId)
   const activeColor = activeCargaId ? (colorMap.get(activeCargaId) ?? PALETTE[0]) : PALETTE[0]
 
@@ -686,7 +695,7 @@ export default function CargaBuilderPage() {
   // ── Carga activa en modal (drag o edición) ──
   const modalCarga = editingBlock
     ? cargas.find(c => c.id === editingBlock.cargaId)
-    : cargas.find(c => c.id === activeCargaId)
+    : cargas.find(c => c.id === pendingCargaId)
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -933,6 +942,7 @@ export default function CargaBuilderPage() {
           onCancel={() => {
             setShowDropModal(false)
             setEditingBlock(null)
+            setPendingCargaId(null)
             setDropTarget(null)
           }}
         />
