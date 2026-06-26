@@ -31,7 +31,7 @@ class ReestructurarHorarios extends Command
 
         // Obtener todos los horarios agrupados por docente + periodo + dia
         $grupos = Horario::query()
-            ->join('carga_academicas as ca', 'horarios.carga_academica_id', '=', 'ca.id')
+            ->join('cargas_academicas as ca', 'horarios.carga_academica_id', '=', 'ca.id')
             ->join('users as u', 'ca.docente_id', '=', 'u.id')
             ->select(
                 'horarios.id',
