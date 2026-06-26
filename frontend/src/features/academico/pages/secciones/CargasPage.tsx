@@ -63,6 +63,11 @@ function toMin(t: string) {
 
 // ── Accordion carrera → semestre ─────────────────────────────────────────────
 
+// Tipos internos del accordion
+type GrupoEntry = { id: string; clave: string; turno: string; cargas: CargaAcademica[] }
+type SemestreEntry = { semestre: number; grupos: Map<string, GrupoEntry> }
+type CarreraEntry = { id: string; nombre: string; clave: string; semestres: Map<number, SemestreEntry> }
+
 function CargasAccordion({
   cargas,
   onEdit,
@@ -78,140 +83,186 @@ function CargasAccordion({
 }) {
   const [openCarreras, setOpenCarreras] = useState<Set<string>>(() => new Set())
   const [openSemestres, setOpenSemestres] = useState<Set<string>>(() => new Set())
+  const [openGrupos, setOpenGrupos] = useState<Set<string>>(() => new Set())
 
-  const toggleCarrera = useCallback((id: string) => {
-    setOpenCarreras(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
-  }, [])
-  const toggleSemestre = useCallback((key: string) => {
-    setOpenSemestres(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
+  const toggle = useCallback((set: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) => {
+    set(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
   }, [])
 
-  // Agrupar por carrera → semestre
+  // Agrupar por carrera → semestre → grupo
   const byCarrera = useMemo(() => {
-    const map = new Map<string, { id: string; nombre: string; clave: string; semestres: Map<number, CargaAcademica[]> }>()
+    const map = new Map<string, CarreraEntry>()
+
     for (const c of cargas) {
       const carrera = c.grupo?.carrera ?? c.materia?.carrera
       const carreraId = carrera?.id ?? '_sin_carrera'
-      const carreraNombre = carrera?.nombre ?? 'Sin carrera'
-      const carreraClave = carrera?.clave ?? '—'
       const semestre = c.grupo?.semestre ?? 0
+      const grupoId = c.grupo?.id ?? '_sin_grupo'
+      const grupoClave = c.grupo?.clave ?? 'Sin grupo'
+      const grupoTurno = c.grupo?.turno ?? ''
 
       if (!map.has(carreraId)) {
-        map.set(carreraId, { id: carreraId, nombre: carreraNombre, clave: carreraClave, semestres: new Map() })
+        map.set(carreraId, {
+          id: carreraId,
+          nombre: carrera?.nombre ?? 'Sin carrera',
+          clave: carrera?.clave ?? '—',
+          semestres: new Map(),
+        })
       }
-      const entry = map.get(carreraId)!
-      if (!entry.semestres.has(semestre)) entry.semestres.set(semestre, [])
-      entry.semestres.get(semestre)!.push(c)
+      const ce = map.get(carreraId)!
+
+      if (!ce.semestres.has(semestre)) ce.semestres.set(semestre, { semestre, grupos: new Map() })
+      const se = ce.semestres.get(semestre)!
+
+      if (!se.grupos.has(grupoId)) se.grupos.set(grupoId, { id: grupoId, clave: grupoClave, turno: grupoTurno, cargas: [] })
+      se.grupos.get(grupoId)!.cargas.push(c)
     }
+
     return [...map.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))
   }, [cargas])
 
-  // Expandir todo por defecto cuando solo hay una carrera
-  const firstRender = useMemo(() => true, [])
+  // Auto-expand si solo hay una carrera
   useMemo(() => {
-    if (firstRender && byCarrera.length === 1) {
+    if (byCarrera.length === 1) {
       const c = byCarrera[0]
       setOpenCarreras(new Set([c.id]))
-      setOpenSemestres(new Set([...c.semestres.keys()].map(s => `${c.id}|${s}`)))
     }
-  }, [byCarrera, firstRender])
+  }, [byCarrera])
+
+  const Chevron = ({ open, size = 'w-4 h-4' }: { open: boolean; size?: string }) => (
+    <svg className={`${size} text-slate-400 shrink-0 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  )
 
   return (
     <div className="space-y-3">
       {byCarrera.map(carrera => {
         const isOpenC = openCarreras.has(carrera.id)
-        const totalCargas = [...carrera.semestres.values()].reduce((s, a) => s + a.length, 0)
-        const sortedSems = [...carrera.semestres.entries()].sort(([a], [b]) => a - b)
+        const totalCargas = [...carrera.semestres.values()]
+          .flatMap(s => [...s.grupos.values()])
+          .reduce((sum, g) => sum + g.cargas.length, 0)
+        const sortedSems = [...carrera.semestres.values()].sort((a, b) => a.semestre - b.semestre)
 
         return (
           <div key={carrera.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            {/* Cabecera carrera */}
+
+            {/* ── Nivel 1: Carrera ── */}
             <button
               className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
-              onClick={() => toggleCarrera(carrera.id)}
+              onClick={() => toggle(setOpenCarreras, carrera.id)}
             >
-              <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isOpenC ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-              <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full shrink-0">
+              <Chevron open={isOpenC} />
+              <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">
                 {carrera.clave}
               </span>
               <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
-              <span className="ml-auto shrink-0 text-xs text-slate-400 font-medium">{totalCargas} carga{totalCargas !== 1 ? 's' : ''}</span>
+              <span className="ml-auto shrink-0 text-xs text-slate-400">{totalCargas} carga{totalCargas !== 1 ? 's' : ''}</span>
             </button>
 
-            {/* Semestres */}
             {isOpenC && (
               <div className="border-t border-slate-100 divide-y divide-slate-100">
-                {sortedSems.map(([semestre, cargasSem]) => {
-                  const key = `${carrera.id}|${semestre}`
-                  const isOpenS = openSemestres.has(key)
+                {sortedSems.map(semEntry => {
+                  const semKey = `${carrera.id}|${semEntry.semestre}`
+                  const isOpenS = openSemestres.has(semKey)
+                  const totalSem = [...semEntry.grupos.values()].reduce((s, g) => s + g.cargas.length, 0)
+                  const sortedGrupos = [...semEntry.grupos.values()].sort((a, b) => a.clave.localeCompare(b.clave))
+
                   return (
-                    <div key={key}>
-                      {/* Cabecera semestre */}
+                    <div key={semKey}>
+
+                      {/* ── Nivel 2: Semestre ── */}
                       <button
-                        className="w-full flex items-center gap-3 px-6 py-2.5 hover:bg-slate-50 transition-colors text-left"
-                        onClick={() => toggleSemestre(key)}
+                        className="w-full flex items-center gap-3 pl-10 pr-5 py-2.5 hover:bg-slate-50/80 transition-colors text-left"
+                        onClick={() => toggle(setOpenSemestres, semKey)}
                       >
-                        <svg className={`w-3.5 h-3.5 text-slate-300 shrink-0 transition-transform ${isOpenS ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span className="text-xs font-semibold text-slate-500">
-                          {semestre > 0 ? `${semestre}° Semestre` : 'Sin semestre'}
+                        <Chevron open={isOpenS} size="w-3.5 h-3.5" />
+                        <span className="text-xs font-semibold text-slate-600">
+                          {semEntry.semestre > 0 ? `${semEntry.semestre}° Semestre` : 'Sin semestre'}
                         </span>
-                        <span className="ml-auto text-xs text-slate-400">{cargasSem.length} asignatura{cargasSem.length !== 1 ? 's' : ''}</span>
+                        <span className="text-xs text-slate-400 ml-1">· {sortedGrupos.length} grupo{sortedGrupos.length !== 1 ? 's' : ''}</span>
+                        <span className="ml-auto text-xs text-slate-400">{totalSem} asignatura{totalSem !== 1 ? 's' : ''}</span>
                       </button>
 
-                      {/* Tabla de cargas */}
                       {isOpenS && (
-                        <table className="w-full text-sm border-t border-slate-100">
-                          <thead className="bg-slate-50">
-                            <tr>
-                              <th className="px-6 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Materia</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Grupo</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Docente</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Horario</th>
-                              <th className="px-3 py-2 text-center text-xs font-medium text-slate-400 uppercase tracking-wide">H/sem</th>
-                              <th className="px-3 py-2" />
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-50">
-                            {cargasSem
-                              .slice()
-                              .sort((a, b) => (a.materia?.nombre ?? '').localeCompare(b.materia?.nombre ?? ''))
-                              .map(c => (
-                                <tr key={c.id} className="hover:bg-blue-50/40 transition-colors group">
-                                  <td className="px-6 py-2.5">
-                                    <p className="text-sm font-medium text-slate-800 truncate max-w-[200px]">{c.materia?.nombre ?? '—'}</p>
-                                    <p className="text-xs text-slate-400 font-mono">{c.materia?.clave}</p>
-                                  </td>
-                                  <td className="px-3 py-2.5">
-                                    <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">{c.grupo?.clave ?? '—'}</span>
-                                  </td>
-                                  <td className="px-3 py-2.5 text-sm text-slate-700 max-w-[160px] truncate">
-                                    {c.docente?.name ?? <span className="text-slate-300">—</span>}
-                                  </td>
-                                  <td className="px-3 py-2.5">
-                                    {(c.horarios ?? []).length === 0 ? (
-                                      <button onClick={() => onHorarios(c)} className="text-xs text-amber-600 hover:underline">Sin horario</button>
-                                    ) : (
-                                      <div className="flex flex-wrap gap-1">
-                                        {c.horarios!.slice(0, 2).map(h => <HorarioChip key={h.id} h={h} />)}
-                                        {c.horarios!.length > 2 && <span className="text-xs text-slate-400">+{c.horarios!.length - 2}</span>}
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-center font-semibold text-slate-800">{c.horas_semana}h</td>
-                                  <td className="px-3 py-2.5 text-right whitespace-nowrap space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {c.docente && <button onClick={() => onVerHorario(c)} className="text-xs text-violet-600 hover:underline">Ver carga</button>}
-                                    <button onClick={() => onHorarios(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
-                                    <button onClick={() => onEdit(c)} className="text-xs text-slate-500 hover:underline">Editar</button>
-                                    <button onClick={() => onDelete(c)} className="text-xs text-red-400 hover:underline">Eliminar</button>
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
+                        <div className="border-t border-slate-50 divide-y divide-slate-50">
+                          {sortedGrupos.map(grupo => {
+                            const grupoKey = `${semKey}|${grupo.id}`
+                            const isOpenG = openGrupos.has(grupoKey)
+
+                            return (
+                              <div key={grupoKey}>
+
+                                {/* ── Nivel 3: Grupo ── */}
+                                <button
+                                  className="w-full flex items-center gap-3 pl-16 pr-5 py-2 hover:bg-blue-50/30 transition-colors text-left"
+                                  onClick={() => toggle(setOpenGrupos, grupoKey)}
+                                >
+                                  <Chevron open={isOpenG} size="w-3 h-3" />
+                                  <span className="font-mono text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded shrink-0">
+                                    {grupo.clave}
+                                  </span>
+                                  {grupo.turno && (
+                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${TURNO_COLOR[grupo.turno] ?? 'bg-slate-100 text-slate-600'}`}>
+                                      {grupo.turno}
+                                    </span>
+                                  )}
+                                  <span className="ml-auto text-xs text-slate-400">
+                                    {grupo.cargas.length} materia{grupo.cargas.length !== 1 ? 's' : ''}
+                                  </span>
+                                </button>
+
+                                {/* ── Tabla de materias del grupo ── */}
+                                {isOpenG && (
+                                  <table className="w-full text-sm border-t border-slate-50">
+                                    <thead className="bg-slate-50/60">
+                                      <tr>
+                                        <th className="pl-20 pr-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Materia</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Docente</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Horario</th>
+                                        <th className="px-3 py-2 text-center text-xs font-medium text-slate-400 uppercase tracking-wide">H/sem</th>
+                                        <th className="px-3 py-2" />
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                      {grupo.cargas
+                                        .slice()
+                                        .sort((a, b) => (a.materia?.nombre ?? '').localeCompare(b.materia?.nombre ?? ''))
+                                        .map(c => (
+                                          <tr key={c.id} className="hover:bg-blue-50/40 transition-colors group">
+                                            <td className="pl-20 pr-3 py-2.5">
+                                              <p className="text-sm font-medium text-slate-800 truncate max-w-[220px]">{c.materia?.nombre ?? '—'}</p>
+                                              <p className="text-xs text-slate-400 font-mono">{c.materia?.clave}</p>
+                                            </td>
+                                            <td className="px-3 py-2.5 text-sm text-slate-700 max-w-[160px] truncate">
+                                              {c.docente?.name ?? <span className="text-slate-300 text-xs">Sin asignar</span>}
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                              {(c.horarios ?? []).length === 0 ? (
+                                                <button onClick={() => onHorarios(c)} className="text-xs text-amber-600 hover:underline">Sin horario</button>
+                                              ) : (
+                                                <div className="flex flex-wrap gap-1">
+                                                  {c.horarios!.slice(0, 2).map(h => <HorarioChip key={h.id} h={h} />)}
+                                                  {c.horarios!.length > 2 && <span className="text-xs text-slate-400">+{c.horarios!.length - 2}</span>}
+                                                </div>
+                                              )}
+                                            </td>
+                                            <td className="px-3 py-2.5 text-center font-semibold text-slate-800 text-xs">{c.horas_semana}h</td>
+                                            <td className="px-3 py-2.5 text-right whitespace-nowrap space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                              {c.docente && <button onClick={() => onVerHorario(c)} className="text-xs text-violet-600 hover:underline">Ver carga</button>}
+                                              <button onClick={() => onHorarios(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
+                                              <button onClick={() => onEdit(c)} className="text-xs text-slate-500 hover:underline">Editar</button>
+                                              <button onClick={() => onDelete(c)} className="text-xs text-red-400 hover:underline">Eliminar</button>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                    </tbody>
+                                  </table>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
                       )}
                     </div>
                   )
