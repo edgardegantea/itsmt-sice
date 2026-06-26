@@ -123,7 +123,7 @@ page { size: letter portrait; }
 {{-- ── ENCABEZADO INSTITUCIONAL ── --}}
 <table class="doc-header" style="margin-bottom:0;">
     <tr>
-        <td colspan="3" class="inst-name">Instituto Tecnológico Superior de Teziutlán</td>
+        <td colspan="3" class="inst-name">{{ $nombreInstitucion }}</td>
     </tr>
     <tr>
         <td class="tec-logo" rowspan="2" style="width:55px;">TEC</td>
@@ -301,12 +301,12 @@ page { size: letter portrait; }
         </td>
         <td>
             <div class="firma-linea">&nbsp;</div>
-            <div class="firma-inst">INSTITUTO TECNOLÓGICO SUPERIOR DE TEZIUTLÁN</div>
+            <div class="firma-inst">{{ strtoupper($nombreInstitucion) }}</div>
             <div class="firma-inst">JEFE(A) DE DIVISIÓN / COORDINADOR(A) DE CARRERA</div>
         </td>
         <td>
             <div class="firma-linea">&nbsp;</div>
-            <div class="firma-inst">INSTITUTO TECNOLÓGICO SUPERIOR DE TEZIUTLÁN</div>
+            <div class="firma-inst">{{ strtoupper($nombreInstitucion) }}</div>
             <div class="firma-inst">SUBDIRECCIÓN ACADÉMICA</div>
         </td>
     </tr>

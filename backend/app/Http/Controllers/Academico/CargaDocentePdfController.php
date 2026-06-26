@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Academico;
 
 use App\Domains\Academico\Models\CargaAcademica;
 use App\Domains\Academico\Models\Periodo;
+use App\Domains\Institucional\Models\ConfiguracionInstitucional;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -41,10 +42,13 @@ class CargaDocentePdfController extends Controller
             ->orderBy('created_at')
             ->get();
 
+        $cfg = ConfiguracionInstitucional::instancia();
+
         $pdf = Pdf::loadView('pdfs.carga_docente_fsac03', [
-            'docente' => $docente,
-            'periodo' => $periodo,
-            'cargas'  => $cargas,
+            'docente'          => $docente,
+            'periodo'          => $periodo,
+            'cargas'           => $cargas,
+            'nombreInstitucion' => $cfg?->nombre_institucion ?? 'Instituto Tecnológico Superior de Teziutlán',
         ])->setPaper('letter', 'portrait');
 
         $filename = 'CargaAcademica_' . str_replace(' ', '_', $docente->name) . '_' . $periodo->nombre . '.pdf';
