@@ -67,7 +67,7 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 7.5pt; color: #111;
 page { size: letter portrait; }
 
 /* ── Encabezado institucional ── */
-.doc-header { width:100%; border:1.5px solid #222; border-collapse:collapse; }
+.doc-header { width:100%; }
 .doc-header td { padding:3px 5px; vertical-align:middle; }
 .inst-name  { text-align:center; font-size:10pt; font-weight:bold; border-bottom:1.5px solid #222; padding:4px; }
 .tec-logo   { font-size:14pt; font-weight:bold; color:#006837; width:60px; text-align:center; border-right:1px solid #222; }
