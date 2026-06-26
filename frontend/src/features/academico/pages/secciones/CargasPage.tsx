@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type CargaAcademica, type Horario } from '../../services/academico'
@@ -59,6 +59,170 @@ function fmt12(t: string) {
 function toMin(t: string) {
   const [h, m] = t.split(':').map(Number)
   return h * 60 + m
+}
+
+// ── Accordion carrera → semestre ─────────────────────────────────────────────
+
+function CargasAccordion({
+  cargas,
+  onEdit,
+  onDelete,
+  onHorarios,
+  onVerHorario,
+}: {
+  cargas: CargaAcademica[]
+  onEdit: (c: CargaAcademica) => void
+  onDelete: (c: CargaAcademica) => void
+  onHorarios: (c: CargaAcademica) => void
+  onVerHorario: (c: CargaAcademica) => void
+}) {
+  const [openCarreras, setOpenCarreras] = useState<Set<string>>(() => new Set())
+  const [openSemestres, setOpenSemestres] = useState<Set<string>>(() => new Set())
+
+  const toggleCarrera = useCallback((id: string) => {
+    setOpenCarreras(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }, [])
+  const toggleSemestre = useCallback((key: string) => {
+    setOpenSemestres(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }, [])
+
+  // Agrupar por carrera → semestre
+  const byCarrera = useMemo(() => {
+    const map = new Map<string, { id: string; nombre: string; clave: string; semestres: Map<number, CargaAcademica[]> }>()
+    for (const c of cargas) {
+      const carrera = c.grupo?.carrera ?? c.materia?.carrera
+      const carreraId = carrera?.id ?? '_sin_carrera'
+      const carreraNombre = carrera?.nombre ?? 'Sin carrera'
+      const carreraClave = carrera?.clave ?? '—'
+      const semestre = c.grupo?.semestre ?? 0
+
+      if (!map.has(carreraId)) {
+        map.set(carreraId, { id: carreraId, nombre: carreraNombre, clave: carreraClave, semestres: new Map() })
+      }
+      const entry = map.get(carreraId)!
+      if (!entry.semestres.has(semestre)) entry.semestres.set(semestre, [])
+      entry.semestres.get(semestre)!.push(c)
+    }
+    return [...map.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))
+  }, [cargas])
+
+  // Expandir todo por defecto cuando solo hay una carrera
+  const firstRender = useMemo(() => true, [])
+  useMemo(() => {
+    if (firstRender && byCarrera.length === 1) {
+      const c = byCarrera[0]
+      setOpenCarreras(new Set([c.id]))
+      setOpenSemestres(new Set([...c.semestres.keys()].map(s => `${c.id}|${s}`)))
+    }
+  }, [byCarrera, firstRender])
+
+  return (
+    <div className="space-y-3">
+      {byCarrera.map(carrera => {
+        const isOpenC = openCarreras.has(carrera.id)
+        const totalCargas = [...carrera.semestres.values()].reduce((s, a) => s + a.length, 0)
+        const sortedSems = [...carrera.semestres.entries()].sort(([a], [b]) => a - b)
+
+        return (
+          <div key={carrera.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            {/* Cabecera carrera */}
+            <button
+              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
+              onClick={() => toggleCarrera(carrera.id)}
+            >
+              <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isOpenC ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full shrink-0">
+                {carrera.clave}
+              </span>
+              <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
+              <span className="ml-auto shrink-0 text-xs text-slate-400 font-medium">{totalCargas} carga{totalCargas !== 1 ? 's' : ''}</span>
+            </button>
+
+            {/* Semestres */}
+            {isOpenC && (
+              <div className="border-t border-slate-100 divide-y divide-slate-100">
+                {sortedSems.map(([semestre, cargasSem]) => {
+                  const key = `${carrera.id}|${semestre}`
+                  const isOpenS = openSemestres.has(key)
+                  return (
+                    <div key={key}>
+                      {/* Cabecera semestre */}
+                      <button
+                        className="w-full flex items-center gap-3 px-6 py-2.5 hover:bg-slate-50 transition-colors text-left"
+                        onClick={() => toggleSemestre(key)}
+                      >
+                        <svg className={`w-3.5 h-3.5 text-slate-300 shrink-0 transition-transform ${isOpenS ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-xs font-semibold text-slate-500">
+                          {semestre > 0 ? `${semestre}° Semestre` : 'Sin semestre'}
+                        </span>
+                        <span className="ml-auto text-xs text-slate-400">{cargasSem.length} asignatura{cargasSem.length !== 1 ? 's' : ''}</span>
+                      </button>
+
+                      {/* Tabla de cargas */}
+                      {isOpenS && (
+                        <table className="w-full text-sm border-t border-slate-100">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="px-6 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Materia</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Grupo</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Docente</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Horario</th>
+                              <th className="px-3 py-2 text-center text-xs font-medium text-slate-400 uppercase tracking-wide">H/sem</th>
+                              <th className="px-3 py-2" />
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            {cargasSem
+                              .slice()
+                              .sort((a, b) => (a.materia?.nombre ?? '').localeCompare(b.materia?.nombre ?? ''))
+                              .map(c => (
+                                <tr key={c.id} className="hover:bg-blue-50/40 transition-colors group">
+                                  <td className="px-6 py-2.5">
+                                    <p className="text-sm font-medium text-slate-800 truncate max-w-[200px]">{c.materia?.nombre ?? '—'}</p>
+                                    <p className="text-xs text-slate-400 font-mono">{c.materia?.clave}</p>
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">{c.grupo?.clave ?? '—'}</span>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-sm text-slate-700 max-w-[160px] truncate">
+                                    {c.docente?.name ?? <span className="text-slate-300">—</span>}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    {(c.horarios ?? []).length === 0 ? (
+                                      <button onClick={() => onHorarios(c)} className="text-xs text-amber-600 hover:underline">Sin horario</button>
+                                    ) : (
+                                      <div className="flex flex-wrap gap-1">
+                                        {c.horarios!.slice(0, 2).map(h => <HorarioChip key={h.id} h={h} />)}
+                                        {c.horarios!.length > 2 && <span className="text-xs text-slate-400">+{c.horarios!.length - 2}</span>}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-semibold text-slate-800">{c.horas_semana}h</td>
+                                  <td className="px-3 py-2.5 text-right whitespace-nowrap space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {c.docente && <button onClick={() => onVerHorario(c)} className="text-xs text-violet-600 hover:underline">Ver carga</button>}
+                                    <button onClick={() => onHorarios(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
+                                    <button onClick={() => onEdit(c)} className="text-xs text-slate-500 hover:underline">Editar</button>
+                                    <button onClick={() => onDelete(c)} className="text-xs text-red-400 hover:underline">Eliminar</button>
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 // ── Chip de horario ───────────────────────────────────────────────────────────
@@ -363,142 +527,6 @@ function CargaDocenteView({
               </div>
             </div>
           ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Card de carga ─────────────────────────────────────────────────────────────
-
-function CargaCard({
-  carga,
-  onEdit,
-  onDelete,
-  onHorarios,
-  onVerHorario,
-}: {
-  carga: CargaAcademica
-  onEdit: () => void
-  onDelete: () => void
-  onHorarios: () => void
-  onVerHorario: () => void
-}) {
-  const turno = carga.grupo?.turno ?? ''
-  const carrera = carga.materia?.carrera ?? carga.grupo?.carrera
-
-  return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-      <div className="px-4 pt-4 pb-3 border-b border-slate-100">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="font-semibold text-slate-900 truncate">{carga.materia?.nombre ?? '—'}</p>
-            <p className="text-xs text-slate-500 mt-0.5 font-mono">{carga.materia?.clave}</p>
-          </div>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            {carga.materia?.tipo && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${carga.materia.tipo === 'obligatoria' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'}`}>
-                {carga.materia.tipo}
-              </span>
-            )}
-            {turno && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TURNO_COLOR[turno] ?? 'bg-slate-100 text-slate-600'}`}>
-                {turno}
-              </span>
-            )}
-          </div>
-        </div>
-        {carrera && <p className="text-xs text-slate-400 mt-1">{carrera.nombre}</p>}
-      </div>
-
-      <div className="px-4 py-3 space-y-2.5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-            <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-400">Docente</p>
-            <p className="text-sm font-medium text-slate-800 truncate">{carga.docente?.name ?? '—'}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-            <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400">Grupo · Semestre</p>
-            <p className="text-sm font-medium text-slate-800">
-              <span className="font-mono bg-slate-100 px-1.5 rounded text-slate-700">{carga.grupo?.clave ?? '—'}</span>
-              {carga.grupo?.semestre && <span className="ml-2 text-slate-500">{carga.grupo.semestre}° sem.</span>}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
-            <svg className="w-3.5 h-3.5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400">Periodo escolar</p>
-            <p className="text-sm font-medium text-slate-800">{carga.periodo?.nombre ?? '—'}</p>
-          </div>
-        </div>
-
-        {carga.aula && (
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-              <svg className="w-3.5 h-3.5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400">Aula</p>
-              <p className="text-sm font-medium text-slate-800">{carga.aula.nombre} <span className="text-slate-400 text-xs">· cap. {carga.aula.capacidad}</span></p>
-            </div>
-          </div>
-        )}
-
-        <div>
-          <p className="text-xs text-slate-400 mb-1.5">Horario semanal</p>
-          {(carga.horarios ?? []).length === 0 ? (
-            <button onClick={onHorarios} className="text-xs text-blue-500 hover:underline">+ Agregar horario</button>
-          ) : (
-            <div className="flex flex-wrap gap-1">
-              {(carga.horarios ?? [])
-                .slice()
-                .sort((a, b) => DIAS.indexOf(a.dia_semana as DiaKey) - DIAS.indexOf(b.dia_semana as DiaKey))
-                .map(h => <HorarioChip key={h.id} h={h} />)}
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-          <span className="text-xs text-slate-400">Horas / semana</span>
-          <span className="text-sm font-bold text-slate-800">{carga.horas_semana}h</span>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-t border-slate-100">
-        <div className="flex gap-2">
-          <button onClick={onHorarios} className="text-xs text-blue-600 hover:underline font-medium">
-            {(carga.horarios ?? []).length > 0 ? 'Editar horario' : '+ Horario'}
-          </button>
-          {carga.docente && (
-            <button onClick={onVerHorario} className="text-xs text-violet-600 hover:underline font-medium">
-              Ver carga
-            </button>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <button onClick={onEdit} className="text-xs text-slate-600 hover:text-slate-900">Editar</button>
-          <button onClick={onDelete} className="text-xs text-red-500 hover:text-red-700">Eliminar</button>
         </div>
       </div>
     </div>
@@ -940,18 +968,13 @@ export default function CargasPage() {
             </table>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cargasFiltradas.map(c => (
-              <CargaCard
-                key={c.id}
-                carga={c}
-                onEdit={() => setModal(c)}
-                onDelete={() => confirm({ title: '¿Eliminar carga académica?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar carga', onConfirm: () => del.mutateAsync(c.id) })}
-                onHorarios={() => setHorariosModal(c)}
-                onVerHorario={() => c.docente && setHorarioDocenteModal(c.docente as Docente)}
-              />
-            ))}
-          </div>
+          <CargasAccordion
+            cargas={cargasFiltradas}
+            onEdit={c => setModal(c)}
+            onDelete={c => confirm({ title: '¿Eliminar carga académica?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar carga', onConfirm: () => del.mutateAsync(c.id) })}
+            onHorarios={c => setHorariosModal(c)}
+            onVerHorario={c => c.docente && setHorarioDocenteModal(c.docente as Docente)}
+          />
         )}
       </div>
 
