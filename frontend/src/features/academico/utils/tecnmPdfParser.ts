@@ -62,7 +62,28 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     pages.push(lines.join('\n'))
   }
 
-  return pages.join('\n')
+  return cleanPdfText(pages.join('\n'))
+}
+
+// ── Limpieza de texto extraído ────────────────────────────────────────────────
+
+function cleanPdfText(raw: string): string {
+  return raw
+    // Pies/encabezados de página TecNM: "©TecNM diciembre 2017  Página | 8"
+    .replace(/©\s*TecNM[^\n]*/gi, '')
+    // Nombre institucional en headers
+    .replace(/TECNOL[ÓO]GICO NACIONAL DE M[ÉE]XICO[^\n]*/gi, '')
+    .replace(/Secretar[ií]a Acad[eé]mica[^\n]*/gi, '')
+    .replace(/Direcci[oó]n de Docencia[^\n]*/gi, '')
+    .replace(/Investigaci[oó]n e Innovaci[oó]n Educativa[^\n]*/gi, '')
+    // Números de página sueltos: "Página | 8" o "Página|8"
+    .replace(/P[áa]gina\s*\|?\s*\d+[^\n]*/gi, '')
+    // Cabeceras de tabla repetidas que confunden el parser de secciones
+    .replace(/^Competencias\s+Actividades de aprendizaje\s+Competencia espec[ií]fica[^\n]*/gim, '')
+    .replace(/^Tema\s+Subtemas?\s+/gim, '')
+    // Líneas vacías múltiples → una sola
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 // ── División en secciones ─────────────────────────────────────────────────────
@@ -150,20 +171,27 @@ function parsePresentacion(sec: string) {
 }
 
 function parseCompetencia(sec: string): string | undefined {
-  // Elimina la primera línea (el encabezado de sección)
   const lines = cleanLines(sec)
-  // Buscar después de "Competencia(s) específica(s) de la asignatura"
+  // Buscar la línea del encabezado "Competencia(s) específica(s)…"
   const idx = lines.findIndex(l => /espec[ií]fica/i.test(l))
-  if (idx !== -1) {
-    return lines.slice(idx + 1).join(' ').trim() || undefined
-  }
-  // Fallback: todo menos el encabezado de sección
-  return lines.slice(1).join(' ').trim() || undefined
+  const start = idx !== -1 ? idx + 1 : 1
+  // Detener antes de encabezados de tabla o secciones siguientes
+  const stopRe = /^(Actividades de aprendizaje|Competencias previas|Unidad|Tema\s+\d|Subtema)/i
+  const stopIdx = lines.findIndex((l, i) => i >= start && stopRe.test(l))
+  const end = stopIdx !== -1 ? stopIdx : lines.length
+  return lines.slice(start, end).join(' ').trim() || undefined
 }
 
 function parseCompetenciasPrevias(sec: string): string | undefined {
   const lines = cleanLines(sec)
-  return lines.slice(1).join(' ').trim() || undefined
+  // Saltar encabezados de tabla ("Competencias Previas", columnas de tabla)
+  const skipRe = /^(Competencias?\s+previas|Asignatura|Carrera|Clave)/i
+  const start = lines.findIndex((l, i) => i > 0 && !skipRe.test(l))
+  if (start === -1) return undefined
+  const stopRe = /^(Unidad|Tema\s+\d|\d+\.\s)/i
+  const stopIdx = lines.findIndex((l, i) => i > start && stopRe.test(l))
+  const end = stopIdx !== -1 ? stopIdx : lines.length
+  return lines.slice(start, end).join(' ').trim() || undefined
 }
 
 function parseTemario(sec: string): MateriaTemaTema[] {
