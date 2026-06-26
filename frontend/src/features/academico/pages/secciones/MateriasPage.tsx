@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useConfirm } from '../../../../components/ConfirmDialog'
 import { academicoApi, type Materia, type MateriaTemaTema } from '../../services/academico'
-import { parseTecnmPdf } from '../../utils/tecnmPdfParser'
+import { parseTecnmPdfFull, type ProgramaExtraido, type ExtractionResult } from '../../utils/tecnmPdfParser'
 import { Field, SkeletonRows, inputCls, selectCls, icls, ModalWrap, extractApiErrors, mutationError, useCarreras } from '../tabs/shared'
 import { useToastStore } from '../../../../store/toastStore'
 
@@ -17,6 +17,200 @@ function Chevron({ open }: { open: boolean }) {
       fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
     </svg>
+  )
+}
+
+// ── Modal de previsualización de extracción PDF ───────────────────────────────
+
+const SEC_LABELS: Record<string, string> = {
+  '1': '1. Datos generales',
+  '2': '2. Presentación',
+  '3': '3. Competencia genérica',
+  '4': '4. Competencia específica',
+  '5': '5. Competencias previas',
+  '6': '6. Temario',
+  '7': '7. Actividades de aprendizaje',
+  '8': '8. Prácticas',
+  '9': '9. Proyecto de asignatura',
+  '10': '10. Evaluación',
+  '11': '11. Fuentes de información',
+}
+
+function PdfPreviewModal({
+  result,
+  onApply,
+  onClose,
+}: {
+  result: ExtractionResult
+  onApply: (campos: ProgramaExtraido) => void
+  onClose: () => void
+}) {
+  const [tab, setTab] = useState<'campos' | 'texto'>('campos')
+  const [campos, setCampos] = useState<ProgramaExtraido>({ ...result.campos })
+  const [openSec, setOpenSec] = useState<string | null>(null)
+
+  const setC = (k: keyof ProgramaExtraido, v: unknown) =>
+    setCampos(prev => ({ ...prev, [k]: v }))
+
+  const secNums = Object.keys(result.secciones)
+    .filter(k => k !== '_full')
+    .sort((a, b) => Number(a) - Number(b))
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-6 flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+          <div>
+            <p className="font-semibold text-slate-900">Revisión de extracción PDF</p>
+            <p className="text-xs text-slate-400 mt-0.5">Revisa y corrige los campos antes de aplicarlos</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 px-6 pt-3 shrink-0">
+          {([['campos', 'Campos extraídos'], ['texto', 'Texto por secciones']] as const).map(([id, label]) => (
+            <button key={id} onClick={() => setTab(id)}
+              className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-colors ${tab === id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          {tab === 'campos' && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-500">Nombre de la asignatura</label>
+                  <input value={campos.nombre ?? ''} onChange={e => setC('nombre', e.target.value)}
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500">Clave oficial TecNM</label>
+                  <input value={campos.clave_oficial_tecnm ?? ''} onChange={e => setC('clave_oficial_tecnm', e.target.value)}
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500">SATCA</label>
+                  <input value={campos.satca ?? ''} onChange={e => setC('satca', e.target.value)}
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500">Créditos</label>
+                  <input type="number" value={campos.creditos ?? ''} onChange={e => setC('creditos', Number(e.target.value))}
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+              </div>
+
+              {([
+                ['caracterizacion', 'Caracterización de la asignatura'],
+                ['intencion_didactica', 'Intención didáctica'],
+                ['competencia_especifica', 'Competencia específica'],
+                ['competencias_previas', 'Competencias previas'],
+                ['proyecto_asignatura', 'Proyecto de asignatura'],
+                ['evaluacion', 'Evaluación'],
+              ] as const).map(([key, label]) => (
+                <div key={key}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <label className="text-xs font-medium text-slate-500">{label}</label>
+                    {campos[key] ? (
+                      <span className="text-[10px] bg-emerald-100 text-emerald-700 rounded-full px-1.5 py-0.5">detectado</span>
+                    ) : (
+                      <span className="text-[10px] bg-amber-100 text-amber-700 rounded-full px-1.5 py-0.5">no detectado</span>
+                    )}
+                  </div>
+                  <textarea
+                    rows={3}
+                    value={(campos[key] as string) ?? ''}
+                    onChange={e => setC(key, e.target.value)}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y"
+                    placeholder={`Escribe la ${label.toLowerCase()}…`}
+                  />
+                </div>
+              ))}
+
+              {/* Campos complejos (solo lectura) */}
+              {campos.temario && campos.temario.length > 0 && (
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">
+                    Temario <span className="text-emerald-600 font-normal">({campos.temario.length} temas detectados)</span>
+                  </label>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-600 space-y-0.5 max-h-40 overflow-y-auto">
+                    {campos.temario.map((t, i) => (
+                      <div key={i} className="truncate">
+                        <span className="font-mono text-slate-400 mr-1">{i + 1}.</span>{t.tema}
+                        {t.subtemas?.map((s, j) => <div key={j} className="ml-4 text-slate-400 truncate">• {s}</div>)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {campos.fuentes_informacion && campos.fuentes_informacion.length > 0 && (
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">
+                    Fuentes de información <span className="text-emerald-600 font-normal">({campos.fuentes_informacion.length} detectadas)</span>
+                  </label>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-600 space-y-0.5 max-h-32 overflow-y-auto">
+                    {campos.fuentes_informacion.map((f, i) => (
+                      <div key={i} className="truncate">• {f}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {tab === 'texto' && (
+            <div className="space-y-2">
+              <p className="text-xs text-slate-400">
+                Secciones detectadas: <strong>{secNums.length}</strong> · Texto total: <strong>{result.textoCompleto.length.toLocaleString()} caracteres</strong>
+              </p>
+              {secNums.length === 0 ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-sm text-amber-700 font-medium">No se detectaron secciones numeradas</p>
+                  <p className="text-xs text-amber-500 mt-1">El PDF puede estar escaneado, protegido o no seguir el formato TecNM estándar.</p>
+                  <details className="mt-3">
+                    <summary className="text-xs text-slate-500 cursor-pointer">Ver texto completo</summary>
+                    <pre className="mt-2 text-[10px] text-slate-500 whitespace-pre-wrap max-h-64 overflow-y-auto font-mono">{result.textoCompleto}</pre>
+                  </details>
+                </div>
+              ) : (
+                secNums.map(num => (
+                  <div key={num} className="border border-slate-200 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setOpenSec(openSec === num ? null : num)}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+                    >
+                      <span className="text-xs font-semibold text-slate-700">{SEC_LABELS[num] ?? `Sección ${num}`}</span>
+                      <span className="text-[10px] text-slate-400">{result.secciones[num].length} chars {openSec === num ? '▲' : '▼'}</span>
+                    </button>
+                    {openSec === num && (
+                      <pre className="px-4 py-3 text-[10px] text-slate-600 whitespace-pre-wrap font-mono max-h-64 overflow-y-auto bg-white border-t border-slate-100">
+                        {result.secciones[num]}
+                      </pre>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 shrink-0">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">Cancelar</button>
+          <button
+            onClick={() => { onApply(campos); onClose() }}
+            className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+          >
+            Aplicar al formulario
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -587,6 +781,7 @@ export default function MateriasPage() {
   const [modalTab, setModalTab] = useState<'basico' | 'programa' | 'temario' | 'practicas' | 'biblio'>('basico')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [extrayendo, setExtrayendo] = useState(false)
+  const [pdfPreview, setPdfPreview] = useState<ExtractionResult | null>(null)
   const pdfExtractRef = useRef<HTMLInputElement>(null)
   const { confirm, dialog: confirmDialog } = useConfirm()
 
@@ -644,28 +839,31 @@ export default function MateriasPage() {
 
   const set = (k: keyof Materia, v: unknown) => setModal(m => ({ ...m, [k]: v }))
 
+  const applyExtraction = useCallback((campos: ProgramaExtraido) => {
+    const keys: (keyof ProgramaExtraido)[] = [
+      'nombre', 'clave_oficial_tecnm', 'satca', 'creditos',
+      'horas_teoria', 'horas_practica', 'caracterizacion',
+      'intencion_didactica', 'competencia_especifica',
+      'competencias_previas', 'temario', 'actividades_aprendizaje',
+      'practicas', 'proyecto_asignatura', 'evaluacion', 'fuentes_informacion',
+    ]
+    setModal(prev => {
+      const merged: Partial<Materia> = { ...prev }
+      for (const k of keys) {
+        const val = (campos as Record<string, unknown>)[k]
+        if (val !== null && val !== undefined && val !== '') {
+          (merged as Record<string, unknown>)[k] = val
+        }
+      }
+      return merged
+    })
+  }, [])
+
   const handleExtractPdf = useCallback(async (file: File) => {
     setExtrayendo(true)
     try {
-      const data = await parseTecnmPdf(file)
-      setModal(prev => {
-        const merged: Partial<Materia> = { ...prev }
-        const keys: (keyof Materia)[] = [
-          'nombre', 'clave_oficial_tecnm', 'satca', 'creditos',
-          'horas_teoria', 'horas_practica', 'caracterizacion',
-          'intencion_didactica', 'competencia_especifica',
-          'competencias_previas', 'temario', 'actividades_aprendizaje',
-          'practicas', 'proyecto_asignatura', 'evaluacion', 'fuentes_informacion',
-        ]
-        for (const k of keys) {
-          const val = (data as Record<string, unknown>)[k]
-          if (val !== null && val !== undefined && val !== '') {
-            (merged as Record<string, unknown>)[k] = val
-          }
-        }
-        return merged
-      })
-      addToast('Información extraída del PDF. Revisa y completa los campos.', 'success')
+      const result = await parseTecnmPdfFull(file)
+      setPdfPreview(result)
     } catch (e) {
       console.error(e)
       addToast('No se pudo leer el PDF. Verifica que no esté escaneado o protegido.', 'error')
@@ -682,11 +880,20 @@ export default function MateriasPage() {
   const openDetalle = (m: Materia) => setDetalle(m)
 
   const handleExtractAndEdit = useCallback(async (base: Materia, file: File) => {
+    // Pre-carga la materia base en el modal; el preview la completará con el PDF
     setModal(base)
     setModalTab('programa')
     setErrors({})
     await handleExtractPdf(file)
   }, [handleExtractPdf])
+
+  // Cuando el preview aplica desde el panel de detalle, asegurarse de que el modal esté visible
+  const handlePreviewApply = useCallback((campos: ProgramaExtraido) => {
+    applyExtraction(campos)
+    // Si el modal no está abierto todavía, abrirlo en la pestaña de programa
+    setModal(prev => prev ?? {})
+    setModalTab('programa')
+  }, [applyExtraction])
   const openEliminar = (m: Materia) => confirm({
     title: `¿Eliminar "${m.nombre}"?`,
     description: 'Se eliminará permanentemente del catálogo.',
@@ -782,6 +989,14 @@ export default function MateriasPage() {
       </div>
 
       {confirmDialog}
+
+      {pdfPreview && (
+        <PdfPreviewModal
+          result={pdfPreview}
+          onApply={handlePreviewApply}
+          onClose={() => setPdfPreview(null)}
+        />
+      )}
 
       {detalle && (
         <MateriaDetail materia={detalle} onClose={() => setDetalle(null)}

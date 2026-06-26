@@ -67,7 +67,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
 
 // ── División en secciones ─────────────────────────────────────────────────────
 
-function splitSections(text: string): Record<string, string> {
+export function splitSections(text: string): Record<string, string> {
   // Detecta encabezados como "1. Datos Generales", "2. Presentación", etc.
   const headingRe = /^(\d+)\.\s+([\w\s()áéíóúüñÁÉÍÓÚÜÑ\/]+)/m
   const sectionRe = /(?=^\d+\.\s+)/m
@@ -85,13 +85,6 @@ function splitSections(text: string): Record<string, string> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function between(text: string, start: RegExp, end: RegExp): string {
-  const s = text.search(start)
-  if (s === -1) return ''
-  const sub = text.slice(s)
-  const e = sub.search(end)
-  return (e === -1 ? sub : sub.slice(0, e)).replace(start, '').trim()
-}
 
 function cleanLines(text: string): string[] {
   return text.split('\n').map(l => l.trim()).filter(Boolean)
@@ -129,20 +122,31 @@ function parseDatosGenerales(sec: string) {
   return { nombre, clave_oficial_tecnm, satca, horas_teoria, horas_practica, creditos }
 }
 
+function extractBlock(text: string, startRe: RegExp, endRe: RegExp): string {
+  const s = text.search(startRe)
+  if (s === -1) return ''
+  const after = text.slice(s)
+  // Strip the heading line itself
+  const bodyStart = after.indexOf('\n')
+  const body = bodyStart === -1 ? '' : after.slice(bodyStart + 1)
+  const e = body.search(endRe)
+  return (e === -1 ? body : body.slice(0, e)).trim()
+}
+
 function parsePresentacion(sec: string) {
-  const caracterizacion = between(
-    sec,
-    /Caracterizaci[oó]n de la asignatura/i,
-    /Intenci[oó]n did[aá]ctica/i
-  ).replace(/Caracterizaci[oó]n de la asignatura/i, '').trim()
+  // Títulos posibles: "Caracterización de la asignatura", "Caracterización", etc.
+  const caraRe  = /Caracterizaci[oó]n(\s+de\s+la\s+asignatura)?/i
+  const intRe   = /Intenci[oó]n\s+did[aá]ctica/i
+  // Fin de sección: copyright, número de sección siguiente, o fin de texto
+  const endOfSec = /©\s*TecNM|^\s*\d{1,2}\.\s+[A-ZÁÉÍÓÚ]/m
 
-  const intencion_didactica = between(
-    sec,
-    /Intenci[oó]n did[aá]ctica/i,
-    /©TecNM|^\d+\./m
-  ).replace(/Intenci[oó]n did[aá]ctica/i, '').trim()
+  const caracterizacion    = extractBlock(sec, caraRe, intRe) || extractBlock(sec, caraRe, endOfSec)
+  const intencion_didactica = extractBlock(sec, intRe, endOfSec)
 
-  return { caracterizacion: caracterizacion || undefined, intencion_didactica: intencion_didactica || undefined }
+  return {
+    caracterizacion:     caracterizacion     || undefined,
+    intencion_didactica: intencion_didactica || undefined,
+  }
 }
 
 function parseCompetencia(sec: string): string | undefined {
@@ -308,7 +312,9 @@ export async function parseTecnmPdf(file: File): Promise<ProgramaExtraido> {
   const secs = splitSections(text)
 
   const datos      = parseDatosGenerales(secs['1'] ?? text)
-  const present    = parsePresentacion(secs['2'] ?? '')
+  // Si no se encontró sección 2, buscar en el texto completo (PDFs sin numeración estricta)
+  const sec2       = secs['2'] ?? ''
+  const present    = parsePresentacion(sec2.length > 20 ? sec2 : text)
   const competencia = parseCompetencia(secs['4'] ?? '')
   const previas    = parseCompetenciasPrevias(secs['5'] ?? '')
   const temario    = parseTemario(secs['6'] ?? '')
@@ -330,4 +336,17 @@ export async function parseTecnmPdf(file: File): Promise<ProgramaExtraido> {
     evaluacion,
     fuentes_informacion: fuentes.length ? fuentes : undefined,
   }
+}
+
+export interface ExtractionResult {
+  campos: ProgramaExtraido
+  secciones: Record<string, string>
+  textoCompleto: string
+}
+
+export async function parseTecnmPdfFull(file: File): Promise<ExtractionResult> {
+  const textoCompleto = await extractTextFromPdf(file)
+  const secciones     = splitSections(textoCompleto)
+  const campos        = await parseTecnmPdf(file)
+  return { campos, secciones, textoCompleto }
 }
