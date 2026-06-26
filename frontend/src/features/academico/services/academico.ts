@@ -48,11 +48,14 @@ export interface CargaAcademica {
   materia_id: string
   grupo_id: string
   periodo_id: string
+  aula_id?: string
   horas_semana: number
   docente?: { id: string; name: string; email: string }
   materia?: Materia
   grupo?: Grupo
   periodo?: { id: string; nombre: string }
+  aula?: { id: string; nombre: string; tipo: string; capacidad: number }
+  horarios?: Horario[]
 }
 
 export interface MallaCurricular {
