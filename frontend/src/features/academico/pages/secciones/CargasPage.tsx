@@ -87,7 +87,23 @@ function CargaDocenteView({
   onBack: () => void
 }) {
   const totalHorasGrupo = cargas.reduce((s, c) => s + c.horas_semana, 0)
-  const [imprimiendo, setImprimiendo] = useState(false)
+  const [descargando, setDescargando] = useState(false)
+
+  async function descargarPdf() {
+    setDescargando(true)
+    try {
+      const params = periodo ? `?periodo_id=${periodo.id}` : ''
+      const res = await apiClient.get(`/docentes/${docente.id}/carga-academica/pdf${params}`, { responseType: 'blob' })
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CargaAcademica_${docente.name.replace(/ /g, '_')}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   // Construir cuadrícula horaria
   type CeldaHorario = { label: string; color: string } | null
@@ -134,13 +150,14 @@ function CargaDocenteView({
           Volver a la lista
         </button>
         <button
-          onClick={() => { setImprimiendo(true); setTimeout(() => { window.print(); setImprimiendo(false) }, 100) }}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700"
+          onClick={descargarPdf}
+          disabled={descargando}
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 disabled:opacity-60"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          {imprimiendo ? 'Preparando…' : 'Imprimir / PDF'}
+          {descargando ? 'Generando PDF…' : 'Descargar PDF'}
         </button>
       </div>
 

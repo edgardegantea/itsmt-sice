@@ -134,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/cargas-academicas/{cargaAcademica}',            [CargaAcademicaController::class, 'update']);
     Route::delete('/cargas-academicas/{cargaAcademica}',           [CargaAcademicaController::class, 'destroy']);
     Route::get('/admin/docentes',                                  [CargaAcademicaController::class, 'docentes']);
+    Route::get('/docentes/{docente}/carga-academica/pdf',          \App\Http\Controllers\Academico\CargaDocentePdfController::class);
 
     // Tutorías
     Route::get('/tutorias',                    [TutoriaController::class, 'index']);
