@@ -63,6 +63,151 @@ function toMin(t: string) {
 
 // ── Accordion carrera → semestre ─────────────────────────────────────────────
 
+// ── Cuadrícula semanal de un grupo ───────────────────────────────────────────
+
+const DIAS_SEMANA = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const
+const DIA_LABEL_CORTO: Record<string, string> = {
+  lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
+  jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
+}
+
+// Paleta de colores por materia (ciclica)
+const MATERIA_COLORS = [
+  'bg-blue-50 border-blue-200 text-blue-900',
+  'bg-violet-50 border-violet-200 text-violet-900',
+  'bg-emerald-50 border-emerald-200 text-emerald-900',
+  'bg-amber-50 border-amber-200 text-amber-900',
+  'bg-rose-50 border-rose-200 text-rose-900',
+  'bg-cyan-50 border-cyan-200 text-cyan-900',
+  'bg-orange-50 border-orange-200 text-orange-900',
+  'bg-teal-50 border-teal-200 text-teal-900',
+  'bg-indigo-50 border-indigo-200 text-indigo-900',
+  'bg-pink-50 border-pink-200 text-pink-900',
+]
+
+function GrupoSemanaGrid({
+  cargas,
+  onEdit,
+  onDelete,
+  onHorarios,
+  onVerHorario,
+}: {
+  cargas: CargaAcademica[]
+  onEdit: (c: CargaAcademica) => void
+  onDelete: (c: CargaAcademica) => void
+  onHorarios: (c: CargaAcademica) => void
+  onVerHorario: (c: CargaAcademica) => void
+}) {
+  // Asignar color fijo a cada carga
+  const colorMap = useMemo(() => {
+    const m = new Map<string, string>()
+    cargas.forEach((c, i) => m.set(c.id, MATERIA_COLORS[i % MATERIA_COLORS.length]))
+    return m
+  }, [cargas])
+
+  // Días que tienen al menos un horario
+  const diasActivos = useMemo(() => {
+    const set = new Set<string>()
+    for (const c of cargas) for (const h of c.horarios ?? []) set.add(h.dia_semana)
+    return DIAS_SEMANA.filter(d => set.has(d))
+  }, [cargas])
+
+  // Cargas sin horario
+  const sinHorario = cargas.filter(c => (c.horarios ?? []).length === 0)
+
+  // Bloques por día: { dia → [{carga, horario}] } ordenados por hora_inicio
+  const bloquesPorDia = useMemo(() => {
+    const map = new Map<string, { carga: CargaAcademica; h: Horario }[]>()
+    for (const dia of diasActivos) map.set(dia, [])
+    for (const c of cargas) {
+      for (const h of c.horarios ?? []) {
+        map.get(h.dia_semana)?.push({ carga: c, h })
+      }
+    }
+    for (const [, arr] of map) arr.sort((a, b) => a.h.hora_inicio.localeCompare(b.h.hora_inicio))
+    return map
+  }, [cargas, diasActivos])
+
+  if (diasActivos.length === 0 && sinHorario.length === 0) return null
+
+  return (
+    <div className="border-t border-slate-50 bg-slate-50/40">
+      {/* Leyenda de materias */}
+      <div className="pl-16 pr-4 pt-3 pb-1 flex flex-wrap gap-1.5">
+        {cargas.map(c => (
+          <span key={c.id} className={`inline-flex items-center gap-1 border rounded-full px-2 py-0.5 text-xs font-medium ${colorMap.get(c.id)}`}>
+            <span className="truncate max-w-[160px]">{c.materia?.nombre ?? '—'}</span>
+            {(c.horarios ?? []).length === 0 && (
+              <button onClick={() => onHorarios(c)} className="text-amber-600 hover:text-amber-800 ml-0.5" title="Sin horario">⚠</button>
+            )}
+          </span>
+        ))}
+      </div>
+
+      {/* Cuadrícula días */}
+      {diasActivos.length > 0 && (
+        <div className="pl-16 pr-4 pb-3 pt-2 overflow-x-auto">
+          <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${diasActivos.length}, minmax(160px, 1fr))` }}>
+            {diasActivos.map(dia => (
+              <div key={dia} className="min-w-0">
+                {/* Cabecera día */}
+                <div className="text-center text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 py-1 bg-white rounded border border-slate-100">
+                  {DIA_LABEL_CORTO[dia]}
+                </div>
+                {/* Bloques de ese día */}
+                <div className="space-y-1.5">
+                  {(bloquesPorDia.get(dia) ?? []).map(({ carga: c, h }) => (
+                    <div
+                      key={h.id}
+                      className={`group border rounded-lg px-3 py-2 cursor-default ${colorMap.get(c.id)}`}
+                    >
+                      {/* Hora */}
+                      <p className="text-xs font-mono font-semibold mb-1 opacity-70">
+                        {fmt12(h.hora_inicio)} – {fmt12(h.hora_fin)}
+                      </p>
+                      {/* Materia */}
+                      <p className="text-xs font-semibold leading-tight truncate">{c.materia?.nombre ?? '—'}</p>
+                      {/* Docente */}
+                      <p className="text-xs opacity-60 truncate mt-0.5">{c.docente?.name ?? <span className="italic">Sin docente</span>}</p>
+                      {/* Acciones hover */}
+                      <div className="mt-1.5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => onHorarios(c)} className="text-[10px] underline opacity-80">Horario</button>
+                        <button onClick={() => onEdit(c)} className="text-[10px] underline opacity-80">Editar</button>
+                        {c.docente && <button onClick={() => onVerHorario(c)} className="text-[10px] underline opacity-80">Carga</button>}
+                        <button onClick={() => onDelete(c)} className="text-[10px] underline opacity-80 text-red-600">✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Materias sin horario */}
+      {sinHorario.length > 0 && (
+        <div className="pl-16 pr-4 pb-3">
+          <p className="text-xs text-amber-600 font-medium mb-1.5">Sin horario asignado:</p>
+          <div className="flex flex-wrap gap-2">
+            {sinHorario.map(c => (
+              <div key={c.id} className="border border-amber-200 bg-amber-50 rounded-lg px-3 py-2 max-w-[200px]">
+                <p className="text-xs font-semibold text-amber-800 truncate">{c.materia?.nombre ?? '—'}</p>
+                <p className="text-xs text-amber-600 truncate mt-0.5">{c.docente?.name ?? 'Sin docente'}</p>
+                <div className="flex gap-2 mt-1.5">
+                  <button onClick={() => onHorarios(c)} className="text-[10px] text-amber-700 underline">+ Horario</button>
+                  <button onClick={() => onEdit(c)} className="text-[10px] text-slate-500 underline">Editar</button>
+                  <button onClick={() => onDelete(c)} className="text-[10px] text-red-400 underline">✕</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Tipos internos del accordion
 type GrupoEntry = { id: string; clave: string; turno: string; cargas: CargaAcademica[] }
 type SemestreEntry = { semestre: number; grupos: Map<string, GrupoEntry> }
@@ -212,52 +357,15 @@ function CargasAccordion({
                                   </span>
                                 </button>
 
-                                {/* ── Tabla de materias del grupo ── */}
+                                {/* ── Horario semanal del grupo ── */}
                                 {isOpenG && (
-                                  <table className="w-full text-sm border-t border-slate-50">
-                                    <thead className="bg-slate-50/60">
-                                      <tr>
-                                        <th className="pl-20 pr-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Materia</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Docente</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">Horario</th>
-                                        <th className="px-3 py-2 text-center text-xs font-medium text-slate-400 uppercase tracking-wide">H/sem</th>
-                                        <th className="px-3 py-2" />
-                                      </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50">
-                                      {grupo.cargas
-                                        .slice()
-                                        .sort((a, b) => (a.materia?.nombre ?? '').localeCompare(b.materia?.nombre ?? ''))
-                                        .map(c => (
-                                          <tr key={c.id} className="hover:bg-blue-50/40 transition-colors group">
-                                            <td className="pl-20 pr-3 py-2.5">
-                                              <p className="text-sm font-medium text-slate-800 truncate max-w-[220px]">{c.materia?.nombre ?? '—'}</p>
-                                              <p className="text-xs text-slate-400 font-mono">{c.materia?.clave}</p>
-                                            </td>
-                                            <td className="px-3 py-2.5 text-sm text-slate-700 max-w-[160px] truncate">
-                                              {c.docente?.name ?? <span className="text-slate-300 text-xs">Sin asignar</span>}
-                                            </td>
-                                            <td className="px-3 py-2.5">
-                                              {(c.horarios ?? []).length === 0 ? (
-                                                <button onClick={() => onHorarios(c)} className="text-xs text-amber-600 hover:underline">Sin horario</button>
-                                              ) : (
-                                                <div className="flex flex-wrap gap-1">
-                                                  {c.horarios!.slice(0, 2).map(h => <HorarioChip key={h.id} h={h} />)}
-                                                  {c.horarios!.length > 2 && <span className="text-xs text-slate-400">+{c.horarios!.length - 2}</span>}
-                                                </div>
-                                              )}
-                                            </td>
-                                            <td className="px-3 py-2.5 text-center font-semibold text-slate-800 text-xs">{c.horas_semana}h</td>
-                                            <td className="px-3 py-2.5 text-right whitespace-nowrap space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                              {c.docente && <button onClick={() => onVerHorario(c)} className="text-xs text-violet-600 hover:underline">Ver carga</button>}
-                                              <button onClick={() => onHorarios(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
-                                              <button onClick={() => onEdit(c)} className="text-xs text-slate-500 hover:underline">Editar</button>
-                                              <button onClick={() => onDelete(c)} className="text-xs text-red-400 hover:underline">Eliminar</button>
-                                            </td>
-                                          </tr>
-                                        ))}
-                                    </tbody>
-                                  </table>
+                                  <GrupoSemanaGrid
+                                    cargas={grupo.cargas}
+                                    onEdit={onEdit}
+                                    onDelete={onDelete}
+                                    onHorarios={onHorarios}
+                                    onVerHorario={onVerHorario}
+                                  />
                                 )}
                               </div>
                             )
