@@ -289,6 +289,7 @@ function DropModal({
   const [conflictos, setConflictos] = useState<Conflicto[]>([])
   const [checking, setChecking] = useState(false)
 
+  const fmtHora = (t: string) => t.slice(0, 5).replace(/^(\d):/, '0$1:')
   const check = useCallback(async (fin: string, aid: string) => {
     if (!fin) return
     setChecking(true)
@@ -298,8 +299,8 @@ function DropModal({
           docente_id: docenteId,
           periodo_id: periodoId,
           dia_semana: dia,
-          hora_inicio: horaInicio,
-          hora_fin: fin,
+          hora_inicio: fmtHora(horaInicio),
+          hora_fin: fmtHora(fin),
           ...(aid ? { aula_id: aid } : {}),
           ...(existingBlockUid ? { excluir_carga_id: carga.id } : {}),
         },
@@ -651,9 +652,10 @@ export default function CargaBuilderPage() {
 
     for (const cargaId of unsavedCargaIds) {
       // Enviar TODOS los bloques de esa carga (nuevos + ya guardados) para que el backend los reemplace
+      const fmtHora = (t: string) => t.slice(0, 5).replace(/^(\d):/, '0$1:')
       const bloques = draftBlocks
         .filter(b => b.cargaId === cargaId)
-        .map(b => ({ dia_semana: b.dia, hora_inicio: b.horaInicio, hora_fin: b.horaFin }))
+        .map(b => ({ dia_semana: b.dia, hora_inicio: fmtHora(b.horaInicio), hora_fin: fmtHora(b.horaFin) }))
 
       try {
         await apiClient.post('/horarios', { carga_academica_id: cargaId, bloques })

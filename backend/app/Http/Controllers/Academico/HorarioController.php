@@ -44,8 +44,8 @@ class HorarioController extends Controller
             'docente_id'       => ['required', 'uuid', 'exists:users,id'],
             'periodo_id'       => ['required', 'uuid', 'exists:periodos,id'],
             'dia_semana'       => ['required', 'in:lunes,martes,miercoles,jueves,viernes,sabado'],
-            'hora_inicio'      => ['required', 'date_format:H:i'],
-            'hora_fin'         => ['required', 'date_format:H:i', 'after:hora_inicio'],
+            'hora_inicio'      => ['required', 'date_format:H:i,G:i'],
+            'hora_fin'         => ['required', 'date_format:H:i,G:i'],
             'aula_id'          => ['nullable', 'uuid', 'exists:aulas,id'],
             'excluir_carga_id' => ['nullable', 'uuid'],
         ]);
@@ -153,8 +153,8 @@ class HorarioController extends Controller
         $data = $request->validate([
             'carga_academica_id' => ['required', 'uuid', 'exists:cargas_academicas,id'],
             'dia_semana'         => ['required', 'in:lunes,martes,miercoles,jueves,viernes,sabado'],
-            'hora_inicio'        => ['required', 'date_format:H:i'],
-            'hora_fin'           => ['required', 'date_format:H:i', 'after:hora_inicio'],
+            'hora_inicio'        => ['required', 'date_format:H:i,G:i'],
+            'hora_fin'           => ['required', 'date_format:H:i,G:i'],
         ]);
 
         $conflictos = $this->service->detectarConflictos(
@@ -175,8 +175,8 @@ class HorarioController extends Controller
             'carga_academica_id' => ['required', 'uuid', 'exists:cargas_academicas,id'],
             'bloques'            => ['required', 'array', 'min:1'],
             'bloques.*.dia_semana'  => ['required', 'in:lunes,martes,miercoles,jueves,viernes,sabado'],
-            'bloques.*.hora_inicio' => ['required', 'date_format:H:i'],
-            'bloques.*.hora_fin'    => ['required', 'date_format:H:i', 'after:bloques.*.hora_inicio'],
+            'bloques.*.hora_inicio' => ['required', 'date_format:H:i,G:i'],
+            'bloques.*.hora_fin'    => ['required', 'date_format:H:i,G:i'],
         ]);
 
         $carga = CargaAcademica::findOrFail($data['carga_academica_id']);
