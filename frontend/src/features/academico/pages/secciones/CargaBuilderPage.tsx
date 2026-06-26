@@ -751,8 +751,13 @@ export default function CargaBuilderPage() {
             {/* Stats */}
             {docenteId && periodoId && (
               <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="bg-slate-100 rounded px-2 py-1">
-                  <span className="font-semibold text-slate-700">{totalHoras}</span> h/sem
+                {/* Horas semanales con semáforo */}
+                <span className={`rounded px-2 py-1 font-medium ${
+                  totalHoras > 40 ? 'bg-red-100 text-red-700' :
+                  totalHoras >= 39 ? 'bg-amber-100 text-amber-700' :
+                  'bg-slate-100 text-slate-700'
+                }`}>
+                  {totalHoras}/40 h/sem{totalHoras > 40 ? ' ⚠' : ''}
                 </span>
                 {totalConflictos > 0 && (
                   <span className="bg-red-100 text-red-700 rounded px-2 py-1 font-medium">
@@ -885,12 +890,22 @@ export default function CargaBuilderPage() {
                     Hora
                   </div>
                   {DIAS.map(dia => {
-                    const horasDia = draftBlocks
-                      .filter(b => b.dia === dia)
-                      .reduce((s, b) => s + (toMin(b.horaFin) - toMin(b.horaInicio)) / 60, 0)
-                    const limite = dia !== 'sabado' ? 8 : null
-                    const excede = limite !== null && horasDia > limite
-                    const cerca  = limite !== null && !excede && horasDia >= limite - 1
+                    // Calcular span del día: entrada más temprana → salida más tardía
+                    const bloquesDia = draftBlocks.filter(b => b.dia === dia)
+                    const span = bloquesDia.length > 0
+                      ? (Math.max(...bloquesDia.map(b => toMin(b.horaFin))) -
+                         Math.min(...bloquesDia.map(b => toMin(b.horaInicio)))) / 60
+                      : 0
+
+                    const entradaMin = bloquesDia.length > 0 ? Math.min(...bloquesDia.map(b => toMin(b.horaInicio))) : null
+                    const salidaMin  = bloquesDia.length > 0 ? Math.max(...bloquesDia.map(b => toMin(b.horaFin))) : null
+                    const fmtMin = (m: number) => {
+                      const h = Math.floor(m / 60), min = m % 60
+                      return `${h > 12 ? h - 12 : h === 0 ? 12 : h}:${String(min).padStart(2, '0')} ${h >= 12 ? 'pm' : 'am'}`
+                    }
+
+                    const excede = span > 8
+                    const cerca  = !excede && span >= 7
 
                     return (
                       <div key={dia} className="py-1.5 text-center border-r border-slate-200 last:border-r-0">
@@ -898,10 +913,10 @@ export default function CargaBuilderPage() {
                           <span className="hidden sm:block">{DIA_LABEL[dia]}</span>
                           <span className="block sm:hidden">{DIA_SHORT[dia]}</span>
                         </div>
-                        {horasDia > 0 && (
-                          <div className={`text-[10px] font-medium mt-0.5 ${excede ? 'text-red-500' : cerca ? 'text-amber-500' : 'text-slate-400'}`}>
-                            {horasDia}h{limite ? `/${limite}h` : ''}
-                            {excede && ' ⚠'}
+                        {entradaMin !== null && salidaMin !== null && (
+                          <div className={`text-[10px] font-medium mt-0.5 leading-tight ${excede ? 'text-red-500' : cerca ? 'text-amber-500' : 'text-slate-400'}`}>
+                            <div>{fmtMin(entradaMin)}–{fmtMin(salidaMin)}</div>
+                            <div>{span.toFixed(1)}h/8h{excede && ' ⚠'}</div>
                           </div>
                         )}
                       </div>

@@ -93,34 +93,54 @@ class HorarioController extends Controller
             }
         }
 
-        // Límite de 8 horas diarias (sábado no tiene límite)
-        if ($data['dia_semana'] !== 'sabado') {
-            $toMin = fn(string $t) => (int) explode(':', $t)[0] * 60 + (int) explode(':', $t)[1];
+        $toMin    = fn(string $t): int => (int) explode(':', $t)[0] * 60 + (int) explode(':', $t)[1];
+        $minToStr = fn(int $m): string => sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+        $excluirCarga = $data['excluir_carga_id'] ?? null;
+        $minBloque    = $toMin($data['hora_fin']) - $toMin($data['hora_inicio']);
 
-            $minutosBloque = $toMin($data['hora_fin']) - $toMin($data['hora_inicio']);
+        // ── Span diario ≤ 8 h (entrada más temprana → salida más tardía) ─────
+        $existentesDia = Horario::query()
+            ->where('dia_semana', $data['dia_semana'])
+            ->whereHas('cargaAcademica', fn($q) =>
+                $q->where('docente_id', $data['docente_id'])
+                  ->where('periodo_id', $data['periodo_id'])
+                  ->when($excluirCarga, fn($q2, $v) => $q2->where('id', '!=', $v))
+            )
+            ->get();
 
-            $minutosExistentes = Horario::query()
-                ->where('dia_semana', $data['dia_semana'])
-                ->whereHas('cargaAcademica', fn($q) =>
-                    $q->where('docente_id', $data['docente_id'])
-                      ->where('periodo_id', $data['periodo_id'])
-                      ->when($data['excluir_carga_id'] ?? null, fn($q2, $v) => $q2->where('id', '!=', $v))
-                )
-                ->get()
-                ->sum(fn($h) => $toMin($h->hora_fin) - $toMin($h->hora_inicio));
+        $inicios = $existentesDia->map(fn($h) => $toMin($h->hora_inicio))->push($toMin($data['hora_inicio']));
+        $fines   = $existentesDia->map(fn($h) => $toMin($h->hora_fin))->push($toMin($data['hora_fin']));
+        $spanMin = $fines->max() - $inicios->min();
 
-            $totalMin = $minutosExistentes + $minutosBloque;
-            $limiteMin = 8 * 60;
+        if ($spanMin > 8 * 60) {
+            $conflictos[] = [
+                'tipo'    => 'limite_diario',
+                'mensaje' => sprintf(
+                    'El %s, el docente estaría de %s a %s (%.1fh); excede el límite de 8h/día.',
+                    $data['dia_semana'], $minToStr($inicios->min()), $minToStr($fines->max()), $spanMin / 60
+                ),
+            ];
+        }
 
-            if ($totalMin > $limiteMin) {
-                $existentesH = round($minutosExistentes / 60, 1);
-                $bloqueH     = round($minutosBloque / 60, 1);
-                $totalH      = round($totalMin / 60, 1);
-                $conflictos[] = [
-                    'tipo'    => 'limite_diario',
-                    'mensaje' => "El {$data['dia_semana']}, el docente ya acumula {$existentesH}h; agregar {$bloqueH}h llegaría a {$totalH}h (límite: 8h).",
-                ];
-            }
+        // ── Horas semanales frente a grupo ≤ 40 h ────────────────────────────
+        $minSemanaDB = Horario::query()
+            ->whereHas('cargaAcademica', fn($q) =>
+                $q->where('docente_id', $data['docente_id'])
+                  ->where('periodo_id', $data['periodo_id'])
+                  ->when($excluirCarga, fn($q2, $v) => $q2->where('id', '!=', $v))
+            )
+            ->get()
+            ->sum(fn($h) => $toMin($h->hora_fin) - $toMin($h->hora_inicio));
+
+        $totalSemana = $minSemanaDB + $minBloque;
+        if ($totalSemana > 40 * 60) {
+            $conflictos[] = [
+                'tipo'    => 'limite_semanal',
+                'mensaje' => sprintf(
+                    'El docente ya acumula %.1fh/sem frente a grupo; agregar %.1fh llegaría a %.1fh (límite: 40h/sem).',
+                    $minSemanaDB / 60, $minBloque / 60, $totalSemana / 60
+                ),
+            ];
         }
 
         return ApiResponse::success(['conflictos' => $conflictos, 'tiene_conflictos' => !empty($conflictos)]);
