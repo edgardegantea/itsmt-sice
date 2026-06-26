@@ -36,14 +36,15 @@ const SEC_LABELS: Record<string, string> = {
   '11': '11. Fuentes de información',
 }
 
-function PdfPreviewModal({
+// PdfPreviewBody: se renderiza DENTRO del ModalWrap existente (sin segundo modal)
+function PdfPreviewBody({
   result,
   onApply,
-  onClose,
+  onCancel,
 }: {
   result: ExtractionResult
   onApply: (campos: ProgramaExtraido) => void
-  onClose: () => void
+  onCancel: () => void
 }) {
   const [tab, setTab] = useState<'campos' | 'texto'>('campos')
   const [campos, setCampos] = useState<ProgramaExtraido>({ ...result.campos })
@@ -57,29 +58,24 @@ function PdfPreviewModal({
     .sort((a, b) => Number(a) - Number(b))
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-6 flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-          <div>
-            <p className="font-semibold text-slate-900">Revisión de extracción PDF</p>
-            <p className="text-xs text-slate-400 mt-0.5">Revisa y corrige los campos antes de aplicarlos</p>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-        </div>
+    <div className="col-span-2 flex flex-col -m-6 min-h-0">
+      {/* Aviso */}
+      <div className="px-6 pt-4 pb-2 shrink-0">
+        <p className="text-xs text-slate-400">Revisa y corrige los campos antes de aplicarlos al formulario</p>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 px-6 pt-3 shrink-0">
-          {([['campos', 'Campos extraídos'], ['texto', 'Texto por secciones']] as const).map(([id, label]) => (
-            <button key={id} onClick={() => setTab(id)}
-              className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-colors ${tab === id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
-              {label}
-            </button>
-          ))}
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 px-6 pb-2 shrink-0">
+        {([['campos', 'Campos extraídos'], ['texto', 'Texto por secciones']] as const).map(([id, label]) => (
+          <button key={id} onClick={() => setTab(id)}
+            className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-colors ${tab === id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4" style={{ maxHeight: '55vh' }}>
           {tab === 'campos' && (
             <>
               <div className="grid grid-cols-2 gap-3">
@@ -199,16 +195,17 @@ function PdfPreviewModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 shrink-0">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">Cancelar</button>
-          <button
-            onClick={() => { onApply(campos); onClose() }}
-            className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
-          >
-            Aplicar al formulario
-          </button>
-        </div>
+      {/* Footer inline */}
+      <div className="flex items-center justify-between px-6 py-3 border-t border-slate-100 shrink-0 bg-white">
+        <button onClick={onCancel} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">
+          ← Volver al formulario
+        </button>
+        <button
+          onClick={() => onApply(campos)}
+          className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+        >
+          Aplicar campos
+        </button>
       </div>
     </div>
   )
@@ -990,14 +987,6 @@ export default function MateriasPage() {
 
       {confirmDialog}
 
-      {pdfPreview && (
-        <PdfPreviewModal
-          result={pdfPreview}
-          onApply={handlePreviewApply}
-          onClose={() => setPdfPreview(null)}
-        />
-      )}
-
       {detalle && (
         <MateriaDetail materia={detalle} onClose={() => setDetalle(null)}
           onEditar={openEditar} onEliminar={openEliminar}
@@ -1007,11 +996,25 @@ export default function MateriasPage() {
       {/* Modal crear/editar */}
       {modal !== null && (
         <ModalWrap
-          title={modal.id ? `Editar: ${modal.nombre ?? ''}` : 'Nueva materia'}
-          onClose={() => { setModal(null); setErrors({}) }}
-          onSave={() => save.mutate()}
+          title={pdfPreview
+            ? `Revisión de extracción PDF — ${modal.nombre ?? 'materia'}`
+            : (modal.id ? `Editar: ${modal.nombre ?? ''}` : 'Nueva materia')}
+          onClose={() => { setModal(null); setErrors({}); setPdfPreview(null) }}
+          onSave={pdfPreview ? undefined : () => save.mutate()}
           saving={save.isPending}
         >
+          {/* ── Vista de extracción PDF (reemplaza el formulario) ── */}
+          {pdfPreview && (
+            <PdfPreviewBody
+              result={pdfPreview}
+              onApply={campos => { handlePreviewApply(campos); setPdfPreview(null) }}
+              onCancel={() => setPdfPreview(null)}
+            />
+          )}
+
+          {/* ── Formulario normal ── */}
+          {!pdfPreview && <>
+
           {/* Extractor PDF + Tabs */}
           <div className="sm:col-span-2 -mt-1 mb-1 space-y-2">
             {/* Botón extraer */}
@@ -1187,6 +1190,7 @@ export default function MateriasPage() {
               <p className="text-xs text-slate-400 mt-1">Una fuente por línea</p>
             </Field>
           )}
+          </>}
         </ModalWrap>
       )}
     </div>
