@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
         // Habilita la extensión si no está activa (suele estarlo en PostgreSQL moderno)
         DB::statement('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
 
@@ -16,6 +20,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
         DB::statement('ALTER TABLE alumno_grupo ALTER COLUMN id DROP DEFAULT');
     }
 };

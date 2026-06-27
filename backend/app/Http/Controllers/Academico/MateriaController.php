@@ -50,7 +50,7 @@ class MateriaController extends Controller
         $data = $request->validate([
             'carrera_id'           => ['required', 'uuid', 'exists:carreras,id'],
             'clave'                => ['required', 'string', 'max:20', 'unique:materias,clave'],
-            'clave_oficial_tecnm'  => ['nullable', 'string', 'max:50'],
+            'clave_oficial_tecnm'  => ['required', 'string', 'max:50'],
             'nombre'               => ['required', 'string', 'max:200'],
             'semestre'             => ['required', 'integer', 'min:1', 'max:10'],
             'creditos'             => ['required', 'integer', 'min:0'],
