@@ -38,7 +38,7 @@ class GrupoController extends Controller
                 'carrera', 'periodo',
                 'alumnos.user',
                 'alumnos.inscripcion.aspirante',
-                'cargas.docente', 'cargas.materia',
+                'cargas.docente', 'cargas.materia', 'cargas.aula', 'cargas.horarios',
             ])
         );
     }
