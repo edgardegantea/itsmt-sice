@@ -62,434 +62,6 @@ function toMin(t: string) {
   return h * 60 + m
 }
 
-// ── Accordion carrera → semestre ─────────────────────────────────────────────
-
-// ── Drawer de detalle de una carga ───────────────────────────────────────────
-
-function CargaDetailDrawer({
-  carga,
-  colorCls,
-  onClose,
-  onEdit,
-  onHorarios,
-  onDelete,
-  onVerHorario,
-}: {
-  carga: CargaAcademica
-  colorCls: string
-  onClose: () => void
-  onEdit: () => void
-  onHorarios: () => void
-  onDelete: () => void
-  onVerHorario: () => void
-}) {
-  // Cerrar con Escape
-  useState(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  })
-
-  const horariosPorDia = useMemo(() => {
-    const map = new Map<string, Horario[]>()
-    for (const h of carga.horarios ?? []) {
-      if (!map.has(h.dia_semana)) map.set(h.dia_semana, [])
-      map.get(h.dia_semana)!.push(h)
-    }
-    return DIAS.filter(d => map.has(d)).map(d => ({ dia: d, bloques: map.get(d)!.sort((a,b) => a.hora_inicio.localeCompare(b.hora_inicio)) }))
-  }, [carga.horarios])
-
-  const totalHoras = useMemo(() => {
-    return (carga.horarios ?? []).reduce((s, h) => {
-      const [hi, mi] = h.hora_inicio.split(':').map(Number)
-      const [hf, mf] = h.hora_fin.split(':').map(Number)
-      return s + (hf * 60 + mf) - (hi * 60 + mi)
-    }, 0) / 60
-  }, [carga.horarios])
-
-  return (
-    <>
-      <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col">
-        {/* Header con color de la materia */}
-        <div className={`px-5 pt-5 pb-4 border-b border-slate-100 ${colorCls.replace('border-', 'border-b-').split(' ')[0]}`}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-mono text-slate-400 mb-0.5">{carga.materia?.clave}</p>
-              <h2 className="font-bold text-slate-900 text-base leading-tight">{carga.materia?.nombre ?? '—'}</h2>
-              {carga.materia?.tipo && (
-                <span className={`inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${carga.materia.tipo === 'obligatoria' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'}`}>
-                  {carga.materia.tipo}
-                </span>
-              )}
-            </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none shrink-0 mt-0.5">&times;</button>
-          </div>
-        </div>
-
-        {/* Contenido scrollable */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-
-          {/* Docente */}
-          <div className="px-5 py-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#1a3a5c] flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {(carga.docente?.name ?? '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-slate-400">Docente</p>
-              <p className="text-sm font-semibold text-slate-900 truncate">{carga.docente?.name ?? <span className="text-slate-400 font-normal italic">Sin asignar</span>}</p>
-              {carga.docente?.email && <p className="text-xs text-slate-400 truncate">{carga.docente.email}</p>}
-            </div>
-            {carga.docente && (
-              <button onClick={onVerHorario} className="ml-auto text-xs text-violet-600 hover:underline shrink-0">Ver carga →</button>
-            )}
-          </div>
-
-          {/* Grupo */}
-          <div className="px-5 py-4 grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-slate-400 mb-0.5">Grupo</p>
-              <p className="text-sm font-semibold font-mono text-slate-800">{carga.grupo?.clave ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-0.5">Semestre</p>
-              <p className="text-sm font-semibold text-slate-800">{carga.grupo?.semestre ? `${carga.grupo.semestre}°` : '—'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-0.5">Turno</p>
-              {carga.grupo?.turno ? (
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TURNO_COLOR[carga.grupo.turno] ?? 'bg-slate-100 text-slate-600'}`}>
-                  {carga.grupo.turno}
-                </span>
-              ) : <span className="text-sm text-slate-400">—</span>}
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-0.5">Horas / semana</p>
-              <p className="text-sm font-bold text-slate-800">{carga.horas_semana}h</p>
-            </div>
-          </div>
-
-          {/* Aula */}
-          {carga.aula && (
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-                <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400">Aula</p>
-                <p className="text-sm font-semibold text-slate-800">{carga.aula.nombre}</p>
-                <p className="text-xs text-slate-400">{carga.aula.tipo} · cap. {carga.aula.capacidad}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Periodo */}
-          <div className="px-5 py-4">
-            <p className="text-xs text-slate-400 mb-0.5">Periodo</p>
-            <p className="text-sm font-medium text-slate-800">{carga.periodo?.nombre ?? '—'}</p>
-          </div>
-
-          {/* Horario semanal */}
-          <div className="px-5 py-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Horario semanal</p>
-              {totalHoras > 0 && <span className="text-xs text-slate-400">{totalHoras.toFixed(1)}h totales</span>}
-            </div>
-            {horariosPorDia.length === 0 ? (
-              <button onClick={onHorarios} className="w-full py-3 border-2 border-dashed border-amber-200 bg-amber-50 rounded-lg text-xs text-amber-600 hover:border-amber-400 transition-colors">
-                + Asignar horario
-              </button>
-            ) : (
-              <div className="space-y-2">
-                {horariosPorDia.map(({ dia, bloques }) => (
-                  <div key={dia} className="flex items-start gap-3">
-                    <span className="text-xs font-semibold text-slate-500 w-10 shrink-0 pt-1 text-right">{DIA_SHORT[dia]}</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {bloques.map(h => (
-                        <span key={h.id} className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 rounded-lg px-2.5 py-1 text-xs font-medium">
-                          {fmt12(h.hora_inicio)} – {fmt12(h.hora_fin)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Carrera */}
-          {(carga.grupo?.carrera ?? carga.materia?.carrera) && (
-            <div className="px-5 py-4">
-              <p className="text-xs text-slate-400 mb-0.5">Carrera</p>
-              <p className="text-sm font-medium text-slate-800">
-                {(carga.grupo?.carrera ?? carga.materia?.carrera)?.nombre}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Footer acciones */}
-        <div className="flex items-center gap-2 px-5 py-4 border-t border-slate-100 shrink-0">
-          <button onClick={onHorarios}
-            className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
-            {(carga.horarios ?? []).length > 0 ? 'Editar horario' : '+ Horario'}
-          </button>
-          <button onClick={onEdit}
-            className="px-3 py-2 border border-slate-200 text-slate-600 text-sm rounded-lg hover:bg-slate-50">
-            Editar
-          </button>
-          <button onClick={onDelete}
-            className="px-3 py-2 border border-red-200 text-red-500 text-sm rounded-lg hover:bg-red-50">
-            Eliminar
-          </button>
-        </div>
-      </div>
-    </>
-  )
-}
-
-// ── Constantes de la cuadrícula horaria ──────────────────────────────────────
-
-const DIAS_SEMANA = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const
-const DIA_LABEL_CORTO: Record<string, string> = {
-  lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
-  jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
-}
-const START_HOUR = 7
-const END_HOUR   = 20
-const SLOT_PX    = 56  // px por hora
-const TOTAL_HOURS = END_HOUR - START_HOUR
-const HOURS_RANGE = Array.from({ length: TOTAL_HOURS }, (_, i) => START_HOUR + i)
-
-const MATERIA_COLORS = [
-  { bg: 'bg-blue-100',    border: 'border-blue-300',    text: 'text-blue-900',    chip: 'bg-blue-100 border-blue-200 text-blue-900' },
-  { bg: 'bg-violet-100',  border: 'border-violet-300',  text: 'text-violet-900',  chip: 'bg-violet-100 border-violet-200 text-violet-900' },
-  { bg: 'bg-emerald-100', border: 'border-emerald-300', text: 'text-emerald-900', chip: 'bg-emerald-100 border-emerald-200 text-emerald-900' },
-  { bg: 'bg-amber-100',   border: 'border-amber-300',   text: 'text-amber-900',   chip: 'bg-amber-100 border-amber-200 text-amber-900' },
-  { bg: 'bg-rose-100',    border: 'border-rose-300',    text: 'text-rose-900',    chip: 'bg-rose-100 border-rose-200 text-rose-900' },
-  { bg: 'bg-cyan-100',    border: 'border-cyan-300',    text: 'text-cyan-900',    chip: 'bg-cyan-100 border-cyan-200 text-cyan-900' },
-  { bg: 'bg-orange-100',  border: 'border-orange-300',  text: 'text-orange-900',  chip: 'bg-orange-100 border-orange-200 text-orange-900' },
-  { bg: 'bg-teal-100',    border: 'border-teal-300',    text: 'text-teal-900',    chip: 'bg-teal-100 border-teal-200 text-teal-900' },
-  { bg: 'bg-indigo-100',  border: 'border-indigo-300',  text: 'text-indigo-900',  chip: 'bg-indigo-100 border-indigo-200 text-indigo-900' },
-  { bg: 'bg-pink-100',    border: 'border-pink-300',    text: 'text-pink-900',    chip: 'bg-pink-100 border-pink-200 text-pink-900' },
-]
-
-function toMinOfDay(t: string): number {
-  const [h, m] = t.split(':').map(Number)
-  return h * 60 + m
-}
-
-// ── Cuadrícula horaria de un grupo ───────────────────────────────────────────
-
-function GrupoSemanaGrid({
-  cargas,
-  onEdit,
-  onDelete,
-  onHorarios,
-  onVerHorario,
-}: {
-  cargas: CargaAcademica[]
-  onEdit: (c: CargaAcademica) => void
-  onDelete: (c: CargaAcademica) => void
-  onHorarios: (c: CargaAcademica) => void
-  onVerHorario: (c: CargaAcademica) => void
-}) {
-  const [detalle, setDetalle] = useState<CargaAcademica | null>(null)
-  // Estado para picker de materia al hacer clic en celda vacía
-  const [slotPick, setSlotPick] = useState<{ dia: string; hora: number } | null>(null)
-
-  const colorMap = useMemo(() => {
-    const m = new Map<string, typeof MATERIA_COLORS[0]>()
-    cargas.forEach((c, i) => m.set(c.id, MATERIA_COLORS[i % MATERIA_COLORS.length]))
-    return m
-  }, [cargas])
-
-  // Todos los días de lun–sáb
-  const diasMostrados = DIAS_SEMANA as unknown as string[]
-
-  // Bloques indexados por día
-  const bloquesPorDia = useMemo(() => {
-    const map = new Map<string, { carga: CargaAcademica; h: Horario }[]>()
-    for (const dia of diasMostrados) map.set(dia, [])
-    for (const c of cargas) {
-      for (const h of c.horarios ?? []) {
-        map.get(h.dia_semana)?.push({ carga: c, h })
-      }
-    }
-    return map
-  }, [cargas, diasMostrados])
-
-  const sinHorario = useMemo(() => cargas.filter(c => (c.horarios ?? []).length === 0), [cargas])
-
-  const gridHeight = TOTAL_HOURS * SLOT_PX
-
-  return (
-    <div className="border-t border-slate-100 bg-white">
-      {/* ── Leyenda de materias ── */}
-      <div className="px-4 pt-3 pb-2 flex flex-wrap gap-1.5 border-b border-slate-50">
-        {cargas.map(c => {
-          const col = colorMap.get(c.id)!
-          const sinH = (c.horarios ?? []).length === 0
-          return (
-            <button key={c.id} onClick={() => setDetalle(c)}
-              className={`inline-flex items-center gap-1.5 border rounded-full px-2.5 py-0.5 text-xs font-medium hover:opacity-80 transition-opacity ${col.chip}`}>
-              <span className="truncate max-w-[150px]">{c.materia?.nombre ?? '—'}</span>
-              {sinH && <span className="text-amber-500" title="Sin horario">⚠</span>}
-            </button>
-          )
-        })}
-        {sinHorario.length > 0 && (
-          <span className="text-xs text-amber-500 self-center ml-1">
-            {sinHorario.length} sin horario — haz clic en una celda vacía para asignar
-          </span>
-        )}
-      </div>
-
-      {/* ── Cuadrícula ── */}
-      <div className="overflow-x-auto">
-        <div className="min-w-[700px]">
-          {/* Cabecera días */}
-          <div className="flex border-b border-slate-100 bg-slate-50">
-            <div className="w-14 shrink-0" /> {/* espacio columna HORA */}
-            {diasMostrados.map(dia => (
-              <div key={dia} className="flex-1 text-center py-2 text-xs font-bold text-slate-500 uppercase tracking-wide border-l border-slate-100">
-                {DIA_LABEL_CORTO[dia]}
-              </div>
-            ))}
-          </div>
-
-          {/* Cuerpo: columna HORA + columnas de días */}
-          <div className="flex" style={{ height: gridHeight }}>
-
-            {/* Columna HORA */}
-            <div className="w-14 shrink-0 relative border-r border-slate-100">
-              {HOURS_RANGE.map(h => (
-                <div key={h} className="absolute w-full flex items-start justify-end pr-2"
-                  style={{ top: (h - START_HOUR) * SLOT_PX, height: SLOT_PX }}>
-                  <span className="text-[10px] text-slate-400 font-mono leading-none pt-1">{h}:00</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Columnas de días */}
-            {diasMostrados.map(dia => {
-              const bloques = bloquesPorDia.get(dia) ?? []
-              return (
-                <div key={dia} className="flex-1 relative border-l border-slate-100">
-                  {/* Líneas de hora (fondo) */}
-                  {HOURS_RANGE.map(h => (
-                    <div key={h} className="absolute w-full border-t border-slate-100 border-dashed"
-                      style={{ top: (h - START_HOUR) * SLOT_PX }} />
-                  ))}
-
-                  {/* Celdas clicables por hora (detrás de las tarjetas) */}
-                  {HOURS_RANGE.map(h => {
-                    const ocupado = bloques.some(({ h: bh }) => {
-                      const ini = toMinOfDay(bh.hora_inicio) / 60
-                      const fin = toMinOfDay(bh.hora_fin) / 60
-                      return h >= ini && h < fin
-                    })
-                    return (
-                      <div key={h}
-                        onClick={() => !ocupado && setSlotPick({ dia, hora: h })}
-                        className={`absolute w-full transition-colors ${!ocupado ? 'hover:bg-blue-50/60 cursor-pointer group' : ''}`}
-                        style={{ top: (h - START_HOUR) * SLOT_PX, height: SLOT_PX }}>
-                        {!ocupado && (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span className="text-blue-400 text-lg font-light leading-none">+</span>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-
-                  {/* Tarjetas de bloques */}
-                  {bloques.map(({ carga: c, h }) => {
-                    const iniMin = toMinOfDay(h.hora_inicio)
-                    const finMin = toMinOfDay(h.hora_fin)
-                    const top    = (iniMin - START_HOUR * 60) / 60 * SLOT_PX
-                    const height = (finMin - iniMin) / 60 * SLOT_PX - 3
-                    const col    = colorMap.get(c.id)!
-                    return (
-                      <button
-                        key={h.id}
-                        onClick={() => setDetalle(c)}
-                        className={`absolute left-0.5 right-0.5 rounded-lg border px-2 py-1 text-left hover:shadow-md hover:z-10 hover:scale-[1.01] active:scale-[0.99] transition-all overflow-hidden ${col.bg} ${col.border} ${col.text}`}
-                        style={{ top, height }}
-                      >
-                        <p className="text-[10px] font-mono font-semibold opacity-70 leading-tight">
-                          {fmt12(h.hora_inicio)}–{fmt12(h.hora_fin)}
-                        </p>
-                        {height > 40 && (
-                          <p className="text-xs font-semibold leading-tight mt-0.5 line-clamp-2">
-                            {c.materia?.nombre ?? '—'}
-                          </p>
-                        )}
-                        {height > 68 && (
-                          <p className="text-[10px] opacity-60 truncate mt-0.5">{c.docente?.name}</p>
-                        )}
-                        {height > 88 && c.aula && (
-                          <p className="text-[10px] opacity-50 truncate">{c.aula.nombre}</p>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Picker de materia para celda vacía ── */}
-      {slotPick && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
-          onClick={() => setSlotPick(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="font-semibold text-slate-900">Asignar horario</p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {DIA_LABEL_CORTO[slotPick.dia]} · {slotPick.hora}:00 – {slotPick.hora + 1}:00
-                </p>
-              </div>
-              <button onClick={() => setSlotPick(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
-            </div>
-            <p className="text-xs text-slate-500 mb-3">¿A qué materia asignar este bloque?</p>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {cargas.map(c => {
-                const col = colorMap.get(c.id)!
-                return (
-                  <button key={c.id}
-                    onClick={() => { setSlotPick(null); onHorarios(c) }}
-                    className={`w-full text-left border rounded-xl px-4 py-3 hover:shadow-md transition-all ${col.chip}`}>
-                    <p className="text-sm font-semibold">{c.materia?.nombre ?? '—'}</p>
-                    <p className="text-xs opacity-60 mt-0.5">{c.docente?.name ?? 'Sin docente'}</p>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Drawer de detalle ── */}
-      {detalle && (
-        <CargaDetailDrawer
-          carga={detalle}
-          colorCls={`${colorMap.get(detalle.id)?.bg} ${colorMap.get(detalle.id)?.border} ${colorMap.get(detalle.id)?.text}`}
-          onClose={() => setDetalle(null)}
-          onEdit={() => { onEdit(detalle); setDetalle(null) }}
-          onHorarios={() => { onHorarios(detalle); setDetalle(null) }}
-          onDelete={() => { onDelete(detalle); setDetalle(null) }}
-          onVerHorario={() => { onVerHorario(detalle); setDetalle(null) }}
-        />
-      )}
-    </div>
-  )
-}
 
 // Tipos internos del accordion
 type GrupoEntry = { id: string; clave: string; turno: string; cargas: CargaAcademica[]; horarios_liberados: boolean }
@@ -498,26 +70,17 @@ type CarreraEntry = { id: string; nombre: string; clave: string; semestres: Map<
 
 function CargasAccordion({
   cargas,
-  onEdit,
-  onDelete,
-  onHorarios,
-  onVerHorario,
   onLiberarGrupo,
   onLiberarBulk,
   esSuperadmin = false,
 }: {
   cargas: CargaAcademica[]
-  onEdit: (c: CargaAcademica) => void
-  onDelete: (c: CargaAcademica) => void
-  onHorarios: (c: CargaAcademica) => void
-  onVerHorario: (c: CargaAcademica) => void
   onLiberarGrupo?: (grupoId: string, liberar: boolean) => void
   onLiberarBulk?: (params: { carrera_id?: string; semestre?: number; liberar: boolean }) => void
   esSuperadmin?: boolean
 }) {
   const [openCarreras, setOpenCarreras] = useState<Set<string>>(() => new Set())
   const [openSemestres, setOpenSemestres] = useState<Set<string>>(() => new Set())
-  const [openGrupos, setOpenGrupos] = useState<Set<string>>(() => new Set())
 
   const toggle = useCallback((set: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) => {
     set(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
@@ -651,62 +214,41 @@ function CargasAccordion({
 
                       {isOpenS && (
                         <div className="border-t border-slate-50 divide-y divide-slate-50">
-                          {sortedGrupos.map(grupo => {
-                            const grupoKey = `${semKey}|${grupo.id}`
-                            const isOpenG = openGrupos.has(grupoKey)
-
-                            return (
-                              <div key={grupoKey}>
-
-                                {/* ── Nivel 3: Grupo ── */}
-                                <div className="flex items-center gap-2 pl-16 pr-5 py-2 hover:bg-blue-50/30 transition-colors">
-                                  <button
-                                    className="flex items-center gap-3 flex-1 text-left min-w-0"
-                                    onClick={() => toggle(setOpenGrupos, grupoKey)}
-                                  >
-                                    <Chevron open={isOpenG} size="w-3 h-3" />
-                                    <span className="font-mono text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded shrink-0">
-                                      {grupo.clave}
-                                    </span>
-                                    {grupo.turno && (
-                                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${TURNO_COLOR[grupo.turno] ?? 'bg-slate-100 text-slate-600'}`}>
-                                        {grupo.turno}
-                                      </span>
-                                    )}
-                                    {grupo.horarios_liberados && (
-                                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">liberado</span>
-                                    )}
-                                    <span className="ml-auto text-xs text-slate-400">
-                                      {grupo.cargas.length} materia{grupo.cargas.length !== 1 ? 's' : ''}
-                                    </span>
-                                  </button>
-                                  {esSuperadmin && onLiberarGrupo && (
-                                    <button
-                                      onClick={() => onLiberarGrupo(grupo.id, !grupo.horarios_liberados)}
-                                      className={`text-xs px-2 py-0.5 rounded border shrink-0 transition-colors ${
-                                        grupo.horarios_liberados
-                                          ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                                      }`}
-                                    >
-                                      {grupo.horarios_liberados ? 'Ocultar' : 'Liberar'}
-                                    </button>
-                                  )}
-                                </div>
-
-                                {/* ── Horario semanal del grupo ── */}
-                                {isOpenG && (
-                                  <GrupoSemanaGrid
-                                    cargas={grupo.cargas}
-                                    onEdit={onEdit}
-                                    onDelete={onDelete}
-                                    onHorarios={onHorarios}
-                                    onVerHorario={onVerHorario}
-                                  />
+                          {sortedGrupos.map(grupo => (
+                            <div key={grupo.id} className="flex items-center gap-2 pl-16 pr-5 py-2 hover:bg-blue-50/30 transition-colors">
+                              <Link
+                                to={`/admin/gestion-academica/grupos/${grupo.id}`}
+                                className="flex items-center gap-3 flex-1 min-w-0 hover:text-blue-700 group"
+                              >
+                                <span className="font-mono text-xs font-semibold bg-slate-100 text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-700 px-2 py-0.5 rounded shrink-0 transition-colors">
+                                  {grupo.clave}
+                                </span>
+                                {grupo.turno && (
+                                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${TURNO_COLOR[grupo.turno] ?? 'bg-slate-100 text-slate-600'}`}>
+                                    {grupo.turno}
+                                  </span>
                                 )}
-                              </div>
-                            )
-                          })}
+                                {grupo.horarios_liberados && (
+                                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">liberado</span>
+                                )}
+                                <span className="ml-auto text-xs text-slate-400">
+                                  {grupo.cargas.length} materia{grupo.cargas.length !== 1 ? 's' : ''}
+                                </span>
+                              </Link>
+                              {esSuperadmin && onLiberarGrupo && (
+                                <button
+                                  onClick={e => { e.preventDefault(); onLiberarGrupo(grupo.id, !grupo.horarios_liberados) }}
+                                  className={`text-xs px-2 py-0.5 rounded border shrink-0 transition-colors ${
+                                    grupo.horarios_liberados
+                                      ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                  }`}
+                                >
+                                  {grupo.horarios_liberados ? 'Ocultar' : 'Liberar'}
+                                </button>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
@@ -1524,10 +1066,6 @@ export default function CargasPage() {
         ) : (
           <CargasAccordion
             cargas={cargasFiltradas}
-            onEdit={c => setModal(c)}
-            onDelete={c => confirm({ title: '¿Eliminar carga académica?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar carga', onConfirm: () => del.mutateAsync(c.id) })}
-            onHorarios={c => setHorariosModal(c)}
-            onVerHorario={c => c.docente && setHorarioDocenteModal(c.docente as Docente)}
             esSuperadmin={esSuperadmin}
             onLiberarGrupo={(grupoId, liberar) => liberarGrupoMut.mutate({ grupoId, liberar })}
             onLiberarBulk={(params) => liberarBulkMut.mutate({ ...params, periodo_id: periodoSeleccionado?.id })}
