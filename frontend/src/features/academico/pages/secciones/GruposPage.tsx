@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Grupo } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, SortableTh, SkeletonRows, EmptyRow, CapacityBar, icls, useCarreras, usePeriodos, mutationError, extractApiErrors, useSorted } from '../tabs/shared'
+import { Field, ModalWrap, SkeletonRows, CapacityBar, icls, useCarreras, usePeriodos, mutationError, extractApiErrors } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
 
 const TURNO_LABEL = { matutino: 'Matutino', vespertino: 'Vespertino', sabatino: 'Sabatino' }
@@ -37,14 +37,41 @@ export default function GruposPage() {
     },
   })
 
-  const gruposFiltrados = busqueda.trim()
-    ? grupos.filter(g =>
-        g.clave.toLowerCase().includes(busqueda.toLowerCase()) ||
-        (g.carrera?.nombre ?? '').toLowerCase().includes(busqueda.toLowerCase())
-      )
-    : grupos
+  const gruposFiltrados = useMemo(() => {
+    if (!busqueda.trim()) return grupos
+    const q = busqueda.toLowerCase()
+    return grupos.filter(g =>
+      g.clave.toLowerCase().includes(q) ||
+      (g.carrera?.nombre ?? '').toLowerCase().includes(q) ||
+      (g.carrera?.clave ?? '').toLowerCase().includes(q)
+    )
+  }, [grupos, busqueda])
 
-  const { sorted, sort, onSort } = useSorted(gruposFiltrados, 'clave', 'asc')
+  // Agrupar: carrera → semestre → grupos
+  const byCarrera = useMemo(() => {
+    type SemEntry = { semestre: number; grupos: Grupo[] }
+    type CarEntry = { id: string; nombre: string; clave: string; semestres: Map<number, SemEntry> }
+    const map = new Map<string, CarEntry>()
+    for (const g of gruposFiltrados) {
+      const cid = g.carrera?.id ?? '_sin'
+      if (!map.has(cid)) map.set(cid, { id: cid, nombre: g.carrera?.nombre ?? 'Sin carrera', clave: g.carrera?.clave ?? '—', semestres: new Map() })
+      const ce = map.get(cid)!
+      if (!ce.semestres.has(g.semestre)) ce.semestres.set(g.semestre, { semestre: g.semestre, grupos: [] })
+      ce.semestres.get(g.semestre)!.grupos.push(g)
+    }
+    // ordenar grupos dentro de cada semestre por clave
+    for (const ce of map.values())
+      for (const se of ce.semestres.values())
+        se.grupos.sort((a, b) => a.clave.localeCompare(b.clave))
+    return [...map.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))
+  }, [gruposFiltrados])
+
+  const [openCarreras, setOpenCarreras] = useState<Set<string>>(() => new Set())
+  const [openSemestres, setOpenSemestres] = useState<Set<string>>(() => new Set())
+
+  const toggle = useCallback((set: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) => {
+    set(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }, [])
 
   const save = useMutation({
     mutationFn: () => modal?.id ? academicoApi.updateGrupo(modal.id!, modal) : academicoApi.createGrupo(modal!),
@@ -149,65 +176,101 @@ export default function GruposPage() {
           </div>
         </div>
 
-        {/* Tabla */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <SortableTh field="clave" sort={sort} onSort={onSort}>Clave</SortableTh>
-                <SortableTh field="carrera.clave" sort={sort} onSort={onSort}>Carrera</SortableTh>
-                <SortableTh field="periodo.nombre" sort={sort} onSort={onSort}>Periodo</SortableTh>
-                <SortableTh field="semestre" sort={sort} onSort={onSort}>Sem.</SortableTh>
-                <SortableTh field="turno" sort={sort} onSort={onSort}>Turno</SortableTh>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Capacidad</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading && <SkeletonRows cols={7} />}
-              {!isLoading && sorted.length === 0 && (
-                <EmptyRow cols={7} msg={busqueda ? 'Sin resultados para la búsqueda.' : 'No hay grupos registrados.'} />
-              )}
-              {sorted.map(g => (
-                <tr
-                  key={g.id}
-                  className="hover:bg-blue-50/60 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/admin/gestion-academica/grupos/${g.id}`)}
-                >
-                  <td className="px-4 py-3 font-mono font-semibold text-slate-900">{g.clave}</td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{g.carrera?.clave ?? '—'}</span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600 text-xs">{g.periodo?.nombre ?? '—'}</td>
-                  <td className="px-4 py-3 text-center font-medium text-slate-700">{g.semestre}°</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TURNO_COLOR[g.turno] ?? 'bg-slate-100 text-slate-600'}`}>
-                      {TURNO_LABEL[g.turno] ?? g.turno}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <CapacityBar current={g.alumnos_count ?? 0} max={g.capacidad} />
-                  </td>
-                  <td className="px-4 py-3 text-right space-x-2" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => navigate(`/admin/gestion-academica/grupos/${g.id}`)} className="text-xs text-green-700 hover:underline">Ver</button>
-                    <button onClick={() => setModal(g)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                    <button
-                      onClick={() => confirm({
-                        title: `¿Eliminar grupo ${g.clave}?`,
-                        description: 'Esta acción no se puede deshacer. Los alumnos asignados serán desvinculados.',
-                        confirmLabel: 'Eliminar grupo',
-                        onConfirm: () => del.mutateAsync(g.id),
+        {/* Acordeón carrera → semestre → grupo */}
+        {isLoading ? (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full"><tbody><SkeletonRows cols={4} /></tbody></table>
+          </div>
+        ) : byCarrera.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 px-6 py-12 text-center text-sm text-slate-400">
+            {busqueda ? 'Sin resultados para la búsqueda.' : 'No hay grupos registrados.'}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {byCarrera.map(carrera => {
+              const isOpenC = openCarreras.has(carrera.id)
+              const totalGrupos = [...carrera.semestres.values()].reduce((s, se) => s + se.grupos.length, 0)
+              const sortedSems = [...carrera.semestres.values()].sort((a, b) => a.semestre - b.semestre)
+
+              return (
+                <div key={carrera.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  {/* Nivel 1: Carrera */}
+                  <button
+                    className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
+                    onClick={() => toggle(setOpenCarreras, carrera.id)}
+                  >
+                    <svg className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${isOpenC ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">{carrera.clave}</span>
+                    <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
+                    <span className="ml-auto text-xs text-slate-400 shrink-0">{totalGrupos} grupo{totalGrupos !== 1 ? 's' : ''}</span>
+                  </button>
+
+                  {isOpenC && (
+                    <div className="border-t border-slate-100 divide-y divide-slate-100">
+                      {sortedSems.map(semEntry => {
+                        const semKey = `${carrera.id}|${semEntry.semestre}`
+                        const isOpenS = openSemestres.has(semKey)
+
+                        return (
+                          <div key={semKey}>
+                            {/* Nivel 2: Semestre */}
+                            <button
+                              className="w-full flex items-center gap-3 pl-10 pr-5 py-2.5 hover:bg-slate-50/80 transition-colors text-left"
+                              onClick={() => toggle(setOpenSemestres, semKey)}
+                            >
+                              <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isOpenS ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                              </svg>
+                              <span className="text-xs font-semibold text-slate-600">{semEntry.semestre}° Semestre</span>
+                              <span className="ml-auto text-xs text-slate-400">{semEntry.grupos.length} grupo{semEntry.grupos.length !== 1 ? 's' : ''}</span>
+                            </button>
+
+                            {isOpenS && (
+                              <div className="border-t border-slate-50 divide-y divide-slate-50">
+                                {semEntry.grupos.map(g => (
+                                  <div
+                                    key={g.id}
+                                    className="flex items-center gap-3 pl-16 pr-5 py-2.5 hover:bg-blue-50/40 transition-colors cursor-pointer"
+                                    onClick={() => navigate(`/admin/gestion-academica/grupos/${g.id}`)}
+                                  >
+                                    <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded shrink-0">{g.clave}</span>
+                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium shrink-0 ${TURNO_COLOR[g.turno] ?? 'bg-slate-100 text-slate-600'}`}>
+                                      {TURNO_LABEL[g.turno] ?? g.turno}
+                                    </span>
+                                    {g.horarios_liberados && (
+                                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium shrink-0">liberado</span>
+                                    )}
+                                    <div className="ml-auto flex items-center gap-4">
+                                      <CapacityBar current={g.alumnos_count ?? 0} max={g.capacidad} />
+                                      <div className="flex gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                                        <button onClick={() => setModal(g)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                                        <button
+                                          onClick={() => confirm({
+                                            title: `¿Eliminar grupo ${g.clave}?`,
+                                            description: 'Esta acción no se puede deshacer.',
+                                            confirmLabel: 'Eliminar grupo',
+                                            onConfirm: () => del.mutateAsync(g.id),
+                                          })}
+                                          className="text-xs text-red-500 hover:underline"
+                                        >Eliminar</button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
                       })}
-                      className="text-xs text-red-500 hover:underline"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {modal !== null && (
