@@ -30,7 +30,7 @@ class AlumnoController extends Controller
                     $q2->whereRaw("CONCAT(nombres, ' ', apellido_paterno, ' ', COALESCE(apellido_materno, '')) ILIKE ?", ["%{$v}%"])
                 ))
             ->orderBy('numero_control')
-            ->paginate(20);
+            ->paginate(min((int) ($request->query('per_page', 20)), 500));
 
         return ApiResponse::success($alumnos, 'Alumnos listados.');
     }

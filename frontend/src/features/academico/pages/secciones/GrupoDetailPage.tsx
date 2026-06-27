@@ -40,7 +40,9 @@ export default function GrupoDetailPage() {
     enabled: !!id,
   })
 
-  const { data: todosAlumnos = [] } = useAlumnos()
+  const { data: todosAlumnos = [] } = useAlumnos(
+    grupo ? { carrera_id: grupo.carrera_id, semestre: grupo.semestre } : undefined
+  )
 
   const asignar = useMutation({
     mutationFn: () => academicoApi.asignarAlumnos(id!, selAlumnos),
@@ -64,15 +66,10 @@ export default function GrupoDetailPage() {
 
   const alumnosEnGrupo = new Set((grupo?.alumnos ?? []).map(a => a.id))
 
-  // Solo alumnos de la misma carrera y semestre que el grupo, sin estar ya asignados
-  const alumnosElegibles = useMemo(() => {
-    if (!grupo) return []
-    return todosAlumnos.filter(a =>
-      !alumnosEnGrupo.has(a.id) &&
-      a.carrera?.id === grupo.carrera_id &&
-      a.semestre_actual === grupo.semestre
-    )
-  }, [todosAlumnos, alumnosEnGrupo, grupo])
+  // El backend ya filtra por carrera_id + semestre; solo excluimos los ya asignados
+  const alumnosElegibles = useMemo(() =>
+    todosAlumnos.filter(a => !alumnosEnGrupo.has(a.id))
+  , [todosAlumnos, alumnosEnGrupo])
 
   const alumnosDisponibles = useMemo(() => {
     if (!busqueda.trim()) return alumnosElegibles
