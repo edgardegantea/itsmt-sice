@@ -63,23 +63,31 @@ export default function GrupoDetailPage() {
   })
 
   const alumnosEnGrupo = new Set((grupo?.alumnos ?? []).map(a => a.id))
+
+  // Solo alumnos de la misma carrera y semestre que el grupo, sin estar ya asignados
+  const alumnosElegibles = useMemo(() => {
+    if (!grupo) return []
+    return todosAlumnos.filter(a =>
+      !alumnosEnGrupo.has(a.id) &&
+      a.carrera?.id === grupo.carrera_id &&
+      a.semestre_actual === grupo.semestre
+    )
+  }, [todosAlumnos, alumnosEnGrupo, grupo])
+
   const alumnosDisponibles = useMemo(() => {
-    const base = todosAlumnos.filter(a => !alumnosEnGrupo.has(a.id))
-    if (!busqueda.trim()) return base
+    if (!busqueda.trim()) return alumnosElegibles
     const q = busqueda.toLowerCase()
-    return base.filter(a => {
+    return alumnosElegibles.filter(a => {
       const nombre = a.user?.name
         ?? (a.inscripcion?.aspirante
           ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()
           : '')
       return (
         a.numero_control.toLowerCase().includes(q) ||
-        nombre.toLowerCase().includes(q) ||
-        (a.carrera?.clave ?? '').toLowerCase().includes(q) ||
-        (a.carrera?.nombre ?? '').toLowerCase().includes(q)
+        nombre.toLowerCase().includes(q)
       )
     })
-  }, [todosAlumnos, alumnosEnGrupo, busqueda])
+  }, [alumnosElegibles, busqueda])
 
   if (isLoading) {
     return (
@@ -164,13 +172,21 @@ export default function GrupoDetailPage() {
           {/* Panel inline de asignación */}
           {asignarOpen && (
             <div className="border-b border-slate-100 bg-slate-50 p-5 space-y-3">
+              {/* Info contextual */}
+              <div className="text-xs text-slate-500 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                Mostrando alumnos de <strong>{grupo.carrera?.clave}</strong> en <strong>{grupo.semestre}° semestre</strong>
+                {grupo.semestre > 1 && (
+                  <> — avanzan automáticamente según su progreso académico</>
+                )}
+              </div>
+
               {/* Búsqueda y controles */}
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex-1 min-w-48">
                   <input
                     value={busqueda}
                     onChange={e => setBusqueda(e.target.value)}
-                    placeholder="Buscar por nombre, N° control o carrera…"
+                    placeholder="Buscar por nombre o N° control…"
                     className={inputCls}
                   />
                 </div>
@@ -232,9 +248,21 @@ export default function GrupoDetailPage() {
               {/* Acciones */}
               <div className="flex gap-2 justify-between items-center">
                 <span className="text-xs text-slate-500">
-                  {selAlumnos.length > 0 ? `${selAlumnos.length} alumno${selAlumnos.length !== 1 ? 's' : ''} seleccionado${selAlumnos.length !== 1 ? 's' : ''}` : ''}
+                  {selAlumnos.length > 0
+                    ? `${selAlumnos.length} alumno${selAlumnos.length !== 1 ? 's' : ''} seleccionado${selAlumnos.length !== 1 ? 's' : ''}`
+                    : alumnosElegibles.length === 0
+                      ? 'No hay alumnos elegibles para este semestre y carrera.'
+                      : ''}
                 </span>
                 <div className="flex gap-2">
+                  {grupo.semestre > 1 && alumnosElegibles.length > 0 && selAlumnos.length === 0 && (
+                    <button
+                      onClick={() => setSelAlumnos(alumnosElegibles.map(a => a.id))}
+                      className="px-3 py-1.5 text-xs border border-blue-300 text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 font-medium"
+                    >
+                      Auto-asignar todos ({alumnosElegibles.length})
+                    </button>
+                  )}
                   <button
                     onClick={() => { setAsignarOpen(false); setSelAlumnos([]); setBusqueda('') }}
                     className="text-xs text-slate-500 hover:underline px-3 py-1.5"
