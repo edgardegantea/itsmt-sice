@@ -9,8 +9,8 @@ use Illuminate\Support\Str;
  * Crea un User (rol alumno) para cada alumno inscrito que aún no tenga user_id.
  *
  * Credenciales iniciales
- *   - email:    el del aspirante (aspirantes.email)
- *   - password: su número de control   ← el alumno deberá cambiarlo al primer inicio
+ *   - usuario:   número de control
+ *   - password:  CURP del aspirante (aspirantes.curp)
  *
  * Si el email ya está en uso (otro user), se genera uno derivado del número de control:
  *   <numero_control>@sice.local
@@ -45,6 +45,7 @@ return new class extends Migration
                 'alumnos.id as alumno_id',
                 'alumnos.numero_control',
                 'aspirantes.email',
+                'aspirantes.curp',
                 'aspirantes.nombres',
                 'aspirantes.apellido_paterno',
                 'aspirantes.apellido_materno',
@@ -71,7 +72,7 @@ return new class extends Migration
                 'id'         => $userId,
                 'name'       => $nombre,
                 'email'      => $email,
-                'password'   => Hash::make($a->numero_control),
+                'password'   => Hash::make($a->curp),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
