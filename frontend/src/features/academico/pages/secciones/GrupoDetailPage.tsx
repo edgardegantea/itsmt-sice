@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
@@ -27,6 +27,7 @@ function alumnoNombre(a: {
 
 export default function GrupoDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const qc = useQueryClient()
   const { toast: addToast } = useToastStore()
   const [asignarOpen, setAsignarOpen] = useState(false)
@@ -291,7 +292,7 @@ export default function GrupoDetailPage() {
             <tbody className="divide-y divide-slate-100">
               {(grupo.alumnos ?? []).length === 0 && <EmptyRow cols={5} msg="Sin alumnos asignados." />}
               {(grupo.alumnos ?? []).map(a => (
-                <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
+                <tr key={a.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer" onClick={() => navigate(`/admin/alumnos/${a.id}`)}>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{a.numero_control}</td>
                   <td className="px-4 py-3 font-medium text-slate-900">{alumnoNombre(a)}</td>
                   <td className="px-4 py-3 text-center text-slate-600">{a.semestre_actual}°</td>
@@ -300,7 +301,7 @@ export default function GrupoDetailPage() {
                       ? new Date(a.pivot.fecha_asignacion).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
                       : '—'}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => confirm({
                         title: '¿Retirar alumno del grupo?',
