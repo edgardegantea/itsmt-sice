@@ -49,7 +49,14 @@ class AlumnoController extends Controller
         }
 
         return ApiResponse::success(
-            $alumno->load(['carrera', 'periodoIngreso', 'inscripcion.aspirante', 'user']),
+            $alumno->load([
+                'carrera', 'periodoIngreso', 'inscripcion.aspirante', 'user',
+                'grupos.cargas.materia',
+                'grupos.cargas.docente',
+                'grupos.cargas.aula',
+                'grupos.cargas.horarios',
+                'grupos.periodo',
+            ]),
             'Detalle de alumno.'
         );
     }

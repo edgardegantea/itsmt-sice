@@ -96,6 +96,31 @@ export interface Inscripcion {
 
 export type EstatusAlumno = 'activo' | 'baja_temporal' | 'baja_definitiva' | 'egresado' | 'titulado'
 
+export interface AlumnoHorario {
+  id: string
+  dia_semana: string
+  hora_inicio: string
+  hora_fin: string
+}
+
+export interface AlumnoCarga {
+  id: string
+  horas_semana: number
+  materia?: { id: string; nombre: string; clave: string }
+  docente?: { name: string }
+  aula?: { id: string; nombre: string }
+  horarios: AlumnoHorario[]
+}
+
+export interface AlumnoGrupo {
+  id: string
+  clave: string
+  semestre: number
+  turno: string
+  periodo?: { id: string; nombre: string }
+  cargas: AlumnoCarga[]
+}
+
 export interface Alumno {
   id: string
   inscripcion_id: string
@@ -108,6 +133,7 @@ export interface Alumno {
   pendiente_certificado_bachillerato: boolean
   autorizacion_consulta_expediente: string
   observaciones_estatus: string | null
+  grupos?: AlumnoGrupo[]
   inscripcion?: {
     id: string
     aspirante_id: string

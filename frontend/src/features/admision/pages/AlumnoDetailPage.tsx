@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   admisionApi,
   type Alumno,
+  type AlumnoCarga,
   type EstatusAlumno,
   type ActualizarAlumnoPayload,
 } from '../services/admision'
@@ -232,6 +233,88 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
   )
 }
 
+// ── Horario semanal ───────────────────────────────────────────────────────────
+
+const DIAS_H = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const
+const DIA_LABEL_H: Record<string, string> = { lunes: 'LUN', martes: 'MAR', miercoles: 'MIÉ', jueves: 'JUE', viernes: 'VIE', sabado: 'SÁB' }
+const HORA_INI = 7, HORA_FIN_H = 20, SLOT = 52
+
+const PALETA = [
+  { bg: '#dbeafe', border: '#60a5fa', text: '#1e3a5f' },
+  { bg: '#d1fae5', border: '#34d399', text: '#065f46' },
+  { bg: '#ede9fe', border: '#a78bfa', text: '#3b0764' },
+  { bg: '#fef3c7', border: '#fbbf24', text: '#78350f' },
+  { bg: '#fce7f3', border: '#f472b6', text: '#831843' },
+  { bg: '#cffafe', border: '#22d3ee', text: '#164e63' },
+  { bg: '#ffedd5', border: '#fb923c', text: '#7c2d12' },
+  { bg: '#ffe4e6', border: '#fb7185', text: '#881337' },
+]
+
+function toMinH(t: string) { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+
+function HorarioAlumnoGrid({ cargas }: { cargas: AlumnoCarga[] }) {
+  const horas = Array.from({ length: HORA_FIN_H - HORA_INI }, (_, i) => HORA_INI + i)
+  const colorMap: Record<string, typeof PALETA[0]> = {}
+  cargas.forEach((c, i) => { colorMap[c.id] = PALETA[i % PALETA.length] })
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="min-w-[680px]">
+        {/* Cabecera días */}
+        <div className="flex" style={{ marginLeft: 52 }}>
+          {DIAS_H.map(d => (
+            <div key={d} className="flex-1 text-center text-xs font-semibold text-slate-500 py-2 border-b border-slate-200 tracking-wider">
+              {DIA_LABEL_H[d]}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex">
+          {/* Columna horas */}
+          <div className="shrink-0" style={{ width: 52 }}>
+            {horas.map(h => (
+              <div key={h} className="flex items-start justify-end pr-2 text-[10px] text-slate-400 border-b border-dashed border-slate-100"
+                style={{ height: SLOT }}>
+                <span className="-translate-y-1.5">{String(h).padStart(2, '0')}:00</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Columnas días */}
+          {DIAS_H.map(dia => (
+            <div key={dia} className="flex-1 relative border-l border-slate-100" style={{ height: (HORA_FIN_H - HORA_INI) * SLOT }}>
+              {horas.map(h => (
+                <div key={h} className="absolute left-0 right-0 border-b border-dashed border-slate-100"
+                  style={{ top: (h - HORA_INI) * SLOT }} />
+              ))}
+              {cargas.flatMap(c =>
+                (c.horarios ?? [])
+                  .filter(h => h.dia_semana === dia)
+                  .map(h => {
+                    const top    = (toMinH(h.hora_inicio) - HORA_INI * 60) / 60 * SLOT
+                    const height = (toMinH(h.hora_fin) - toMinH(h.hora_inicio)) / 60 * SLOT - 3
+                    const col    = colorMap[c.id]
+                    return (
+                      <div key={h.id}
+                        className="absolute left-0.5 right-0.5 rounded border-l-4 px-1.5 py-1 text-[10px] leading-tight overflow-hidden"
+                        style={{ top, height, backgroundColor: col.bg, borderColor: col.border, color: col.text }}
+                      >
+                        <div className="font-semibold truncate">{c.materia?.nombre}</div>
+                        {c.docente && <div className="opacity-75 truncate">{c.docente.name}</div>}
+                        {c.aula && <div className="opacity-70 truncate">{c.aula.nombre}</div>}
+                        <div className="opacity-60">{h.hora_inicio.slice(0,5)}–{h.hora_fin.slice(0,5)}</div>
+                      </div>
+                    )
+                  })
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Página ────────────────────────────────────────────────────────────────────
 
 export default function AlumnoDetailPage() {
@@ -348,6 +431,30 @@ export default function AlumnoDetailPage() {
           </div>
         </div>
       )}
+
+      {/* ── Horario semanal ── */}
+      {(alumno.grupos ?? []).map(grupo => {
+        const cargas = grupo.cargas ?? []
+        const conHorario = cargas.filter(c => (c.horarios ?? []).length > 0)
+        if (conHorario.length === 0) return null
+        return (
+          <div key={grupo.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div>
+                <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Horario semanal</h2>
+                <p className="text-sm text-slate-700 mt-0.5 font-medium">
+                  Grupo {grupo.clave}
+                  {grupo.periodo && <span className="text-slate-400 font-normal ml-1.5">— {grupo.periodo.nombre}</span>}
+                </p>
+              </div>
+              <span className="text-xs text-slate-400 capitalize">{grupo.turno}</span>
+            </div>
+            <div className="p-4">
+              <HorarioAlumnoGrid cargas={conHorario} />
+            </div>
+          </div>
+        )
+      })}
 
       {/* ── Documentos ── */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
