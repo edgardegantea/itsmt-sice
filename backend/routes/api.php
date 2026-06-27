@@ -349,6 +349,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/actividades-complementarias',                            [ActividadComplementariaController::class, 'store']);
     Route::post('/actividades-complementarias/{actividad}/evidencia',      [ActividadComplementariaController::class, 'subirEvidencia']);
     Route::patch('/actividades-complementarias/{actividad}/validar',       [ActividadComplementariaController::class, 'validar']);
+    Route::delete('/actividades-complementarias/{actividad}',              [ActividadComplementariaController::class, 'destroy']);
 
     // Evaluaciones docentes anónimas (S5-03, S5-04)
     // resultados ANTES del wildcard para evitar conflicto de rutas

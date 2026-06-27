@@ -69,6 +69,19 @@ export const calidadApi = {
     return res.data.data
   },
 
+  eliminarActividad: async (id: string): Promise<void> => {
+    await apiClient.delete(`/actividades-complementarias/${id}`)
+  },
+
+  subirEvidencia: async (id: string, file: File): Promise<{ evidencia_url: string }> => {
+    const form = new FormData()
+    form.append('evidencia', file)
+    const res = await apiClient.post(`/actividades-complementarias/${id}/evidencia`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return res.data.data
+  },
+
   validarActividad: async (
     id: string,
     data: {

@@ -134,4 +134,18 @@ class ActividadComplementariaController extends Controller
 
         return ApiResponse::success($actividad->fresh(['tipo', 'alumno.user', 'validador']), 'Actividad validada.');
     }
+
+    // DELETE /api/actividades-complementarias/{id}
+    public function destroy(Request $request, ActividadComplementaria $actividad): JsonResponse
+    {
+        $this->authorize('delete', $actividad);
+
+        if ($actividad->estatus !== 'registrada') {
+            return ApiResponse::error('Solo puedes eliminar actividades en estatus registrada.', 422);
+        }
+
+        $actividad->delete();
+
+        return ApiResponse::success(null, 'Actividad eliminada.', 204);
+    }
 }

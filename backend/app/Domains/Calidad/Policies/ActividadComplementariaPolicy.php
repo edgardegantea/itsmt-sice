@@ -2,6 +2,7 @@
 
 namespace App\Domains\Calidad\Policies;
 
+use App\Domains\Academico\Models\Alumno;
 use App\Domains\Calidad\Models\ActividadComplementaria;
 use App\Models\User;
 
@@ -28,7 +29,7 @@ class ActividadComplementariaPolicy
         if ($actividad->estatus !== 'registrada') {
             return false;
         }
-        $alumnoDelUser = $user->alumno;
+        $alumnoDelUser = Alumno::where('user_id', $user->id)->first();
         return $alumnoDelUser && $alumnoDelUser->id === $actividad->alumno_id;
     }
 }

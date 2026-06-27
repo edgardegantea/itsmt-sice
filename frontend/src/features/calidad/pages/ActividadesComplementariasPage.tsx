@@ -1,8 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { calidadApi, type ActividadComplementaria, type NivelDesempeno } from '../services/calidad'
 import { useAuthStore } from '../../../store/authStore'
-import { usePuedeEliminar } from '../../../hooks/usePermisos'
 
 const ESTATUS_BADGE: Record<string, string> = {
   registrada: 'bg-yellow-100 text-yellow-800',
@@ -23,13 +22,13 @@ const NIVEL_OPTIONS: NivelDesempeno[] = ['excelente', 'notable', 'bueno', 'sufic
 export default function ActividadesComplementariasPage() {
   const { user } = useAuthStore()
   const qc = useQueryClient()
-  const puedeEliminar = usePuedeEliminar()
   const esAlumno = user?.roles.includes('alumno')
   const esAdmin  = user?.roles.some(r => ['admin', 'superadmin'].includes(r))
 
   const [showForm, setShowForm] = useState(false)
   const [filtroEstatus, setFiltroEstatus] = useState('')
   const [validandoId, setValidandoId] = useState<string | null>(null)
+  const [confirmandoEliminarId, setConfirmandoEliminarId] = useState<string | null>(null)
   const [formNivel, setFormNivel] = useState<NivelDesempeno>('bueno')
   const [formObs, setFormObs] = useState('')
   const [formEstatusValidar, setFormEstatusValidar] = useState<'validada' | 'rechazada'>('validada')
@@ -38,6 +37,9 @@ export default function ActividadesComplementariasPage() {
   const [tipoId, setTipoId] = useState('')
   const [horas, setHoras] = useState('')
   const [evidenciaUrl, setEvidenciaUrl] = useState('')
+
+  // File refs para upload por actividad
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const { data: tipos = [] } = useQuery({
     queryKey: ['tipos-actividad'],
@@ -65,6 +67,21 @@ export default function ActividadesComplementariasPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['actividades-complementarias'] })
       setValidandoId(null)
+    },
+  })
+
+  const eliminarMut = useMutation({
+    mutationFn: calidadApi.eliminarActividad,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['actividades-complementarias'] })
+      setConfirmandoEliminarId(null)
+    },
+  })
+
+  const evidenciaMut = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => calidadApi.subirEvidencia(id, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['actividades-complementarias'] })
     },
   })
 
@@ -221,6 +238,57 @@ export default function ActividadesComplementariasPage() {
                     <p className="text-xs text-slate-500 mt-1 italic">Obs: {ac.observaciones_validacion}</p>
                   )}
                 </div>
+
+                {/* Acciones alumno en actividades registradas */}
+                {esAlumno && ac.estatus === 'registrada' && (
+                  <div className="shrink-0 flex flex-col gap-1.5">
+                    {/* Subir / cambiar evidencia */}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      className="hidden"
+                      ref={el => { fileInputRefs.current[ac.id] = el }}
+                      onChange={e => {
+                        const file = e.target.files?.[0]
+                        if (file) evidenciaMut.mutate({ id: ac.id, file })
+                        if (e.target) e.target.value = ''
+                      }}
+                    />
+                    <button
+                      onClick={() => fileInputRefs.current[ac.id]?.click()}
+                      disabled={evidenciaMut.isPending}
+                      className="text-xs bg-slate-50 text-slate-700 border border-slate-200 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      {ac.evidencia_url ? 'Cambiar evidencia' : 'Subir evidencia'}
+                    </button>
+
+                    {/* Eliminar */}
+                    {confirmandoEliminarId === ac.id ? (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => eliminarMut.mutate(ac.id)}
+                          disabled={eliminarMut.isPending}
+                          className="text-xs bg-red-600 text-white px-2 py-1 rounded disabled:opacity-50"
+                        >
+                          Confirmar
+                        </button>
+                        <button
+                          onClick={() => setConfirmandoEliminarId(null)}
+                          className="text-xs border border-slate-300 px-2 py-1 rounded text-slate-600"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmandoEliminarId(ac.id)}
+                        className="text-xs text-red-600 border border-red-200 bg-red-50 px-2.5 py-1.5 rounded-lg hover:bg-red-100 transition-colors"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Botón validar (admin) */}
                 {esAdmin && ac.estatus === 'registrada' && (

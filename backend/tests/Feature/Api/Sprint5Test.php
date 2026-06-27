@@ -418,4 +418,187 @@ class Sprint5Test extends TestCase
         $res->assertOk();
         $this->assertGreaterThanOrEqual(1, count($res->json('data')));
     }
+
+    // ── Tests adicionales para cobertura completa de CAs ────────────────────
+
+    // CA-S501-04
+    public function test_actividades_rechazadas_no_cuentan_para_acumulado(): void
+    {
+        // 35h rechazadas — no deben contar para el límite (max = 40)
+        ActividadComplementaria::create([
+            'alumno_id'                   => $this->alumno->id,
+            'tipo_id'                     => $this->tipo->id,
+            'horas'                       => 35,
+            'estatus'                     => 'rechazada',
+            'semestre_alumno_al_registrar' => 3,
+        ]);
+
+        // 10h nuevas — solo hay 0h no-rechazadas, 0+10 = 10 ≤ 40 → OK
+        $res = $this->actingAs($this->alumnoUser)->postJson('/api/actividades-complementarias', [
+            'tipo_id' => $this->tipo->id,
+            'horas'   => 10,
+        ]);
+
+        $res->assertStatus(201);
+    }
+
+    // CA-S501-06
+    public function test_jefe_carrera_solo_ve_actividades_de_su_carrera(): void
+    {
+        $otraCarrera = Carrera::create([
+            'nombre'    => 'Ingeniería Industrial',
+            'clave'     => 'II',
+            'codigo_it' => '07',
+            'activa'    => true,
+        ]);
+
+        // Actividad de alumno de OTRA carrera
+        ActividadComplementaria::create([
+            'alumno_id'                   => $this->alumno->id,
+            'tipo_id'                     => $this->tipo->id,
+            'horas'                       => 10,
+            'estatus'                     => 'registrada',
+            'semestre_alumno_al_registrar' => 3,
+        ]);
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe_carrera');
+        $jefe->update(['carrera_id' => $otraCarrera->id]); // carrera diferente
+
+        $res = $this->actingAs($jefe)->getJson('/api/actividades-complementarias');
+
+        $res->assertOk()->assertJsonCount(0, 'data.data');
+    }
+
+    // CA-S502-05
+    public function test_validar_actividad_ya_validada_devuelve_422(): void
+    {
+        $actividad = ActividadComplementaria::create([
+            'alumno_id'                   => $this->alumno->id,
+            'tipo_id'                     => $this->tipo->id,
+            'horas'                       => 20,
+            'estatus'                     => 'validada',
+            'nivel_desempeno'             => 'bueno',
+            'semestre_alumno_al_registrar' => 3,
+        ]);
+
+        $res = $this->actingAs($this->admin)->patchJson(
+            "/api/actividades-complementarias/{$actividad->id}/validar",
+            ['estatus' => 'validada', 'nivel_desempeno' => 'excelente']
+        );
+
+        $res->assertStatus(422);
+    }
+
+    // CA-S503-05
+    public function test_ya_evaluado_cambia_a_true_despues_de_enviar(): void
+    {
+        // Enviar evaluación
+        $this->actingAs($this->alumnoUser)->postJson('/api/evaluaciones-docentes', [
+            'grupo_id'   => $this->grupo->id,
+            'respuestas' => ['puntualidad' => 5, 'dominio_tema' => 4],
+        ]);
+
+        // Verificar que ahora aparece como ya_evaluado
+        $res = $this->actingAs($this->alumnoUser)->getJson('/api/evaluaciones-docentes');
+
+        $res->assertOk()
+            ->assertJsonPath('data.0.ya_evaluado', true);
+    }
+
+    // CA-S504-03
+    public function test_grupo_sin_evaluaciones_aparece_con_total_cero(): void
+    {
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe_carrera');
+        $jefe->update(['carrera_id' => $this->carrera->id]);
+
+        $res = $this->actingAs($jefe)->getJson(
+            "/api/evaluaciones-docentes/resultados?periodo_id={$this->periodo->id}"
+        );
+
+        $res->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.total_respuestas', 0);
+
+        $this->assertEmpty($res->json('data.0.promedios'));
+    }
+
+    // CA-S504-04
+    public function test_jefe_carrera_no_ve_grupos_de_otra_carrera(): void
+    {
+        $otraCarrera = Carrera::create([
+            'nombre'    => 'Ingeniería Civil',
+            'clave'     => 'IC',
+            'codigo_it' => '08',
+            'activa'    => true,
+        ]);
+
+        Grupo::create([
+            'carrera_id' => $otraCarrera->id,
+            'periodo_id' => $this->periodo->id,
+            'clave'      => '3C',
+            'semestre'   => 3,
+            'turno'      => 'vespertino',
+            'capacidad'  => 30,
+            'activo'     => true,
+        ]);
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe_carrera');
+        $jefe->update(['carrera_id' => $this->carrera->id]); // carrera original, no otraCarrera
+
+        $res = $this->actingAs($jefe)->getJson(
+            "/api/evaluaciones-docentes/resultados?periodo_id={$this->periodo->id}"
+        );
+
+        $res->assertOk()->assertJsonCount(1, 'data'); // solo su grupo, no el de otra carrera
+        $this->assertEquals($this->grupo->id, $res->json('data.0.grupo_id'));
+    }
+
+    // CA-S504-05
+    public function test_admin_ve_todos_los_grupos_sin_restriccion(): void
+    {
+        $otraCarrera = Carrera::create([
+            'nombre'    => 'Ingeniería Mecatrónica',
+            'clave'     => 'IM',
+            'codigo_it' => '09',
+            'activa'    => true,
+        ]);
+
+        Grupo::create([
+            'carrera_id' => $otraCarrera->id,
+            'periodo_id' => $this->periodo->id,
+            'clave'      => '1A',
+            'semestre'   => 1,
+            'turno'      => 'matutino',
+            'capacidad'  => 30,
+            'activo'     => true,
+        ]);
+
+        $res = $this->actingAs($this->admin)->getJson(
+            "/api/evaluaciones-docentes/resultados?periodo_id={$this->periodo->id}"
+        );
+
+        $res->assertOk()->assertJsonCount(2, 'data'); // grupo original + nuevo
+    }
+
+    // Policy delete
+    public function test_alumno_puede_eliminar_actividad_propia_registrada(): void
+    {
+        $actividad = ActividadComplementaria::create([
+            'alumno_id'                   => $this->alumno->id,
+            'tipo_id'                     => $this->tipo->id,
+            'horas'                       => 10,
+            'estatus'                     => 'registrada',
+            'semestre_alumno_al_registrar' => 3,
+        ]);
+
+        $res = $this->actingAs($this->alumnoUser)->deleteJson(
+            "/api/actividades-complementarias/{$actividad->id}"
+        );
+
+        $res->assertStatus(204);
+        $this->assertSoftDeleted('actividades_complementarias', ['id' => $actividad->id]);
+    }
 }
