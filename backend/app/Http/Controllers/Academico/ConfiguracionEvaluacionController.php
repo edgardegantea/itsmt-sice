@@ -18,7 +18,7 @@ class ConfiguracionEvaluacionController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        if (! $request->user()->hasAnyRole(['superadmin', 'admin'])) {
+        if (! $request->user()->hasAnyRole(['superadmin', 'admin', ...\App\Models\User::ROLES_DIRECTIVOS])) {
             return ApiResponse::error('No tienes permiso.', 403);
         }
 

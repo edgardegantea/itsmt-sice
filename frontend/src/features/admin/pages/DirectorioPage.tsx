@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
+import { usePuedeEliminar } from '../../../hooks/usePermisos'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
@@ -478,7 +479,7 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
           <input type="search" placeholder="Buscar…" value={busqueda} onChange={e => setBusqueda(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        {esAdmin && (
+        {puedeEditar && (
           <button onClick={() => setEditando('nuevo')}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 whitespace-nowrap">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -563,11 +564,11 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
                         )}
                       </div>
                     </div>
-                    {esAdmin && (
+                    {puedeEditar && (
                       <div className="px-4 pb-3 flex gap-2 border-t border-gray-100 pt-2">
                         <button onClick={() => setEditando(p)} className="flex-1 text-xs py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">Editar</button>
-                        <button onClick={() => { if (confirm(`¿Eliminar a ${p.nombre}?`)) deleteMutation.mutate(p.id) }}
-                          className="flex-1 text-xs py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 font-medium">Eliminar</button>
+                        {puedeEliminar && <button onClick={() => { if (confirm(`¿Eliminar a ${p.nombre}?`)) deleteMutation.mutate(p.id) }}
+                          className="flex-1 text-xs py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 font-medium">Eliminar</button>}
                       </div>
                     )}
                   </div>
@@ -595,6 +596,8 @@ function TabAreas({ esAdmin }: { esAdmin: boolean }) {
   const qc = useQueryClient()
   const success = useToastStore(s => s.success)
   const error   = useToastStore(s => s.error)
+  const puedeEliminar = usePuedeEliminar()
+  const puedeEditar   = esAdmin || !puedeEliminar
   const [editando, setEditando] = useState<Area | null | 'nuevo'>(null)
 
   const { data: areas = [], isLoading } = useQuery({ queryKey: ['directorio-areas'], queryFn: api.areas })
@@ -610,7 +613,7 @@ function TabAreas({ esAdmin }: { esAdmin: boolean }) {
 
   return (
     <div>
-      {esAdmin && (
+      {puedeEditar && (
         <div className="flex justify-end mb-4">
           <button onClick={() => setEditando('nuevo')}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700">
@@ -643,12 +646,12 @@ function TabAreas({ esAdmin }: { esAdmin: boolean }) {
                       <td className="px-4 py-3 text-center text-xs text-gray-500">
                         {(a as Area & { personal_count?: number }).personal_count ?? 0} personas
                       </td>
-                      {esAdmin && (
+                      {puedeEditar && (
                         <td className="px-4 py-3">
                           <div className="flex gap-2 justify-end">
                             <button onClick={() => setEditando(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                            <button onClick={() => { if (confirm(`¿Eliminar "${a.nombre}"?`)) deleteMutation.mutate(a.id) }}
-                              className="text-xs text-red-500 hover:underline">Eliminar</button>
+                            {puedeEliminar && <button onClick={() => { if (confirm(`¿Eliminar "${a.nombre}"?`)) deleteMutation.mutate(a.id) }}
+                              className="text-xs text-red-500 hover:underline">Eliminar</button>}
                           </div>
                         </td>
                       )}
@@ -674,6 +677,8 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
   const qc = useQueryClient()
   const success = useToastStore(s => s.success)
   const error   = useToastStore(s => s.error)
+  const puedeEliminar = usePuedeEliminar()
+  const puedeEditar   = esAdmin || !puedeEliminar
   const [editando, setEditando] = useState<Puesto | null | 'nuevo'>(null)
   const [detalle, setDetalle] = useState<Puesto | null>(null)
 
@@ -687,7 +692,7 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
 
   return (
     <div>
-      {esAdmin && (
+      {puedeEditar && (
         <div className="flex justify-end mb-4">
           <button onClick={() => setEditando('nuevo')}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700">
@@ -706,7 +711,7 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
                 <th className="px-4 py-2 text-left">Área</th>
                 <th className="px-4 py-2 text-center">Firma</th>
                 <th className="px-4 py-2 text-center">Personal</th>
-                {esAdmin && <th className="px-4 py-2"/>}
+                {puedeEditar && <th className="px-4 py-2"/>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -723,12 +728,12 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
                       : <span className="text-gray-300 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3 text-center text-xs text-gray-500">{(p as Puesto & { personal_count?: number }).personal_count ?? 0}</td>
-                  {esAdmin && (
+                  {puedeEditar && (
                     <td className="px-4 py-3">
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => setEditando(p)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                        <button onClick={() => { if (confirm(`¿Eliminar "${p.nombre}"?`)) deleteMutation.mutate(p.id) }}
-                          className="text-xs text-red-500 hover:underline">Eliminar</button>
+                        {puedeEliminar && <button onClick={() => { if (confirm(`¿Eliminar "${p.nombre}"?`)) deleteMutation.mutate(p.id) }}
+                          className="text-xs text-red-500 hover:underline">Eliminar</button>}
                       </div>
                     </td>
                   )}
@@ -791,6 +796,10 @@ type Tab = 'personas' | 'areas' | 'puestos'
 export default function DirectorioPage() {
   const user    = useAuthStore(s => s.user)
   const esAdmin = user?.roles?.some(r => ['admin', 'superadmin'].includes(r)) ?? false
+  const puedeEliminar = usePuedeEliminar()
+  const puedeEditar = user?.roles?.some(r => [
+    'admin', 'superadmin', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica',
+  ].includes(r)) ?? false
   const [tab, setTab] = useState<Tab>('personas')
 
   const { data: areas   = [] } = useQuery({ queryKey: ['directorio-areas'],  queryFn: api.areas })

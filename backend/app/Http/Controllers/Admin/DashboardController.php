@@ -16,7 +16,7 @@ class DashboardController extends Controller
     // GET /api/admin/dashboard
     public function index(Request $request): JsonResponse
     {
-        if (! $request->user()?->hasAnyRole(['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'])) {
+        if (! $request->user()?->hasAnyRole(['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo', ...\App\Models\User::ROLES_DIRECTIVOS])) {
             return ApiResponse::error('No autorizado.', 403);
         }
 

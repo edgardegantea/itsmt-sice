@@ -109,40 +109,40 @@ const NAV_GROUPS: NavGroup[] = [
     id: 'general',
     label: '',
     items: [
-      { to: '/admin', label: 'Panel', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
+      { to: '/admin', label: 'Panel', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
     ],
   },
   {
     id: 'aspirantes',
     label: 'Aspirantes',
     items: [
-      { to: '/admin/aspirantes', label: 'Aspirantes', roles: ['superadmin', 'admin', 'jefe_carrera', 'personal_administrativo'] },
+      { to: '/admin/aspirantes', label: 'Aspirantes', roles: ['superadmin', 'admin', 'jefe_carrera', 'personal_administrativo', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
     ],
   },
   {
     id: 'estudiantes',
     label: 'Estudiantes',
     items: [
-      { to: '/admin/alumnos',                   label: 'Alumnos',             roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo'] },
-      { to: '/admin/reinscripciones',           label: 'Reinscripciones',     roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera'] },
-      { to: '/admin/constancias',               label: 'Constancias',         roles: ['superadmin', 'admin', 'personal_administrativo'] },
-      { to: '/admin/encuestas-socioeconomicas', label: 'Enc. Socioeconómica', roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'jefe_carrera'] },
-      { to: '/admin/carga-academica',           label: 'Carga Académica PDF', roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera'] },
+      { to: '/admin/alumnos',                   label: 'Alumnos',             roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/reinscripciones',           label: 'Reinscripciones',     roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/constancias',               label: 'Constancias',         roles: ['superadmin', 'admin', 'personal_administrativo', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/encuestas-socioeconomicas', label: 'Enc. Socioeconómica', roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/carga-academica',           label: 'Carga Académica PDF', roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
     ],
   },
   {
     id: 'personal',
     label: 'Personal',
     items: [
-      { to: '/admin/gestion-academica', label: 'Gestión Académica', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera'] },
+      { to: '/admin/gestion-academica', label: 'Gestión Académica', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/docente/planeacion',      label: 'Mi Planeación',     roles: ['docente', 'jefe_carrera'] },
-      { to: '/admin/directorio',        label: 'Directorio',        roles: ['superadmin'] },
+      { to: '/admin/directorio',        label: 'Directorio',        roles: ['superadmin', 'admin', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/usuarios',          label: 'Usuarios',          roles: ['superadmin', 'admin'] },
       { to: '/admin/permisos',          label: 'Permisos',          roles: ['superadmin'] },
-      { to: '/admin/periodos',          label: 'Periodos',          roles: ['superadmin', 'admin'] },
-      { to: '/admin/carreras',          label: 'Carreras',          roles: ['superadmin', 'admin', 'director_academico'] },
-      { to: '/admin/catalogos',         label: 'Catálogos',         roles: ['superadmin', 'admin'] },
-      { to: '/admin/configuracion',     label: 'Configuración',     roles: ['superadmin', 'admin'] },
+      { to: '/admin/periodos',          label: 'Periodos',          roles: ['superadmin', 'admin', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/carreras',          label: 'Carreras',          roles: ['superadmin', 'admin', 'director_academico', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/catalogos',         label: 'Catálogos',         roles: ['superadmin', 'admin', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/configuracion',     label: 'Configuración',     roles: ['superadmin', 'admin', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
     ],
   },
 ]
@@ -281,7 +281,19 @@ const ROLE_LABEL: Record<string, string> = {
   docente:                 'Docente',
   alumno:                  'Alumno',
   personal_administrativo: 'Personal Administrativo',
+  control_escolar:         'Control Escolar',
+  direccion_general:       'Dirección General',
+  direccion_academica:     'Dirección Académica',
+  subdireccion_academica:  'Subdirección Académica',
 }
+
+/** Roles con acceso total pero sin capacidad de eliminar registros. */
+export const ROLES_DIRECTIVOS = [
+  'control_escolar',
+  'direccion_general',
+  'direccion_academica',
+  'subdireccion_academica',
+] as const
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, clearAuth } = useAuthStore()

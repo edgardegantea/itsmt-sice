@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Modal from '../../../components/ui/Modal'
 import { useToastStore } from '../../../store/toastStore'
+import { usePuedeEliminar } from '../../../hooks/usePermisos'
 import {
   catalogoAdmin,
   type Estado, type Municipio, type EscuelaBachillerato, type Turno,
@@ -61,6 +62,7 @@ const TIPOS_ESCUELA = [
 function EstadosTab() {
   const qc = useQueryClient()
   const { success, error: toastError } = useToastStore()
+  const puedeEliminar = usePuedeEliminar()
   const [modal, setModal] = useState<'nuevo' | Estado | null>(null)
   const [form, setForm]   = useState({ nombre: '', clave_curp: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -123,7 +125,7 @@ function EstadosTab() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => abrirModal(e)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
-                    <button onClick={() => eliminar.mutate(e.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                    {puedeEliminar && <button onClick={() => eliminar.mutate(e.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
               </tr>
@@ -165,6 +167,7 @@ function EstadosTab() {
 function MunicipiosTab() {
   const qc = useQueryClient()
   const { success, error: toastError } = useToastStore()
+  const puedeEliminar = usePuedeEliminar()
   const [filtroEstado, setFiltroEstado] = useState('')
   const [modal, setModal] = useState<'nuevo' | Municipio | null>(null)
   const [form, setForm]   = useState({ nombre: '', estado_id: '' })
@@ -238,7 +241,7 @@ function MunicipiosTab() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => abrirModal(m)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
-                    <button onClick={() => eliminar.mutate(m.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                    {puedeEliminar && <button onClick={() => eliminar.mutate(m.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
               </tr>
@@ -281,6 +284,7 @@ function MunicipiosTab() {
 function EscuelasTab() {
   const qc = useQueryClient()
   const { success, error: toastError } = useToastStore()
+  const puedeEliminar = usePuedeEliminar()
   const [filtroEstado, setFiltroEstado] = useState('')
   const [modal, setModal] = useState<'nueva' | EscuelaBachillerato | null>(null)
   const [form, setForm]   = useState({ nombre: '', municipio_id: '', tipo: 'preparatoria', activa: true })
@@ -367,7 +371,7 @@ function EscuelasTab() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => abrirModal(e)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
-                    <button onClick={() => eliminar.mutate(e.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                    {puedeEliminar && <button onClick={() => eliminar.mutate(e.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
               </tr>
@@ -423,6 +427,7 @@ function EscuelasTab() {
 function TurnosTab() {
   const qc = useQueryClient()
   const { success, error: toastError } = useToastStore()
+  const puedeEliminar = usePuedeEliminar()
   const [modal, setModal] = useState<'nuevo' | Turno | null>(null)
   const [form, setForm]   = useState({ nombre: '', clave: '', activo: true })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -489,7 +494,7 @@ function TurnosTab() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => abrirModal(t)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
-                    <button onClick={() => eliminar.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                    {puedeEliminar && <button onClick={() => eliminar.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
               </tr>
@@ -543,6 +548,7 @@ const TIPOS_AREA = [
 function AreasTab() {
   const qc = useQueryClient()
   const { success, error: toastError } = useToastStore()
+  const puedeEliminar = usePuedeEliminar()
   const [modal, setModal] = useState<'nueva' | DirectorioArea | null>(null)
   const [form, setForm]   = useState({ nombre: '', descripcion: '', tipo: 'departamento', orden: 0, activo: true })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -612,7 +618,7 @@ function AreasTab() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => abrirModal(a)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
-                    <button onClick={() => eliminar.mutate(a.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                    {puedeEliminar && <button onClick={() => eliminar.mutate(a.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
               </tr>
@@ -670,6 +676,7 @@ function AreasTab() {
 function PuestosTab() {
   const qc = useQueryClient()
   const { success, error: toastError } = useToastStore()
+  const puedeEliminar = usePuedeEliminar()
   const [modal, setModal] = useState<'nuevo' | DirectorioPuesto | null>(null)
   const [form, setForm]   = useState({ nombre: '', descripcion: '', area_id: '', firma_documentos: false, orden: 0, activo: true })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -749,7 +756,7 @@ function PuestosTab() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => abrirModal(p)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
-                    <button onClick={() => eliminar.mutate(p.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                    {puedeEliminar && <button onClick={() => eliminar.mutate(p.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
               </tr>

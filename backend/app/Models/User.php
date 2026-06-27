@@ -19,6 +19,29 @@ class User extends Authenticatable
 
     protected string $guard_name = 'web';
 
+    /** Roles con acceso total de lectura/escritura pero sin capacidad de eliminar. */
+    public const ROLES_DIRECTIVOS = [
+        'control_escolar',
+        'direccion_general',
+        'direccion_academica',
+        'subdireccion_academica',
+    ];
+
+    /** True si el usuario puede leer y escribir (pero no necesariamente eliminar). */
+    public function puedeGestionar(): bool
+    {
+        return $this->hasAnyRole([
+            'superadmin', 'admin',
+            ...self::ROLES_DIRECTIVOS,
+        ]);
+    }
+
+    /** True si el usuario puede eliminar registros. */
+    public function puedeEliminar(): bool
+    {
+        return $this->hasAnyRole(['superadmin', 'admin']);
+    }
+
     protected $fillable = [
         'name',
         'email',

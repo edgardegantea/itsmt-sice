@@ -12,7 +12,7 @@ class DirectorioAreaController extends Controller
 {
     private function authorizeAdmin(Request $request): void
     {
-        abort_unless($request->user()?->hasRole(['admin', 'superadmin']), 403);
+        abort_unless($request->user()?->hasAnyRole(['admin', 'superadmin', ...\App\Models\User::ROLES_DIRECTIVOS]), 403);
     }
 
     public function index(): JsonResponse

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Aula } from '../../services/academico'
 import { Field, SortableTh, SkeletonRows, EmptyRow, inputCls, selectCls, ModalWrap, useSorted } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
+import { usePuedeEliminar } from '../../../../hooks/usePermisos'
 
 type AulaForm = { nombre: string; capacidad: number; tipo: Aula['tipo']; activa: boolean }
 type TipoFiltro = 'todas' | 'salon' | 'laboratorio' | 'taller'
@@ -21,6 +22,7 @@ export default function AulasPage() {
   const [form, setForm] = useState<Partial<AulaForm>>({ tipo: 'salon', capacidad: 35, activa: true })
   const set = (k: keyof AulaForm, v: unknown) => setForm(f => ({ ...f, [k]: v }))
   const { confirm, dialog: confirmDialog } = useConfirm()
+  const puedeEliminar = usePuedeEliminar()
 
   const { data: aulas = [], isLoading } = useQuery({
     queryKey: ['aulas'],
@@ -128,7 +130,7 @@ export default function AulasPage() {
                     </td>
                     <td className="px-4 py-3 flex gap-3 justify-end">
                       <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                      <button
+                      {puedeEliminar && <button
                       onClick={() => confirm({
                         title: `¿Eliminar ${a.nombre}?`,
                         description: 'El espacio será eliminado permanentemente.',
@@ -136,7 +138,7 @@ export default function AulasPage() {
                         onConfirm: () => mutDelete.mutateAsync(a.id),
                       })}
                       className="text-xs text-red-500 hover:underline"
-                    >Eliminar</button>
+                    >Eliminar</button>}
                     </td>
                   </tr>
                 ))

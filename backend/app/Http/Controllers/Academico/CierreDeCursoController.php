@@ -17,7 +17,10 @@ class CierreDeCursoController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera'])) {
+        if (! $user->hasAnyRole([
+            'superadmin', 'admin', 'jefe_carrera',
+            ...\App\Models\User::ROLES_DIRECTIVOS,
+        ])) {
             return ApiResponse::error('No tienes permiso para cerrar cursos.', 403);
         }
 

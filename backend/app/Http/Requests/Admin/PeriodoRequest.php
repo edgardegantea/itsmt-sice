@@ -8,7 +8,10 @@ class PeriodoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole(['admin', 'superadmin']) ?? false;
+        return $this->user()?->hasAnyRole([
+            'admin', 'superadmin',
+            ...\App\Models\User::ROLES_DIRECTIVOS,
+        ]) ?? false;
     }
 
     public function rules(): array

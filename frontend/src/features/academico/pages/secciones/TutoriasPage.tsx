@@ -5,6 +5,7 @@ import { academicoApi, type Tutoria } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
 import { Field, Th, SkeletonRows, EmptyRow, icls, selectCls, usePeriodos, useAlumnos, mutationError, extractApiErrors } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
+import { usePuedeEliminar } from '../../../../hooks/usePermisos'
 
 type Vista = 'lista' | 'por-tutor'
 
@@ -17,6 +18,7 @@ export default function TutoriasPage() {
   const [modal, setModal] = useState<{ tutor_id: string; periodo_id: string; alumno_ids: string[] } | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { confirm, dialog: confirmDialog } = useConfirm()
+  const puedeEliminar = usePuedeEliminar()
 
   const { data: periodos = [] } = usePeriodos()
   const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
@@ -173,12 +175,12 @@ export default function TutoriasPage() {
                             <td className="px-4 py-2.5 text-slate-500 text-xs">{t.alumno?.carrera?.nombre ?? '—'}</td>
                             <td className="px-4 py-2.5 text-slate-400 text-xs">{t.periodo?.nombre ?? '—'}</td>
                             <td className="px-4 py-2.5 text-right">
-                              <button
+                              {puedeEliminar && <button
                                 onClick={() => confirm({ title: '¿Eliminar tutoría?', description: `Se eliminará la tutoría de ${t.alumno?.user?.name ?? t.alumno?.numero_control}.`, confirmLabel: 'Eliminar', onConfirm: () => del.mutateAsync(t.id) })}
                                 className="text-xs text-red-500 hover:underline"
                               >
                                 Eliminar
-                              </button>
+                              </button>}
                             </td>
                           </tr>
                         ))}
@@ -209,7 +211,7 @@ export default function TutoriasPage() {
                     <td className="px-4 py-3 text-slate-600">{t.alumno?.carrera?.nombre ?? '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{t.periodo?.nombre ?? '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => window.confirm('¿Eliminar tutoría?') && del.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                      {puedeEliminar && <button onClick={() => window.confirm('¿Eliminar tutoría?') && del.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                     </td>
                   </tr>
                 ))}

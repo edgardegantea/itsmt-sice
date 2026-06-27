@@ -7,6 +7,7 @@ import { useAuthStore } from '../../../../store/authStore'
 import { Field, SkeletonRows, icls, selectCls, inputCls, ModalWrap, usePeriodos, mutationError, extractApiErrors } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
 import apiClient from '../../../../config/apiClient'
+import { usePuedeEliminar } from '../../../../hooks/usePermisos'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -726,6 +727,7 @@ export default function CargasPage() {
 
   const { user } = useAuthStore()
   const esSuperadmin = user?.roles?.includes('superadmin') ?? false
+  const puedeEliminar = usePuedeEliminar()
 
   const { data: periodos = [] } = usePeriodos()
   const { data: aulas = [] } = useAulas()
@@ -1056,7 +1058,7 @@ export default function CargasPage() {
                       {c.docente && <button onClick={() => setHorarioDocenteModal(c.docente as Docente)} className="text-xs text-violet-600 hover:underline">Ver carga</button>}
                       <button onClick={() => setHorariosModal(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
                       <button onClick={() => setModal(c)} className="text-xs text-slate-600 hover:underline">Editar</button>
-                      <button onClick={() => confirm({ title: '¿Eliminar carga?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar', onConfirm: () => del.mutateAsync(c.id) })} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                      {puedeEliminar && <button onClick={() => confirm({ title: '¿Eliminar carga?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar', onConfirm: () => del.mutateAsync(c.id) })} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                     </td>
                   </tr>
                 ))}

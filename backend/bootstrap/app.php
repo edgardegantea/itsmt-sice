@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Rutas API devuelven 401 JSON en lugar de redirigir a "login"
         $middleware->redirectGuestsTo(fn (Request $request) => null);
+
+        // Roles con acceso total pero sin capacidad de eliminar
+        $middleware->alias(['restringir-eliminacion' => \App\Http\Middleware\RestringirEliminacion::class]);
+        $middleware->appendToGroup('api', \App\Http\Middleware\RestringirEliminacion::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -47,6 +47,10 @@ const ROLE_LABEL: Record<string, string> = {
   docente:                 'Docente',
   alumno:                  'Alumno',
   personal_administrativo: 'Personal Administrativo',
+  control_escolar:         'Control Escolar',
+  direccion_general:       'Dirección General',
+  direccion_academica:     'Dirección Académica',
+  subdireccion_academica:  'Subdirección Académica',
 }
 
 const ROLE_COLOR: Record<string, string> = {
@@ -57,6 +61,10 @@ const ROLE_COLOR: Record<string, string> = {
   docente:                 'bg-cyan-100 text-cyan-800',
   alumno:                  'bg-green-100 text-green-800',
   personal_administrativo: 'bg-amber-100 text-amber-800',
+  control_escolar:         'bg-teal-100 text-teal-800',
+  direccion_general:       'bg-indigo-100 text-indigo-800',
+  direccion_academica:     'bg-violet-100 text-violet-800',
+  subdireccion_academica:  'bg-fuchsia-100 text-fuchsia-800',
 }
 
 function RoleBadge({ role }: { role: string }) {

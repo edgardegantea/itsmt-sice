@@ -132,7 +132,7 @@ class GrupoController extends Controller
     // PATCH /api/grupos/{grupo}/liberar-horarios
     public function liberarHorarios(Request $request, Grupo $grupo): JsonResponse
     {
-        if (! $request->user()?->hasRole(['admin', 'superadmin'])) {
+        if (! $request->user()?->hasAnyRole(['admin', 'superadmin', ...\App\Models\User::ROLES_DIRECTIVOS])) {
             return ApiResponse::error('No autorizado.', 403);
         }
 
@@ -146,7 +146,7 @@ class GrupoController extends Controller
     // POST /api/grupos/liberar-horarios-bulk
     public function liberarHorariosBulk(Request $request): JsonResponse
     {
-        if (! $request->user()?->hasRole(['admin', 'superadmin'])) {
+        if (! $request->user()?->hasAnyRole(['admin', 'superadmin', ...\App\Models\User::ROLES_DIRECTIVOS])) {
             return ApiResponse::error('No autorizado.', 403);
         }
 

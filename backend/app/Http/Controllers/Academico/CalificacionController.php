@@ -134,7 +134,10 @@ class CalificacionController extends Controller
             if ($alumno->id !== $alumnoId) {
                 return ApiResponse::error('Solo puedes ver tu propia situación académica.', 403);
             }
-        } elseif (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', 'director_academico', 'personal_administrativo'])) {
+        } elseif (! $user->hasAnyRole([
+            'superadmin', 'admin', 'jefe_carrera', 'director_academico', 'personal_administrativo',
+            ...\App\Models\User::ROLES_DIRECTIVOS,
+        ])) {
             return ApiResponse::error('No tienes permiso.', 403);
         }
 
