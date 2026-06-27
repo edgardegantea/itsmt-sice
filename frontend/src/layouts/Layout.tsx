@@ -99,6 +99,8 @@ const ICONS: Record<string, () => React.JSX.Element> = {
   '/admin/gestion-academica':            IconGraduate,
   '/admin/carga-academica':              IconGraduate,
   '/docente/planeacion':                 IconBook,
+  '/admin/bajas':                        IconUsers,
+  '/admin/alertas-baja-definitiva':      IconShield,
 }
 
 type NavItem = { to: string; label: string; roles?: string[] }
@@ -125,9 +127,11 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: '/admin/alumnos',                   label: 'Alumnos',             roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/reinscripciones',           label: 'Reinscripciones',     roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/bajas',                     label: 'Bajas',               roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/constancias',               label: 'Constancias',         roles: ['superadmin', 'admin', 'personal_administrativo', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/encuestas-socioeconomicas', label: 'Enc. Socioeconómica', roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/carga-academica',           label: 'Carga Académica PDF', roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/alertas-baja-definitiva',   label: 'Alertas Baja Def.',   roles: ['superadmin', 'admin', 'jefe_carrera', 'director_academico', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
     ],
   },
   {

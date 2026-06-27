@@ -38,6 +38,7 @@ use App\Http\Controllers\Academico\ConfiguracionEvaluacionController;
 use App\Http\Controllers\Academico\CalificacionController;
 use App\Http\Controllers\Academico\CierreDeCursoController;
 use App\Http\Controllers\Academico\ActaCalificacionesController;
+use App\Http\Controllers\Academico\AlertaBajaDefinitivaController;
 use App\Http\Controllers\Academico\PrecargaController;
 use App\Http\Controllers\Calidad\TipoActividadController;
 use App\Http\Controllers\Calidad\ActividadComplementariaController;
@@ -335,6 +336,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cierre de curso
     Route::post('/cierres-de-curso',                                      [CierreDeCursoController::class, 'store']);
+    Route::get('/alertas-baja-definitiva',                                [AlertaBajaDefinitivaController::class, 'index']);
+    Route::patch('/alertas-baja-definitiva/{alerta}/revisar',             [AlertaBajaDefinitivaController::class, 'revisar']);
 
     // Situación académica del alumno (S4-06)
     Route::get('/alumnos/{alumno}/situacion-academica',                   [CalificacionController::class, 'situacionAcademica']);

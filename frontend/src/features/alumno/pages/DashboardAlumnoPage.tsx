@@ -3,6 +3,7 @@ import { authApi } from '../../auth/services/auth'
 import { useAuthStore } from '../../../store/authStore'
 import { admisionApi } from '../../admision/services/admision'
 import { useCredencialPdf } from '../../admision/hooks/useCredencialPdf'
+import { academicoApi, type SituacionAcademica } from '../../academico/services/academico'
 
 const ESTATUS_COLOR: Record<string, string> = {
   activo:        'bg-green-100 text-green-800',
@@ -56,6 +57,12 @@ export default function DashboardAlumnoPage() {
   })
 
   const { descargar: descargarCredencial, generando: generandoCredencial } = useCredencialPdf()
+
+  const { data: situacion } = useQuery<SituacionAcademica>({
+    queryKey: ['situacion-academica', me?.alumno_id],
+    queryFn: () => academicoApi.getSituacionAcademica(me!.alumno_id!),
+    enabled: !!me?.alumno_id,
+  })
 
   const handleCredencial = async () => {
     if (!me?.alumno_id) return
@@ -129,6 +136,51 @@ export default function DashboardAlumnoPage() {
           </button>
         </div>
       </section>
+
+      {/* Calificaciones */}
+      {situacion && situacion.calificaciones.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Mis calificaciones</h2>
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Materia</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Periodo</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Promedio</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Estatus</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {situacion.calificaciones.map(cal => {
+                  const materia = cal.grupo?.cargas?.[0]?.materia?.nombre ?? '—'
+                  const periodo = cal.grupo?.periodo?.nombre ?? '—'
+                  return (
+                    <tr key={cal.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-2.5 text-slate-800 font-medium">{materia}</td>
+                      <td className="px-4 py-2.5 text-center text-slate-500 text-xs">{periodo}</td>
+                      <td className="px-4 py-2.5 text-center font-semibold text-slate-800">
+                        {cal.promedio ?? '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-center">
+                        {cal.acreditado === true && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">Acreditado</span>
+                        )}
+                        {cal.acreditado === false && (
+                          <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs">No acreditado</span>
+                        )}
+                        {(cal.acreditado === null || cal.acreditado === undefined) && (
+                          <span className="text-slate-400 text-xs">Pendiente</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Observaciones (si las hay) */}
       {me?.observaciones_estatus && (

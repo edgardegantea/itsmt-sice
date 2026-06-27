@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi } from '../../services/academico'
-import type { CargaAcademica, Horario } from '../../services/academico'
+import type { CargaAcademica, Horario, Calificacion } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
 import { Th, EmptyRow, mutationError, inputCls } from '../tabs/shared'
 import { useAlumnos } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
+import { useAuthStore } from '../../../../store/authStore'
 
 // ── Horario semanal ───────────────────────────────────────────────────────────
 
@@ -116,10 +117,15 @@ export default function GrupoDetailPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { toast: addToast } = useToastStore()
+  const { user } = useAuthStore()
   const [asignarOpen, setAsignarOpen] = useState(false)
   const [selAlumnos, setSelAlumnos] = useState<string[]>([])
   const [busqueda, setBusqueda] = useState('')
   const { confirm, dialog: confirmDialog } = useConfirm()
+
+  const esDocente = user?.roles.includes('docente') && !user?.roles.some(r => ['superadmin', 'admin'].includes(r))
+  const puedeAdministrar = user?.roles.some(r => ['superadmin', 'admin', 'jefe_carrera', 'director_academico', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'].includes(r))
+  const puedeFirmar = user?.roles.some(r => ['superadmin', 'admin'].includes(r))
 
   const { data: grupo, isLoading } = useQuery({
     queryKey: ['grupo-detalle', id],
@@ -450,7 +456,266 @@ export default function GrupoDetailPage() {
             </table>
           </div>
         )}
+
+        {/* Sección: Calificaciones */}
+        {(esDocente || puedeAdministrar) && (
+          <CalificacionesSection
+            grupoId={id!}
+            alumnos={grupo.alumnos ?? []}
+            periodoId={grupo.periodo_id}
+            esDocente={esDocente}
+            puedeFirmar={!!puedeFirmar}
+          />
+        )}
       </div>
+    </div>
+  )
+}
+
+// ── Sección calificaciones ────────────────────────────────────────────────────
+
+interface AlumnoRow {
+  id: string
+  numero_control: string
+  user?: { name: string }
+  inscripcion?: { aspirante?: { nombres: string; apellido_paterno: string; apellido_materno?: string } }
+}
+
+function CalificacionesSection({
+  grupoId,
+  alumnos,
+  periodoId,
+  esDocente,
+  puedeFirmar,
+}: {
+  grupoId: string
+  alumnos: AlumnoRow[]
+  periodoId: string
+  esDocente: boolean
+  puedeFirmar: boolean
+}) {
+  const qc = useQueryClient()
+  const { toast: addToast } = useToastStore()
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [confirmCierre, setConfirmCierre] = useState(false)
+  const [confirmFirma, setConfirmFirma] = useState(false)
+
+  // Formulario inline
+  const [parcial1, setParcial1] = useState('')
+  const [parcial2, setParcial2] = useState('')
+  const [parcial3, setParcial3] = useState('')
+
+  const { data: calificaciones = [], isLoading } = useQuery({
+    queryKey: ['calificaciones-grupo', grupoId],
+    queryFn: () => academicoApi.getCalificacionesGrupo(grupoId),
+  })
+
+  const calMap = useMemo(() => {
+    const m: Record<string, Calificacion> = {}
+    calificaciones.forEach(c => { m[c.alumno_id] = c })
+    return m
+  }, [calificaciones])
+
+  const registrarMut = useMutation({
+    mutationFn: (data: Parameters<typeof academicoApi.registrarCalificacion>[0]) =>
+      academicoApi.registrarCalificacion(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['calificaciones-grupo', grupoId] })
+      setEditandoId(null)
+      addToast('Calificación guardada.', 'success')
+    },
+    onError: (e) => addToast(mutationError(e), 'error'),
+  })
+
+  const cerrarMut = useMutation({
+    mutationFn: () => academicoApi.cerrarCurso(grupoId, periodoId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['grupo-detalle', grupoId] })
+      addToast('Curso cerrado. Las calificaciones ya no pueden modificarse.', 'success')
+      setConfirmCierre(false)
+    },
+    onError: (e) => addToast(mutationError(e), 'error'),
+  })
+
+  const firmarMut = useMutation({
+    mutationFn: () => academicoApi.firmarActa(grupoId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['grupo-detalle', grupoId] })
+      addToast('Acta firmada e integrada al libro de actas.', 'success')
+      setConfirmFirma(false)
+    },
+    onError: (e) => addToast(mutationError(e), 'error'),
+  })
+
+  function abrirEdicion(alumnoId: string) {
+    const cal = calMap[alumnoId]
+    const getP = (n: number) => String(cal?.parciales?.find(p => p.parcial === n)?.calificacion ?? '')
+    setParcial1(getP(1))
+    setParcial2(getP(2))
+    setParcial3(getP(3))
+    setEditandoId(alumnoId)
+  }
+
+  function guardar(alumnoId: string) {
+    const parciales = [
+      { parcial: 1, calificacion: Number(parcial1) },
+      { parcial: 2, calificacion: Number(parcial2) },
+      { parcial: 3, calificacion: Number(parcial3) },
+    ].filter(p => !isNaN(p.calificacion) && String(p.calificacion) !== '')
+
+    registrarMut.mutate({ alumno_id: alumnoId, grupo_id: grupoId, parciales })
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h2 className="font-semibold text-slate-900 text-sm">Calificaciones</h2>
+        <div className="flex gap-2">
+          {puedeFirmar && !confirmFirma && !confirmCierre && (
+            <>
+              <button
+                onClick={() => setConfirmCierre(true)}
+                className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors"
+              >
+                Cerrar curso
+              </button>
+              <button
+                onClick={() => setConfirmFirma(true)}
+                className="text-xs bg-slate-700 text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                Firmar acta
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {(confirmCierre || confirmFirma) && (
+        <div className={`px-6 py-3 border-b text-sm flex items-center gap-3 ${confirmCierre ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
+          <span className="text-slate-700">
+            {confirmCierre
+              ? '¿Cerrar el curso? Las calificaciones quedarán bloqueadas.'
+              : '¿Firmar el acta? Esta acción no se puede deshacer.'}
+          </span>
+          <button
+            onClick={() => confirmCierre ? cerrarMut.mutate() : firmarMut.mutate()}
+            disabled={cerrarMut.isPending || firmarMut.isPending}
+            className="px-3 py-1 bg-slate-700 text-white text-xs rounded-lg disabled:opacity-50"
+          >
+            Confirmar
+          </button>
+          <button
+            onClick={() => { setConfirmCierre(false); setConfirmFirma(false) }}
+            className="px-3 py-1 border border-slate-300 text-slate-600 text-xs rounded-lg"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="px-6 py-8 text-center text-slate-400 text-sm">Cargando calificaciones…</div>
+      ) : alumnos.length === 0 ? (
+        <div className="px-6 py-8 text-center text-slate-400 text-sm">Sin alumnos asignados.</div>
+      ) : (
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <Th>Alumno</Th>
+              <Th>P1</Th>
+              <Th>P2</Th>
+              <Th>P3</Th>
+              <Th>Promedio</Th>
+              <Th>Estatus</Th>
+              {esDocente && <Th></Th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {alumnos.map(a => {
+              const cal = calMap[a.id]
+              const getP = (n: number) => cal?.parciales?.find(p => p.parcial === n)?.calificacion
+              const editando = editandoId === a.id
+
+              return (
+                <tr key={a.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-2.5">
+                    <div className="font-medium text-slate-800">{alumnoNombre(a)}</div>
+                    <div className="text-xs text-slate-400 font-mono">{a.numero_control}</div>
+                  </td>
+                  {editando ? (
+                    <>
+                      <td className="px-2 py-2">
+                        <input type="number" min="0" max="100" step="0.1" value={parcial1}
+                          onChange={e => setParcial1(e.target.value)}
+                          className={`${inputCls} w-16`} placeholder="—" />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input type="number" min="0" max="100" step="0.1" value={parcial2}
+                          onChange={e => setParcial2(e.target.value)}
+                          className={`${inputCls} w-16`} placeholder="—" />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input type="number" min="0" max="100" step="0.1" value={parcial3}
+                          onChange={e => setParcial3(e.target.value)}
+                          className={`${inputCls} w-16`} placeholder="—" />
+                      </td>
+                      <td className="px-2 py-2 text-slate-400 text-xs">—</td>
+                      <td className="px-2 py-2 text-slate-400 text-xs">—</td>
+                      <td className="px-2 py-2">
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => guardar(a.id)}
+                            disabled={registrarMut.isPending}
+                            className="px-2.5 py-1 bg-blue-600 text-white text-xs rounded-lg disabled:opacity-50"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            onClick={() => setEditandoId(null)}
+                            className="px-2 py-1 border border-slate-300 text-slate-600 text-xs rounded-lg"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-2.5 text-center text-slate-700">{getP(1) ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-center text-slate-700">{getP(2) ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-center text-slate-700">{getP(3) ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-center font-semibold text-slate-800">
+                        {cal?.promedio ?? '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-center">
+                        {cal?.acreditado === true && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">Acreditado</span>
+                        )}
+                        {cal?.acreditado === false && (
+                          <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs">No acreditado</span>
+                        )}
+                        {cal?.acreditado === null || cal?.acreditado === undefined ? (
+                          <span className="text-slate-400 text-xs">Sin calificación</span>
+                        ) : null}
+                      </td>
+                      {esDocente && (
+                        <td className="px-4 py-2.5 text-right">
+                          <button
+                            onClick={() => abrirEdicion(a.id)}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            {cal ? 'Editar' : 'Capturar'}
+                          </button>
+                        </td>
+                      )}
+                    </>
+                  )}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      )}
     </div>
   )
 }

@@ -124,10 +124,8 @@ class EvaluacionDocenteController extends Controller
     public function resultados(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', ...array_keys([])])) {
-            if (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', ...\App\Models\User::ROLES_DIRECTIVOS])) {
-                abort(403);
-            }
+        if (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', ...\App\Models\User::ROLES_DIRECTIVOS])) {
+            abort(403);
         }
 
         $periodoId = $request->query('periodo_id');

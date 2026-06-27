@@ -50,6 +50,8 @@ const PlaneacionDocentePage           = lazy(() => import('../features/academico
 const ActividadesComplementariasPage  = lazy(() => import('../features/calidad/pages/ActividadesComplementariasPage'))
 const EvaluacionDocentePage           = lazy(() => import('../features/calidad/pages/EvaluacionDocentePage'))
 const ResultadosEvaluacionPage        = lazy(() => import('../features/calidad/pages/ResultadosEvaluacionPage'))
+const BajasAdminPage                  = lazy(() => import('../features/permanencia/pages/BajasAdminPage'))
+const AlertasPage                     = lazy(() => import('../features/academico/pages/AlertasPage'))
 
 // ── Wrappers ──────────────────────────────────────────────────────────────────
 
@@ -95,6 +97,8 @@ export default function AppRoutes() {
         <Route path="/admin/reinscripciones"          element={<AdminLayout><ReinscripcionesAdminPage /></AdminLayout>} />
         <Route path="/admin/constancias"             element={<AdminLayout><ConstanciasAdminPage /></AdminLayout>} />
         <Route path="/admin/encuestas-socioeconomicas" element={<AdminLayout><EncuestasAdminPage /></AdminLayout>} />
+        <Route path="/admin/bajas"                   element={<AdminLayout><BajasAdminPage /></AdminLayout>} />
+        <Route path="/admin/alertas-baja-definitiva" element={<AdminLayout><AlertasPage /></AdminLayout>} />
         <Route path="/admin/usuarios"                  element={<AdminLayout><UsuariosPage /></AdminLayout>} />
         <Route path="/admin/usuarios/:id"              element={<AdminLayout><UsuarioDetailPage /></AdminLayout>} />
         <Route path="/admin/directorio"               element={<AdminLayout><DirectorioPage /></AdminLayout>} />

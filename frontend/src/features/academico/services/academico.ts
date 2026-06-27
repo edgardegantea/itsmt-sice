@@ -337,4 +337,101 @@ export const academicoApi = {
     apiClient.post(`/planeaciones-docentes/${id}/entregar`, {}).then(r => r.data.data as PlaneacionDocente),
   cambiarEstatusPlaneacion: (id: string, estatus: string, observaciones?: string) =>
     apiClient.patch(`/planeaciones-docentes/${id}/estatus`, { estatus, observaciones_revision: observaciones }).then(r => r.data.data as PlaneacionDocente),
+
+  // ── Sprint 4 — Calificaciones ─────────────────────────────────────────────
+
+  getCalificacionesGrupo: (grupoId: string): Promise<Calificacion[]> =>
+    apiClient.get(`/grupos/${grupoId}/calificaciones`).then(r => r.data.data),
+
+  registrarCalificacion: (data: {
+    alumno_id: string
+    grupo_id: string
+    parciales?: { parcial: number; calificacion: number }[]
+    calificacion_final?: number
+    oportunidad?: 'primera_oportunidad' | 'segunda_oportunidad'
+  }): Promise<Calificacion> =>
+    apiClient.post('/calificaciones', data).then(r => r.data.data),
+
+  getSituacionAcademica: (alumnoId: string): Promise<SituacionAcademica> =>
+    apiClient.get(`/alumnos/${alumnoId}/situacion-academica`).then(r => r.data.data),
+
+  getConfigEvaluacion: (carreraId: string): Promise<ConfiguracionEvaluacion | null> =>
+    apiClient.get(`/configuraciones-evaluacion/${carreraId}`).then(r => r.data.data).catch(() => null),
+
+  saveConfigEvaluacion: (data: {
+    carrera_id: string
+    peso_parciales: { parcial: number; peso: number }[]
+    calificacion_minima: number
+  }): Promise<ConfiguracionEvaluacion> =>
+    apiClient.post('/configuraciones-evaluacion', data).then(r => r.data.data),
+
+  cerrarCurso: (grupoId: string, periodoId: string): Promise<void> =>
+    apiClient.post('/cierres-de-curso', { grupo_id: grupoId, periodo_id: periodoId }).then(() => undefined),
+
+  firmarActa: (grupoId: string): Promise<ActaCalificaciones> =>
+    apiClient.patch(`/grupos/${grupoId}/acta-calificaciones/firmar`, {}).then(r => r.data.data),
+
+  getAlertas: (params?: { revisada?: boolean; carrera_id?: string }): Promise<{ data: AlertaBajaDefinitiva[]; meta: unknown }> =>
+    apiClient.get('/alertas-baja-definitiva', { params: {
+      ...(params?.revisada !== undefined && { revisada: params.revisada ? 1 : 0 }),
+      ...(params?.carrera_id && { carrera_id: params.carrera_id }),
+    }}).then(r => r.data.data),
+
+  revisarAlerta: (id: string): Promise<AlertaBajaDefinitiva> =>
+    apiClient.patch(`/alertas-baja-definitiva/${id}/revisar`, {}).then(r => r.data.data),
+}
+
+// ── Tipos Sprint 4 ────────────────────────────────────────────────────────────
+
+export interface Calificacion {
+  id: string
+  alumno_id: string
+  grupo_id: string
+  parciales: { parcial: number; calificacion: number }[] | null
+  calificacion_final: number | null
+  promedio: number | null
+  acreditado: boolean | null
+  tipo_curso: 'ordinario' | 'repeticion' | 'especial' | null
+  intento_numero: number | null
+  oportunidad: string | null
+  alumno?: { id: string; numero_control: string; user?: { name: string } }
+}
+
+export interface SituacionAcademica {
+  calificaciones: (Calificacion & {
+    grupo?: { clave: string; cargas?: { materia?: { nombre: string } }[]; periodo?: { nombre: string } }
+  })[]
+  alertas_baja_definitiva: AlertaBajaDefinitiva[]
+}
+
+export interface ConfiguracionEvaluacion {
+  id: string
+  carrera_id: string
+  peso_parciales: { parcial: number; peso: number }[]
+  calificacion_minima: number
+}
+
+export interface ActaCalificaciones {
+  id: string
+  grupo_id: string
+  periodo_id: string
+  firmada: boolean
+  fecha_firma: string | null
+  integrada_libro_actas: boolean
+}
+
+export interface AlertaBajaDefinitiva {
+  id: string
+  alumno_id: string
+  grupo_id: string
+  periodo_id: string
+  materia_nombre: string
+  intento_numero: number
+  revisada: boolean
+  revisada_por: string | null
+  revisada_en: string | null
+  alumno?: { id: string; numero_control: string; user?: { name: string }; carrera?: { nombre: string; clave: string } }
+  grupo?: { clave: string; periodo?: { nombre: string } }
+  revisada_por_user?: { name: string }
+  created_at: string
 }

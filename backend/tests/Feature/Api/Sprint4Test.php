@@ -452,4 +452,95 @@ class Sprint4Test extends TestCase
             ->patchJson("/api/grupos/{$this->grupo->id}/acta-calificaciones/firmar")
             ->assertStatus(422);
     }
+
+    // ── S4-07: Alertas de baja definitiva ────────────────────────────────────
+
+    public function test_admin_puede_ver_alertas_baja_definitiva(): void
+    {
+        AlertaBajaDefinitiva::create([
+            'alumno_id'      => $this->alumno->id,
+            'grupo_id'       => $this->grupo->id,
+            'periodo_id'     => $this->periodo->id,
+            'materia_nombre' => 'Fundamentos de Programación',
+            'intento_numero' => 3,
+            'revisada'       => false,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/alertas-baja-definitiva')
+            ->assertStatus(200)
+            ->assertJsonPath('data.data.0.alumno_id', $this->alumno->id);
+    }
+
+    public function test_alertas_filtrables_por_revisada(): void
+    {
+        AlertaBajaDefinitiva::create([
+            'alumno_id'      => $this->alumno->id,
+            'grupo_id'       => $this->grupo->id,
+            'periodo_id'     => $this->periodo->id,
+            'materia_nombre' => 'Fundamentos de Programación',
+            'intento_numero' => 3,
+            'revisada'       => false,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/alertas-baja-definitiva?revisada=0')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data.data');
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/alertas-baja-definitiva?revisada=1')
+            ->assertStatus(200)
+            ->assertJsonCount(0, 'data.data');
+    }
+
+    public function test_admin_puede_marcar_alerta_como_revisada(): void
+    {
+        $alerta = AlertaBajaDefinitiva::create([
+            'alumno_id'      => $this->alumno->id,
+            'grupo_id'       => $this->grupo->id,
+            'periodo_id'     => $this->periodo->id,
+            'materia_nombre' => 'Fundamentos de Programación',
+            'intento_numero' => 3,
+            'revisada'       => false,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/alertas-baja-definitiva/{$alerta->id}/revisar")
+            ->assertStatus(200)
+            ->assertJsonPath('data.revisada', true);
+
+        $this->assertDatabaseHas('alertas_baja_definitiva', [
+            'id'      => $alerta->id,
+            'revisada'=> true,
+        ]);
+    }
+
+    public function test_revisar_alerta_ya_revisada_retorna_422(): void
+    {
+        $alerta = AlertaBajaDefinitiva::create([
+            'alumno_id'      => $this->alumno->id,
+            'grupo_id'       => $this->grupo->id,
+            'periodo_id'     => $this->periodo->id,
+            'materia_nombre' => 'Fundamentos de Programación',
+            'intento_numero' => 3,
+            'revisada'       => true,
+            'revisada_por'   => $this->admin->id,
+            'revisada_en'    => now(),
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/alertas-baja-definitiva/{$alerta->id}/revisar")
+            ->assertStatus(422);
+    }
+
+    public function test_alumno_no_puede_ver_alertas(): void
+    {
+        $alumnoUser = User::factory()->create();
+        $alumnoUser->assignRole('alumno');
+
+        $this->actingAs($alumnoUser, 'sanctum')
+            ->getJson('/api/alertas-baja-definitiva')
+            ->assertStatus(403);
+    }
 }
