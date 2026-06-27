@@ -37,8 +37,8 @@ return new class extends Migration
 
         // Alumnos sin usuario
         $alumnos = DB::table('alumnos')
-            ->whereNull('user_id')
-            ->whereNull('deleted_at')
+            ->whereNull('alumnos.user_id')
+            ->whereNull('alumnos.deleted_at')
             ->join('inscripciones', 'alumnos.inscripcion_id', '=', 'inscripciones.id')
             ->join('aspirantes', 'inscripciones.aspirante_id', '=', 'aspirantes.id')
             ->select(
