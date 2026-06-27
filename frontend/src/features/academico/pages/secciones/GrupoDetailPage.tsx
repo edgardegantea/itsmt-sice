@@ -2,10 +2,96 @@ import { useState, useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi } from '../../services/academico'
+import type { CargaAcademica, Horario } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
 import { Th, EmptyRow, mutationError, inputCls } from '../tabs/shared'
 import { useAlumnos } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
+
+// ── Horario semanal ───────────────────────────────────────────────────────────
+
+const DIAS: Horario['dia_semana'][] = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
+const DIA_LABEL: Record<string, string> = {
+  lunes: 'Lun', martes: 'Mar', miercoles: 'Mié', jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb',
+}
+const HORA_INICIO = 7
+const HORA_FIN    = 20
+const SLOT_PX     = 52
+
+const COLORES = [
+  { bg: 'bg-blue-100',    border: 'border-blue-400',    text: 'text-blue-900'    },
+  { bg: 'bg-emerald-100', border: 'border-emerald-400', text: 'text-emerald-900' },
+  { bg: 'bg-violet-100',  border: 'border-violet-400',  text: 'text-violet-900'  },
+  { bg: 'bg-amber-100',   border: 'border-amber-400',   text: 'text-amber-900'   },
+  { bg: 'bg-pink-100',    border: 'border-pink-400',    text: 'text-pink-900'    },
+  { bg: 'bg-cyan-100',    border: 'border-cyan-400',    text: 'text-cyan-900'    },
+  { bg: 'bg-orange-100',  border: 'border-orange-400',  text: 'text-orange-900'  },
+  { bg: 'bg-rose-100',    border: 'border-rose-400',    text: 'text-rose-900'    },
+]
+
+function toMin(t: string) { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+
+function HorarioSemanalGrid({ cargas }: { cargas: CargaAcademica[] }) {
+  const horasRange = Array.from({ length: HORA_FIN - HORA_INICIO }, (_, i) => HORA_INICIO + i)
+  const totalH     = (HORA_FIN - HORA_INICIO) * SLOT_PX
+  const colorMap   = useMemo(() => {
+    const m: Record<string, typeof COLORES[0]> = {}
+    cargas.forEach((c, i) => { m[c.id] = COLORES[i % COLORES.length] })
+    return m
+  }, [cargas])
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="min-w-[700px]">
+        <div className="flex" style={{ marginLeft: 52 }}>
+          {DIAS.map(d => (
+            <div key={d} className="flex-1 text-center text-xs font-semibold text-slate-500 py-1.5 border-b border-slate-200 uppercase tracking-wide">
+              {DIA_LABEL[d]}
+            </div>
+          ))}
+        </div>
+        <div className="flex">
+          <div className="shrink-0" style={{ width: 52 }}>
+            {horasRange.map(h => (
+              <div key={h} className="flex items-start justify-end pr-2 text-[10px] text-slate-400 border-b border-dashed border-slate-100"
+                style={{ height: SLOT_PX }}>
+                <span className="-translate-y-1.5">{String(h).padStart(2, '0')}:00</span>
+              </div>
+            ))}
+          </div>
+          {DIAS.map(dia => (
+            <div key={dia} className="flex-1 relative border-l border-slate-100" style={{ height: totalH }}>
+              {horasRange.map(h => (
+                <div key={h} className="absolute left-0 right-0 border-b border-dashed border-slate-100"
+                  style={{ top: (h - HORA_INICIO) * SLOT_PX }} />
+              ))}
+              {cargas.flatMap(c =>
+                (c.horarios ?? [])
+                  .filter(h => h.dia_semana === dia)
+                  .map(h => {
+                    const top    = (toMin(h.hora_inicio) - HORA_INICIO * 60) / 60 * SLOT_PX
+                    const height = (toMin(h.hora_fin) - toMin(h.hora_inicio)) / 60 * SLOT_PX - 3
+                    const col    = colorMap[c.id]
+                    return (
+                      <div key={h.id}
+                        className={`absolute left-0.5 right-0.5 rounded border-l-4 px-1 py-0.5 text-[10px] leading-tight overflow-hidden ${col.bg} ${col.border} ${col.text}`}
+                        style={{ top, height }}
+                      >
+                        <div className="font-semibold truncate">{c.materia?.nombre}</div>
+                        {c.docente && <div className="opacity-60 truncate">{c.docente.name}</div>}
+                        {c.aula && <div className="opacity-60 truncate">{c.aula.nombre}</div>}
+                        <div className="opacity-60">{h.hora_inicio.slice(0,5)}–{h.hora_fin.slice(0,5)}</div>
+                      </div>
+                    )
+                  })
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const TURNO_LABEL: Record<string, string> = {
   matutino: 'Matutino',
@@ -322,6 +408,18 @@ export default function GrupoDetailPage() {
         </div>
 
         {confirmDialog}
+
+        {/* Sección: Horario semanal */}
+        {(grupo.cargas ?? []).some(c => (c.horarios ?? []).length > 0) && (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100">
+              <h2 className="font-semibold text-slate-900 text-sm">Horario semanal</h2>
+            </div>
+            <div className="p-4">
+              <HorarioSemanalGrid cargas={grupo.cargas ?? []} />
+            </div>
+          </div>
+        )}
 
         {/* Sección: Cargas académicas */}
         {(grupo.cargas ?? []).length > 0 && (
