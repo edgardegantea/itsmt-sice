@@ -188,8 +188,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/usuarios',              [UsuarioController::class, 'store']);
     Route::get('/admin/usuarios/{usuario}',     [UsuarioController::class, 'show']);
     Route::patch('/admin/usuarios/{usuario}',   [UsuarioController::class, 'update']);
-    Route::delete('/admin/usuarios/{usuario}',  [UsuarioController::class, 'destroy']);
-    Route::get('/admin/roles',                  [UsuarioController::class, 'roles']);
+    Route::delete('/admin/usuarios/{usuario}',              [UsuarioController::class, 'destroy']);
+    Route::patch('/admin/usuarios/{usuario}/credenciales', [UsuarioController::class, 'actualizarCredenciales']);
+    Route::get('/admin/roles',                             [UsuarioController::class, 'roles']);
 
     // Admin — Gestión de permisos
     Route::get('/admin/permisos/catalogo',                  [PermisosController::class, 'catalogo']);

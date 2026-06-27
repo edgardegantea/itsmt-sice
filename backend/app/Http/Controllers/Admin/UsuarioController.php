@@ -138,6 +138,29 @@ class UsuarioController extends Controller
         return ApiResponse::success(null, 'Usuario eliminado.');
     }
 
+    // PATCH /api/admin/usuarios/{usuario}/credenciales  (solo superadmin)
+    public function actualizarCredenciales(Request $request, User $usuario): JsonResponse
+    {
+        abort_unless($request->user()?->hasRole('superadmin'), 403, 'Solo el superadministrador puede cambiar credenciales de acceso.');
+
+        $data = $request->validate([
+            'email'    => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],
+            'password' => ['sometimes', 'string', 'min:6'],
+        ]);
+
+        if (empty($data)) {
+            return ApiResponse::error('Proporciona al menos un campo (email o contraseña).', 422);
+        }
+
+        if (isset($data['email']))    $usuario->email    = $data['email'];
+        if (isset($data['password'])) $usuario->password = Hash::make($data['password']);
+        $usuario->save();
+
+        $usuario->tokens()->delete();
+
+        return ApiResponse::success($usuario->fresh(['roles']), 'Credenciales actualizadas. Las sesiones activas fueron cerradas.');
+    }
+
     // GET /api/admin/roles
     public function roles(Request $request): JsonResponse
     {

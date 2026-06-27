@@ -209,6 +209,94 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
   )
 }
 
+// ── Modal credenciales (solo superadmin) ──────────────────────────────────────
+
+function CredencialesModal({ usuario, onClose }: { usuario: Usuario; onClose: () => void }) {
+  const qc = useQueryClient()
+  const { toast: addToast } = useToastStore()
+  const [email, setEmail]       = useState(usuario.email)
+  const [password, setPassword] = useState('')
+  const [errors, setErrors]     = useState<Record<string, string | string[]>>({})
+
+  const mut = useMutation({
+    mutationFn: () => {
+      const payload: Record<string, string> = {}
+      if (email !== usuario.email) payload.email = email
+      if (password) payload.password = password
+      return apiClient.patch(`/admin/usuarios/${usuario.id}/credenciales`, payload).then(r => r.data)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['usuarios'] })
+      addToast('Credenciales actualizadas. Las sesiones activas fueron cerradas.', 'success')
+      onClose()
+    },
+    onError: (err: ApiErr) => {
+      setErrors(err?.response?.data?.errors ?? {})
+      addToast(err?.response?.data?.message ?? 'Error al actualizar credenciales.', 'error')
+    },
+  })
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div>
+            <h2 className="font-semibold text-slate-900">Cambiar credenciales</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{usuario.name}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Correo electrónico</label>
+            <input
+              className={inputCls}
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="usuario@itsmt.edu.mx"
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Nueva contraseña <span className="text-slate-400 font-normal">(dejar vacío para no cambiar)</span>
+            </label>
+            <input
+              className={inputCls}
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="new-password"
+            />
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+          </div>
+
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Al guardar se cerrarán todas las sesiones activas del usuario.
+          </p>
+        </div>
+
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">
+            Cancelar
+          </button>
+          <button
+            disabled={mut.isPending || (email === usuario.email && !password)}
+            onClick={() => mut.mutate()}
+            className="px-5 py-2 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 disabled:opacity-50"
+          >
+            {mut.isPending ? 'Guardando…' : 'Actualizar acceso'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Página principal ──────────────────────────────────────────────────────────
 
 export default function UsuariosPage() {
@@ -216,9 +304,10 @@ export default function UsuariosPage() {
   const qc = useQueryClient()
   const { toast: addToast } = useToastStore()
 
-  const [busqueda, setBusqueda] = useState('')
-  const [filtroRol, setFiltroRol] = useState('')
-  const [modalUsuario, setModalUsuario] = useState<Usuario | null | false>(false)
+  const [busqueda, setBusqueda]           = useState('')
+  const [filtroRol, setFiltroRol]         = useState('')
+  const [modalUsuario, setModalUsuario]   = useState<Usuario | null | false>(false)
+  const [modalCreds, setModalCreds]       = useState<Usuario | null>(null)
 
   const params: Record<string, string> = {}
   if (busqueda)  params.q    = busqueda
@@ -338,6 +427,7 @@ export default function UsuariosPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={e => { e.stopPropagation(); setModalUsuario(u) }} className="text-xs text-blue-600 hover:underline font-medium">Editar</button>
+                      <button onClick={e => { e.stopPropagation(); setModalCreds(u) }} className="text-xs text-rose-600 hover:underline font-medium">Credenciales</button>
                       <button onClick={e => { e.stopPropagation(); confirmarEliminar(u) }} className="text-xs text-red-500 hover:underline font-medium">Eliminar</button>
                     </div>
                   </td>
@@ -355,6 +445,9 @@ export default function UsuariosPage() {
           carreras={carreras}
           onClose={() => setModalUsuario(false)}
         />
+      )}
+      {modalCreds && (
+        <CredencialesModal usuario={modalCreds} onClose={() => setModalCreds(null)} />
       )}
     </div>
   )
