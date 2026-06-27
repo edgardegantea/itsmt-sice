@@ -39,6 +39,9 @@ use App\Http\Controllers\Academico\CalificacionController;
 use App\Http\Controllers\Academico\CierreDeCursoController;
 use App\Http\Controllers\Academico\ActaCalificacionesController;
 use App\Http\Controllers\Academico\PrecargaController;
+use App\Http\Controllers\Calidad\TipoActividadController;
+use App\Http\Controllers\Calidad\ActividadComplementariaController;
+use App\Http\Controllers\Calidad\EvaluacionDocenteController;
 use Illuminate\Support\Facades\Route;
 
 // Sprint 0 — Auth
@@ -335,4 +338,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Situación académica del alumno (S4-06)
     Route::get('/alumnos/{alumno}/situacion-academica',                   [CalificacionController::class, 'situacionAcademica']);
+
+    // ── Sprint 5 — Calidad Educativa ──────────────────────────────────────────
+
+    // Catálogo de tipos de actividad complementaria (12 tipos oficiales TecNM)
+    Route::get('/tipos-actividad',                                         [TipoActividadController::class, 'index']);
+
+    // Actividades complementarias (S5-01, S5-02)
+    Route::get('/actividades-complementarias',                             [ActividadComplementariaController::class, 'index']);
+    Route::post('/actividades-complementarias',                            [ActividadComplementariaController::class, 'store']);
+    Route::post('/actividades-complementarias/{actividad}/evidencia',      [ActividadComplementariaController::class, 'subirEvidencia']);
+    Route::patch('/actividades-complementarias/{actividad}/validar',       [ActividadComplementariaController::class, 'validar']);
+
+    // Evaluaciones docentes anónimas (S5-03, S5-04)
+    // resultados ANTES del wildcard para evitar conflicto de rutas
+    Route::get('/evaluaciones-docentes/resultados',                        [EvaluacionDocenteController::class, 'resultados']);
+    Route::get('/evaluaciones-docentes',                                   [EvaluacionDocenteController::class, 'index']);
+    Route::post('/evaluaciones-docentes',                                  [EvaluacionDocenteController::class, 'store']);
 });

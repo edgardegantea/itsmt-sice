@@ -135,6 +135,8 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Personal',
     items: [
       { to: '/admin/gestion-academica', label: 'Gestión Académica', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/calidad/actividades-complementarias', label: 'Act. Complementarias', roles: ['superadmin', 'admin', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/calidad/evaluacion-docente/resultados', label: 'Eval. Docente', roles: ['superadmin', 'admin', 'jefe_carrera', 'director_academico', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/docente/planeacion',      label: 'Mi Planeación',     roles: ['docente', 'jefe_carrera'] },
       { to: '/admin/directorio',        label: 'Directorio',        roles: ['superadmin', 'admin', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/usuarios',          label: 'Usuarios',          roles: ['superadmin', 'admin'] },

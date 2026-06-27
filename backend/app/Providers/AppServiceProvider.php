@@ -24,6 +24,8 @@ use App\Domains\Academico\Policies\CalificacionPolicy;
 use App\Domains\Academico\Policies\CierreDeCursoPolicy;
 use App\Domains\Academico\Policies\ActaCalificacionesPolicy;
 use App\Domains\Academico\Policies\ConfiguracionEvaluacionPolicy;
+use App\Domains\Calidad\Models\ActividadComplementaria;
+use App\Domains\Calidad\Policies\ActividadComplementariaPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -55,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CierreDeCurso::class, CierreDeCursoPolicy::class);
         Gate::policy(ActaCalificaciones::class, ActaCalificacionesPolicy::class);
         Gate::policy(ConfiguracionEvaluacion::class, ConfiguracionEvaluacionPolicy::class);
+        Gate::policy(ActividadComplementaria::class, ActividadComplementariaPolicy::class);
 
         // Apunta el enlace de reset al frontend
         ResetPassword::createUrlUsing(function (object $notifiable, string $token): string {

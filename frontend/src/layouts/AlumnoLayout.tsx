@@ -79,6 +79,8 @@ export default function AlumnoLayout({ children }: Props) {
             { to: '/alumno/precarga-academica',       label: 'Precarga Académica' },
             { to: '/alumno/tramites',                 label: 'Trámites' },
             { to: '/alumno/encuesta-socioeconomica',  label: 'Encuesta Socioeconómica' },
+            { to: '/alumno/actividades-complementarias', label: 'Act. Complementarias' },
+            { to: '/alumno/evaluacion-docente',        label: 'Evaluar Docentes' },
           ].map(({ to, label }) => (
             <NavLink
               key={to}

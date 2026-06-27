@@ -47,6 +47,9 @@ const TutoriasPage                    = lazy(() => import('../features/academico
 const FuncionesPage                   = lazy(() => import('../features/academico/pages/secciones/FuncionesPage'))
 const CargaAcademicaAdminPage         = lazy(() => import('../features/academico/pages/CargaAcademicaAdminPage'))
 const PlaneacionDocentePage           = lazy(() => import('../features/academico/pages/PlaneacionDocentePage'))
+const ActividadesComplementariasPage  = lazy(() => import('../features/calidad/pages/ActividadesComplementariasPage'))
+const EvaluacionDocentePage           = lazy(() => import('../features/calidad/pages/EvaluacionDocentePage'))
+const ResultadosEvaluacionPage        = lazy(() => import('../features/calidad/pages/ResultadosEvaluacionPage'))
 
 // ── Wrappers ──────────────────────────────────────────────────────────────────
 
@@ -144,6 +147,26 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute requiredRole="alumno">
               <AlumnoLayout><EncuestaSocioeconomicaPage /></AlumnoLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Sprint 5 — Calidad Educativa */}
+        <Route path="/admin/calidad/actividades-complementarias" element={<AdminLayout><ActividadesComplementariasPage /></AdminLayout>} />
+        <Route path="/admin/calidad/evaluacion-docente/resultados" element={<AdminLayout><ResultadosEvaluacionPage /></AdminLayout>} />
+        <Route
+          path="/alumno/actividades-complementarias"
+          element={
+            <ProtectedRoute requiredRole="alumno">
+              <AlumnoLayout><ActividadesComplementariasPage /></AlumnoLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/alumno/evaluacion-docente"
+          element={
+            <ProtectedRoute requiredRole="alumno">
+              <AlumnoLayout><EvaluacionDocentePage /></AlumnoLayout>
             </ProtectedRoute>
           }
         />

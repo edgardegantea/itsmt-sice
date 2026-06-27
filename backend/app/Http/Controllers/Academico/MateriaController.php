@@ -89,7 +89,7 @@ class MateriaController extends Controller
         $data = $request->validate([
             'carrera_id'          => ['sometimes', 'uuid', 'exists:carreras,id'],
             'clave'               => ['sometimes', 'string', 'max:20', Rule::unique('materias', 'clave')->ignore($materia->id)],
-            'clave_oficial_tecnm' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'clave_oficial_tecnm' => ['sometimes', 'string', 'max:50'],
             'nombre'              => ['sometimes', 'string', 'max:200'],
             'semestre'            => ['sometimes', 'integer', 'min:1', 'max:10'],
             'creditos'            => ['sometimes', 'integer', 'min:0'],
