@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Alumno extends Model
@@ -56,5 +57,11 @@ class Alumno extends Model
     public function periodoIngreso(): BelongsTo
     {
         return $this->belongsTo(Periodo::class, 'periodo_ingreso_id');
+    }
+
+    public function grupos(): BelongsToMany
+    {
+        return $this->belongsToMany(Grupo::class, 'alumno_grupo')
+            ->withPivot('fecha_asignacion');
     }
 }

@@ -300,7 +300,7 @@ export const admisionApi = {
   },
 
   // Alumnos
-  getAlumnos: async (params: { carrera_id?: string; estatus?: string; semestre?: number; search?: string; page?: number }): Promise<PaginatedResponse<Alumno>> => {
+  getAlumnos: async (params: { carrera_id?: string; estatus?: string; semestre?: number; grupo_id?: string; search?: string; page?: number }): Promise<PaginatedResponse<Alumno>> => {
     const { data } = await apiClient.get('/alumnos', { params })
     return data.data
   },

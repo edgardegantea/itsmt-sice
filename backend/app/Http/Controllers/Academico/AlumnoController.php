@@ -24,6 +24,7 @@ class AlumnoController extends Controller
             ->when(! $carreraForzada && $request->carrera_id,           fn($q) => $q->where('carrera_id', $request->carrera_id))
             ->when($request->estatus,    fn($q, $v) => $q->where('estatus', $v))
             ->when($request->semestre,   fn($q, $v) => $q->where('semestre_actual', $v))
+            ->when($request->grupo_id,   fn($q, $v) => $q->whereHas('grupos', fn($g) => $g->where('grupos.id', $v)))
             ->when($request->search, fn($q, $v) => $q
                 ->where('numero_control', 'ilike', "%{$v}%")
                 ->orWhereHas('inscripcion.aspirante', fn($q2) =>

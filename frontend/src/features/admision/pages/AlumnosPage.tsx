@@ -17,6 +17,9 @@ import { openPdfPreview } from '../../../utils/pdfHelpers'
 import apiClient from '../../../config/apiClient'
 import { useToastStore } from '../../../store/toastStore'
 
+type PeriodoItem = { id: string; nombre: string; activo: boolean }
+type GrupoItem   = { id: string; clave: string; semestre: number; periodo_id: string; carrera_id: string }
+
 // ── Catálogos de estatus ──────────────────────────────────────────────────────
 
 const ESTATUS_LABEL: Record<EstatusAlumno, string> = {
@@ -647,7 +650,7 @@ function descargarCsv(contenido: string, nombre: string) {
 
 export default function AlumnosPage() {
   const navigate = useNavigate()
-  const [filtros, setFiltros]           = useState({ search: '', estatus: '', semestre: '', carrera_id: '', page: 1 })
+  const [filtros, setFiltros]           = useState({ search: '', estatus: '', semestre: '', carrera_id: '', periodo_id: '', grupo_id: '', page: 1 })
   const [expandedId, setExpandedId]     = useState<string | null>(null)
   const [editando, setEditando]         = useState<Alumno | null>(null)
   const [cobrando, setCobrando]         = useState<Alumno | null>(null)
@@ -663,6 +666,24 @@ export default function AlumnosPage() {
   const { descargar: descargarInscPdf,   generando: generandoInscPdf }    = useInscripcionPdf()
   const { data: carreras = [] } = useCarrerasAdmin()
 
+  const { data: periodos = [] } = useQuery<PeriodoItem[]>({
+    queryKey: ['periodos-select'],
+    queryFn: () => apiClient.get('/admin/periodos').then(r => r.data.data),
+    staleTime: 60_000,
+  })
+
+  const { data: gruposFiltro = [] } = useQuery<GrupoItem[]>({
+    queryKey: ['grupos-filtro', filtros.carrera_id, filtros.periodo_id],
+    enabled: !!(filtros.carrera_id || filtros.periodo_id),
+    queryFn: () => apiClient.get('/grupos', {
+      params: {
+        carrera_id: filtros.carrera_id || undefined,
+        periodo_id: filtros.periodo_id || undefined,
+      },
+    }).then(r => r.data.data),
+    staleTime: 30_000,
+  })
+
   const { data, isLoading } = useQuery({
     queryKey: ['alumnos', filtros],
     queryFn: () => admisionApi.getAlumnos({
@@ -670,6 +691,7 @@ export default function AlumnosPage() {
       estatus:    filtros.estatus    || undefined,
       semestre:   filtros.semestre   ? Number(filtros.semestre) : undefined,
       carrera_id: filtros.carrera_id || undefined,
+      grupo_id:   filtros.grupo_id   || undefined,
       page:       filtros.page,
     }),
   })
@@ -880,12 +902,30 @@ export default function AlumnosPage() {
             />
             <select
               value={filtros.carrera_id}
-              onChange={e => setFiltros(f => ({ ...f, carrera_id: e.target.value, page: 1 }))}
+              onChange={e => setFiltros(f => ({ ...f, carrera_id: e.target.value, grupo_id: '', page: 1 }))}
               className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
             >
               <option value="">Todas las carreras</option>
               {carreras.map(c => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
             </select>
+            <select
+              value={filtros.periodo_id}
+              onChange={e => setFiltros(f => ({ ...f, periodo_id: e.target.value, grupo_id: '', page: 1 }))}
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
+            >
+              <option value="">Todos los periodos</option>
+              {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+            </select>
+            {(filtros.carrera_id || filtros.periodo_id) && (
+              <select
+                value={filtros.grupo_id}
+                onChange={e => setFiltros(f => ({ ...f, grupo_id: e.target.value, page: 1 }))}
+                className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
+              >
+                <option value="">Todos los grupos</option>
+                {gruposFiltro.map(g => <option key={g.id} value={g.id}>{g.clave} (sem. {g.semestre})</option>)}
+              </select>
+            )}
             <select
               value={filtros.estatus}
               onChange={e => setFiltros(f => ({ ...f, estatus: e.target.value, page: 1 }))}
