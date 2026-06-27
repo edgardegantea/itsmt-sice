@@ -17,13 +17,19 @@ class CalificacionController extends Controller
     {
         $grupo = Grupo::with(['cargas.docente'])->findOrFail($grupoId);
 
-        // Docente solo puede ver calificaciones de grupos donde tiene carga
         $user = $request->user();
+
+        // Docente: solo sus grupos
         if ($user->hasRole('docente')) {
             $esSuGrupo = $grupo->cargas()->where('docente_id', $user->id)->exists();
             if (! $esSuGrupo) {
                 return ApiResponse::error('No tienes acceso a este grupo.', 403);
             }
+        }
+
+        // Jefe de carrera: solo su carrera
+        if ($user->hasRole('jefe_carrera') && $user->carrera_id !== $grupo->carrera_id) {
+            return ApiResponse::error('No tienes acceso a grupos de otra carrera.', 403);
         }
 
         $calificaciones = Calificacion::with(['alumno.user'])
@@ -130,6 +136,14 @@ class CalificacionController extends Controller
             }
         } elseif (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', 'director_academico', 'personal_administrativo'])) {
             return ApiResponse::error('No tienes permiso.', 403);
+        }
+
+        // Jefe de carrera: solo alumnos de su carrera
+        if ($user->hasRole('jefe_carrera')) {
+            $alumno = \App\Domains\Academico\Models\Alumno::find($alumnoId);
+            if (! $alumno || $alumno->carrera_id !== $user->carrera_id) {
+                return ApiResponse::error('No tienes acceso a alumnos de otra carrera.', 403);
+            }
         }
 
         $calificaciones = Calificacion::with(['grupo.cargas.materia', 'grupo.periodo'])

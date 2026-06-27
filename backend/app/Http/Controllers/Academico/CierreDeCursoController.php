@@ -16,7 +16,8 @@ class CierreDeCursoController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
-        if (! $request->user()->hasAnyRole(['superadmin', 'admin', 'jefe_carrera'])) {
+        $user = $request->user();
+        if (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera'])) {
             return ApiResponse::error('No tienes permiso para cerrar cursos.', 403);
         }
 
@@ -24,6 +25,14 @@ class CierreDeCursoController extends Controller
             'grupo_id'  => ['required', 'uuid', 'exists:grupos,id'],
             'periodo_id'=> ['required', 'uuid', 'exists:periodos,id'],
         ]);
+
+        // Jefe de carrera: solo sus grupos
+        if ($user->hasRole('jefe_carrera')) {
+            $grupo = Grupo::find($data['grupo_id']);
+            if (! $grupo || $grupo->carrera_id !== $user->carrera_id) {
+                return ApiResponse::error('No tienes acceso a grupos de otra carrera.', 403);
+            }
+        }
 
         // Verificar que no ya esté cerrado
         $existente = CierreDeCurso::where('grupo_id', $data['grupo_id'])

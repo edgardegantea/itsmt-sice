@@ -31,8 +31,10 @@ class GrupoController extends Controller
         return ApiResponse::success($grupos);
     }
 
-    public function show(Grupo $grupo): JsonResponse
+    public function show(Request $request, Grupo $grupo): JsonResponse
     {
+        $this->verificarCarrera($request, $grupo->carrera_id);
+
         return ApiResponse::success(
             $grupo->load([
                 'carrera', 'periodo',

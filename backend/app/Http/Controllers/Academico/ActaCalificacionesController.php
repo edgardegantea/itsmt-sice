@@ -18,7 +18,8 @@ class ActaCalificacionesController extends Controller
 
     public function pdf(Request $request, string $grupoId): Response|JsonResponse
     {
-        if (! $request->user()->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', 'director_academico'])) {
+        $user = $request->user();
+        if (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', 'director_academico'])) {
             return ApiResponse::error('No tienes permiso.', 403);
         }
 
@@ -30,6 +31,11 @@ class ActaCalificacionesController extends Controller
             'carrera',
             'alumnos.user',
         ])->findOrFail($grupoId);
+
+        // Jefe de carrera: solo su carrera
+        if ($user->hasRole('jefe_carrera') && $user->carrera_id !== $grupo->carrera_id) {
+            return ApiResponse::error('No tienes acceso a grupos de otra carrera.', 403);
+        }
 
         $periodo = $grupo->periodo;
 
