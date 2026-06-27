@@ -72,7 +72,7 @@ return new class extends Migration
                 'id'         => $userId,
                 'name'       => $nombre,
                 'email'      => $email,
-                'password'   => Hash::make($a->curp),
+                'password'   => Hash::make($a->curp, ['rounds' => 4]),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
