@@ -7,25 +7,6 @@ export type EstatusBaja = 'pendiente' | 'aprobada' | 'rechazada'
 export type TipoConstancia = 'estudios' | 'inscripcion' | 'calificaciones'
 export type TipoBaja = 'parcial' | 'temporal' | 'definitiva'
 
-export interface Baja {
-  id: string
-  alumno_id: string
-  tipo_baja: TipoBaja
-  estatus: EstatusBaja
-  motivo_enum: string | null
-  motivo_texto: string | null
-  motivo_rechazo: string | null
-  fecha_solicitud: string
-  fecha_aprobacion: string | null
-  alumno?: {
-    id: string
-    numero_control: string
-    semestre_actual: number
-    user?: { name: string }
-    carrera?: { nombre: string; clave: string }
-  }
-}
-
 export interface Vehiculo { tipo: string; marca: string; anio: number }
 export interface GastosMensuales {
   luz?: number; agua?: number; tel_fija?: number; tel_celular?: number
@@ -149,13 +130,22 @@ export interface Baja {
   alumno_id: string
   periodo_id: string
   tipo_baja: TipoBaja
+  estatus: EstatusBaja
   motivo_enum: string | null
   motivo_texto: string | null
+  motivo_rechazo: string | null
   fecha_solicitud: string
   fecha_efectiva: string | null
+  fecha_aprobacion: string | null
   reingreso_posible: boolean
   numero_semestres_cursados: number | null
-  alumno?: { numero_control: string; user?: { name: string } }
+  alumno?: {
+    id: string
+    numero_control: string
+    semestre_actual: number
+    user?: { name: string }
+    carrera?: { nombre: string; clave: string }
+  }
   periodo?: { nombre: string }
 }
 

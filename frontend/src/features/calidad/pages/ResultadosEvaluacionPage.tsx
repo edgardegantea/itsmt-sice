@@ -27,7 +27,7 @@ function BarraPromedio({ valor }: { valor: number | null }) {
 }
 
 export default function ResultadosEvaluacionPage() {
-  const [periodo, setPeriodo] = useState('')
+  const [periodo] = useState('')
 
   const { data: resultados = [], isLoading } = useQuery<ResultadoEvaluacion[]>({
     queryKey: ['evaluaciones-resultados', periodo],

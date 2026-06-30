@@ -463,7 +463,7 @@ export default function GrupoDetailPage() {
             grupoId={id!}
             alumnos={grupo.alumnos ?? []}
             periodoId={grupo.periodo_id}
-            esDocente={esDocente}
+            esDocente={!!esDocente}
             puedeFirmar={!!puedeFirmar}
           />
         )}

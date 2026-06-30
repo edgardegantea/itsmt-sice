@@ -445,6 +445,8 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
   const error   = useToastStore(s => s.error)
   const [editando, setEditando] = useState<PersonaDirectorio | null | 'nuevo'>(null)
   const [busqueda, setBusqueda] = useState('')
+  const puedeEliminar = usePuedeEliminar()
+  const puedeEditar   = esAdmin || !puedeEliminar
 
   const { data: directorio = [], isLoading } = useQuery({ queryKey: ['directorio'], queryFn: api.directorio })
 
@@ -796,10 +798,6 @@ type Tab = 'personas' | 'areas' | 'puestos'
 export default function DirectorioPage() {
   const user    = useAuthStore(s => s.user)
   const esAdmin = user?.roles?.some(r => ['admin', 'superadmin'].includes(r)) ?? false
-  const puedeEliminar = usePuedeEliminar()
-  const puedeEditar = user?.roles?.some(r => [
-    'admin', 'superadmin', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica',
-  ].includes(r)) ?? false
   const [tab, setTab] = useState<Tab>('personas')
 
   const { data: areas   = [] } = useQuery({ queryKey: ['directorio-areas'],  queryFn: api.areas })

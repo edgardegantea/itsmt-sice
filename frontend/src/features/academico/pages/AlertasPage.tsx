@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type AlertaBajaDefinitiva } from '../services/academico'
-import { useAuthStore } from '../../../store/authStore'
 
 export default function AlertasPage() {
-  const { user } = useAuthStore()
   const qc = useQueryClient()
   const [soloNoRevisadas, setSoloNoRevisadas] = useState(true)
   const [confirmandoId, setConfirmandoId] = useState<string | null>(null)
