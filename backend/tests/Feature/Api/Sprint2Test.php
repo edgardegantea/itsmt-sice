@@ -15,6 +15,7 @@ use App\Mail\BajaSolicitadaMail;
 use App\Mail\ConstanciaSolicitadaMail;
 use App\Mail\OrdenReinscripcionPublicadaMail;
 use App\Models\User;
+use App\Services\GotenbergService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
@@ -684,5 +685,50 @@ class Sprint2Test extends TestCase
         $this->actingAs($this->userAlumno, 'sanctum')
             ->getJson("/api/alumnos/{$this->alumno->id}")
             ->assertStatus(200);
+    }
+
+    // ── S2-03: PDF de constancia ──────────────────────────────────────────────
+
+    public function test_admin_puede_descargar_pdf_constancia_emitida(): void
+    {
+        $this->mock(GotenbergService::class, function ($mock) {
+            $mock->shouldReceive('htmlToPdf')->andReturn('%PDF-1.4 fake-pdf-content');
+        });
+
+        $constancia = Constancia::create([
+            'alumno_id'      => $this->alumno->id,
+            'tipo'           => 'estudios',
+            'folio_unico'    => 'CONST-PDF-TEST',
+            'estatus'        => 'solicitada',
+            'solicitada_por' => $this->userAlumno->id,
+        ]);
+
+        // Emitir primero
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/constancias/{$constancia->id}/emitir")
+            ->assertOk();
+
+        // Descargar PDF
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/constancias/{$constancia->id}/pdf");
+
+        $r->assertOk();
+        $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    public function test_pdf_constancia_no_disponible_si_no_emitida(): void
+    {
+        $constancia = Constancia::create([
+            'alumno_id'      => $this->alumno->id,
+            'tipo'           => 'inscripcion',
+            'folio_unico'    => 'CONST-PDF-TEST2',
+            'estatus'        => 'solicitada',
+            'solicitada_por' => $this->userAlumno->id,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/constancias/{$constancia->id}/pdf");
+
+        $r->assertStatus(422);
     }
 }

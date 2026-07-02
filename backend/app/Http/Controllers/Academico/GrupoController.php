@@ -100,6 +100,10 @@ class GrupoController extends Controller
     // POST /api/admin/grupos/{grupo}/alumnos
     public function asignarAlumnos(Request $request, Grupo $grupo): JsonResponse
     {
+        if (! $request->user()?->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', ...\App\Models\User::ROLES_DIRECTIVOS])) {
+            abort(403);
+        }
+
         $this->verificarCarrera($request, $grupo->carrera_id);
 
         $data = $request->validate([
@@ -107,11 +111,26 @@ class GrupoController extends Controller
             'alumno_ids.*' => ['uuid', 'exists:alumnos,id'],
         ]);
 
-        $sync = collect($data['alumno_ids'])->mapWithKeys(fn($id) => [
-            $id => ['fecha_asignacion' => now()->toDateString()],
-        ]);
+        // Use manual insert so the UUID id is generated; syncWithoutDetaching does not
+        // auto-fill the pk when the pivot table has a custom UUID primary key.
+        $fecha = now()->toDateString();
+        foreach ($data['alumno_ids'] as $alumnoId) {
+            $exists = \Illuminate\Support\Facades\DB::table('alumno_grupo')
+                ->where('grupo_id', $grupo->id)
+                ->where('alumno_id', $alumnoId)
+                ->exists();
 
-        $grupo->alumnos()->syncWithoutDetaching($sync->all());
+            if (! $exists) {
+                \Illuminate\Support\Facades\DB::table('alumno_grupo')->insert([
+                    'id'              => (string) \Illuminate\Support\Str::uuid(),
+                    'grupo_id'        => $grupo->id,
+                    'alumno_id'       => $alumnoId,
+                    'fecha_asignacion'=> $fecha,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ]);
+            }
+        }
 
         return ApiResponse::success(
             $grupo->load(['alumnos.user', 'alumnos.inscripcion.aspirante'])->alumnos,

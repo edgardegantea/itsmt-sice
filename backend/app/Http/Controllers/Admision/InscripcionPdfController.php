@@ -186,7 +186,18 @@ class InscripcionPdfController extends Controller
     // GET /api/inscripciones/{inscripcion}/credencial/pdf
     public function credencial(Inscripcion $inscripcion): Response
     {
-        $this->authorize('view', $inscripcion->aspirante);
+        $user = request()->user();
+
+        $isAdmin = $user->hasAnyRole([
+            'superadmin', 'admin', 'director_academico', 'jefe_carrera',
+            'personal_administrativo', ...User::ROLES_DIRECTIVOS,
+        ]);
+
+        if (! $isAdmin) {
+            // El alumno sólo puede descargar su propia credencial
+            $alumnoCheck = $inscripcion->alumno()->where('user_id', $user->id)->exists();
+            abort_unless($alumnoCheck, 403);
+        }
 
         $alumno = $inscripcion->alumno()->with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])->firstOrFail();
 
@@ -226,6 +237,60 @@ class InscripcionPdfController extends Controller
         $pdf  = $this->gotenberg->htmlToPdfLandscape($html);
 
         return response($pdf, 200, $this->headers('libro-registro-nc-' . now()->format('Ymd') . '.pdf'));
+    }
+
+    // GET /api/grupos/{grupo}/carga-academica/{periodo}/pdf
+    public function cargaAcademicaGrupo(\App\Domains\Academico\Models\Grupo $grupo, Periodo $periodo): Response
+    {
+        abort_unless(
+            request()->user()->hasAnyRole(['superadmin', 'admin', 'director_academico', 'jefe_carrera',
+                                           'control_escolar', 'direccion_general', 'subdireccion_academica']),
+            403
+        );
+
+        $grupo->load(['carrera', 'alumnos.inscripcion.aspirante', 'alumnos.periodoIngreso']);
+        $cfg = ConfiguracionInstitucional::instancia();
+
+        $alumnos = $grupo->alumnos()->orderBy('users.name')->with([
+            'carrera', 'periodoIngreso', 'inscripcion.aspirante',
+        ])->get();
+
+        if ($alumnos->isEmpty()) {
+            abort(422, 'El grupo no tiene alumnos inscritos.');
+        }
+
+        $pdfs = [];
+
+        foreach ($alumnos as $alumno) {
+            $grupoIds = \App\Domains\Academico\Models\Grupo::whereHas('alumnos', fn($q) => $q->where('alumnos.id', $alumno->id))
+                ->where('periodo_id', $periodo->id)
+                ->pluck('id');
+
+            $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
+                ->whereIn('grupo_id', $grupoIds)
+                ->where('periodo_id', $periodo->id)
+                ->get();
+
+            $materiasAntes = CargaAcademica::where('periodo_id', '!=', $periodo->id)
+                ->whereIn('grupo_id', \App\Domains\Academico\Models\Grupo::whereHas(
+                    'alumnos', fn($q) => $q->where('alumnos.id', $alumno->id)
+                )->pluck('id'))
+                ->pluck('materia_id')
+                ->unique();
+
+            $repeticion = $cargas->pluck('materia_id')
+                ->intersect($materiasAntes)
+                ->flip()
+                ->toArray();
+
+            $html    = view('pdfs.carga_academica', compact('alumno', 'periodo', 'cargas', 'cfg', 'repeticion'))->render();
+            $pdfs[]  = $this->gotenberg->htmlToPdf($html);
+        }
+
+        $merged   = count($pdfs) === 1 ? $pdfs[0] : $this->gotenberg->mergePdfs($pdfs);
+        $filename = "carga-academica-grupo-{$grupo->clave}-{$periodo->nombre}.pdf";
+
+        return response($merged, 200, $this->headers($filename));
     }
 
     // GET /api/alumnos/{alumno}/carga-academica/{periodo}/pdf

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Domains\Academico\Models\Alumno;
 use App\Domains\Academico\Models\Aula;
 use App\Domains\Academico\Models\CargaAcademica;
 use App\Domains\Academico\Models\Carrera;
@@ -9,9 +10,15 @@ use App\Domains\Academico\Models\Grupo;
 use App\Domains\Academico\Models\MallaCurricular;
 use App\Domains\Academico\Models\Materia;
 use App\Domains\Academico\Models\Periodo;
+use App\Domains\Academico\Models\HorarioTrabajo;
 use App\Domains\Academico\Models\PlaneacionDocente;
+use App\Domains\Admision\Models\Aspirante;
+use App\Domains\Admision\Models\Inscripcion;
+use App\Domains\Academico\Models\FuncionPersonal;
+use App\Domains\Academico\Models\Tutoria;
 use App\Mail\PlaneacionDocenteEntregadaMail;
 use App\Models\User;
+use App\Services\GotenbergService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
@@ -513,5 +520,374 @@ class Sprint3Test extends TestCase
             ])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['clave_oficial_tecnm']);
+    }
+
+    // ── Horario de Trabajo del Docente (TecNM-AC-PO-003-01) ───────────────────
+
+    public function test_docente_guarda_horario_de_trabajo(): void
+    {
+        $response = $this->actingAs($this->docente, 'sanctum')
+            ->postJson('/api/horarios-trabajo', [
+                'periodo_id'            => $this->periodo->id,
+                'total_horas_semanales' => 40,
+                'cct_docente'           => '30DIT0001U',
+                'tipo_nombramiento'     => 'Tiempo Completo',
+                'fecha_ingreso_sep'     => '2015-09-01',
+                'carga_academica_json'  => [['materia' => 'Fundamentos de Programación', 'horas' => 5]],
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.docente_id', $this->docente->id)
+            ->assertJsonPath('data.total_horas_semanales', 40)
+            ->assertJsonPath('data.cct_docente', '30DIT0001U');
+    }
+
+    public function test_horario_trabajo_upsert_por_docente_y_periodo(): void
+    {
+        // Primera inserción
+        $this->actingAs($this->docente, 'sanctum')
+            ->postJson('/api/horarios-trabajo', [
+                'periodo_id'            => $this->periodo->id,
+                'total_horas_semanales' => 35,
+            ])
+            ->assertStatus(201);
+
+        // Segunda llamada misma combinación docente+periodo → actualiza, no duplica
+        $response = $this->actingAs($this->docente, 'sanctum')
+            ->postJson('/api/horarios-trabajo', [
+                'periodo_id'            => $this->periodo->id,
+                'total_horas_semanales' => 40,
+                'tipo_nombramiento'     => 'Tiempo Completo',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.total_horas_semanales', 40);
+
+        $this->assertDatabaseCount('horarios_trabajo', 1);
+    }
+
+    public function test_admin_lista_horarios_de_trabajo(): void
+    {
+        HorarioTrabajo::create([
+            'docente_id'            => $this->docente->id,
+            'periodo_id'            => $this->periodo->id,
+            'total_horas_semanales' => 40,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/horarios-trabajo')
+            ->assertOk()
+            ->assertJsonPath('data.total', 1);
+    }
+
+    public function test_docente_ve_su_horario_de_trabajo(): void
+    {
+        HorarioTrabajo::create([
+            'docente_id'            => $this->docente->id,
+            'periodo_id'            => $this->periodo->id,
+            'total_horas_semanales' => 40,
+        ]);
+
+        $this->actingAs($this->docente, 'sanctum')
+            ->getJson("/api/horarios-trabajo/mio?periodo_id={$this->periodo->id}")
+            ->assertOk()
+            ->assertJsonPath('data.docente_id', $this->docente->id);
+    }
+
+    public function test_alumno_no_puede_listar_horarios_de_trabajo(): void
+    {
+        $alumno = User::factory()->create();
+        $alumno->assignRole('alumno');
+
+        $this->actingAs($alumno, 'sanctum')
+            ->getJson('/api/horarios-trabajo')
+            ->assertStatus(403);
+    }
+
+    // ── S3-06: Formato Carga Académica PDF (TecNM-AC-PO-001) ─────────────────
+
+    public function test_admin_puede_generar_pdf_carga_academica_alumno(): void
+    {
+        $this->mock(GotenbergService::class, fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
+        $alumnoUser = User::factory()->create(['email' => 's3pdf@test.com']);
+        $alumnoUser->assignRole('alumno');
+
+        $aspirante = Aspirante::create([
+            'nombres'               => 'PDF',
+            'apellido_paterno'      => 'Carga',
+            'curp'                  => 'CARP000101HVZRPX01',
+            'fecha_nacimiento'      => '2000-01-01',
+            'sexo'                  => 'masculino',
+            'municipio_procedencia' => 'Martínez de la Torre',
+            'escuela_bachillerato'  => 'CBTis 76',
+            'promedio_bachillerato' => 85.0,
+            'turno_preferido'       => 'matutino',
+            'email'                 => 'aspirante.s3pdf@test.com',
+            'carrera_id'            => $this->carrera->id,
+            'periodo_id'            => $this->periodo->id,
+        ]);
+
+        $inscripcion = Inscripcion::create([
+            'aspirante_id'      => $aspirante->id,
+            'numero_control'    => '26ISC0099',
+            'carrera_id'        => $this->carrera->id,
+            'periodo_id'        => $this->periodo->id,
+            'fecha_inscripcion' => now()->toDateString(),
+        ]);
+
+        $alumno = Alumno::create([
+            'user_id'            => $alumnoUser->id,
+            'inscripcion_id'     => $inscripcion->id,
+            'numero_control'     => '26ISC0099',
+            'carrera_id'         => $this->carrera->id,
+            'periodo_ingreso_id' => $this->periodo->id,
+            'semestre_actual'    => 1,
+            'estatus'            => 'activo',
+        ]);
+
+        CargaAcademica::create([
+            'docente_id'   => $this->docente->id,
+            'materia_id'   => $this->materia->id,
+            'grupo_id'     => $this->grupo->id,
+            'periodo_id'   => $this->periodo->id,
+            'horas_semana' => 5,
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('alumno_grupo')->insert([
+            'id'              => (string) \Illuminate\Support\Str::uuid(),
+            'grupo_id'        => $this->grupo->id,
+            'alumno_id'       => $alumno->id,
+            'fecha_asignacion'=> now()->toDateString(),
+            'created_at'      => now(),
+            'updated_at'      => now(),
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/alumnos/{$alumno->id}/carga-academica/{$this->periodo->id}/pdf");
+
+        $r->assertOk();
+        $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    // ── S3-04: Tutorías ───────────────────────────────────────────────────────
+
+    private function crearAlumno(string $suffix = '01'): Alumno
+    {
+        $user = User::factory()->create(['email' => "alumno.s3tut{$suffix}@test.com"]);
+        $user->assignRole('alumno');
+
+        $aspirante = Aspirante::create([
+            'nombres'               => 'Alumno',
+            'apellido_paterno'      => 'Tutoria',
+            'curp'                  => "TUAA000101HVZRNN{$suffix}",
+            'fecha_nacimiento'      => '2000-01-01',
+            'sexo'                  => 'masculino',
+            'municipio_procedencia' => 'Xalapa',
+            'escuela_bachillerato'  => 'CBTis 1',
+            'promedio_bachillerato' => 8.0,
+            'turno_preferido'       => 'matutino',
+            'email'                 => "asp.tut{$suffix}@test.com",
+            'carrera_id'            => $this->carrera->id,
+            'periodo_id'            => $this->periodo->id,
+        ]);
+
+        $inscripcion = Inscripcion::create([
+            'aspirante_id'      => $aspirante->id,
+            'numero_control'    => "26ISC{$suffix}00",
+            'carrera_id'        => $this->carrera->id,
+            'periodo_id'        => $this->periodo->id,
+            'fecha_inscripcion' => now()->toDateString(),
+        ]);
+
+        return Alumno::create([
+            'user_id'            => $user->id,
+            'inscripcion_id'     => $inscripcion->id,
+            'numero_control'     => "26ISC{$suffix}00",
+            'carrera_id'         => $this->carrera->id,
+            'periodo_ingreso_id' => $this->periodo->id,
+            'semestre_actual'    => 1,
+            'estatus'            => 'activo',
+        ]);
+    }
+
+    public function test_admin_puede_listar_tutorias(): void
+    {
+        $alumno = $this->crearAlumno('11');
+        Tutoria::create([
+            'tutor_id'   => $this->docente->id,
+            'alumno_id'  => $alumno->id,
+            'periodo_id' => $this->periodo->id,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/tutorias');
+
+        $r->assertOk();
+        $this->assertCount(1, $r->json('data'));
+    }
+
+    public function test_admin_puede_crear_tutoria(): void
+    {
+        $alumno = $this->crearAlumno('12');
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/tutorias', [
+                'tutor_id'   => $this->docente->id,
+                'alumno_id'  => $alumno->id,
+                'periodo_id' => $this->periodo->id,
+            ]);
+
+        $r->assertStatus(201)
+          ->assertJsonPath('data.tutor_id', $this->docente->id);
+
+        $this->assertDatabaseHas('tutorias', [
+            'tutor_id'  => $this->docente->id,
+            'alumno_id' => $alumno->id,
+        ]);
+    }
+
+    public function test_tutoria_masivo_asigna_a_varios_alumnos(): void
+    {
+        $alumno1 = $this->crearAlumno('13');
+        $alumno2 = $this->crearAlumno('14');
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/tutorias/masivo', [
+                'tutor_id'   => $this->docente->id,
+                'periodo_id' => $this->periodo->id,
+                'alumno_ids' => [$alumno1->id, $alumno2->id],
+            ]);
+
+        $r->assertStatus(201)
+          ->assertJsonPath('data.asignadas', 2);
+
+        $this->assertEquals(2, Tutoria::where('tutor_id', $this->docente->id)->count());
+    }
+
+    public function test_admin_puede_eliminar_tutoria(): void
+    {
+        $alumno = $this->crearAlumno('15');
+        $tutoria = Tutoria::create([
+            'tutor_id'   => $this->docente->id,
+            'alumno_id'  => $alumno->id,
+            'periodo_id' => $this->periodo->id,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->deleteJson("/api/tutorias/{$tutoria->id}")
+            ->assertOk();
+
+        $this->assertSoftDeleted('tutorias', ['id' => $tutoria->id]);
+    }
+
+    public function test_tutoria_masivo_no_duplica_si_ya_existe(): void
+    {
+        $alumno = $this->crearAlumno('16');
+        Tutoria::create([
+            'tutor_id'   => $this->docente->id,
+            'alumno_id'  => $alumno->id,
+            'periodo_id' => $this->periodo->id,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/tutorias/masivo', [
+                'tutor_id'   => $this->docente->id,
+                'periodo_id' => $this->periodo->id,
+                'alumno_ids' => [$alumno->id],
+            ]);
+
+        $r->assertStatus(201);
+        $this->assertEquals(1, Tutoria::where('tutor_id', $this->docente->id)
+            ->where('alumno_id', $alumno->id)->count());
+    }
+
+    // ── S3-05: Funciones personal ─────────────────────────────────────────────
+
+    public function test_admin_puede_listar_funciones_personal(): void
+    {
+        FuncionPersonal::create([
+            'user_id' => $this->docente->id,
+            'funcion' => 'Jefe de Academia de Sistemas',
+            'activa'  => true,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/funciones-personal');
+
+        $r->assertOk();
+        $this->assertCount(1, $r->json('data'));
+    }
+
+    public function test_admin_puede_crear_funcion_personal(): void
+    {
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/funciones-personal', [
+                'user_id' => $this->docente->id,
+                'funcion' => 'Responsable de Laboratorio',
+                'area'    => 'Cómputo',
+            ]);
+
+        $r->assertStatus(201)
+          ->assertJsonPath('data.funcion', 'Responsable de Laboratorio');
+
+        $this->assertDatabaseHas('funciones_personal', [
+            'user_id' => $this->docente->id,
+            'funcion' => 'Responsable de Laboratorio',
+        ]);
+    }
+
+    public function test_admin_puede_actualizar_funcion_personal(): void
+    {
+        $funcion = FuncionPersonal::create([
+            'user_id' => $this->docente->id,
+            'funcion' => 'Jefe de Academia',
+            'activa'  => true,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/funciones-personal/{$funcion->id}", [
+                'funcion' => 'Ex-Jefe de Academia',
+                'activa'  => false,
+            ]);
+
+        $r->assertOk()
+          ->assertJsonPath('data.funcion', 'Ex-Jefe de Academia');
+
+        $this->assertDatabaseHas('funciones_personal', [
+            'id'     => $funcion->id,
+            'funcion'=> 'Ex-Jefe de Academia',
+            'activa' => 0,
+        ]);
+    }
+
+    public function test_admin_puede_eliminar_funcion_personal(): void
+    {
+        $funcion = FuncionPersonal::create([
+            'user_id' => $this->docente->id,
+            'funcion' => 'Asesor de residencias',
+            'activa'  => true,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->deleteJson("/api/funciones-personal/{$funcion->id}")
+            ->assertOk();
+
+        $this->assertSoftDeleted('funciones_personal', ['id' => $funcion->id]);
+    }
+
+    public function test_funciones_filtrables_por_user_id(): void
+    {
+        $otro = User::factory()->create();
+        $otro->assignRole('docente');
+
+        FuncionPersonal::create(['user_id' => $this->docente->id, 'funcion' => 'F-Docente', 'activa' => true]);
+        FuncionPersonal::create(['user_id' => $otro->id,         'funcion' => 'F-Otro',    'activa' => true]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/funciones-personal?user_id={$this->docente->id}");
+
+        $r->assertOk();
+        $this->assertCount(1, $r->json('data'));
+        $this->assertEquals('F-Docente', $r->json('data.0.funcion'));
     }
 }

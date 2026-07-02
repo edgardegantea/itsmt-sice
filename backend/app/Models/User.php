@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use App\Domains\Academico\Models\Carrera;
+use App\Domains\Academico\Models\CargaAcademica;
+use App\Domains\Academico\Models\FichaDocente;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -56,6 +60,16 @@ class User extends Authenticatable
     public function carrera(): BelongsTo
     {
         return $this->belongsTo(Carrera::class);
+    }
+
+    public function cargas(): HasMany
+    {
+        return $this->hasMany(CargaAcademica::class, 'docente_id');
+    }
+
+    public function fichaDocente(): HasOne
+    {
+        return $this->hasOne(FichaDocente::class, 'docente_id');
     }
 
     /** Devuelve el carrera_id si el usuario es jefe_carrera, null en caso contrario. */

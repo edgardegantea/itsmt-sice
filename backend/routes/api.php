@@ -34,6 +34,7 @@ use App\Http\Controllers\Academico\MallaCurricularController;
 use App\Http\Controllers\Academico\AulaController;
 use App\Http\Controllers\Academico\HorarioController;
 use App\Http\Controllers\Academico\PlaneacionDocenteController;
+use App\Http\Controllers\Academico\HorarioTrabajoController;
 use App\Http\Controllers\Academico\ConfiguracionEvaluacionController;
 use App\Http\Controllers\Academico\CalificacionController;
 use App\Http\Controllers\Academico\CierreDeCursoController;
@@ -43,6 +44,54 @@ use App\Http\Controllers\Academico\PrecargaController;
 use App\Http\Controllers\Calidad\TipoActividadController;
 use App\Http\Controllers\Calidad\ActividadComplementariaController;
 use App\Http\Controllers\Calidad\EvaluacionDocenteController;
+use App\Http\Controllers\Vinculacion\ServicioSocialController;
+use App\Http\Controllers\Vinculacion\SolicitudRpController;
+use App\Http\Controllers\Vinculacion\DictamenAnteproyectoController;
+use App\Http\Controllers\Vinculacion\ResidenciaProfesionalController;
+use App\Http\Controllers\Vinculacion\AsesoriaRpController;
+use App\Http\Controllers\Titulacion\SolicitudActoProtocolarioController;
+use App\Http\Controllers\Titulacion\ActoProtocolarioController;
+use App\Http\Controllers\Titulacion\CertificadoIdiomaController;
+use App\Http\Controllers\Titulacion\SalidaLateralController;
+use App\Http\Controllers\Titulacion\ModalidadTitulacionController;
+use App\Http\Controllers\Analitica\IndicadoresController;
+use App\Http\Controllers\Academico\AsignacionDocenteController;
+use App\Http\Controllers\Academico\InstrumentacionDidacticaController;
+use App\Http\Controllers\Academico\FichaDocenteController;
+use App\Http\Controllers\Academico\SesionClaseController;
+use App\Http\Controllers\Academico\AlertaInasistenciaController;
+use App\Http\Controllers\Personal\SolicitudPersonalController;
+use App\Http\Controllers\Personal\ComisionController;
+use App\Http\Controllers\Capacitacion\CursoCapacitacionController;
+use App\Http\Controllers\Capacitacion\AsistenciaCapacitacionController;
+use App\Http\Controllers\Capacitacion\EvaluacionSeguimientoCapController;
+use App\Http\Controllers\Academico\EspecialidadController;
+use App\Http\Controllers\Vinculacion\InformeSemestralAsesorController;
+use App\Http\Controllers\Academico\EgresadoController;
+use App\Http\Controllers\Academico\ReporteDirectivoController;
+use App\Http\Controllers\Academico\IndicadoresAsistenciaController;
+use App\Http\Controllers\Academico\AsignacionTutoriaController;
+use App\Http\Controllers\Academico\SesionTutoriaController;
+use App\Http\Controllers\Academico\PlanAccionTutorialController;
+use App\Http\Controllers\Academico\IndicadoresTutoriaController;
+use App\Http\Controllers\Academico\TrasladoController;
+use App\Http\Controllers\Academico\ConvalidacionController;
+use App\Http\Controllers\Academico\EquivalenciaController;
+use App\Http\Controllers\Academico\ConvenioMovilidadController;
+use App\Http\Controllers\Academico\MovilidadEstudiantilController;
+use App\Http\Controllers\Academico\CursoVeranoController;
+use App\Http\Controllers\Academico\ProgramaDistanciaController;
+use App\Http\Controllers\Academico\InscripcionDistanciaController;
+use App\Http\Controllers\Academico\EducacionDistanciaController;
+use App\Http\Controllers\Academico\FichaSindicalController;
+use App\Http\Controllers\Academico\PlazaController;
+use App\Http\Controllers\Academico\PlantillaSindicalController;
+use App\Http\Controllers\Academico\PermisoSindicalController;
+use App\Http\Controllers\Academico\ConcursoOposicionController;
+use App\Http\Controllers\Academico\AusentismoSindicalController;
+use App\Http\Controllers\Academico\InformeSindicalController;
+use App\Http\Controllers\Convocatoria\ConvocatoriaController;
+use App\Http\Controllers\Convocatoria\PostulacionController;
 use Illuminate\Support\Facades\Route;
 
 // Sprint 0 — Auth
@@ -104,6 +153,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/alumnos/{alumno}',                        [AlumnoController::class, 'update']);
     Route::get('/alumnos/{alumno}/autorizacion-expediente',  [AlumnoController::class, 'autorizacionExpediente']);
     Route::patch('/alumnos/{alumno}/autorizacion-expediente',[AlumnoController::class, 'actualizarAutorizacion']);
+    Route::get('/alumnos/{alumno}/expediente',               [AlumnoController::class, 'expediente']); // S11-03
 
     // Cobros CFDI — S1-11
     Route::post('/cobros-inscripcion',                       [CobroInscripcionController::class, 'store']);
@@ -115,6 +165,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Libro Registro NC — S1-13
     Route::get('/libro-registro-nc',                                          [InscripcionPdfController::class, 'libroRegistroNc']);
     Route::get('/alumnos/{alumno}/carga-academica/{periodo}/pdf',             [InscripcionPdfController::class, 'cargaAcademica']);
+    Route::get('/grupos/{grupo}/carga-academica/{periodo}/pdf',               [InscripcionPdfController::class, 'cargaAcademicaGrupo']);
 
     // ── Gestión Académica (superadmin / admin) ────────────────────────────────
 
@@ -148,6 +199,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/docentes',                                  [CargaAcademicaController::class, 'docentes']);
     Route::get('/docentes/{docente}/carga-academica/pdf',          \App\Http\Controllers\Academico\CargaDocentePdfController::class);
 
+    // Fichas docentes (S11-04)
+    Route::get('/docentes/fichas',                                 [FichaDocenteController::class, 'index']);
+    Route::post('/docentes/fichas',                                [FichaDocenteController::class, 'store']);
+    Route::patch('/docentes/{docente}/ficha',                      [FichaDocenteController::class, 'update']);
+
     // Tutorías
     Route::get('/tutorias',                    [TutoriaController::class, 'index']);
     Route::post('/tutorias',                   [TutoriaController::class, 'store']);
@@ -167,8 +223,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/mallas-curriculares/{mallaCurricular}',         [MallaCurricularController::class, 'update']);
     Route::delete('/mallas-curriculares/{mallaCurricular}',        [MallaCurricularController::class, 'destroy']);
 
-    // Aulas
+    // Aulas (S11-01)
     Route::get('/aulas',                                           [AulaController::class, 'index']);
+    Route::get('/aulas/disponibles',                               [AulaController::class, 'disponibles']);
     Route::post('/aulas',                                          [AulaController::class, 'store']);
     Route::patch('/aulas/{aula}',                                  [AulaController::class, 'update']);
     Route::delete('/aulas/{aula}',                                 [AulaController::class, 'destroy']);
@@ -181,6 +238,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/horarios/{horario}',                           [HorarioController::class, 'destroy']);
 
     // Planeaciones didácticas
+    Route::get('/horarios-trabajo',                                               [HorarioTrabajoController::class, 'index']);
+    Route::get('/horarios-trabajo/mio',                                           [HorarioTrabajoController::class, 'mio']);
+    Route::post('/horarios-trabajo',                                              [HorarioTrabajoController::class, 'store']);
+    Route::get('/horarios-trabajo/{horarioTrabajo}',                              [HorarioTrabajoController::class, 'show']);
+
     Route::get('/planeaciones-docentes',                                          [PlaneacionDocenteController::class, 'index']);
     Route::get('/planeaciones-docentes/mias',                                     [PlaneacionDocenteController::class, 'mias']);
     Route::post('/planeaciones-docentes',                                         [PlaneacionDocenteController::class, 'store']);
@@ -359,4 +421,238 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/evaluaciones-docentes/resultados',                        [EvaluacionDocenteController::class, 'resultados']);
     Route::get('/evaluaciones-docentes',                                   [EvaluacionDocenteController::class, 'index']);
     Route::post('/evaluaciones-docentes',                                  [EvaluacionDocenteController::class, 'store']);
+
+    // ── Sprint 6 — Vinculación Institucional ─────────────────────────────────
+
+    // Servicio Social (S6-01, S6-02, S6-03)
+    Route::get('/servicio-social',                                         [ServicioSocialController::class, 'index']);
+    Route::post('/servicio-social',                                        [ServicioSocialController::class, 'store']);
+    Route::patch('/servicio-social/{servicioSocial}/estatus',              [ServicioSocialController::class, 'actualizarEstatus']);
+
+    // Verificar prerrequisitos para RP (S6-06)
+    Route::get('/alumnos/{alumno}/verificar-prerequisitos-residencia',     [ServicioSocialController::class, 'verificarPrerequisitosResidencia']);
+
+    // Solicitudes de Residencia Profesional (S6-06)
+    Route::get('/solicitudes-rp',                                                      [SolicitudRpController::class, 'index']);
+    Route::post('/solicitudes-rp',                                                     [SolicitudRpController::class, 'store']);
+    Route::get('/solicitudes-rp/{solicitudRp}/carta-presentacion/pdf',                 [SolicitudRpController::class, 'cartaPresentacionPdf']);
+
+    // Informes Semestrales del Asesor (S6-10 — TecNM-AC-PO-004-06)
+    Route::get('/informes-semestral-asesor',  [InformeSemestralAsesorController::class, 'index']);
+    Route::post('/informes-semestral-asesor', [InformeSemestralAsesorController::class, 'store']);
+
+    // Dictamen de anteproyecto (S6-07)
+    Route::post('/dictamenes-anteproyecto',                                [DictamenAnteproyectoController::class, 'store']);
+    Route::get('/dictamenes-anteproyecto/{dictamenAnteproyecto}/pdf',      [DictamenAnteproyectoController::class, 'pdf']);
+
+    // Residencias profesionales (S6-04, S6-08, S6-10, S6-11)
+    Route::get('/residencias',                                             [ResidenciaProfesionalController::class, 'index']);
+    Route::post('/residencias',                                            [ResidenciaProfesionalController::class, 'store']);
+    Route::patch('/residencias/{residenciaProfesional}/asesor',            [ResidenciaProfesionalController::class, 'asignarAsesor']);
+    Route::get('/residencias/{residenciaProfesional}/oficio-asesor/pdf',   [ResidenciaProfesionalController::class, 'oficioAsesorPdf']);
+    Route::patch('/residencias/{residenciaProfesional}/seguimiento',       [ResidenciaProfesionalController::class, 'registrarSeguimiento']);
+    Route::patch('/residencias/{residenciaProfesional}/evaluacion-reporte',[ResidenciaProfesionalController::class, 'evaluacionReporte']);
+
+    // Asesorías RP (S6-09 — stub)
+    Route::get('/asesorias-rp',                                            [AsesoriaRpController::class, 'index']);
+    Route::post('/asesorias-rp',                                           [AsesoriaRpController::class, 'store']);
+
+    // ── Sprint 7 — Cierre Académico y Salida Lateral ──────────────────────────
+
+    // Modalidades de titulación (catálogo)
+    Route::get('/modalidades-titulacion', [ModalidadTitulacionController::class, 'index']);
+
+    // Certificados de idioma (S7-05)
+    Route::get('/certificados-idioma',                                     [CertificadoIdiomaController::class, 'index']);
+    Route::post('/certificados-idioma',                                    [CertificadoIdiomaController::class, 'store']);
+    Route::patch('/certificados-idioma/{certificadoIdioma}/validar',       [CertificadoIdiomaController::class, 'validar']);
+
+    // Solicitudes de Acto Protocolario (S7-03, S7-04)
+    Route::get('/solicitudes-acto-protocolario',                           [SolicitudActoProtocolarioController::class, 'index']);
+    Route::post('/solicitudes-acto-protocolario',                          [SolicitudActoProtocolarioController::class, 'store']);
+    Route::patch('/solicitudes-acto-protocolario/{solicitudActoProtocolario}/no-inconveniencia',
+                                                                           [SolicitudActoProtocolarioController::class, 'emitirNoInconveniencia']);
+    Route::get('/solicitudes-acto-protocolario/{solicitudActoProtocolario}/no-inconveniencia/pdf',
+                                                                           [SolicitudActoProtocolarioController::class, 'noInconvenienciaPdf']);
+
+    // Actos Protocolarios (S7-04)
+    Route::post('/actos-protocolarios',                                    [ActoProtocolarioController::class, 'store']);
+    Route::get('/actos-protocolarios/{actoProtocolario}/aviso/pdf',        [ActoProtocolarioController::class, 'avisoPdf']);
+    Route::patch('/actos-protocolarios/{actoProtocolario}/resultado',      [ActoProtocolarioController::class, 'registrarResultado']);
+    Route::get('/actos-protocolarios/{actoProtocolario}/acta/pdf',         [ActoProtocolarioController::class, 'actaPdf']);
+    Route::get('/actos-protocolarios/{actoProtocolario}/constancia-exencion/pdf',
+                                                                           [ActoProtocolarioController::class, 'constanciaExencionPdf']);
+
+    // Salida Lateral (S7-06, S7-07)
+    Route::get('/salida-lateral',                                          [SalidaLateralController::class, 'index']);
+    Route::post('/salida-lateral',                                         [SalidaLateralController::class, 'store']);
+    Route::patch('/salida-lateral/{salidaLateral}/estatus',                [SalidaLateralController::class, 'actualizarEstatus']);
+    Route::get('/salida-lateral/{salidaLateral}/diploma/pdf',              [SalidaLateralController::class, 'diplomaPdf']);
+
+    // ── Sprint 10 — Gestión de Personal Docente (TecNM-AC-PO-005) ───────────────
+    // Tipos de solicitud (catálogo)
+    Route::get('/tipos-solicitud-personal',                              [SolicitudPersonalController::class, 'tipos']);
+
+    // Solicitudes de permiso/licencia (S10-01/S10-02/S10-04)
+    Route::get('/solicitudes-personal',                                  [SolicitudPersonalController::class, 'index']);
+    Route::post('/solicitudes-personal',                                 [SolicitudPersonalController::class, 'store']);
+    Route::patch('/solicitudes-personal/{solicitudPersonal}/resolver',   [SolicitudPersonalController::class, 'resolver']);
+    Route::get('/solicitudes-personal/{solicitudPersonal}/documento/pdf',[SolicitudPersonalController::class, 'documentoPdf']);
+    Route::get('/personal/{personalId}/historial',                       [SolicitudPersonalController::class, 'historial']);
+
+    // Comisiones (S10-03)
+    Route::get('/comisiones',                                            [ComisionController::class, 'index']);
+    Route::post('/comisiones',                                           [ComisionController::class, 'store']);
+    Route::get('/comisiones/{comision}/oficio/pdf',                      [ComisionController::class, 'oficioPdf']);
+
+    // Cursos de Capacitación AP/FD (S10-07/S10-08)
+    Route::get('/cursos-capacitacion',                                           [CursoCapacitacionController::class, 'index']);
+    Route::post('/cursos-capacitacion',                                          [CursoCapacitacionController::class, 'store']);
+    Route::patch('/cursos-capacitacion/{cursoCapacitacion}',                     [CursoCapacitacionController::class, 'update']);
+    Route::get('/cursos-capacitacion/{cursoCapacitacion}/inscripciones',         [CursoCapacitacionController::class, 'inscripciones']);
+    Route::post('/cursos-capacitacion/{cursoCapacitacion}/inscripciones',        [CursoCapacitacionController::class, 'inscribir']);
+    Route::get('/cursos-capacitacion/{cursoCapacitacion}/lista-asistencia/pdf',  [AsistenciaCapacitacionController::class, 'listaAsistenciaPdf']);
+    Route::get('/cedulas-inscripcion/{cedulaInscripcion}/pdf',                   [CursoCapacitacionController::class, 'cedulaPdf']);
+
+    // Asistencias de Capacitación (S10-09)
+    Route::get('/asistencias-capacitacion',  [AsistenciaCapacitacionController::class, 'index']);
+    Route::post('/asistencias-capacitacion', [AsistenciaCapacitacionController::class, 'store']);
+
+    // Evaluaciones de Seguimiento Capacitación (S10-10)
+    Route::get('/evaluaciones-seguimiento-capacitacion',  [EvaluacionSeguimientoCapController::class, 'index']);
+    Route::post('/evaluaciones-seguimiento-capacitacion', [EvaluacionSeguimientoCapController::class, 'store']);
+
+    // Registro General Capacitación (S10-11)
+    Route::get('/registro-general-capacitacion',          [AsistenciaCapacitacionController::class, 'registroGeneral']);
+    Route::get('/registro-general-capacitacion/pdf',      [AsistenciaCapacitacionController::class, 'registroGeneralPdf']);
+
+    // ── Sprint 9 — Planeación Académica (TecNM-AC-PO-003 / PO-007) ──────────────
+    // Asignaciones docentes (S9-01/S9-02)
+    Route::get('/asignaciones-docentes',                                 [AsignacionDocenteController::class, 'index']);
+    Route::post('/asignaciones-docentes',                                [AsignacionDocenteController::class, 'store']);
+    Route::get('/asignaciones-docentes/{carrera_id}',                    [AsignacionDocenteController::class, 'index']);
+    Route::patch('/asignaciones-docentes/{asignacionDocente}',           [AsignacionDocenteController::class, 'update']);
+    Route::get('/docentes/{docenteId}/carga-horaria',                    [AsignacionDocenteController::class, 'cargaHoraria']);
+
+    // Especialidades (S9-06)
+    Route::get('/especialidades',                                                     [EspecialidadController::class, 'index']);
+    Route::post('/especialidades',                                                    [EspecialidadController::class, 'store']);
+    Route::patch('/especialidades/{especialidad}',                                    [EspecialidadController::class, 'update']);
+    Route::patch('/especialidades/{especialidad}/autorizar',                          [EspecialidadController::class, 'autorizar']);
+    Route::get('/especialidades/{especialidad}/oficio/pdf',                           [EspecialidadController::class, 'oficio']);
+    Route::get('/programas-educativos/{carrera}/especialidades',                      [EspecialidadController::class, 'porCarrera']);
+    Route::post('/solicitudes-apertura-especialidad',                                 [EspecialidadController::class, 'solicitarApertura']);
+    Route::patch('/solicitudes-apertura-especialidad/{solicitud}/dictaminar',         [EspecialidadController::class, 'dictaminar']);
+    Route::post('/alumnos/{alumno}/especialidad-seleccionada',                        [EspecialidadController::class, 'seleccionar']);
+
+    // Instrumentaciones didácticas (S9-03/S9-04/S9-05)
+    Route::get('/instrumentaciones-didacticas',                                      [InstrumentacionDidacticaController::class, 'index']);
+    Route::post('/instrumentaciones-didacticas',                                     [InstrumentacionDidacticaController::class, 'store']);
+    Route::patch('/instrumentaciones-didacticas/{instrumentacionDidactica}',         [InstrumentacionDidacticaController::class, 'update']);
+    Route::patch('/instrumentaciones-didacticas/{instrumentacionDidactica}/enviar',  [InstrumentacionDidacticaController::class, 'enviar']);
+    Route::patch('/instrumentaciones-didacticas/{instrumentacionDidactica}/liberar', [InstrumentacionDidacticaController::class, 'liberar']);
+    Route::patch('/instrumentaciones-didacticas/{instrumentacionDidactica}/visto-bueno',
+                                                                                     [InstrumentacionDidacticaController::class, 'vistoBueno']);
+
+    // ── Sprint 8 — Inteligencia Analítica ────────────────────────────────────────
+    Route::get('/indicadores/desercion',           [IndicadoresController::class, 'desercion']);
+    Route::get('/indicadores/retencion',           [IndicadoresController::class, 'retencion']);
+    Route::get('/indicadores/eficiencia-terminal', [IndicadoresController::class, 'eficienciaTerminal']);
+    Route::get('/indicadores/promedio',            [IndicadoresController::class, 'promedio']);
+
+    // ── Sprint 12 — Asistencia y Seguimiento Académico ───────────────────────────
+    Route::get('/sesiones-clase',                                      [SesionClaseController::class, 'index']);
+    Route::post('/sesiones-clase',                                     [SesionClaseController::class, 'store']);
+    Route::get('/sesiones-clase/{sesionClase}',                        [SesionClaseController::class, 'show']);
+    Route::patch('/sesiones-clase/{sesionClase}/asistencia',           [SesionClaseController::class, 'actualizarAsistencia']);
+    Route::get('/grupos/{grupo}/reporte-asistencia',                   [SesionClaseController::class, 'reporteAsistenciaGrupo']);
+    Route::get('/alumnos/{alumnoId}/asistencia',                       [SesionClaseController::class, 'asistenciaAlumno']);
+    Route::get('/alertas/inasistencias',                               [AlertaInasistenciaController::class, 'index']);
+    Route::patch('/alertas/inasistencias/{alerta}/leer',               [AlertaInasistenciaController::class, 'marcarLeida']);
+    Route::get('/reportes/carga-academica',                            [SesionClaseController::class, 'reporteCargaAcademica']);
+
+    // ── Sprint 13 — Reportes Directivos y Egresados ──────────────────────────────
+    // Egresados (S13-01)
+    Route::get('/egresados',                [EgresadoController::class, 'index']);
+    Route::post('/egresados',               [EgresadoController::class, 'store']);
+    Route::patch('/egresados/{egresado}',   [EgresadoController::class, 'update']);
+
+    // Reportes PDF directivos (S13-02, S13-03, S13-04)
+    Route::get('/reportes/matricula/pdf',             [ReporteDirectivoController::class, 'matriculaPdf']);
+    Route::get('/reportes/calificaciones/pdf',        [ReporteDirectivoController::class, 'calificacionesPdf']);
+    Route::get('/reportes/directorio/{tipo}/pdf',     [ReporteDirectivoController::class, 'directorioPdf']);
+
+    // Dashboard asistencia institucional (S13-05)
+    Route::get('/indicadores/asistencia',                     [IndicadoresAsistenciaController::class, 'dashboard']);
+    Route::get('/indicadores/asistencia/carrera/{carreraId}', [IndicadoresAsistenciaController::class, 'porCarrera']);
+
+    // ── Sprint 14 — Programa Institucional de Tutoría ─────────────────────────────
+    Route::get('/asignaciones-tutoria',                        [AsignacionTutoriaController::class, 'index']);
+    Route::post('/asignaciones-tutoria',                       [AsignacionTutoriaController::class, 'store']);
+    Route::patch('/asignaciones-tutoria/{asignacion}',         [AsignacionTutoriaController::class, 'update']);
+    Route::get('/sesiones-tutoria',                            [SesionTutoriaController::class, 'index']);
+    Route::post('/sesiones-tutoria',                           [SesionTutoriaController::class, 'store']);
+    Route::get('/sesiones-tutoria/{tutorId}',                  [SesionTutoriaController::class, 'porTutor']);
+    Route::get('/planes-accion-tutorial',                      [PlanAccionTutorialController::class, 'index']);
+    Route::post('/planes-accion-tutorial',                     [PlanAccionTutorialController::class, 'store']);
+    Route::patch('/planes-accion-tutorial/{plan}/estatus',     [PlanAccionTutorialController::class, 'updateEstatus']);
+    Route::get('/indicadores/tutoria',                         [IndicadoresTutoriaController::class, 'dashboard']);
+
+    // ── Sprint 15 — Traslado, Convalidación y Equivalencia ────────────────────────
+    Route::get('/traslados',                                   [TrasladoController::class, 'index']);
+    Route::post('/traslados',                                  [TrasladoController::class, 'store']);
+    Route::patch('/traslados/{traslado}/gestionar',            [TrasladoController::class, 'gestionar']);
+    Route::get('/traslados/{traslado}/kardex/pdf',             [TrasladoController::class, 'kardexPdf']);
+    Route::get('/convalidaciones',                             [ConvalidacionController::class, 'index']);
+    Route::post('/convalidaciones',                            [ConvalidacionController::class, 'store']);
+    Route::get('/equivalencias',                               [EquivalenciaController::class, 'index']);
+    Route::post('/equivalencias',                              [EquivalenciaController::class, 'store']);
+    Route::get('/alumnos/{alumno}/historial-academico',        [AlumnoController::class, 'historialAcademico']);
+
+    // ── Sprint 16 — Movilidad Estudiantil y Cursos de Verano ──────────────────────
+    Route::get('/convenios-movilidad',                             [ConvenioMovilidadController::class, 'index']);
+    Route::post('/convenios-movilidad',                            [ConvenioMovilidadController::class, 'store']);
+    Route::get('/movilidad-estudiantil',                           [MovilidadEstudiantilController::class, 'index']);
+    Route::post('/movilidad-estudiantil',                          [MovilidadEstudiantilController::class, 'store']);
+    Route::patch('/movilidad-estudiantil/{movilidad}/calificaciones', [MovilidadEstudiantilController::class, 'registrarCalificaciones']);
+    Route::get('/cursos-verano',                                   [CursoVeranoController::class, 'index']);
+    Route::post('/cursos-verano',                                  [CursoVeranoController::class, 'store']);
+    Route::post('/cursos-verano/{cursoVerano}/inscripciones',      [CursoVeranoController::class, 'inscribir']);
+    Route::patch('/cursos-verano/{cursoVerano}/cerrar',            [CursoVeranoController::class, 'cerrar']);
+
+    // ── Sprint 17 — Educación a Distancia (TecNM Cap. 16) ────────────────────────
+    Route::get('/programas-distancia',                             [ProgramaDistanciaController::class, 'index']);
+    Route::post('/programas-distancia',                            [ProgramaDistanciaController::class, 'store']);
+    Route::post('/inscripciones-distancia',                        [InscripcionDistanciaController::class, 'store']);
+    Route::get('/alumnos/{alumno}/avance-distancia',               [AlumnoController::class, 'avanceDistancia']);
+    Route::get('/seguimiento-distancia',                           [EducacionDistanciaController::class, 'seguimiento']);
+    Route::get('/indicadores/distancia',                           [EducacionDistanciaController::class, 'indicadores']);
+
+    // ── Sprint 18 — Catálogo de Personal Sindicalizado ────────────────────────────
+    Route::get('/docentes/{docente}/ficha-sindical',               [FichaSindicalController::class, 'show']);
+    Route::post('/docentes/{docente}/ficha-sindical',              [FichaSindicalController::class, 'store']);
+    Route::get('/plazas',                                          [PlazaController::class, 'index']);
+    Route::post('/plazas/{plaza}/movimientos',                     [PlazaController::class, 'registrarMovimiento']);
+    Route::get('/reportes/plantilla-sindical/pdf',                 [PlantillaSindicalController::class, 'pdf']);
+
+    // ── Sprint 19 — Permisos Sindicales y Escalafón ───────────────────────────────
+    Route::get('/permisos-sindicales',                                     [PermisoSindicalController::class, 'index']);
+    Route::post('/permisos-sindicales',                                    [PermisoSindicalController::class, 'store']);
+    Route::get('/permisos-sindicales/{permiso}/oficio-pdf',                [PermisoSindicalController::class, 'oficio']);
+    Route::get('/docentes/{docente}/historial-escalafon',                  [FichaSindicalController::class, 'historialEscalafon']);
+    Route::get('/concursos-oposicion',                                     [ConcursoOposicionController::class, 'index']);
+    Route::post('/concursos-oposicion',                                    [ConcursoOposicionController::class, 'store']);
+    Route::get('/reportes/permisos-sindicales/{periodo}/pdf',              [InformeSindicalController::class, 'pdf']);
+    Route::get('/dashboard/ausentismo-sindical',                           [AusentismoSindicalController::class, 'dashboard']);
+
+    // ── Sprint 20 — Convocatorias Institucionales ─────────────────────────────────
+    Route::get('/convocatorias',                                               [ConvocatoriaController::class, 'index']);
+    Route::post('/convocatorias',                                              [ConvocatoriaController::class, 'store']);
+    Route::get('/convocatorias/{convocatoria}',                                [ConvocatoriaController::class, 'show']);
+    Route::patch('/convocatorias/{convocatoria}/estatus',                      [ConvocatoriaController::class, 'updateEstatus']);
+    Route::post('/convocatorias/{convocatoria}/publicar-resultados',           [ConvocatoriaController::class, 'publicarResultados']);
+    Route::get('/convocatorias/{convocatoria}/postulaciones',                  [PostulacionController::class, 'indexPorConvocatoria']);
+    Route::post('/convocatorias/{convocatoria}/postulaciones',                 [PostulacionController::class, 'store']);
+    Route::patch('/postulaciones/{postulacion}/estatus',                       [PostulacionController::class, 'updateEstatus']);
+    Route::get('/users/{user}/postulaciones',                                  [PostulacionController::class, 'misPostulaciones']);
 });

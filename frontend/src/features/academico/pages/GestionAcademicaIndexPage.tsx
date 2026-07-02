@@ -154,6 +154,18 @@ const SECCIONES: SeccionCard[] = [
     ruta: '/admin/gestion-academica/funciones',
     icono: <IconBadge />,
   },
+  {
+    titulo: 'Fichas Docentes',
+    descripcion: 'Gestiona contrato, categoría, especialidades y carga histórica de cada docente.',
+    ruta: '/admin/gestion-academica/fichas-docentes',
+    icono: <IconBadge />,
+  },
+  {
+    titulo: 'Asistencias',
+    descripcion: 'Registra sesiones de clase y controla la asistencia de alumnos por sesión.',
+    ruta: '/admin/gestion-academica/asistencias',
+    icono: <IconClipboard />,
+  },
 ]
 
 export default function GestionAcademicaIndexPage() {

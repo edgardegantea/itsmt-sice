@@ -101,6 +101,24 @@ const ICONS: Record<string, () => React.JSX.Element> = {
   '/docente/planeacion':                 IconBook,
   '/admin/bajas':                        IconUsers,
   '/admin/alertas-baja-definitiva':      IconShield,
+  '/admin/vinculacion/servicio-social':      IconBook,
+  '/admin/vinculacion/solicitudes-rp':       IconBook,
+  '/admin/vinculacion/residencias':          IconGraduate,
+  '/admin/vinculacion/asesorias-rp':        IconBook,
+  '/admin/libro-registro-nc':               IconBook,
+  '/admin/egresados':                       IconUsers,
+  '/admin/reportes/directivos':             IconBook,
+  '/admin/indicadores/asistencia':          IconShield,
+  '/admin/indicadores/tutoria':             IconShield,
+  '/admin/pit/asignaciones':               IconUsers,
+  '/admin/traslados':                      IconUsers,
+  '/admin/convalidaciones':                IconBook,
+  '/admin/equivalencias':                  IconBook,
+  '/docente/pit/sesiones':                 IconBook,
+  '/docente/pit/pat':                      IconBook,
+  '/admin/titulacion/certificados-idioma':   IconBook,
+  '/admin/titulacion/acto-protocolario':     IconGraduate,
+  '/admin/titulacion/salida-lateral':        IconBook,
 }
 
 type NavItem = { to: string; label: string; roles?: string[] }
@@ -132,6 +150,106 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/admin/encuestas-socioeconomicas', label: 'Enc. Socioeconómica', roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/carga-academica',           label: 'Carga Académica PDF', roles: ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/alertas-baja-definitiva',   label: 'Alertas Baja Def.',   roles: ['superadmin', 'admin', 'jefe_carrera', 'director_academico', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/libro-registro-nc',         label: 'Libro Registro NC',   roles: ['superadmin', 'admin', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/egresados',                 label: 'Egresados',           roles: ['superadmin', 'admin', 'control_escolar', 'director_academico', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+    ],
+  },
+  {
+    id: 'vinculacion',
+    label: 'Vinculación',
+    items: [
+      { to: '/admin/vinculacion/servicio-social', label: 'Servicio Social',   roles: ['superadmin', 'admin', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/vinculacion/solicitudes-rp',  label: 'Solicitudes RP',    roles: ['superadmin', 'admin', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/vinculacion/residencias',     label: 'Residencias Prof.', roles: ['superadmin', 'admin', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/vinculacion/asesorias-rp',   label: 'Asesorías RP',      roles: ['superadmin', 'admin', 'jefe_carrera', 'docente', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+    ],
+  },
+  {
+    id: 'titulacion',
+    label: 'Titulación',
+    items: [
+      { to: '/admin/titulacion/certificados-idioma', label: 'Certificados Idioma', roles: ['superadmin', 'admin', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/titulacion/acto-protocolario',   label: 'Acto Protocolario',  roles: ['superadmin', 'admin', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/titulacion/salida-lateral',      label: 'Salida Lateral',     roles: ['superadmin', 'admin', 'jefe_carrera', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+    ],
+  },
+  {
+    id: 'planeacion',
+    label: 'Planeación Acad.',
+    items: [
+      { to: '/admin/planeacion/asignaciones',      label: 'Asignaciones',       roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/planeacion/instrumentaciones', label: 'Instrumentaciones',  roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'docente', 'direccion_academica', 'subdireccion_academica'] },
+    ],
+  },
+  {
+    id: 'gestion-personal',
+    label: 'Gest. Personal',
+    items: [
+      { to: '/admin/personal/solicitudes',  label: 'Permisos',       roles: ['superadmin', 'admin', 'docente', 'jefe_carrera', 'personal_administrativo', 'director_academico', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/personal/comisiones',   label: 'Comisiones',     roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/capacitacion/cursos',   label: 'Capacitación',   roles: ['superadmin', 'admin', 'personal_administrativo', 'director_academico', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/docente/capacitacion',        label: 'Mis Cursos',     roles: ['docente', 'jefe_carrera'] },
+    ],
+  },
+  {
+    id: 'traslados',
+    label: 'Traslado / Equiv.',
+    items: [
+      { to: '/admin/traslados',       label: 'Traslados',      roles: ['superadmin', 'admin', 'control_escolar', 'director_academico', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/convalidaciones', label: 'Convalidaciones', roles: ['superadmin', 'admin', 'control_escolar', 'director_academico', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/equivalencias',   label: 'Equivalencias',  roles: ['superadmin', 'admin', 'control_escolar', 'director_academico', 'direccion_academica', 'subdireccion_academica'] },
+    ],
+  },
+  {
+    id: 'movilidad',
+    label: 'Movilidad / Verano',
+    items: [
+      { to: '/admin/convenios-movilidad',   label: 'Convenios',         roles: ['superadmin', 'admin', 'director_academico', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/movilidad-estudiantil', label: 'Movilidad',         roles: ['superadmin', 'admin', 'control_escolar', 'director_academico', 'direccion_academica', 'subdireccion_academica', 'alumno'] },
+      { to: '/admin/cursos-verano',         label: 'Cursos de Verano',  roles: ['superadmin', 'admin', 'control_escolar', 'director_academico', 'direccion_academica', 'subdireccion_academica', 'docente', 'alumno'] },
+    ],
+  },
+  {
+    id: 'distancia',
+    label: 'Ed. a Distancia',
+    items: [
+      { to: '/admin/educacion-distancia/programas',    label: 'Programas',    roles: ['superadmin', 'admin', 'director_academico', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/educacion-distancia/seguimiento',  label: 'Seguimiento',  roles: ['superadmin', 'admin', 'coord_distancia', 'director_academico', 'direccion_academica', 'subdireccion_academica'] },
+    ],
+  },
+  {
+    id: 'sindical',
+    label: 'Personal Sindicalizado',
+    items: [
+      { to: '/admin/plazas-sindicales',    label: 'Catálogo de Plazas',  roles: ['superadmin', 'admin', 'director_academico', 'direccion_general', 'subdireccion_academica', 'control_escolar'] },
+      { to: '/admin/permisos-sindicales',  label: 'Permisos Sindicales', roles: ['superadmin', 'admin', 'director_academico', 'direccion_general', 'subdireccion_academica', 'control_escolar'] },
+      { to: '/admin/concursos-oposicion',  label: 'Concursos Escalafón', roles: ['superadmin', 'admin', 'director_academico', 'direccion_general', 'subdireccion_academica'] },
+    ],
+  },
+  {
+    id: 'convocatorias',
+    label: 'Convocatorias',
+    items: [
+      { to: '/admin/convocatorias',       label: 'Gestión Convocatorias', roles: ['superadmin', 'admin', 'director_academico', 'direccion_general', 'subdireccion_academica', 'control_escolar'] },
+    ],
+  },
+  {
+    id: 'pit',
+    label: 'Tutoría (PIT)',
+    items: [
+      { to: '/admin/pit/asignaciones',        label: 'Asignaciones',       roles: ['superadmin', 'admin', 'coord_tutoria', 'director_academico', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/docente/pit/sesiones',          label: 'Mis Sesiones',       roles: ['docente', 'jefe_carrera'] },
+      { to: '/docente/pit/pat',               label: 'Mi Plan PAT',        roles: ['docente', 'jefe_carrera'] },
+      { to: '/admin/indicadores/tutoria',     label: 'Dashboard PIT',      roles: ['superadmin', 'admin', 'coord_tutoria', 'director_academico', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+    ],
+  },
+  {
+    id: 'analitica',
+    label: 'Analítica',
+    items: [
+      { to: '/admin/analitica/indicadores',   label: 'Indicadores KPI',    roles: ['superadmin', 'admin', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/indicadores/asistencia',  label: 'Asistencia Inst.',   roles: ['superadmin', 'admin', 'director_academico', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/reportes/directivos',     label: 'Reportes PDF',       roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
     ],
   },
   {

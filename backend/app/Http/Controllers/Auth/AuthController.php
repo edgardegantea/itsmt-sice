@@ -48,8 +48,22 @@ class AuthController extends Controller
             ],
         ];
 
-        if ($user->hasRole('alumno') && $alumno ?? false) {
-            $data['user']['numero_control'] = $alumno->numero_control;
+        if ($user->hasRole('alumno')) {
+            $alumnoModel = $alumno
+                ? $alumno->load(['carrera', 'periodoIngreso', 'inscripcion'])
+                : Alumno::with(['carrera', 'periodoIngreso', 'inscripcion'])->where('user_id', $user->id)->first();
+
+            if ($alumnoModel) {
+                $data['user']['numero_control']                     = $alumnoModel->numero_control;
+                $data['user']['carrera']                            = $alumnoModel->carrera?->nombre;
+                $data['user']['semestre']                           = $alumnoModel->semestre_actual;
+                $data['user']['estatus']                            = $alumnoModel->estatus;
+                $data['user']['pendiente_certificado_bachillerato'] = $alumnoModel->pendiente_certificado_bachillerato;
+                $data['user']['periodo_ingreso']                    = $alumnoModel->periodoIngreso?->nombre;
+                $data['user']['tipo_ingreso']                       = $alumnoModel->inscripcion?->tipo_ingreso;
+                $data['user']['observaciones_estatus']              = $alumnoModel->observaciones_estatus;
+                $data['user']['alumno_id']                          = $alumnoModel->id;
+            }
         }
 
         return ApiResponse::success($data, 'Sesión iniciada correctamente.');

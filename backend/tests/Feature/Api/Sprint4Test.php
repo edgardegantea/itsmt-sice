@@ -15,6 +15,7 @@ use App\Domains\Academico\Models\Grupo;
 use App\Domains\Academico\Models\Materia;
 use App\Domains\Academico\Models\Periodo;
 use App\Models\User;
+use App\Services\GotenbergService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -541,6 +542,105 @@ class Sprint4Test extends TestCase
 
         $this->actingAs($alumnoUser, 'sanctum')
             ->getJson('/api/alertas-baja-definitiva')
+            ->assertStatus(403);
+    }
+
+    // ── S4-02: Situación académica ────────────────────────────────────────────
+
+    public function test_admin_puede_ver_situacion_academica_alumno(): void
+    {
+        Calificacion::create([
+            'alumno_id'  => $this->alumno->id,
+            'grupo_id'   => $this->grupo->id,
+            'calificacion'=> 85,
+            'acreditado' => true,
+            'intento'    => 1,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/alumnos/{$this->alumno->id}/situacion-academica");
+
+        $r->assertOk()
+          ->assertJsonStructure(['data' => ['calificaciones', 'alertas_baja_definitiva']]);
+
+        $this->assertCount(1, $r->json('data.calificaciones'));
+    }
+
+    public function test_alumno_puede_ver_su_propia_situacion(): void
+    {
+        $alumnoUser = $this->alumno->user;
+
+        $r = $this->actingAs($alumnoUser, 'sanctum')
+            ->getJson("/api/alumnos/{$this->alumno->id}/situacion-academica");
+
+        $r->assertOk()
+          ->assertJsonStructure(['data' => ['calificaciones', 'alertas_baja_definitiva']]);
+    }
+
+    public function test_alumno_no_puede_ver_situacion_de_otro(): void
+    {
+        $otroUser = User::factory()->create();
+        $otroUser->assignRole('alumno');
+
+        $otraInscripcion = Inscripcion::create([
+            'aspirante_id'      => Aspirante::create([
+                'nombres'               => 'Otro',
+                'apellido_paterno'      => 'Alumno',
+                'curp'                  => 'ALOT000101HVZRNN99',
+                'fecha_nacimiento'      => '2000-01-01',
+                'sexo'                  => 'masculino',
+                'municipio_procedencia' => 'Xalapa',
+                'escuela_bachillerato'  => 'CBTis 2',
+                'promedio_bachillerato' => 8.0,
+                'turno_preferido'       => 'matutino',
+                'email'                 => 'otro.s4@test.com',
+                'carrera_id'            => $this->carrera->id,
+                'periodo_id'            => $this->periodo->id,
+            ])->id,
+            'numero_control'    => 'ISC210002',
+            'carrera_id'        => $this->carrera->id,
+            'periodo_id'        => $this->periodo->id,
+            'fecha_inscripcion' => now()->toDateString(),
+        ]);
+
+        $otroAlumno = Alumno::create([
+            'user_id'            => $otroUser->id,
+            'inscripcion_id'     => $otraInscripcion->id,
+            'numero_control'     => 'ISC210002',
+            'carrera_id'         => $this->carrera->id,
+            'periodo_ingreso_id' => $this->periodo->id,
+            'semestre_actual'    => 1,
+            'estatus'            => 'activo',
+        ]);
+
+        // alumnoUser intenta ver situación de otroAlumno → 403
+        $alumnoUser = $this->alumno->user;
+        $this->actingAs($alumnoUser, 'sanctum')
+            ->getJson("/api/alumnos/{$otroAlumno->id}/situacion-academica")
+            ->assertStatus(403);
+    }
+
+    // ── S4-06: Acta calificaciones PDF ───────────────────────────────────────
+
+    public function test_admin_puede_descargar_pdf_acta_calificaciones(): void
+    {
+        $this->mock(GotenbergService::class,
+            fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/grupos/{$this->grupo->id}/acta-calificaciones/pdf");
+
+        $r->assertOk();
+        $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    public function test_docente_ajeno_no_puede_descargar_acta_pdf(): void
+    {
+        $otroDocente = User::factory()->create();
+        $otroDocente->assignRole('docente');
+
+        $this->actingAs($otroDocente, 'sanctum')
+            ->get("/api/grupos/{$this->grupo->id}/acta-calificaciones/pdf")
             ->assertStatus(403);
     }
 }

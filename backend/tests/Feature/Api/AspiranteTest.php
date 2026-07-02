@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Mail\ConfirmacionAspirante;
 use App\Domains\Admision\Models\Aspirante;
+use App\Services\GotenbergService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -411,5 +412,82 @@ class AspiranteTest extends TestCase
             ]);
 
         $response->assertStatus(422);
+    }
+
+    // ── S1-05/S1-07/S1-08/S1-10: PDFs de inscripción ────────────────────────
+
+    private function crearInscripcion(): \App\Domains\Admision\Models\Inscripcion
+    {
+        $aspirante = Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'PDFT000101HVZDRX09']), [
+            'nombres' => 'PDF', 'apellido_paterno' => 'Test',
+            'email' => 'pdf.test@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id, 'estatus' => 'aceptado',
+        ]));
+
+        $resp = $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/inscripciones', ['aspirante_id' => $aspirante->id]);
+
+        $nc = $resp->json('data.numero_control');
+        return \App\Domains\Admision\Models\Inscripcion::where('numero_control', $nc)->firstOrFail();
+    }
+
+    public function test_puede_generar_pdf_solicitud_inscripcion(): void
+    {
+        $this->mock(GotenbergService::class, fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
+        $inscripcion = $this->crearInscripcion();
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/inscripciones/{$inscripcion->id}/solicitud-inscripcion/pdf");
+
+        $r->assertOk();
+        $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    public function test_puede_generar_pdf_carta_compromiso(): void
+    {
+        $this->mock(GotenbergService::class, fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
+        $inscripcion = $this->crearInscripcion();
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/inscripciones/{$inscripcion->id}/carta-compromiso/pdf");
+
+        $r->assertOk();
+        $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    public function test_puede_generar_pdf_contrato_estudiante(): void
+    {
+        $this->mock(GotenbergService::class, fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
+        $inscripcion = $this->crearInscripcion();
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/inscripciones/{$inscripcion->id}/contrato-estudiante/pdf");
+
+        $r->assertOk();
+        $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    public function test_puede_generar_pdf_carta_compromiso_docs(): void
+    {
+        $this->mock(GotenbergService::class, fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
+        $inscripcion = $this->crearInscripcion();
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/inscripciones/{$inscripcion->id}/carta-compromiso-docs/pdf");
+
+        $r->assertOk();
+        $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    public function test_puede_generar_libro_registro_nc(): void
+    {
+        $this->mock(GotenbergService::class, fn($m) => $m->shouldReceive('htmlToPdfLandscape')->andReturn('%PDF fake'));
+        $this->crearInscripcion();
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->get('/api/libro-registro-nc');
+
+        $r->assertOk();
+        $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
     }
 }

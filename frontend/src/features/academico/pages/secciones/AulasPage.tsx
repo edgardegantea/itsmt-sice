@@ -8,6 +8,16 @@ import { usePuedeEliminar } from '../../../../hooks/usePermisos'
 
 type AulaForm = { nombre: string; capacidad: number; tipo: Aula['tipo']; activa: boolean }
 type TipoFiltro = 'todas' | 'salon' | 'laboratorio' | 'taller'
+type ActiveTab = 'catalogo' | 'disponibilidad'
+
+type DisponibilidadForm = {
+  dia_semana: string
+  hora_inicio: string
+  hora_fin: string
+  tipo?: string
+}
+
+const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const
 
 const TIPO_LABEL: Record<Aula['tipo'], string> = {
   salon: 'Salón',
@@ -17,6 +27,7 @@ const TIPO_LABEL: Record<Aula['tipo'], string> = {
 
 export default function AulasPage() {
   const qc = useQueryClient()
+  const [tab, setTab] = useState<ActiveTab>('catalogo')
   const [filtroTipo, setFiltroTipo] = useState<TipoFiltro>('todas')
   const [modal, setModal] = useState<null | 'nuevo' | Aula>(null)
   const [form, setForm] = useState<Partial<AulaForm>>({ tipo: 'salon', capacidad: 35, activa: true })
@@ -24,9 +35,20 @@ export default function AulasPage() {
   const { confirm, dialog: confirmDialog } = useConfirm()
   const puedeEliminar = usePuedeEliminar()
 
+  // Disponibilidad state
+  const [dispForm, setDispForm] = useState<DisponibilidadForm>({ dia_semana: 'lunes', hora_inicio: '08:00', hora_fin: '09:00' })
+  const setDisp = (k: keyof DisponibilidadForm, v: string) => setDispForm(f => ({ ...f, [k]: v }))
+  const [buscarDisp, setBuscarDisp] = useState(false)
+
   const { data: aulas = [], isLoading } = useQuery({
     queryKey: ['aulas'],
     queryFn: () => academicoApi.getAulas(),
+  })
+
+  const { data: aulasDisp = [], isFetching: loadingDisp } = useQuery({
+    queryKey: ['aulas-disponibles', dispForm],
+    queryFn: () => academicoApi.getAulasDisponibles(dispForm),
+    enabled: buscarDisp,
   })
 
   const mutSave = useMutation({
@@ -68,84 +90,189 @@ export default function AulasPage() {
               <h1 className="text-xl font-bold text-slate-900">Aulas y Espacios</h1>
               <p className="text-sm text-slate-500 mt-0.5">Salones, laboratorios y talleres disponibles</p>
             </div>
-            <button onClick={openNuevo} className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
-              + Nuevo espacio
-            </button>
+            {tab === 'catalogo' && (
+              <button onClick={openNuevo} className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+                + Nuevo espacio
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Filtro tabs */}
-        <div className="flex gap-2 flex-wrap">
+        {/* Main tabs */}
+        <div className="flex gap-1 border-b border-slate-200">
           {([
-            { key: 'todas', label: `Todos (${(aulas as Aula[]).length})` },
-            { key: 'salon', label: `Salones (${conteoTipo('salon')})` },
-            { key: 'laboratorio', label: `Laboratorios (${conteoTipo('laboratorio')})` },
-            { key: 'taller', label: `Talleres (${conteoTipo('taller')})` },
-          ] as { key: TipoFiltro; label: string }[]).map(f => (
+            { key: 'catalogo', label: 'Catálogo' },
+            { key: 'disponibilidad', label: 'Consultar disponibilidad' },
+          ] as { key: ActiveTab; label: string }[]).map(t => (
             <button
-              key={f.key}
-              onClick={() => setFiltroTipo(f.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filtroTipo === f.key ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === t.key ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
             >
-              {f.label}
+              {t.label}
             </button>
           ))}
         </div>
 
-        {/* Tabla */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <SortableTh field="nombre" sort={sort} onSort={onSort}>Nombre</SortableTh>
-                <SortableTh field="tipo" sort={sort} onSort={onSort}>Tipo</SortableTh>
-                <SortableTh field="capacidad" sort={sort} onSort={onSort}>Capacidad</SortableTh>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <SkeletonRows cols={5} />
-              ) : aulasSorted.length === 0 ? (
-                <EmptyRow cols={5} />
-              ) : (
-                aulasSorted.map(a => (
-                  <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
-                    <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        a.tipo === 'salon' ? 'bg-blue-100 text-blue-700'
-                        : a.tipo === 'laboratorio' ? 'bg-green-100 text-green-700'
-                        : 'bg-orange-100 text-orange-700'
-                      }`}>
-                        {TIPO_LABEL[a.tipo]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{a.capacidad} lugares</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${a.activa ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                        {a.activa ? 'Disponible' : 'No disponible'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 flex gap-3 justify-end">
-                      <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
-                      {puedeEliminar && <button
-                      onClick={() => confirm({
-                        title: `¿Eliminar ${a.nombre}?`,
-                        description: 'El espacio será eliminado permanentemente.',
-                        confirmLabel: 'Eliminar',
-                        onConfirm: () => mutDelete.mutateAsync(a.id),
-                      })}
-                      className="text-xs text-red-500 hover:underline"
-                    >Eliminar</button>}
-                    </td>
+        {/* ── Catálogo tab ── */}
+        {tab === 'catalogo' && (
+          <>
+            {/* Filtro tabs */}
+            <div className="flex gap-2 flex-wrap">
+              {([
+                { key: 'todas', label: `Todos (${(aulas as Aula[]).length})` },
+                { key: 'salon', label: `Salones (${conteoTipo('salon')})` },
+                { key: 'laboratorio', label: `Laboratorios (${conteoTipo('laboratorio')})` },
+                { key: 'taller', label: `Talleres (${conteoTipo('taller')})` },
+              ] as { key: TipoFiltro; label: string }[]).map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setFiltroTipo(f.key)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filtroTipo === f.key ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tabla */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <SortableTh field="nombre" sort={sort} onSort={onSort}>Nombre</SortableTh>
+                    <SortableTh field="tipo" sort={sort} onSort={onSort}>Tipo</SortableTh>
+                    <SortableTh field="capacidad" sort={sort} onSort={onSort}>Capacidad</SortableTh>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
+                    <th />
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {isLoading ? (
+                    <SkeletonRows cols={5} />
+                  ) : aulasSorted.length === 0 ? (
+                    <EmptyRow cols={5} />
+                  ) : (
+                    aulasSorted.map(a => (
+                      <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
+                        <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            a.tipo === 'salon' ? 'bg-blue-100 text-blue-700'
+                            : a.tipo === 'laboratorio' ? 'bg-green-100 text-green-700'
+                            : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {TIPO_LABEL[a.tipo]}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">{a.capacidad} lugares</td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${a.activa ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {a.activa ? 'Disponible' : 'No disponible'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 flex gap-3 justify-end">
+                          <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                          {puedeEliminar && <button
+                          onClick={() => confirm({
+                            title: `¿Eliminar ${a.nombre}?`,
+                            description: 'El espacio será eliminado permanentemente.',
+                            confirmLabel: 'Eliminar',
+                            onConfirm: () => mutDelete.mutateAsync(a.id),
+                          })}
+                          className="text-xs text-red-500 hover:underline"
+                        >Eliminar</button>}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* ── Disponibilidad tab ── */}
+        {tab === 'disponibilidad' && (
+          <div className="space-y-5">
+            <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <h2 className="text-sm font-semibold text-slate-700 mb-4">Consultar aulas libres en un bloque horario</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Día</label>
+                  <select value={dispForm.dia_semana} onChange={e => setDisp('dia_semana', e.target.value)} className={selectCls}>
+                    {DIAS.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Hora inicio</label>
+                  <input type="time" value={dispForm.hora_inicio} onChange={e => setDisp('hora_inicio', e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Hora fin</label>
+                  <input type="time" value={dispForm.hora_fin} onChange={e => setDisp('hora_fin', e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Tipo (opcional)</label>
+                  <select value={dispForm.tipo ?? ''} onChange={e => setDisp('tipo', e.target.value || '')} className={selectCls}>
+                    <option value="">Todos</option>
+                    <option value="salon">Salón</option>
+                    <option value="laboratorio">Laboratorio</option>
+                    <option value="taller">Taller</option>
+                  </select>
+                </div>
+              </div>
+              <button
+                onClick={() => { setBuscarDisp(false); setTimeout(() => setBuscarDisp(true), 50) }}
+                className="mt-4 px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              >
+                Buscar aulas libres
+              </button>
+            </div>
+
+            {buscarDisp && (
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Aulas disponibles — {dispForm.dia_semana} {dispForm.hora_inicio}–{dispForm.hora_fin}
+                  </span>
+                </div>
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Nombre</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Tipo</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Capacidad</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {loadingDisp ? (
+                      <SkeletonRows cols={3} />
+                    ) : (aulasDisp as Aula[]).length === 0 ? (
+                      <EmptyRow cols={3} msg="No hay aulas disponibles en ese bloque" />
+                    ) : (
+                      (aulasDisp as Aula[]).map(a => (
+                        <tr key={a.id} className="hover:bg-green-50/60 transition-colors">
+                          <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
+                          <td className="px-4 py-3">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              a.tipo === 'salon' ? 'bg-blue-100 text-blue-700'
+                              : a.tipo === 'laboratorio' ? 'bg-green-100 text-green-700'
+                              : 'bg-orange-100 text-orange-700'
+                            }`}>
+                              {TIPO_LABEL[a.tipo]}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">{a.capacidad} lugares</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {confirmDialog}
