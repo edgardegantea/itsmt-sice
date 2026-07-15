@@ -19,6 +19,8 @@ const NAV_ITEMS = [
   { to: '/alumno/titulacion',                label: 'Titulación',            icon: '🎓' },
   { to: '/alumno/convocatorias',             label: 'Convocatorias',         icon: '📢' },
   { to: '/alumno/mis-postulaciones',         label: 'Mis Postulaciones',     icon: '📬' },
+  { to: '/alumno/becas',                     label: 'Mis Becas',             icon: '💰' },
+  { to: '/biblioteca',                       label: 'Biblioteca',            icon: '📚' },
 ]
 
 export default function AlumnoLayout({ children }: Props) {

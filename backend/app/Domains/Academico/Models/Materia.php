@@ -22,6 +22,7 @@ class Materia extends Model
         'temario', 'actividades_aprendizaje', 'practicas',
         'proyecto_asignatura', 'evaluacion',
         'fuentes_informacion', 'documento_path',
+        'modulo_sabatino',
     ];
 
     protected function casts(): array

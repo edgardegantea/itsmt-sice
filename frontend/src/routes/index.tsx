@@ -94,6 +94,19 @@ const ConcursosOposicionPage          = lazy(() => import('../features/academico
 const ConvocatoriasPage               = lazy(() => import('../features/convocatoria/pages/ConvocatoriasPage'))
 const MisPostulacionesPage            = lazy(() => import('../features/convocatoria/pages/MisPostulacionesPage'))
 
+// Sprint 21-25
+const CalendarioEscolarPage           = lazy(() => import('../features/reinscripcion/pages/CalendarioEscolarPage'))
+
+// Builder de Horarios (integración propuestahorarios)
+const DisponibilidadDocentePage       = lazy(() => import('../features/academico/pages/DisponibilidadDocentePage'))
+const BuilderHorarioPage              = lazy(() => import('../features/academico/pages/BuilderHorarioPage'))
+const MiHorarioDocentePage            = lazy(() => import('../features/academico/pages/MiHorarioDocentePage'))
+const EstadoCuentaAdminPage           = lazy(() => import('../features/finanzas/pages/EstadoCuentaAdminPage'))
+const BecasAdminPage                  = lazy(() => import('../features/becas/pages/BecasAdminPage'))
+const BecasAlumnoPage                 = lazy(() => import('../features/becas/pages/BecasAlumnoPage'))
+const BibliotecaPage                  = lazy(() => import('../features/biblioteca/pages/BibliotecaPage'))
+const CalidadPage                     = lazy(() => import('../features/calidadiso/pages/CalidadPage'))
+
 // ── Wrappers ──────────────────────────────────────────────────────────────────
 
 const ADMIN_ROLES = ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'personal_administrativo']
@@ -185,7 +198,11 @@ export default function AppRoutes() {
         {/* Legacy tab view — kept for reference */}
         <Route path="/admin/gestion-academica/legacy"       element={<AdminLayout><GestionAcademicaPage /></AdminLayout>} />
         <Route path="/admin/carga-academica"           element={<AdminLayout><CargaAcademicaAdminPage /></AdminLayout>} />
+        <Route path="/admin/horarios/builder"          element={<AdminLayout><BuilderHorarioPage /></AdminLayout>} />
+        <Route path="/admin/horarios/disponibilidad"   element={<AdminLayout><DisponibilidadDocentePage /></AdminLayout>} />
         <Route path="/docente/planeacion"              element={<AdminLayout><PlaneacionDocentePage /></AdminLayout>} />
+        <Route path="/docente/mi-horario"              element={<AdminLayout><MiHorarioDocentePage /></AdminLayout>} />
+        <Route path="/docente/disponibilidad"          element={<AdminLayout><DisponibilidadDocentePage /></AdminLayout>} />
 
         {/* Portal Alumno */}
         <Route
@@ -312,6 +329,29 @@ export default function AppRoutes() {
         />
 
         {/* Placeholders futuros sprints */}
+        {/* Sprint 21 — Reinscripción Oficial TecNM */}
+        <Route path="/admin/calendario-escolar" element={<AdminLayout><CalendarioEscolarPage /></AdminLayout>} />
+
+        {/* Sprint 22 — Finanzas y Estado de Cuenta */}
+        <Route path="/admin/finanzas/estado-cuenta" element={<AdminLayout><EstadoCuentaAdminPage /></AdminLayout>} />
+
+        {/* Sprint 23 — Becas TecNM */}
+        <Route path="/admin/becas"  element={<AdminLayout><BecasAdminPage /></AdminLayout>} />
+        <Route
+          path="/alumno/becas"
+          element={
+            <ProtectedRoute requiredRole="alumno">
+              <AlumnoLayout><BecasAlumnoPage /></AlumnoLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Sprint 24 — Biblioteca */}
+        <Route path="/biblioteca" element={<AdminLayout><BibliotecaPage /></AdminLayout>} />
+
+        {/* Sprint 25 — Acreditación y Calidad ISO/CACEI */}
+        <Route path="/admin/calidad-iso" element={<AdminLayout><CalidadPage /></AdminLayout>} />
+
         <Route path="/docente" element={<ProtectedRoute requiredRole="docente"><div style={{padding:32}}>Portal Docente — Sprint 4</div></ProtectedRoute>} />
         <Route path="/sin-acceso" element={<div style={{padding:32,color:'#dc3545'}}>Sin permisos para acceder a esta sección.</div>} />
 

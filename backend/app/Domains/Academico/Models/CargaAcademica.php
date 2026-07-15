@@ -17,7 +17,15 @@ class CargaAcademica extends Model
 
     protected $fillable = [
         'docente_id', 'materia_id', 'grupo_id', 'periodo_id', 'aula_id', 'horas_semana',
+        'estado', 'comentario_docente',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'estado' => 'string',
+        ];
+    }
 
     public function docente(): BelongsTo
     {

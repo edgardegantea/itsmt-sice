@@ -324,7 +324,7 @@ export const academicoApi = {
   // Horarios
   getHorarios: (params?: Record<string, string>) =>
     apiClient.get('/horarios', { params }).then(r => r.data.data as Horario[]),
-  verificarDisponibilidad: (params: { docente_id: string; periodo_id: string; dia_semana: string; hora_inicio: string; hora_fin: string; aula_id?: string; excluir_carga_id?: string }) =>
+  checkHorariosDisponibilidad: (params: { docente_id: string; periodo_id: string; dia_semana: string; hora_inicio: string; hora_fin: string; aula_id?: string; excluir_carga_id?: string }) =>
     apiClient.get('/horarios/disponibilidad', { params }).then(r => r.data.data as { conflictos: { tipo: string; mensaje: string }[]; tiene_conflictos: boolean }),
   verificarConflictos: (params: { carga_academica_id: string; dia_semana: string; hora_inicio: string; hora_fin: string; excluir_horario_id?: string }) =>
     apiClient.get('/horarios/conflictos', { params }).then(r => r.data.data as { conflictos: { tipo: string; mensaje: string }[]; tiene_conflictos: boolean }),
@@ -413,6 +413,43 @@ export const academicoApi = {
 
   revisarAlerta: (id: string): Promise<AlertaBajaDefinitiva> =>
     apiClient.patch(`/alertas-baja-definitiva/${id}/revisar`, {}).then(r => r.data.data),
+
+  // ── Builder de Horarios ──────────────────────────────────────────────────────
+  getDisponibilidadDocente: (params: { docente_id: string; periodo_id: string }): Promise<{ bloques: DisponibilidadBloque[]; dias_no_laborables: DiaNoLaborable[] }> =>
+    apiClient.get('/disponibilidad-docente', { params }).then(r => r.data.data),
+
+  saveDisponibilidadDocente: (data: { docente_id: string; periodo_id: string; bloques: Omit<DisponibilidadBloque, 'id'>[] }): Promise<DisponibilidadBloque[]> =>
+    apiClient.put('/disponibilidad-docente', data).then(r => r.data.data),
+
+  getBuilderGrid: (params: { periodo_id: string; docente_id: string; grupo_id?: string }): Promise<{ dias: BuilderDia[] }> =>
+    apiClient.get('/horarios/builder-grid', { params }).then(r => r.data.data),
+
+  verificarDisponibilidad: (data: {
+    periodo_id: string; docente_id: string; dia_semana: string
+    hora_inicio: string; hora_fin: string
+    aula_id?: string; grupo_id?: string; materia_id?: string; ignorar_carga_id?: string
+  }): Promise<{ resultado: VerificacionResultado; horas: ResumenHoras | null }> =>
+    apiClient.post('/horarios/verificar-disponibilidad', data).then(r => r.data.data),
+
+  confirmarCarga: (cargaId: string): Promise<CargaAcademica> =>
+    apiClient.patch(`/cargas-academicas/${cargaId}/confirmar`, {}).then(r => r.data.data),
+
+  reportarConflictoCarga: (cargaId: string, comentario: string): Promise<CargaAcademica> =>
+    apiClient.patch(`/cargas-academicas/${cargaId}/reportar-conflicto`, { comentario }).then(r => r.data.data),
+
+  getDiasNoLaborables: (year?: number): Promise<DiaNoLaborable[]> =>
+    apiClient.get('/dias-no-laborables', { params: year ? { year } : {} }).then(r => r.data.data),
+
+  addDiaNoLaborable: (data: { fecha: string; descripcion: string }): Promise<DiaNoLaborable> =>
+    apiClient.post('/dias-no-laborables', data).then(r => r.data.data),
+
+  deleteDiaNoLaborable: (id: string): Promise<void> =>
+    apiClient.delete(`/dias-no-laborables/${id}`).then(() => undefined),
+
+  getConcentradoUrl: (params: { periodo_id: string; carrera_id?: string }): string => {
+    const qs = new URLSearchParams({ periodo_id: params.periodo_id, ...(params.carrera_id ? { carrera_id: params.carrera_id } : {}) })
+    return `/api/horarios/concentrado?${qs}`
+  },
 
   // Horario de Trabajo Docente (TecNM-AC-PO-003-01)
   getHorariosTrabajo: (params?: { periodo_id?: string; docente_id?: string }): Promise<any> =>
@@ -1290,4 +1327,63 @@ export interface Postulacion {
   convocatoria?: Pick<Convocatoria, 'id' | 'titulo' | 'tipo' | 'estatus'>
   postulante?: { id: string; name: string; email: string }
   revisadoPor?: { id: string; name: string }
+}
+
+// ── Builder de Horarios ───────────────────────────────────────────────────────
+
+export type DiaSemana = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado'
+export type EstadoCarga = 'pendiente' | 'confirmada' | 'conflicto'
+
+export interface DisponibilidadBloque {
+  id?: string
+  dia_semana: DiaSemana
+  hora_inicio: string
+  hora_fin:    string
+}
+
+export interface DiaNoLaborable {
+  id: string
+  fecha: string
+  descripcion: string
+}
+
+export type EstadoSlot =
+  | 'disponible'
+  | 'fuera_disponibilidad'
+  | 'reservado'
+  | 'grupo_ocupado'
+
+export interface BuilderSlot {
+  hora:         string
+  estado:       EstadoSlot
+  carga_id?:    string
+  materia?:     string
+  materia_id?:  string
+  grupo?:       string
+  grupo_id?:    string
+  aula?:        string
+  aula_id?:     string
+  carga_estado?: EstadoCarga
+  hora_inicio?: string
+  hora_fin?:    string
+  docente?:     string
+}
+
+export interface BuilderDia {
+  dia_semana:    DiaSemana
+  disponibilidad: { hora_inicio: string; hora_fin: string }[]
+  horas:         BuilderSlot[]
+  horas_modulo2: BuilderSlot[] | null
+}
+
+export interface VerificacionResultado {
+  conflictos:            { tipo: string; mensaje: string }[]
+  dentro_disponibilidad: boolean
+  mensaje_disponibilidad?: string | null
+}
+
+export interface ResumenHoras {
+  horas_semana: number
+  asignadas:    number
+  restantes:    number
 }

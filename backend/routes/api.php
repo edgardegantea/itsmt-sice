@@ -40,6 +40,11 @@ use App\Http\Controllers\Academico\CalificacionController;
 use App\Http\Controllers\Academico\CierreDeCursoController;
 use App\Http\Controllers\Academico\ActaCalificacionesController;
 use App\Http\Controllers\Academico\AlertaBajaDefinitivaController;
+use App\Http\Controllers\Academico\DisponibilidadDocenteController;
+use App\Http\Controllers\Academico\DiaNoLaborableController;
+use App\Http\Controllers\Academico\BuilderHorarioController;
+use App\Http\Controllers\Academico\CargaEstadoController;
+use App\Http\Controllers\Academico\ConcentradoHorarioController;
 use App\Http\Controllers\Academico\PrecargaController;
 use App\Http\Controllers\Calidad\TipoActividadController;
 use App\Http\Controllers\Calidad\ActividadComplementariaController;
@@ -236,6 +241,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/horarios/conflictos',                             [HorarioController::class, 'conflictos']);
     Route::post('/horarios',                                       [HorarioController::class, 'store']);
     Route::delete('/horarios/{horario}',                           [HorarioController::class, 'destroy']);
+
+    // Builder de horarios — disponibilidad docente y grid visual
+    Route::get('/horarios/builder-grid',                           [BuilderHorarioController::class, 'gridData']);
+    Route::post('/horarios/verificar-disponibilidad',              [BuilderHorarioController::class, 'verificar']);
+    Route::get('/horarios/concentrado',                            [ConcentradoHorarioController::class, 'export']);
+
+    // Disponibilidad docente (autoregistro por periodo)
+    Route::get('/disponibilidad-docente',                          [DisponibilidadDocenteController::class, 'index']);
+    Route::put('/disponibilidad-docente',                          [DisponibilidadDocenteController::class, 'update']);
+
+    // Días no laborables
+    Route::get('/dias-no-laborables',                              [DiaNoLaborableController::class, 'index']);
+    Route::post('/dias-no-laborables',                             [DiaNoLaborableController::class, 'store']);
+    Route::delete('/dias-no-laborables/{id}',                      [DiaNoLaborableController::class, 'destroy']);
+
+    // Estado de carga académica (confirmación y reporte de conflicto por docente)
+    Route::patch('/cargas-academicas/{carga}/confirmar',           [CargaEstadoController::class, 'confirmar']);
+    Route::patch('/cargas-academicas/{carga}/reportar-conflicto',  [CargaEstadoController::class, 'reportarConflicto']);
 
     // Planeaciones didácticas
     Route::get('/horarios-trabajo',                                               [HorarioTrabajoController::class, 'index']);
@@ -655,4 +678,46 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/convocatorias/{convocatoria}/postulaciones',                 [PostulacionController::class, 'store']);
     Route::patch('/postulaciones/{postulacion}/estatus',                       [PostulacionController::class, 'updateEstatus']);
     Route::get('/users/{user}/postulaciones',                                  [PostulacionController::class, 'misPostulaciones']);
+
+    // ── Sprint 21 — Reinscripción Oficial TecNM-AC-PO-002 (Calendario Escolar) ──
+    Route::get('/calendario-escolar/{periodoId}',                              [\App\Http\Controllers\Reinscripcion\CalendarioEscolarController::class, 'show']);
+    Route::post('/calendario-escolar',                                         [\App\Http\Controllers\Reinscripcion\CalendarioEscolarController::class, 'store']);
+    Route::patch('/calendario-escolar/{calendario}/autorizar',                 [\App\Http\Controllers\Reinscripcion\CalendarioEscolarController::class, 'autorizar']);
+
+    // ── Sprint 22 — Estados de Cuenta y Finanzas ──────────────────────────────────
+    Route::get('/alumnos/{alumno}/estado-cuenta',                              [\App\Http\Controllers\Finanzas\EstadoCuentaController::class, 'estadoCuenta']);
+    Route::get('/alumnos/{alumno}/historial-pagos',                            [\App\Http\Controllers\Finanzas\EstadoCuentaController::class, 'historialPagos']);
+    Route::post('/adeudos/{adeudo}/pagar',                                     [\App\Http\Controllers\Finanzas\EstadoCuentaController::class, 'registrarPago']);
+    Route::get('/reportes/ingresos/{periodoId}',                               [\App\Http\Controllers\Finanzas\EstadoCuentaController::class, 'reporteIngresos']);
+
+    // ── Sprint 23 — Módulo de Becas TecNM ────────────────────────────────────────
+    Route::get('/solicitudes-beca',                                            [\App\Http\Controllers\Becas\SolicitudBecaController::class, 'index']);
+    Route::post('/solicitudes-beca',                                           [\App\Http\Controllers\Becas\SolicitudBecaController::class, 'store']);
+    Route::patch('/solicitudes-beca/{solicitud}/validar',                      [\App\Http\Controllers\Becas\SolicitudBecaController::class, 'validar']);
+    Route::post('/solicitudes-beca/{solicitud}/asignar',                       [\App\Http\Controllers\Becas\SolicitudBecaController::class, 'asignar']);
+    Route::get('/becas/padron/{periodoId}',                                    [\App\Http\Controllers\Becas\SolicitudBecaController::class, 'padron']);
+    Route::patch('/becas/{beca}/cancelar',                                     [\App\Http\Controllers\Becas\SolicitudBecaController::class, 'cancelar']);
+    Route::get('/alumnos/{alumno}/historial-becas',                            [\App\Http\Controllers\Becas\SolicitudBecaController::class, 'historialAlumno']);
+
+    // ── Sprint 24 — Biblioteca ────────────────────────────────────────────────────
+    Route::get('/acervo',                                                      [\App\Http\Controllers\Biblioteca\AcervoController::class, 'index']);
+    Route::post('/acervo',                                                     [\App\Http\Controllers\Biblioteca\AcervoController::class, 'store']);
+    Route::get('/acervo/{acervo}/ejemplares',                                  [\App\Http\Controllers\Biblioteca\AcervoController::class, 'ejemplares']);
+    Route::post('/acervo/{acervo}/ejemplares',                                 [\App\Http\Controllers\Biblioteca\AcervoController::class, 'agregarEjemplar']);
+    Route::get('/prestamos',                                                   [\App\Http\Controllers\Biblioteca\AcervoController::class, 'prestamos']);
+    Route::post('/prestamos',                                                  [\App\Http\Controllers\Biblioteca\AcervoController::class, 'crearPrestamo']);
+    Route::patch('/prestamos/{prestamo}/devolver',                             [\App\Http\Controllers\Biblioteca\AcervoController::class, 'devolver']);
+    Route::patch('/prestamos/{prestamo}/renovar',                              [\App\Http\Controllers\Biblioteca\AcervoController::class, 'renovar']);
+    Route::get('/usuarios/{user}/prestamos',                                   [\App\Http\Controllers\Biblioteca\AcervoController::class, 'prestamosPorUsuario']);
+    Route::get('/biblioteca/estadisticas',                                     [\App\Http\Controllers\Biblioteca\AcervoController::class, 'estadisticas']);
+
+    // ── Sprint 25 — Acreditación y Calidad ISO/CACEI ──────────────────────────────
+    Route::get('/evidencias-calidad',                                          [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'index']);
+    Route::post('/evidencias-calidad',                                         [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'store']);
+    Route::patch('/evidencias-calidad/{evidencia}/validar',                    [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'validar']);
+    Route::get('/no-conformidades',                                            [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'noConformidades']);
+    Route::post('/no-conformidades',                                           [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'crearNoConformidad']);
+    Route::post('/no-conformidades/{nc}/acciones',                             [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'agregarAccion']);
+    Route::patch('/no-conformidades/{nc}/cerrar',                              [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'cerrarNoConformidad']);
+    Route::get('/indicadores/calidad/{periodoId}',                             [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'indicadores']);
 });
