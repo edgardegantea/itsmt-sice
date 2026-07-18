@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Academico;
 use App\Domains\Academico\Actions\VerificarDisponibilidadAction;
 use App\Domains\Academico\Models\CargaAcademica;
 use App\Domains\Academico\Models\DisponibilidadDocente;
+use App\Domains\Academico\Models\Grupo;
 use App\Domains\Academico\Models\Horario;
+use App\Domains\Academico\Models\Materia;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BuilderHorarioController extends Controller
 {
@@ -45,7 +48,7 @@ class BuilderHorarioController extends Controller
             ->get();
 
         // Cargas del grupo seleccionado con cualquier docente
-        $cargasGrupo = $data['grupo_id']
+        $cargasGrupo = ($data['grupo_id'] ?? null)
             ? CargaAcademica::with(['materia:id,nombre', 'docente:id,name', 'horarios'])
                 ->where('periodo_id', $data['periodo_id'])
                 ->where('grupo_id', $data['grupo_id'])
@@ -115,6 +118,108 @@ class BuilderHorarioController extends Controller
         ]);
     }
 
+    /**
+     * POST /horarios/asignar
+     *
+     * Asigna una clase a un slot del grid: reutiliza (o crea) la carga académica
+     * docente+materia+grupo+periodo y le agrega el bloque de horario día/hora,
+     * validando conflictos dentro de un advisory lock de Postgres para evitar
+     * condiciones de carrera si dos personas asignan al mismo tiempo.
+     */
+    public function asignar(Request $request, VerificarDisponibilidadAction $accion): JsonResponse
+    {
+        $data = $request->validate([
+            'periodo_id'  => ['required', 'uuid', 'exists:periodos,id'],
+            'docente_id'  => ['required', 'uuid', 'exists:users,id'],
+            'materia_id'  => ['required', 'uuid', 'exists:materias,id'],
+            'grupo_id'    => ['required', 'uuid', 'exists:grupos,id'],
+            'aula_id'     => ['nullable', 'uuid', 'exists:aulas,id'],
+            'dia_semana'  => ['required', 'in:lunes,martes,miercoles,jueves,viernes,sabado'],
+            'hora_inicio' => ['required', 'date_format:H:i'],
+            'hora_fin'    => ['required', 'date_format:H:i', 'after:hora_inicio'],
+        ]);
+
+        $carreraForzada = $request->user()?->carreraRestringida();
+        if ($carreraForzada) {
+            $grupo = Grupo::findOrFail($data['grupo_id']);
+            if ($grupo->carrera_id !== $carreraForzada) {
+                return ApiResponse::error('Solo puedes asignar cargas a grupos de tu carrera.', 403);
+            }
+        }
+
+        return DB::transaction(function () use ($data, $accion) {
+            // Advisory locks: serializa asignaciones concurrentes sobre el mismo
+            // docente/aula para que la verificación de conflictos sea confiable.
+            $llaves = array_filter([crc32('docente:' . $data['docente_id']), ($data['aula_id'] ?? null) ? crc32('aula:' . $data['aula_id']) : null]);
+            sort($llaves);
+            foreach ($llaves as $llave) {
+                DB::statement('SELECT pg_advisory_xact_lock(?)', [$llave]);
+            }
+
+            $resultado = $accion->ejecutar(
+                periodoId:  $data['periodo_id'],
+                docenteId:  $data['docente_id'],
+                diaSemana:  $data['dia_semana'],
+                horaInicio: $data['hora_inicio'],
+                horaFin:    $data['hora_fin'],
+                aulaId:     $data['aula_id'] ?? null,
+                grupoId:    $data['grupo_id'],
+                materiaId:  $data['materia_id'],
+            );
+
+            if (! empty($resultado['conflictos']) || ! $resultado['dentro_disponibilidad']) {
+                $mensajes = array_column($resultado['conflictos'], 'mensaje');
+                if (! $resultado['dentro_disponibilidad'] && $resultado['mensaje_disponibilidad']) {
+                    $mensajes[] = $resultado['mensaje_disponibilidad'];
+                }
+                return ApiResponse::error(implode(' ', $mensajes), 422);
+            }
+
+            $materia = Materia::findOrFail($data['materia_id']);
+
+            $carga = CargaAcademica::firstOrCreate(
+                [
+                    'docente_id' => $data['docente_id'],
+                    'materia_id' => $data['materia_id'],
+                    'grupo_id'   => $data['grupo_id'],
+                    'periodo_id' => $data['periodo_id'],
+                ],
+                [
+                    'aula_id'      => $data['aula_id'] ?? null,
+                    'horas_semana' => max(1, ($materia->horas_teoria ?? 0) + ($materia->horas_practica ?? 0)),
+                    'estado'       => 'pendiente',
+                ]
+            );
+
+            if (! $carga->wasRecentlyCreated && ! empty($data['aula_id']) && ! $carga->aula_id) {
+                $carga->update(['aula_id' => $data['aula_id']]);
+            }
+
+            $yaExiste = $carga->horarios()
+                ->where('dia_semana', $data['dia_semana'])
+                ->where('hora_inicio', $data['hora_inicio'])
+                ->where('hora_fin', $data['hora_fin'])
+                ->exists();
+
+            $horario = $yaExiste
+                ? $carga->horarios()->where('dia_semana', $data['dia_semana'])->where('hora_inicio', $data['hora_inicio'])->first()
+                : Horario::create([
+                    'carga_academica_id' => $carga->id,
+                    'dia_semana'         => $data['dia_semana'],
+                    'hora_inicio'        => $data['hora_inicio'],
+                    'hora_fin'           => $data['hora_fin'],
+                ]);
+
+            $resumenHoras = $accion->resumenHoras($data['materia_id'], $data['grupo_id'], $data['periodo_id']);
+
+            return ApiResponse::success([
+                'carga'   => $carga->fresh(['docente', 'materia', 'grupo', 'aula']),
+                'horario' => $horario,
+                'horas'   => $resumenHoras,
+            ], 'Clase asignada.', 201);
+        });
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function generarSlots(): array
@@ -155,10 +260,15 @@ class BuilderHorarioController extends Controller
             });
 
             if ($carga) {
+                $bloqueDelDia = $carga->horarios->where('dia_semana', $dia)->first(function ($h) use ($inicioMin, $finMin) {
+                    return $this->aMinutos($h->hora_inicio) < $finMin && $this->aMinutos($h->hora_fin) > $inicioMin;
+                }) ?? $carga->horarios->where('dia_semana', $dia)->first();
+
                 $horas[] = [
                     'hora'        => $hora,
                     'estado'      => 'reservado',
                     'carga_id'    => $carga->id,
+                    'horario_id'  => $bloqueDelDia?->id,
                     'materia'     => $carga->materia?->nombre,
                     'materia_id'  => $carga->materia_id,
                     'grupo'       => $carga->grupo?->clave,
@@ -166,8 +276,8 @@ class BuilderHorarioController extends Controller
                     'aula'        => $carga->aula?->nombre,
                     'aula_id'     => $carga->aula_id,
                     'carga_estado'=> $carga->estado,
-                    'hora_inicio' => $carga->horarios->where('dia_semana', $dia)->first()?->hora_inicio,
-                    'hora_fin'    => $carga->horarios->where('dia_semana', $dia)->first()?->hora_fin,
+                    'hora_inicio' => $bloqueDelDia?->hora_inicio,
+                    'hora_fin'    => $bloqueDelDia?->hora_fin,
                 ];
                 continue;
             }

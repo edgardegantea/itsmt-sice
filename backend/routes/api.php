@@ -247,6 +247,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Builder de horarios — disponibilidad docente y grid visual
     Route::get('/horarios/builder-grid',                           [BuilderHorarioController::class, 'gridData']);
     Route::post('/horarios/verificar-disponibilidad',              [BuilderHorarioController::class, 'verificar']);
+    Route::post('/horarios/asignar',                               [BuilderHorarioController::class, 'asignar']);
     Route::get('/horarios/concentrado',                            [ConcentradoHorarioController::class, 'export']);
 
     // Disponibilidad docente (autoregistro por periodo)

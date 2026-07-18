@@ -200,8 +200,16 @@ class HorarioController extends Controller
     }
 
     // DELETE /api/horarios/{horario}
-    public function destroy(Horario $horario): JsonResponse
+    public function destroy(Request $request, Horario $horario): JsonResponse
     {
+        $carreraForzada = $request->user()?->carreraRestringida();
+        if ($carreraForzada) {
+            $horario->loadMissing('cargaAcademica.grupo');
+            if ($horario->cargaAcademica?->grupo?->carrera_id !== $carreraForzada) {
+                return ApiResponse::error('No tienes permiso para modificar horarios de otra carrera.', 403);
+            }
+        }
+
         $horario->delete();
         return ApiResponse::success(null, 'Bloque de horario eliminado.');
     }

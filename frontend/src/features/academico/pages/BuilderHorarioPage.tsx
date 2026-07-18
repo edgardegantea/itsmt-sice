@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   academicoApi,
   type DiaSemana, type BuilderDia, type BuilderSlot, type EstadoCarga,
 } from '../services/academico'
-import { usePeriodos, selectCls } from './tabs/shared'
+import { usePeriodos, selectCls, mutationError } from './tabs/shared'
+import { useToastStore } from '../../../store/toastStore'
+import AsignarSlotModal from './builder/AsignarSlotModal'
 
 const DIAS: DiaSemana[] = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
 const DIA_LABEL: Record<DiaSemana, string> = {
@@ -62,25 +64,33 @@ function SlotCell({ slot, onClick }: { slot: BuilderSlot; onClick?: () => void }
 }
 
 export default function BuilderHorarioPage() {
+  const qc = useQueryClient()
+  const toastSuccess = useToastStore(s => s.success)
+  const toastError = useToastStore(s => s.error)
+
   const [periodoId, setPeriodoId] = useState('')
   const [docenteId, setDocenteId] = useState('')
   const [grupoId] = useState('')
   const [selectedSlot, setSelectedSlot] = useState<{ dia: DiaSemana; slot: BuilderSlot } | null>(null)
+  const [asignarSeleccion, setAsignarSeleccion] = useState<{ dia_semana: DiaSemana; hora_inicio: string; hora_fin: string; modulo_sabatino?: 1 | 2 | null } | null>(null)
+
+  const mutEliminarBloque = useMutation({
+    mutationFn: (horarioId: string) => academicoApi.deleteHorario(horarioId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['builder-grid'] })
+      setSelectedSlot(null)
+      toastSuccess('Bloque de horario eliminado.')
+    },
+    onError: (e) => toastError(mutationError(e)),
+  })
 
   const { data: periodos = [] } = usePeriodos()
 
   const { data: docentesData } = useQuery({
-    queryKey: ['cargas-academicas', 'docentes', periodoId],
-    queryFn: async () => {
-      // Obtiene todos los docentes del periodo via cargas existentes + usuarios con rol docente
-      const res = await academicoApi.getHorarios({ periodo_id: periodoId })
-      const mapa = new Map<string, { id: string; name: string }>()
-      res.forEach((h: any) => {
-        const d = h.carga_academica?.docente
-        if (d) mapa.set(d.id, d)
-      })
-      return Array.from(mapa.values()).sort((a, b) => a.name.localeCompare(b.name))
-    },
+    queryKey: ['docentes'],
+    // Todos los docentes de la institución, no solo quienes ya tienen carga
+    // asignada — de lo contrario nunca se podría asignar la primera clase.
+    queryFn: () => academicoApi.getDocentes(),
     enabled: !!periodoId,
   })
   const docentes = docentesData ?? []
@@ -101,9 +111,19 @@ export default function BuilderHorarioPage() {
   // Todas las horas que aparecen en el grid
   const allSlots = dias.flatMap(d => d.horas).map(h => h.hora).filter((v, i, a) => a.indexOf(v) === i).sort()
 
-  function handleSlotClick(dia: DiaSemana, slot: BuilderSlot) {
+  function siguienteHora(hora: string): string {
+    const h = parseInt(hora.slice(0, 2), 10) + 1
+    return `${String(h).padStart(2, '0')}:00`
+  }
+
+  function handleSlotClick(dia: DiaSemana, slot: BuilderSlot, modulo?: 1 | 2) {
     if (slot.estado === 'disponible') {
-      setSelectedSlot({ dia, slot })
+      setAsignarSeleccion({
+        dia_semana: dia,
+        hora_inicio: slot.hora,
+        hora_fin: siguienteHora(slot.hora),
+        modulo_sabatino: dia === 'sabado' ? modulo : null,
+      })
     } else if (slot.estado === 'reservado' && slot.carga_id) {
       setSelectedSlot({ dia, slot })
     }
@@ -217,10 +237,10 @@ export default function BuilderHorarioPage() {
                           {dia === 'sabado' && slot2 !== null && slot2 !== undefined ? (
                             <div className="flex gap-0.5">
                               <div className="flex-1">
-                                {slot && <SlotCell slot={slot} onClick={() => slot && handleSlotClick(dia, slot)} />}
+                                {slot && <SlotCell slot={slot} onClick={() => slot && handleSlotClick(dia, slot, 1)} />}
                               </div>
                               <div className="flex-1">
-                                <SlotCell slot={slot2} onClick={() => slot2 && handleSlotClick(dia, slot2)} />
+                                <SlotCell slot={slot2} onClick={() => slot2 && handleSlotClick(dia, slot2, 2)} />
                               </div>
                             </div>
                           ) : (
@@ -263,6 +283,15 @@ export default function BuilderHorarioPage() {
                   {selectedSlot.slot.carga_estado ?? 'pendiente'}
                 </span>
               </p>
+              {selectedSlot.slot.horario_id && (
+                <button
+                  onClick={() => mutEliminarBloque.mutate(selectedSlot.slot.horario_id!)}
+                  disabled={mutEliminarBloque.isPending}
+                  className="mt-2 text-xs font-medium text-red-600 hover:underline disabled:opacity-50"
+                >
+                  Eliminar este bloque
+                </button>
+              )}
             </div>
           ) : (
             <p className="text-sm text-slate-500">
@@ -271,6 +300,15 @@ export default function BuilderHorarioPage() {
             </p>
           )}
         </div>
+      )}
+
+      {asignarSeleccion && periodoId && docenteId && (
+        <AsignarSlotModal
+          periodoId={periodoId}
+          docenteId={docenteId}
+          seleccion={asignarSeleccion}
+          onClose={() => setAsignarSeleccion(null)}
+        />
       )}
     </div>
   )

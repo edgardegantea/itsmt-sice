@@ -19,6 +19,7 @@ export interface Materia {
   tipo: 'obligatoria' | 'optativa'
   activa: boolean
   clave_oficial_tecnm?: string
+  modulo_sabatino?: 1 | 2 | null
   carrera?: { id: string; nombre: string; clave: string }
   // Programa TecNM
   satca?: string
@@ -430,6 +431,12 @@ export const academicoApi = {
     aula_id?: string; grupo_id?: string; materia_id?: string; ignorar_carga_id?: string
   }): Promise<{ resultado: VerificacionResultado; horas: ResumenHoras | null }> =>
     apiClient.post('/horarios/verificar-disponibilidad', data).then(r => r.data.data),
+
+  asignarHorario: (data: {
+    periodo_id: string; docente_id: string; materia_id: string; grupo_id: string
+    aula_id?: string; dia_semana: string; hora_inicio: string; hora_fin: string
+  }): Promise<{ carga: CargaAcademica; horario: Horario; horas: ResumenHoras | null }> =>
+    apiClient.post('/horarios/asignar', data).then(r => r.data.data),
 
   confirmarCarga: (cargaId: string): Promise<CargaAcademica> =>
     apiClient.patch(`/cargas-academicas/${cargaId}/confirmar`, {}).then(r => r.data.data),
@@ -1357,6 +1364,7 @@ export interface BuilderSlot {
   hora:         string
   estado:       EstadoSlot
   carga_id?:    string
+  horario_id?:  string
   materia?:     string
   materia_id?:  string
   grupo?:       string
