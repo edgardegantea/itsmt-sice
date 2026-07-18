@@ -56,6 +56,30 @@ function Spinner({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   )
 }
 
+// Campo de solo lectura + tarjeta de sección — mismo patrón visual que AlumnoDetailPage,
+// para que el panel expandido no se sienta como una lista plana de 12 datos sin jerarquía.
+function Campo({ label, value, mono, className }: { label: string; value?: string | null; mono?: boolean; className?: string }) {
+  return (
+    <div className={className}>
+      <p className="text-xs text-slate-400">{label}</p>
+      <p className={`mt-0.5 text-sm ${mono ? 'font-mono' : ''} ${value ? 'text-slate-800' : 'text-slate-300'}`}>
+        {value ?? '—'}
+      </p>
+    </div>
+  )
+}
+
+function SeccionCard({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div className="px-4 py-2 border-b border-slate-100 bg-slate-50">
+        <h4 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{titulo}</h4>
+      </div>
+      <div className="p-4">{children}</div>
+    </div>
+  )
+}
+
 // ── Modal edición ─────────────────────────────────────────────────────────────
 
 const INPUT_CLS = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
@@ -480,63 +504,19 @@ function FilaAlumno({
 
       {/* ── Panel expandido ── */}
       {expanded && (
-        <tr className="bg-[#1a3a5c]/[0.07]">
+        <tr className="bg-slate-50/70">
           <td colSpan={8} className="px-0 pb-0 border-l-4 border-[#1a3a5c]">
-            <div className="mx-4 mb-4 mt-2 bg-white rounded-xl ring-1 ring-slate-200 shadow-sm overflow-hidden">
+            <div className="mx-4 mb-4 mt-2 space-y-2.5">
 
-              {/* Datos */}
-              <div className="px-5 py-4 border-b border-slate-100">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Datos del alumno</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 text-sm">
-                  <div>
-                    <p className="text-xs text-slate-400">Nombre completo</p>
-                    <p className="font-medium text-slate-700 mt-0.5">{apellidosNombre(alumno)}</p>
-                  </div>
-                  {asp && (
-                    <>
-                      <div>
-                        <p className="text-xs text-slate-400">CURP</p>
-                        <p className="font-mono text-xs text-slate-600 mt-0.5">{asp.curp}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-400">Correo electrónico</p>
-                        <p className="text-slate-700 text-xs mt-0.5">{asp.email}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-400">Teléfono</p>
-                        <p className="text-slate-700 mt-0.5">{asp.telefono ?? '—'}</p>
-                      </div>
-                    </>
-                  )}
-                  <div>
-                    <p className="text-xs text-slate-400">N° Control</p>
-                    <p className="font-mono font-semibold text-slate-700 mt-0.5">{alumno.numero_control}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Carrera</p>
-                    <p className="text-slate-700 mt-0.5">
-                      <span className="font-mono font-semibold">{alumno.carrera?.clave}</span>
-                      <span className="text-xs text-slate-400 ml-1">— {alumno.carrera?.nombre}</span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Semestre actual</p>
-                    <p className="font-semibold text-slate-700 mt-0.5">{alumno.semestre_actual}°</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Periodo de ingreso</p>
-                    <p className="text-slate-700 text-xs mt-0.5">{alumno.periodo_ingreso?.nombre ?? '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Tipo de ingreso</p>
-                    <p className="text-slate-700 capitalize mt-0.5">
-                      {alumno.inscripcion?.tipo_ingreso?.replace(/_/g, ' ') ?? '—'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Fecha de inscripción</p>
-                    <p className="text-slate-700 mt-0.5">{alumno.inscripcion?.fecha_inscripcion ? new Date(alumno.inscripcion.fecha_inscripcion).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'}</p>
-                  </div>
+              {/* Datos académicos */}
+              <SeccionCard titulo="Datos académicos">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
+                  <Campo label="N° Control" value={alumno.numero_control} mono />
+                  <Campo label="Carrera" value={alumno.carrera ? `${alumno.carrera.clave} — ${alumno.carrera.nombre}` : null} />
+                  <Campo label="Semestre actual" value={alumno.semestre_actual ? `${alumno.semestre_actual}°` : null} />
+                  <Campo label="Periodo de ingreso" value={alumno.periodo_ingreso?.nombre} />
+                  <Campo label="Tipo de ingreso" value={alumno.inscripcion?.tipo_ingreso?.replace(/_/g, ' ')} />
+                  <Campo label="Fecha de inscripción" value={alumno.inscripcion?.fecha_inscripcion ? new Date(alumno.inscripcion.fecha_inscripcion).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }) : null} />
                   <div>
                     <p className="text-xs text-slate-400">Certificado bachillerato</p>
                     <p className={`mt-0.5 text-sm font-medium ${alumno.pendiente_certificado_bachillerato ? 'text-orange-600' : 'text-emerald-600'}`}>
@@ -545,67 +525,73 @@ function FilaAlumno({
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Autorización expediente</p>
-                    <p className={`mt-0.5 text-sm font-semibold capitalize ${alumno.autorizacion_consulta_expediente === 'nadie' ? 'text-red-700' : 'text-slate-700'}`}>
-                      {alumno.autorizacion_consulta_expediente === 'nadie' ? 'NADIE — NO entregar docs a terceros' : (alumno.autorizacion_consulta_expediente ?? '—')}
+                    <p className={`mt-0.5 text-sm font-medium capitalize ${alumno.autorizacion_consulta_expediente === 'nadie' ? 'text-red-700' : 'text-slate-800'}`}>
+                      {alumno.autorizacion_consulta_expediente === 'nadie' ? 'NADIE — no a terceros' : (alumno.autorizacion_consulta_expediente ?? '—')}
                     </p>
                   </div>
                   {alumno.observaciones_estatus && (
-                    <div className="col-span-2 sm:col-span-3 lg:col-span-4">
-                      <p className="text-xs text-slate-400">Observaciones</p>
-                      <p className="text-slate-600 text-xs mt-0.5 italic">{alumno.observaciones_estatus}</p>
-                    </div>
+                    <Campo label="Observaciones" value={alumno.observaciones_estatus} className="col-span-full" />
                   )}
                 </div>
-              </div>
+              </SeccionCard>
 
-              {/* Acciones */}
-              <div className="px-5 py-3 flex flex-wrap items-center gap-2 bg-slate-50/60">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide mr-1">Acciones</span>
+              {/* Datos personales */}
+              {asp && (
+                <SeccionCard titulo="Datos personales">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
+                    <Campo label="CURP" value={asp.curp} mono />
+                    <Campo label="Correo electrónico" value={asp.email} />
+                    <Campo label="Teléfono" value={asp.telefono} />
+                  </div>
+                </SeccionCard>
+              )}
 
-                <button
-                  onClick={(e) => { e.stopPropagation(); onEditar() }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-white transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/>
-                  </svg>
-                  Editar
-                </button>
+              {/* Acciones y documentos */}
+              <SeccionCard titulo="Acciones y documentos">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onEditar() }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/>
+                    </svg>
+                    Editar
+                  </button>
 
-                <button
-                  onClick={(e) => { e.stopPropagation(); onCobro() }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-white transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
-                  </svg>
-                  Registrar cobro
-                </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onCobro() }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
+                    </svg>
+                    Registrar cobro
+                  </button>
 
-                <div className="flex flex-wrap items-center gap-1.5 ml-1 pl-3 border-l border-slate-200">
-                  <span className="text-xs text-slate-400 mr-0.5">Documentos:</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); onCredencial() }}
                     disabled={generandoCredencial === alumno.id}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-wait"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-wait"
                   >
                     {generandoCredencial === alumno.id ? <Spinner className="w-3 h-3" /> : <span className="text-sm leading-none">🪪</span>}
                     Credencial
                   </button>
+
                   {alumno.inscripcion?.id && DOCS_INSCRIPCION.map(({ tipo, label, icon }) => (
                     <button
                       key={tipo}
                       onClick={(e) => { e.stopPropagation(); onInscripcionPdf(tipo) }}
                       disabled={generandoInscPdf === tipo}
                       title={label}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-wait"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-wait"
                     >
                       {generandoInscPdf === tipo ? <Spinner className="w-3 h-3" /> : <span className="text-sm leading-none">{icon}</span>}
                       <span className="hidden sm:inline">{label}</span>
                     </button>
                   ))}
                 </div>
-              </div>
+              </SeccionCard>
             </div>
           </td>
         </tr>
