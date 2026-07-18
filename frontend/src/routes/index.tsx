@@ -106,6 +106,13 @@ const BecasAdminPage                  = lazy(() => import('../features/becas/pag
 const BecasAlumnoPage                 = lazy(() => import('../features/becas/pages/BecasAlumnoPage'))
 const BibliotecaPage                  = lazy(() => import('../features/biblioteca/pages/BibliotecaPage'))
 const CalidadPage                     = lazy(() => import('../features/calidadiso/pages/CalidadPage'))
+const InvestigacionPage               = lazy(() => import('../features/investigacion/pages/InvestigacionPage'))
+const InfraestructuraPage             = lazy(() => import('../features/infraestructura/pages/InfraestructuraPage'))
+const BolsaTrabajoPage                = lazy(() => import('../features/academico/pages/BolsaTrabajoPage'))
+const EvaluacionDocenteAmpliadaPage    = lazy(() => import('../features/calidad/pages/EvaluacionDocenteAmpliadaPage'))
+const AuditLogPage                    = lazy(() => import('../features/seguridad/pages/AuditLogPage'))
+const SeguridadCuentaPage             = lazy(() => import('../features/seguridad/pages/SeguridadCuentaPage'))
+const IncidentesSeguridadPage         = lazy(() => import('../features/seguridad/pages/IncidentesSeguridadPage'))
 
 // ── Wrappers ──────────────────────────────────────────────────────────────────
 
@@ -351,6 +358,25 @@ export default function AppRoutes() {
 
         {/* Sprint 25 — Acreditación y Calidad ISO/CACEI */}
         <Route path="/admin/calidad-iso" element={<AdminLayout><CalidadPage /></AdminLayout>} />
+
+        {/* Sprint 26 — Cuerpos Académicos e Investigación */}
+        <Route path="/admin/investigacion" element={<AdminLayout><InvestigacionPage /></AdminLayout>} />
+
+        {/* Sprint 27 — Infraestructura y Recursos */}
+        <Route path="/admin/infraestructura" element={<AdminLayout><InfraestructuraPage /></AdminLayout>} />
+
+        {/* Sprint 28 — Portal del Egresado (bolsa de trabajo e indicadores) */}
+        <Route path="/bolsa-trabajo" element={<AdminLayout><BolsaTrabajoPage /></AdminLayout>} />
+
+        {/* Sprint 29 — Evaluación Docente ampliada (esqueleto) */}
+        <Route path="/admin/evaluacion-docente-ampliada" element={<AdminLayout><EvaluacionDocenteAmpliadaPage /></AdminLayout>} />
+
+        {/* Sprint 30 — Auditoría y Trazabilidad */}
+        <Route path="/admin/auditoria" element={<AdminLayout><AuditLogPage /></AdminLayout>} />
+
+        {/* Sprint 31 — Seguridad Informática */}
+        <Route path="/seguridad/mi-cuenta" element={<ProtectedRoute><SeguridadCuentaPage /></ProtectedRoute>} />
+        <Route path="/admin/incidentes-seguridad" element={<AdminLayout><IncidentesSeguridadPage /></AdminLayout>} />
 
         <Route path="/docente" element={<ProtectedRoute requiredRole="docente"><div style={{padding:32}}>Portal Docente — Sprint 4</div></ProtectedRoute>} />
         <Route path="/sin-acceso" element={<div style={{padding:32,color:'#dc3545'}}>Sin permisos para acceder a esta sección.</div>} />

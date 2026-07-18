@@ -35,9 +35,19 @@ export interface LoginResponse {
   user: AuthUser
 }
 
+export interface LoginChallenge2FA {
+  requires_2fa: true
+  challenge_token: string
+}
+
 export const authApi = {
-  login: async (payload: LoginPayload): Promise<LoginResponse> => {
+  login: async (payload: LoginPayload): Promise<LoginResponse | LoginChallenge2FA> => {
     const { data } = await apiClient.post('/auth/login', payload)
+    return data.data
+  },
+
+  verificarDosFactores: async (payload: { challenge_token: string; codigo: string }): Promise<LoginResponse> => {
+    const { data } = await apiClient.post('/auth/2fa/verificar', payload)
     return data.data
   },
 

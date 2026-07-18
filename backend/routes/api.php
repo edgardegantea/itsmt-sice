@@ -101,13 +101,15 @@ use Illuminate\Support\Facades\Route;
 
 // Sprint 0 — Auth
 Route::prefix('auth')->group(function () {
-    Route::post('/login',           [AuthController::class, 'login']);
+    Route::post('/login',           [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/2fa/verificar',   [AuthController::class, 'verificarDosFactores'])->middleware('throttle:5,1');
     Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
     Route::post('/reset-password',  [PasswordResetController::class, 'resetPassword']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me',      [AuthController::class, 'me']);
+        Route::post('/logout',           [AuthController::class, 'logout']);
+        Route::get('/me',                [AuthController::class, 'me']);
+        Route::patch('/cambiar-password',[\App\Http\Controllers\Auth\PasswordController::class, 'cambiar']);
     });
 });
 
@@ -445,6 +447,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/evaluaciones-docentes',                                   [EvaluacionDocenteController::class, 'index']);
     Route::post('/evaluaciones-docentes',                                  [EvaluacionDocenteController::class, 'store']);
 
+    // Sprint 29 — Evaluación Docente ampliada (esqueleto habilitado, pendiente de diseño detallado)
+    Route::get('/autoevaluaciones-docente',                                [\App\Http\Controllers\Calidad\EvaluacionDocenteAmpliadaController::class, 'autoevaluaciones']);
+    Route::get('/evaluaciones-area-docente',                               [\App\Http\Controllers\Calidad\EvaluacionDocenteAmpliadaController::class, 'evaluacionesArea']);
+    Route::get('/planes-mejora-docente',                                   [\App\Http\Controllers\Calidad\EvaluacionDocenteAmpliadaController::class, 'planesMejora']);
+
+    // ── Sprint 30 — Auditoría y Trazabilidad ──────────────────────────────────────
+    Route::get('/audit-logs',                                              [\App\Http\Controllers\Seguridad\AuditLogController::class, 'index']);
+    Route::get('/audit-logs/indicadores',                                  [\App\Http\Controllers\Seguridad\AuditLogController::class, 'indicadores']);
+
+    // ── Sprint 31 — Seguridad Informática ─────────────────────────────────────────
+    Route::get('/2fa/estatus',                                             [\App\Http\Controllers\Seguridad\TwoFactorController::class, 'estatus']);
+    Route::post('/2fa/configurar',                                         [\App\Http\Controllers\Seguridad\TwoFactorController::class, 'configurar']);
+    Route::post('/2fa/confirmar',                                          [\App\Http\Controllers\Seguridad\TwoFactorController::class, 'confirmar']);
+    Route::post('/2fa/deshabilitar',                                       [\App\Http\Controllers\Seguridad\TwoFactorController::class, 'deshabilitar']);
+    Route::get('/incidentes-seguridad',                                    [\App\Http\Controllers\Seguridad\IncidenteSeguridadController::class, 'index']);
+    Route::post('/incidentes-seguridad',                                   [\App\Http\Controllers\Seguridad\IncidenteSeguridadController::class, 'store']);
+    Route::patch('/incidentes-seguridad/{incidente}/estatus',              [\App\Http\Controllers\Seguridad\IncidenteSeguridadController::class, 'actualizarEstatus']);
+
     // ── Sprint 6 — Vinculación Institucional ─────────────────────────────────
 
     // Servicio Social (S6-01, S6-02, S6-03)
@@ -600,6 +620,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/egresados',               [EgresadoController::class, 'store']);
     Route::patch('/egresados/{egresado}',   [EgresadoController::class, 'update']);
 
+    // Sprint 28 — Portal del Egresado (ampliación): historial laboral, encuestas y bolsa de trabajo
+    Route::get('/egresados/{egresado}/historial-laboral',                      [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'historialLaboral']);
+    Route::post('/egresados/{egresado}/historial-laboral',                     [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'storeHistorialLaboral']);
+    Route::get('/egresados/{egresado}/encuestas',                              [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'encuestas']);
+    Route::post('/egresados/{egresado}/encuestas',                             [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'storeEncuesta']);
+    Route::patch('/encuestas-seguimiento/{encuesta}/responder',                [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'responderEncuesta']);
+    Route::get('/vacantes-bolsa-trabajo',                                      [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'vacantes']);
+    Route::post('/vacantes-bolsa-trabajo',                                     [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'storeVacante']);
+    Route::post('/vacantes-bolsa-trabajo/{vacante}/postulaciones',             [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'postular']);
+    Route::patch('/postulaciones-bolsa-trabajo/{postulacion}/estatus',         [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'actualizarEstatusPostulacion']);
+    Route::get('/indicadores/empleabilidad',                                   [\App\Http\Controllers\Academico\PortalEgresadoController::class, 'indicadoresEmpleabilidad']);
+
     // Reportes PDF directivos (S13-02, S13-03, S13-04)
     Route::get('/reportes/matricula/pdf',             [ReporteDirectivoController::class, 'matriculaPdf']);
     Route::get('/reportes/calificaciones/pdf',        [ReporteDirectivoController::class, 'calificacionesPdf']);
@@ -720,4 +752,35 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/no-conformidades/{nc}/acciones',                             [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'agregarAccion']);
     Route::patch('/no-conformidades/{nc}/cerrar',                              [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'cerrarNoConformidad']);
     Route::get('/indicadores/calidad/{periodoId}',                             [\App\Http\Controllers\Calidad\EvidenciaCalidadController::class, 'indicadores']);
+
+    // ── Sprint 26 — Cuerpos Académicos e Investigación ────────────────────────────
+    Route::get('/cuerpos-academicos',                                          [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'index']);
+    Route::post('/cuerpos-academicos',                                         [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'store']);
+    Route::get('/cuerpos-academicos/{ca}',                                     [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'show']);
+    Route::post('/cuerpos-academicos/{ca}/lgac',                               [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'agregarLgac']);
+    Route::post('/cuerpos-academicos/{ca}/integrantes',                        [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'agregarIntegrante']);
+    Route::patch('/integrantes-ca/{integrante}/baja',                          [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'bajaIntegrante']);
+    Route::get('/proyectos-investigacion',                                     [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'proyectos']);
+    Route::post('/proyectos-investigacion',                                    [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'storeProyecto']);
+    Route::patch('/proyectos-investigacion/{proyecto}/estatus',                [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'actualizarEstatusProyecto']);
+    Route::get('/producciones-academicas',                                     [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'producciones']);
+    Route::post('/producciones-academicas',                                    [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'storeProduccion']);
+    Route::patch('/producciones-academicas/{produccion}/validar',              [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'validarProduccion']);
+    Route::get('/indicadores/investigacion',                                   [\App\Http\Controllers\Investigacion\CuerpoAcademicoController::class, 'indicadores']);
+
+    // ── Sprint 27 — Infraestructura y Recursos ────────────────────────────────────
+    Route::get('/inventario',                                                  [\App\Http\Controllers\Infraestructura\InventarioController::class, 'index']);
+    Route::post('/inventario',                                                 [\App\Http\Controllers\Infraestructura\InventarioController::class, 'store']);
+    Route::get('/inventario/{item}',                                           [\App\Http\Controllers\Infraestructura\InventarioController::class, 'show']);
+    Route::patch('/inventario/{item}/estado',                                  [\App\Http\Controllers\Infraestructura\InventarioController::class, 'actualizarEstado']);
+    Route::get('/prestamos-equipo',                                            [\App\Http\Controllers\Infraestructura\InventarioController::class, 'prestamos']);
+    Route::post('/prestamos-equipo',                                           [\App\Http\Controllers\Infraestructura\InventarioController::class, 'storePrestamo']);
+    Route::patch('/prestamos-equipo/{prestamo}/devolver',                      [\App\Http\Controllers\Infraestructura\InventarioController::class, 'devolverPrestamo']);
+    Route::get('/reservas-espacios',                                           [\App\Http\Controllers\Infraestructura\InventarioController::class, 'reservas']);
+    Route::post('/reservas-espacios',                                          [\App\Http\Controllers\Infraestructura\InventarioController::class, 'storeReserva']);
+    Route::patch('/reservas-espacios/{reserva}/estatus',                       [\App\Http\Controllers\Infraestructura\InventarioController::class, 'actualizarEstatusReserva']);
+    Route::get('/mantenimiento',                                               [\App\Http\Controllers\Infraestructura\InventarioController::class, 'mantenimiento']);
+    Route::post('/mantenimiento',                                              [\App\Http\Controllers\Infraestructura\InventarioController::class, 'storeMantenimiento']);
+    Route::patch('/mantenimiento/{solicitud}/atender',                         [\App\Http\Controllers\Infraestructura\InventarioController::class, 'atenderMantenimiento']);
+    Route::get('/indicadores/infraestructura',                                 [\App\Http\Controllers\Infraestructura\InventarioController::class, 'indicadores']);
 });

@@ -1,0 +1,1 @@
+import{n as e}from"./apiClient-R6oqwN-9.js";var t=[`control_escolar`,`direccion_general`,`direccion_academica`,`subdireccion_academica`];function n(){let n=e(e=>e.user);return n?!n.roles.some(e=>t.includes(e)):!1}export{n as t};

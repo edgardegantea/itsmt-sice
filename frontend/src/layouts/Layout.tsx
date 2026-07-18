@@ -167,6 +167,13 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: '/biblioteca',        label: 'Biblioteca',      roles: ['superadmin', 'admin', 'docente', 'jefe_carrera', 'alumno', 'personal_administrativo', 'director_academico', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
       { to: '/admin/calidad-iso', label: 'Calidad ISO/CACEI', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'docente', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/investigacion', label: 'Cuerpos Académicos e Investigación', roles: ['superadmin', 'admin', 'director_academico', 'docente', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
+      { to: '/admin/infraestructura', label: 'Infraestructura y Recursos', roles: ['superadmin', 'admin', 'personal_administrativo', 'direccion_academica', 'direccion_general'] },
+      { to: '/bolsa-trabajo', label: 'Bolsa de Trabajo', roles: ['superadmin', 'admin', 'control_escolar', 'direccion_academica', 'direccion_general', 'alumno'] },
+      { to: '/admin/evaluacion-docente-ampliada', label: 'Evaluación Docente (ampliada)', roles: ['superadmin', 'admin', 'director_academico', 'direccion_academica'] },
+      { to: '/admin/auditoria', label: 'Auditoría y Trazabilidad', roles: ['superadmin', 'admin'] },
+      { to: '/admin/incidentes-seguridad', label: 'Incidentes de Seguridad', roles: ['superadmin', 'admin'] },
+      { to: '/seguridad/mi-cuenta', label: 'Seguridad de mi cuenta', roles: ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'docente', 'alumno', 'personal_administrativo', 'control_escolar', 'direccion_general', 'direccion_academica', 'subdireccion_academica'] },
     ],
   },
   {

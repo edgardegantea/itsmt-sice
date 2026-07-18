@@ -5,6 +5,7 @@ namespace App\Domains\Academico\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Egresado extends Model
@@ -32,4 +33,8 @@ class Egresado extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'alumno_id');
     }
+
+    public function historialLaboral(): HasMany { return $this->hasMany(HistorialLaboralEgresado::class, 'egresado_id'); }
+    public function encuestas(): HasMany        { return $this->hasMany(EncuestaSeguimientoEgresado::class, 'egresado_id'); }
+    public function postulaciones(): HasMany    { return $this->hasMany(PostulacionBolsaTrabajo::class, 'egresado_id'); }
 }
