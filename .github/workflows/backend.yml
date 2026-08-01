@@ -1,0 +1,46 @@
+name: Backend
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, gd, sqlite3, pdo_sqlite
+          coverage: none
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      # phpunit.xml fuerza sqlite en memoria para tests (ver <php><env name="DB_CONNECTION">),
+      # igual que en desarrollo local — no requiere levantar un servicio de base de datos aparte.
+      # NOTA: esto no cubre bugs específicos de dialecto SQL que solo aparecen en Postgres
+      # (ej. columnas ambiguas tras un join) — ver backend/app/Domains/README.md y el
+      # historial de bugs de este tipo. Correr `php artisan test` manualmente contra
+      # Postgres antes de un release es la mitigación actual.
+      - name: Run tests
+        run: php artisan test
