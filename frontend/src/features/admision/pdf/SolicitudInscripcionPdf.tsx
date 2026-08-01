@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
 import type { InscripcionDetalle } from '../services/admision'
-import type { ConfiguracionInstitucional } from '../../admin/services/configuracion'
+import type { ConfiguracionInstitucional } from '@/types/configuracion'
 
 const DOCS = [
   'Certificado de bachillerato o equivalente **',

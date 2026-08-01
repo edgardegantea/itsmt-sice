@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
 import apiClient from '../../../config/apiClient'
-import { inputCls, selectCls, mutationError, ModalWrap } from '../../academico/pages/tabs/shared'
+import { inputCls, selectCls, ModalWrap } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
+import DetailModal from '../../../components/ui/DetailModal'
 
 interface Inventario {
   id: string
@@ -82,6 +84,8 @@ export default function InfraestructuraPage() {
   const [showInventarioModal, setShowInventarioModal] = useState(false)
   const [showReservaModal, setShowReservaModal] = useState(false)
   const [showMantenimientoModal, setShowMantenimientoModal] = useState(false)
+  const [detalleInventario, setDetalleInventario] = useState<Inventario | null>(null)
+  const [detallePrestamo, setDetallePrestamo] = useState<PrestamoEquipo | null>(null)
 
   const [inventarioForm, setInventarioForm] = useState({ clave: '', nombre: '', categoria: 'otro', descripcion: '' })
   const [reservaForm, setReservaForm] = useState({ aula_id: '', fecha: '', hora_inicio: '', hora_fin: '', motivo: '' })
@@ -221,11 +225,12 @@ export default function InfraestructuraPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Categoría</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Ubicación</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Estado</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {(inventario?.data ?? []).length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-sm">Sin bienes registrados</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-sm">Sin bienes registrados</td></tr>
                 ) : (inventario?.data ?? []).map(item => (
                   <tr key={item.id} className="hover:bg-slate-50/60">
                     <td className="px-4 py-3 font-mono text-xs text-slate-500">{item.clave}</td>
@@ -234,6 +239,9 @@ export default function InfraestructuraPage() {
                     <td className="px-4 py-3 text-slate-600">{item.aula?.nombre ?? '—'}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTADO_BIEN_CLS[item.estado]}`}>{item.estado}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setDetalleInventario(item)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -253,11 +261,12 @@ export default function InfraestructuraPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Solicitante</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Devolución prevista</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Estatus</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {(prestamos?.data ?? []).length === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-400 text-sm">Sin préstamos registrados</td></tr>
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-sm">Sin préstamos registrados</td></tr>
               ) : (prestamos?.data ?? []).map(p => (
                 <tr key={p.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3 font-medium text-slate-800">{p.inventario?.nombre} <span className="text-slate-400 font-mono text-xs">({p.inventario?.clave})</span></td>
@@ -267,6 +276,9 @@ export default function InfraestructuraPage() {
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.estatus === 'devuelto' ? 'bg-green-100 text-green-700' : p.estatus === 'dañado' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                       {p.estatus}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -446,6 +458,34 @@ export default function InfraestructuraPage() {
             <textarea value={mantenimientoForm.descripcion} onChange={e => setMantenimientoForm(f => ({ ...f, descripcion: e.target.value }))} rows={3} className={inputCls} />
           </div>
         </ModalWrap>
+      )}
+
+      {detalleInventario && (
+        <DetailModal
+          title={detalleInventario.nombre}
+          onClose={() => setDetalleInventario(null)}
+          fields={[
+            { label: 'Clave', value: detalleInventario.clave },
+            { label: 'Categoría', value: detalleInventario.categoria.replace('_', ' ') },
+            { label: 'Ubicación', value: detalleInventario.aula?.nombre },
+            { label: 'Responsable', value: detalleInventario.responsable?.name },
+            { label: 'Estado', value: <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTADO_BIEN_CLS[detalleInventario.estado]}`}>{detalleInventario.estado}</span> },
+          ]}
+        />
+      )}
+
+      {detallePrestamo && (
+        <DetailModal
+          title={detallePrestamo.inventario?.nombre ?? 'Préstamo'}
+          onClose={() => setDetallePrestamo(null)}
+          fields={[
+            { label: 'Clave del bien', value: detallePrestamo.inventario?.clave },
+            { label: 'Solicitante', value: detallePrestamo.solicitante?.name },
+            { label: 'Fecha de préstamo', value: detallePrestamo.fecha_prestamo },
+            { label: 'Devolución prevista', value: detallePrestamo.fecha_devolucion_prevista },
+            { label: 'Estatus', value: detallePrestamo.estatus },
+          ]}
+        />
       )}
     </div>
   )

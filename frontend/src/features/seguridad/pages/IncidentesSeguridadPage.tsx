@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import apiClient from '../../../config/apiClient'
-import { selectCls, mutationError } from '../../academico/pages/tabs/shared'
+import { selectCls } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
 
 interface Incidente {
   id: string

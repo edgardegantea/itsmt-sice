@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
 import apiClient from '../../../config/apiClient'
-import { inputCls, selectCls, mutationError, ModalWrap } from '../../academico/pages/tabs/shared'
+import { inputCls, selectCls, ModalWrap } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
+import DetailModal from '../../../components/ui/DetailModal'
 
 interface CuerpoAcademico {
   id: string
@@ -64,6 +66,9 @@ export default function InvestigacionPage() {
   const [showCaModal, setShowCaModal] = useState(false)
   const [showProyectoModal, setShowProyectoModal] = useState(false)
   const [showProduccionModal, setShowProduccionModal] = useState(false)
+  const [detalleCa, setDetalleCa] = useState<CuerpoAcademico | null>(null)
+  const [detalleProyecto, setDetalleProyecto] = useState<ProyectoInvestigacion | null>(null)
+  const [detalleProduccion, setDetalleProduccion] = useState<ProduccionAcademica | null>(null)
 
   const [caForm, setCaForm] = useState({ nombre: '', clave: '', lgac_principal: '', fecha_registro: '' })
   const [proyectoForm, setProyectoForm] = useState({ titulo: '', tipo: 'interno', fecha_inicio: '', descripcion: '' })
@@ -179,11 +184,12 @@ export default function InvestigacionPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">LGAC</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Grado</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Líder</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {(cuerpos?.data ?? []).length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-sm">Sin cuerpos académicos registrados</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-sm">Sin cuerpos académicos registrados</td></tr>
                 ) : (cuerpos?.data ?? []).map(ca => (
                   <tr key={ca.id} className="hover:bg-slate-50/60">
                     <td className="px-4 py-3 font-mono text-xs text-slate-500">{ca.clave}</td>
@@ -195,6 +201,9 @@ export default function InvestigacionPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-xs">{ca.lider?.name ?? '—'}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setDetalleCa(ca)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -224,11 +233,12 @@ export default function InvestigacionPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Cuerpo académico</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Responsable</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Estatus</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {(proyectos?.data ?? []).length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-sm">Sin proyectos registrados</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-sm">Sin proyectos registrados</td></tr>
                 ) : (proyectos?.data ?? []).map(p => (
                   <tr key={p.id} className="hover:bg-slate-50/60">
                     <td className="px-4 py-3 font-medium text-slate-800">{p.titulo}</td>
@@ -239,6 +249,9 @@ export default function InvestigacionPage() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.estatus === 'concluido' ? 'bg-green-100 text-green-700' : p.estatus === 'en_proceso' ? 'bg-yellow-100 text-yellow-700' : p.estatus === 'cancelado' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>
                         {p.estatus}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setDetalleProyecto(p)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -270,11 +283,12 @@ export default function InvestigacionPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Autor principal</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Validada</th>
                   {isDirector && <th />}
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {(producciones?.data ?? []).length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-sm">Sin producción académica registrada</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-400 text-sm">Sin producción académica registrada</td></tr>
                 ) : (producciones?.data ?? []).map(pr => (
                   <tr key={pr.id} className="hover:bg-slate-50/60">
                     <td className="px-4 py-3 font-medium text-slate-800 line-clamp-1 max-w-xs">{pr.titulo}</td>
@@ -295,6 +309,9 @@ export default function InvestigacionPage() {
                         )}
                       </td>
                     )}
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setDetalleProduccion(pr)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -397,6 +414,53 @@ export default function InvestigacionPage() {
             <input value={produccionForm.medio_difusion} onChange={e => setProduccionForm(f => ({ ...f, medio_difusion: e.target.value }))} className={inputCls} />
           </div>
         </ModalWrap>
+      )}
+
+      {detalleCa && (
+        <DetailModal
+          title={detalleCa.nombre}
+          onClose={() => setDetalleCa(null)}
+          fields={[
+            { label: 'Clave', value: detalleCa.clave },
+            { label: 'Grado de consolidación', value: GRADO_LABEL[detalleCa.grado_consolidacion] },
+            { label: 'LGAC principal', value: detalleCa.lgac_principal },
+            { label: 'Fecha de registro', value: detalleCa.fecha_registro },
+            { label: 'Líder', value: detalleCa.lider?.name },
+            { label: 'Activo', value: detalleCa.activo ? 'Sí' : 'No' },
+          ]}
+        />
+      )}
+
+      {detalleProyecto && (
+        <DetailModal
+          title={detalleProyecto.titulo}
+          onClose={() => setDetalleProyecto(null)}
+          fields={[
+            { label: 'Tipo', value: detalleProyecto.tipo },
+            { label: 'Cuerpo académico', value: detalleProyecto.cuerpoAcademico?.nombre },
+            { label: 'Responsable', value: detalleProyecto.responsable?.name },
+            { label: 'Estatus', value: detalleProyecto.estatus },
+            { label: 'Fecha inicio', value: detalleProyecto.fecha_inicio },
+            { label: 'Fecha fin', value: detalleProyecto.fecha_fin },
+          ]}
+        />
+      )}
+
+      {detalleProduccion && (
+        <DetailModal
+          title={detalleProduccion.titulo}
+          onClose={() => setDetalleProduccion(null)}
+          fields={[
+            { label: 'Tipo', value: detalleProduccion.tipo.replace('_', ' ') },
+            { label: 'Medio de difusión', value: detalleProduccion.medio_difusion },
+            { label: 'Autor principal', value: detalleProduccion.autorPrincipal?.name },
+            { label: 'Fecha de publicación', value: detalleProduccion.fecha_publicacion },
+            { label: 'Estatus', value: detalleProduccion.estatus === 'validada' ? 'Validada' : 'Pendiente' },
+          ]}
+          footer={isDirector && detalleProduccion.estatus !== 'validada' ? (
+            <button onClick={() => { mutValidarProduccion.mutate(detalleProduccion.id); setDetalleProduccion(null) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Validar</button>
+          ) : undefined}
+        />
       )}
     </div>
   )

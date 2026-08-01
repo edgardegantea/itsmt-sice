@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
 import type { InscripcionDetalle } from '../services/admision'
-import type { ConfiguracionInstitucional } from '../../admin/services/configuracion'
+import type { ConfiguracionInstitucional } from '@/types/configuracion'
 
 const S = StyleSheet.create({
   page:     { fontFamily: 'Helvetica', fontSize: 9, color: '#1a1a1a', paddingTop: 54, paddingBottom: 60, paddingHorizontal: 54, backgroundColor: '#fff' },

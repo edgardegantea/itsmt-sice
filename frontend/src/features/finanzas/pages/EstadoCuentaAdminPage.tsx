@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
 import apiClient from '../../../config/apiClient'
-import { inputCls, selectCls, mutationError } from '../../academico/pages/tabs/shared'
+import { inputCls, selectCls } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
 
 interface Pago {
   id: string

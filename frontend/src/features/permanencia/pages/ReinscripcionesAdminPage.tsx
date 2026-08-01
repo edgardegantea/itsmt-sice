@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import { permanenciaApi, type Reinscripcion, type Baja, type Adeudo, type OrdenReinscripcion, type TipoBaja } from '../services/permanencia'
-import { mutationError } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
+import DetailModal from '../../../components/ui/DetailModal'
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 
@@ -99,11 +100,12 @@ function AccionModal({ r, onClose }: { r: Reinscripcion; onClose: () => void }) 
 }
 
 function TabReinscripciones() {
-  const qc = useQueryClient()
   const [filtroEstatus,  setFiltroEstatus]  = useState('')
   const [filtroCarrera,  setFiltroCarrera]  = useState('')
   const [filtroPeriodo,  setFiltroPeriodo]  = useState('')
   const [seleccionada,   setSeleccionada]   = useState<Reinscripcion | null>(null)
+  const [reselloTarget,  setReselloTarget]  = useState<Reinscripcion | null>(null)
+  const [detalle,        setDetalle]        = useState<Reinscripcion | null>(null)
 
   const { data: carreras = [] } = useCarreras()
   const { data: periodos = [] } = usePeriodos()
@@ -116,11 +118,6 @@ function TabReinscripciones() {
   const { data, isLoading } = useQuery({
     queryKey: ['reinscripciones-admin', params],
     queryFn: () => permanenciaApi.getReinscripciones(params),
-  })
-
-  const mutResello = useMutation({
-    mutationFn: (id: string) => permanenciaApi.registrarResello(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['reinscripciones-admin'] }),
   })
 
   const reinscripciones: Reinscripcion[] = data?.data ?? data ?? []
@@ -157,7 +154,7 @@ function TabReinscripciones() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                {['Alumno', 'NC', 'Carrera', 'Periodo', 'Estatus', 'Resello', 'Acciones'].map(h => (
+                {['Alumno', 'NC', 'Carrera', 'Periodo', 'Estatus', 'Resello', 'Acciones', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -183,16 +180,26 @@ function TabReinscripciones() {
                               className="text-xs text-[#1a3a5c] hover:underline"
                             >Sticker</a>
                           )}
+                          {r.recibo_cobro_id && (
+                            <a
+                              href={`${import.meta.env.VITE_API_URL ?? ''}/api/cobros-inscripcion/${r.recibo_cobro_id}/recibo/pdf`}
+                              target="_blank" rel="noreferrer"
+                              className="text-xs text-[#1a3a5c] hover:underline"
+                            >Recibo</a>
+                          )}
                         </span>
                       : r.estatus === 'aprobada'
-                        ? <button onClick={() => mutResello.mutate(r.id)} disabled={mutResello.isPending}
-                            className="text-xs text-[#1a3a5c] hover:underline disabled:opacity-50">Registrar</button>
+                        ? <button onClick={() => setReselloTarget(r)}
+                            className="text-xs text-[#1a3a5c] hover:underline">Registrar</button>
                         : <span className="text-xs text-slate-300">—</span>}
                   </td>
                   <td className="px-4 py-3">
                     {r.estatus === 'pendiente' && (
                       <button onClick={() => setSeleccionada(r)} className="text-xs font-medium text-[#1a3a5c] hover:underline">Gestionar</button>
                     )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => setDetalle(r)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -202,6 +209,102 @@ function TabReinscripciones() {
       )}
 
       {seleccionada && <AccionModal r={seleccionada} onClose={() => setSeleccionada(null)} />}
+      {reselloTarget && <ReselloModal r={reselloTarget} onClose={() => setReselloTarget(null)} />}
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.user?.name ?? 'Reinscripción'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Número de control', value: detalle.alumno?.numero_control },
+            { label: 'Carrera', value: detalle.alumno?.carrera?.nombre },
+            { label: 'Periodo', value: detalle.periodo?.nombre },
+            { label: 'Estatus', value: <Badge label={detalle.estatus} color={ESTATUS_COLOR[detalle.estatus]} /> },
+            { label: 'Resello registrado', value: detalle.resello_registrado ? 'Sí' : 'No' },
+            { label: 'Fecha resello', value: detalle.fecha_resello ? new Date(detalle.fecha_resello + 'T12:00:00').toLocaleDateString('es-MX') : undefined },
+          ]}
+        />
+      )}
+    </div>
+  )
+}
+
+function ReselloModal({ r, onClose }: { r: Reinscripcion; onClose: () => void }) {
+  const qc = useQueryClient()
+  const [form, setForm] = useState({
+    folio_fiscal: '', nombre_pagador: r.alumno?.user?.name ?? '', rfc_pagador: '',
+    concepto: '', importe: '', sello_digital_cfdi: '', numero_certificado_sat: '',
+  })
+
+  const mut = useMutation({
+    mutationFn: () => permanenciaApi.registrarResello(r.id, {
+      folio_fiscal: form.folio_fiscal,
+      nombre_pagador: form.nombre_pagador,
+      rfc_pagador: form.rfc_pagador || undefined,
+      concepto: form.concepto || undefined,
+      importe: parseFloat(form.importe),
+      sello_digital_cfdi: form.sello_digital_cfdi || undefined,
+      numero_certificado_sat: form.numero_certificado_sat || undefined,
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['reinscripciones-admin'] }); onClose() },
+  })
+
+  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+  const f = (k: keyof typeof form, v: string) => setForm(prev => ({ ...prev, [k]: v }))
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 my-8">
+        <div>
+          <h3 className="text-base font-semibold text-slate-800">Registrar resello — recibo CFDI</h3>
+          <p className="text-sm text-slate-500 mt-0.5">{r.alumno?.user?.name} — NC: {r.alumno?.numero_control}</p>
+        </div>
+        <p className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
+          Captura el folio fiscal del CFDI emitido por el sistema de facturación institucional. El resello queda condicionado a que el alumno no tenga adeudos pendientes.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Folio fiscal (UUID del CFDI)</label>
+            <input value={form.folio_fiscal} onChange={e => f('folio_fiscal', e.target.value)} className={inp} placeholder="folio del CFDI…" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Nombre del pagador</label>
+            <input value={form.nombre_pagador} onChange={e => f('nombre_pagador', e.target.value)} className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">RFC del pagador (opcional)</label>
+            <input value={form.rfc_pagador} onChange={e => f('rfc_pagador', e.target.value)} className={inp} placeholder="XAXX010101000" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Importe ($)</label>
+            <input type="number" min="0.01" step="0.01" value={form.importe} onChange={e => f('importe', e.target.value)} className={inp} placeholder="0.00" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Concepto (opcional)</label>
+            <input value={form.concepto} onChange={e => f('concepto', e.target.value)} className={inp} placeholder={`Resello — ${r.periodo?.nombre ?? ''}`} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Sello digital CFDI (opcional)</label>
+            <input value={form.sello_digital_cfdi} onChange={e => f('sello_digital_cfdi', e.target.value)} className={inp} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Número de certificado SAT (opcional)</label>
+            <input value={form.numero_certificado_sat} onChange={e => f('numero_certificado_sat', e.target.value)} className={inp} />
+          </div>
+        </div>
+
+        {mut.isError && <p className="text-xs text-red-600">{mutationError(mut.error)}</p>}
+
+        <div className="flex gap-3 justify-end pt-1">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">Cancelar</button>
+          <button
+            onClick={() => mut.mutate()}
+            disabled={mut.isPending || !form.folio_fiscal || !form.nombre_pagador || !form.importe}
+            className="px-5 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-40"
+            style={{ backgroundColor: 'var(--color-primario)' }}
+          >{mut.isPending ? 'Guardando…' : 'Registrar resello'}</button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -387,6 +490,7 @@ function TabAdeudos() {
   const [filtroPagado, setFiltroPagado] = useState('false')
   const [filtroCarrera, setFiltroCarrera] = useState('')
   const [showNuevo, setShowNuevo] = useState(false)
+  const [detalle, setDetalle] = useState<Adeudo | null>(null)
 
   const { data: carreras = [] } = useCarreras()
 
@@ -442,7 +546,7 @@ function TabAdeudos() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                {['Alumno', 'NC', 'Carrera', 'Concepto', 'Monto', 'Estado', 'Acciones'].map(h => (
+                {['Alumno', 'NC', 'Carrera', 'Concepto', 'Monto', 'Estado', 'Acciones', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -469,6 +573,9 @@ function TabAdeudos() {
                       disabled={mutEliminar.isPending}
                       className="text-xs text-red-600 hover:underline disabled:opacity-50">Eliminar</button>
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => setDetalle(a)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -477,6 +584,19 @@ function TabAdeudos() {
       )}
 
       {showNuevo && <NuevoAdeudoModal onClose={() => setShowNuevo(false)} />}
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.user?.name ?? 'Adeudo'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Número de control', value: detalle.alumno?.numero_control },
+            { label: 'Carrera', value: detalle.alumno?.carrera?.clave },
+            { label: 'Concepto', value: detalle.concepto, full: true },
+            { label: 'Monto', value: `$${parseFloat(detalle.monto).toFixed(2)}` },
+            { label: 'Estado', value: <Badge label={detalle.pagado ? 'Pagado' : 'Pendiente'} color={detalle.pagado ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} /> },
+          ]}
+        />
+      )}
     </div>
   )
 }
@@ -631,6 +751,7 @@ function TabBajas() {
   const [filtroCarrera, setFiltroCarrera] = useState('')
   const [filtroPeriodo, setFiltroPeriodo] = useState('')
   const [showModal,     setShowModal]     = useState(false)
+  const [detalle,       setDetalle]       = useState<Baja | null>(null)
 
   const { data: carreras = [] } = useCarreras()
   const { data: periodos = [] } = usePeriodos()
@@ -684,7 +805,7 @@ function TabBajas() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                {['Alumno', 'NC', 'Tipo', 'Periodo', 'F. Solicitud', 'Reingreso', 'Motivo'].map(h => (
+                {['Alumno', 'NC', 'Tipo', 'Periodo', 'F. Solicitud', 'Reingreso', 'Motivo', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -705,6 +826,9 @@ function TabBajas() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-slate-500 max-w-[200px] truncate text-xs">{b.motivo_texto ?? b.motivo_enum ?? '—'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => setDetalle(b)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -713,6 +837,20 @@ function TabBajas() {
       )}
 
       {showModal && <RegistrarBajaModal onClose={() => setShowModal(false)} />}
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.user?.name ?? 'Baja'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Número de control', value: detalle.alumno?.numero_control },
+            { label: 'Tipo de baja', value: <Badge label={detalle.tipo_baja} color={TIPO_BAJA_COLOR[detalle.tipo_baja]} /> },
+            { label: 'Periodo', value: detalle.periodo?.nombre },
+            { label: 'Fecha solicitud', value: detalle.fecha_solicitud ? new Date(detalle.fecha_solicitud + 'T12:00:00').toLocaleDateString('es-MX') : undefined },
+            { label: 'Reingreso posible', value: detalle.reingreso_posible ? 'Sí' : 'No' },
+            { label: 'Motivo', value: detalle.motivo_texto ?? detalle.motivo_enum, full: true },
+          ]}
+        />
+      )}
     </div>
   )
 }

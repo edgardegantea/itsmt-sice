@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import apiClient from '../../../config/apiClient'
-import { inputCls, mutationError } from '../../academico/pages/tabs/shared'
+import { inputCls } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
 
 interface Estatus2FA {
   habilitado: boolean
@@ -66,7 +67,7 @@ export default function SeguridadCuentaPage() {
   })
 
   return (
-    <div className="min-h-full bg-slate-50 p-6 space-y-5 max-w-2xl">
+    <div className="min-h-full bg-slate-50 p-6 space-y-5">
       <div>
         <h1 className="text-xl font-bold text-slate-900">Seguridad de mi cuenta</h1>
         <p className="text-sm text-slate-500 mt-0.5">Verificación en dos pasos y cambio de contraseña</p>

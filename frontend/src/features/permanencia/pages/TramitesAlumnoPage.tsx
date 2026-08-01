@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
 import { permanenciaApi, type TipoConstancia, type Baja, type Reinscripcion, type OrdenReinscripcion } from '../services/permanencia'
-import { mutationError } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
 import { useConstanciaPdf } from '../hooks/useConstanciaPdf'
 
 const TIPO_CONSTANCIA_LABEL: Record<TipoConstancia, string> = {
