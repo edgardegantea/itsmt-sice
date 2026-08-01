@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
 import apiClient from '../../../config/apiClient'
-import { inputCls, mutationError } from '../../academico/pages/tabs/shared'
+import { inputCls } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
+import DetailModal from '../../../components/ui/DetailModal'
 
 interface Acervo {
   id: string
@@ -60,10 +62,11 @@ export default function BibliotecaPage() {
   const [prestamoForm, setPrestamoForm] = useState({ fecha_devolucion_esperada: '' })
   const [renewModal, setRenewModal] = useState<Prestamo | null>(null)
   const [nuevaFecha, setNuevaFecha] = useState('')
+  const [detallePrestamo, setDetallePrestamo] = useState<Prestamo | null>(null)
 
-  const { data: catalogoData } = useQuery<{ data: Acervo[] }>({
+  const { data: catalogo = [] } = useQuery<Acervo[]>({
     queryKey: ['acervo', debouncedQ],
-    queryFn: () => apiClient.get('/acervo', { params: debouncedQ ? { q: debouncedQ } : {} }).then(r => r.data),
+    queryFn: () => apiClient.get('/acervo', { params: debouncedQ ? { q: debouncedQ } : {} }).then(r => r.data.data?.data ?? []),
     staleTime: 30_000,
   })
 
@@ -79,9 +82,9 @@ export default function BibliotecaPage() {
     enabled: !!user?.id && tab === 'mis-prestamos',
   })
 
-  const { data: todosPrestamos } = useQuery<{ data: Prestamo[] }>({
+  const { data: todosPrestamos = [] } = useQuery<Prestamo[]>({
     queryKey: ['todos-prestamos'],
-    queryFn: () => apiClient.get('/prestamos', { params: { estatus: 'activo' } }).then(r => r.data),
+    queryFn: () => apiClient.get('/prestamos', { params: { estatus: 'activo' } }).then(r => r.data.data?.data ?? []),
     enabled: isAdmin && tab === 'admin',
   })
 
@@ -173,7 +176,7 @@ export default function BibliotecaPage() {
           />
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {(catalogoData?.data ?? []).map(libro => (
+            {catalogo.map(libro => (
               <div
                 key={libro.id}
                 onClick={() => setAcervoSeleccionado(acervoSeleccionado?.id === libro.id ? null : libro)}
@@ -254,7 +257,11 @@ export default function BibliotecaPage() {
                         {p.renovaciones < 1 && (
                           <button onClick={() => { setRenewModal(p); setNuevaFecha('') }} className="text-xs text-blue-600 hover:underline">Renovar</button>
                         )}
+                        <button onClick={() => setDetallePrestamo(p)} className="text-xs text-blue-600 hover:underline">Ver detalle</button>
                       </div>
+                    )}
+                    {p.estatus !== 'activo' && (
+                      <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     )}
                   </td>
                 </tr>
@@ -277,15 +284,18 @@ export default function BibliotecaPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {(todosPrestamos?.data ?? []).length === 0 ? (
+              {todosPrestamos.length === 0 ? (
                 <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-400 text-sm">Sin préstamos activos</td></tr>
-              ) : (todosPrestamos?.data ?? []).map(p => (
+              ) : todosPrestamos.map(p => (
                 <tr key={p.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3 font-medium text-slate-800">{p.ejemplar?.acervo?.titulo ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600 text-xs">{p.fecha_devolucion_esperada}</td>
                   <td className="px-4 py-3 text-right text-slate-500">{p.renovaciones}/1</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => mutDevolver.mutate(p.id)} className="text-xs text-slate-600 hover:underline">Registrar devolución</button>
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={() => mutDevolver.mutate(p.id)} className="text-xs text-slate-600 hover:underline">Registrar devolución</button>
+                      <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -360,6 +370,21 @@ export default function BibliotecaPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {detallePrestamo && (
+        <DetailModal
+          title={detallePrestamo.ejemplar?.acervo?.titulo ?? 'Préstamo'}
+          onClose={() => setDetallePrestamo(null)}
+          fields={[
+            { label: 'Fecha de préstamo', value: detallePrestamo.fecha_prestamo },
+            { label: 'Devolución esperada', value: detallePrestamo.fecha_devolucion_esperada },
+            { label: 'Devolución real', value: detallePrestamo.fecha_devolucion_real },
+            { label: 'Renovaciones', value: detallePrestamo.renovaciones },
+            { label: 'Multa acumulada', value: detallePrestamo.multa_acumulada ? `$${Number(detallePrestamo.multa_acumulada).toFixed(2)}` : '$0.00' },
+            { label: 'Estatus', value: detallePrestamo.estatus },
+          ]}
+        />
       )}
     </div>
   )

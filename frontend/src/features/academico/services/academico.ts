@@ -37,10 +37,25 @@ export interface Materia {
   documento_url?: string
 }
 
+export interface Plantel {
+  id: number
+  nombre: string
+  clave: string
+  activo: boolean
+}
+
+export interface GrupoHorarioDia {
+  id?: string
+  dia_semana: DiaSemana
+  hora_inicio: string
+  hora_fin: string
+}
+
 export interface Grupo {
   id: string
   carrera_id: string
   periodo_id: string
+  plantel_id?: number | null
   clave: string
   semestre: number
   turno: 'matutino' | 'vespertino' | 'sabatino'
@@ -48,8 +63,10 @@ export interface Grupo {
   activo: boolean
   horarios_liberados: boolean
   alumnos_count?: number
+  horarios_dias?: GrupoHorarioDia[]
   carrera?: { id: string; nombre: string; clave: string }
-  periodo?: { id: string; nombre: string }
+  periodo?: { id: string; nombre: string; codigo?: string; activo?: boolean }
+  plantel?: Plantel | null
   alumnos?: AlumnoGrupo[]
   cargas?: CargaAcademica[]
 }
@@ -58,7 +75,9 @@ export interface AlumnoGrupo {
   id: string
   numero_control: string
   semestre_actual: number
-  user?: { name: string; email: string }
+  // `user.id` es el id real usado como alumno_id en asistencias — distinto de `id`
+  // arriba, que es el id de la fila de la tabla `alumnos` (no el de `users`).
+  user?: { id: string; name: string; email: string }
   inscripcion?: { aspirante?: { nombres: string; apellido_paterno: string; apellido_materno?: string } }
   pivot?: { fecha_asignacion: string }
 }
@@ -67,16 +86,52 @@ export interface CargaAcademica {
   id: string
   docente_id: string
   materia_id: string
-  grupo_id: string
   periodo_id: string
   aula_id?: string
   horas_semana: number
+  estado?: 'pendiente' | 'confirmada' | 'conflicto'
   docente?: { id: string; name: string; email: string }
   materia?: Materia
-  grupo?: Grupo
+  grupos?: Grupo[]
   periodo?: { id: string; nombre: string }
   aula?: { id: string; nombre: string; tipo: string; capacidad: number }
   horarios?: Horario[]
+  instrumentacion_liberada?: boolean
+}
+
+/**
+ * El constructor de horarios crea una CargaAcademica independiente por cada
+ * bloque día+hora que se asigna (a propósito: permite repartir una materia en
+ * grupos distintos según el día) — así, una materia con 5 horas repartidas en
+ * la semana puede terminar como 5 filas de CargaAcademica distintas, cada una
+ * con un solo Horario. Para el pase de lista eso es ruido: el docente debe ver
+ * "Ecología — Grupo X" una sola vez, con los 5 días disponibles en el
+ * calendario. Esta función fusiona, por (materia_id + primer grupo), todas las
+ * cargas equivalentes en una sola (la de id más antiguo/menor, ya que los ids
+ * son UUIDv7 y por tanto ordenables por creación) con la unión de sus
+ * horarios. Debe aplicarse en cualquier lugar que liste cargas para pasar
+ * lista o generar reportes de asistencia, para que las sesiones siempre se
+ * registren bajo el mismo carga_academica_id sin importar qué día se pasa lista.
+ */
+export function mergeCargasPorAsignatura(cargas: CargaAcademica[]): CargaAcademica[] {
+  const grupos = new Map<string, CargaAcademica[]>()
+
+  for (const c of cargas) {
+    const grupoId = c.grupos?.[0]?.id ?? '_sin_grupo'
+    const key = `${c.materia_id}|${grupoId}`
+    if (!grupos.has(key)) grupos.set(key, [])
+    grupos.get(key)!.push(c)
+  }
+
+  const resultado: CargaAcademica[] = []
+  for (const equivalentes of grupos.values()) {
+    const ordenadas = [...equivalentes].sort((a, b) => a.id.localeCompare(b.id))
+    const canonica = ordenadas[0]
+    const horarios = ordenadas.flatMap(c => c.horarios ?? [])
+    resultado.push({ ...canonica, horarios })
+  }
+
+  return resultado
 }
 
 export interface MallaCurricular {
@@ -106,7 +161,134 @@ export interface Horario {
   carga_academica?: CargaAcademica
 }
 
-export type EstatusPlaneacion = 'borrador' | 'entregada' | 'revisada' | 'liberada' | 'devuelta'
+export type EstatusPlaneacion = 'borrador' | 'enviada_da' | 'devuelta_da' | 'enviada_jc' | 'devuelta_jc' | 'liberada'
+
+/** TecNM-AC-PO-003 §4.8/4.9 — indicador de alcance de una competencia específica. */
+export interface IndicadorAlcance {
+  letra: string
+  indicador: string
+  valor: number | null
+}
+
+/** TecNM-AC-PO-003 §4.10 — niveles de desempeño (5 filas fijas, rango numérico estándar institucional). */
+export type NivelDesempeno = 'Excelente' | 'Notable' | 'Bueno' | 'Suficiente' | 'Insuficiente'
+export interface FilaNivelDesempeno {
+  nivel: NivelDesempeno
+  indicadores: string
+}
+
+/** Fuente de información de una competencia/unidad específica — el tipo determina qué
+ * subconjunto de campos de referencia bibliográfica aplica (ver TIPOS_FUENTE en
+ * PlaneacionEditorPage.tsx para el catálogo de campos por tipo). */
+export type TipoFuente = 'impreso' | 'articulo' | 'sitio_web' | 'digital'
+
+export interface FuenteInformacion {
+  tipo: TipoFuente | ''
+  titulo: string
+  autor?: string
+  anio?: string
+  editorial?: string
+  edicion?: string
+  ciudad?: string
+  isbn?: string
+  revista?: string
+  volumen?: string
+  paginas?: string
+  doi?: string
+  url?: string
+  fecha_consulta?: string
+  plataforma?: string
+}
+
+/** Práctica asociada a una competencia/unidad específica. */
+export interface PracticaUnidad {
+  nombre: string
+  requisitos: string
+  semana: string
+  lugar: string
+}
+
+/** TecNM-AC-PO-003 §4.11 — evidencia de aprendizaje y evaluación formativa de una competencia
+ * específica: qué indicadores de alcance cubre (checklist) y cómo se evalúa. */
+export interface FilaMatrizEvaluacion {
+  evidencia: string
+  porcentaje: number | null
+  indicadores: string[]
+  evaluacion_formativa: string
+}
+
+/** TecNM-AC-PO-003 §4 — Análisis por competencias específicas (bloque repetible, uno por unidad/tema). */
+/** Dosificación semanal de un subtema (TecNM-AC-PO-003 — seguimiento de avance real vs.
+ * planeado, con semáforo: a tiempo / adelantado / atrasado). */
+export interface SubtemaDosificado {
+  subtema: string
+  semana_inicio: number | null
+  semana_fin: number | null
+  /** Semana en la que el docente realmente impartió el subtema (bitácora de avance). */
+  semana_realizado: number | null
+}
+
+/** Fila numerada de actividades de enseñanza/aprendizaje (TecNM-AC-PO-003 §4 "Análisis por
+ * competencias") — cada subtema se asocia a una de estas filas mediante su número. */
+export interface FilaActividad {
+  numero: number
+  actividad_ensenanza: string
+  actividad_aprendizaje: string
+  horas_teoricas: number | null
+  horas_practicas: number | null
+}
+
+/** Subtema del temario de la unidad, asociado a una fila de actividades (por número). */
+export interface SubtemaActividad {
+  texto: string
+  fila: number | null
+}
+
+export interface CompetenciaEspecifica {
+  numero: number
+  nombre_unidad: string
+  /** Porcentaje que aporta esta unidad/competencia específica a la calificación final de la
+   * asignatura (suma de todas las unidades debe ser 100%). */
+  porcentaje: number | null
+  descripcion: string
+  subtemas: SubtemaActividad[]
+  actividades: FilaActividad[]
+  competencias_genericas: string[]
+  indicadores_alcance: IndicadorAlcance[]
+  niveles_desempeno: FilaNivelDesempeno[]
+  matriz_evaluacion: FilaMatrizEvaluacion[]
+  fuentes_informacion: FuenteInformacion[]
+  apoyos_didacticos: string[]
+  practicas: PracticaUnidad[]
+  dosificacion: SubtemaDosificado[]
+}
+
+/** TecNM-AC-PO-003 §6 — Calendarización de evaluación (16 semanas fijas). */
+export interface SemanaCalendarizacion {
+  semana: number
+  tipo_evaluacion: 'ED' | 'EF' | 'ES' | ''
+  tp: boolean
+  tr: boolean
+  sd: boolean
+}
+
+/** Sección de la instrumentación a la que se ancla una observación de revisión — coincide
+ * con la estructura del editor del docente para que la observación se muestre exactamente
+ * donde debe corregirse. */
+export type SeccionObservacion =
+  | 'caracterizacion' | 'intencion_didactica' | 'competencia_asignatura'
+  | 'especifica' | 'dosificacion' | 'calendarizacion'
+
+/** Observación de Desarrollo Académico / Jefatura de Carrera anclada a una sección concreta
+ * de la instrumentación (y, para 'especifica'/'dosificacion', a una unidad y opcionalmente
+ * una categoría dentro de ella — análisis, indicadores, fuentes, apoyo, prácticas). */
+export interface ObservacionCampo {
+  id: string
+  seccion: SeccionObservacion
+  unidad?: number | null
+  categoria?: string | null
+  texto: string
+}
 
 export interface PlaneacionDocente {
   id: string
@@ -114,15 +296,19 @@ export interface PlaneacionDocente {
   docente_id: string
   periodo_id: string
   archivo_url: string | null
+  archivo_path: string | null
+  archivo_nombre: string | null
   estatus: EstatusPlaneacion
   caracterizacion: string | null
   intencion_didactica: string | null
-  competencias: { descripcion?: string; [key: string]: unknown }[] | null
+  competencia_asignatura: string | null
+  competencias: CompetenciaEspecifica[] | null
   fuentes_informacion: string | null
   apoyos_didacticos: string | null
-  calendarizacion: { semana?: number; tema?: string; [key: string]: unknown }[] | null
+  calendarizacion: SemanaCalendarizacion[] | null
   fecha_entrega: string | null
   observaciones_revision: string | null
+  observaciones_campos: ObservacionCampo[] | null
   revisado_en: string | null
   docente?: { id: string; name: string }
   periodo?: { id: string; nombre: string }
@@ -233,18 +419,20 @@ export const academicoApi = {
     apiClient.patch(`/grupos/${grupoId}/liberar-horarios`, { liberar }).then(r => r.data.data as Grupo),
   liberarHorariosBulk: (params: { periodo_id?: string; carrera_id?: string; semestre?: number; liberar: boolean }) =>
     apiClient.post('/grupos/liberar-horarios-bulk', params).then(r => r.data),
+  aplicarHorariosDiasBulk: (grupoIds: string[], horariosDias: GrupoHorarioDia[]): Promise<{ grupos_afectados: number }> =>
+    apiClient.post('/grupos/horarios-dias-bulk', { grupo_ids: grupoIds, horarios_dias: horariosDias }).then(r => r.data.data),
 
   // Cargas académicas
   getCargas: (params?: Record<string, string>) =>
     apiClient.get('/cargas-academicas', { params }).then(r => r.data.data as CargaAcademica[]),
-  createCarga: (d: Partial<CargaAcademica>) =>
+  createCarga: (d: Partial<CargaAcademica> & { grupo_ids?: string[] }) =>
     apiClient.post('/cargas-academicas', d).then(r => r.data.data as CargaAcademica),
-  updateCarga: (id: string, d: Partial<CargaAcademica>) =>
+  updateCarga: (id: string, d: Partial<CargaAcademica> & { grupo_ids?: string[] }) =>
     apiClient.patch(`/cargas-academicas/${id}`, d).then(r => r.data.data as CargaAcademica),
   deleteCarga: (id: string) =>
     apiClient.delete(`/cargas-academicas/${id}`),
-  getDocentes: () =>
-    apiClient.get('/admin/docentes').then(r => r.data.data as { id: string; name: string; email: string; clave_empleado?: string; no_huella?: string; nombramiento?: string; tipo_horas?: string }[]),
+  getDocentes: (params?: { carrera_id?: string }) =>
+    apiClient.get('/admin/docentes', { params }).then(r => r.data.data as { id: string; name: string; email: string; clave_empleado?: string; no_huella?: string; nombramiento?: string; tipo_horas?: string }[]),
 
   // Tutorías
   getTutorias: (params?: Record<string, string>) =>
@@ -313,6 +501,27 @@ export const academicoApi = {
     apiClient.patch(`/sesiones-clase/${sesionId}/asistencia`, { asistencias }).then(r => r.data.data as SesionClase),
   getReporteAsistenciaGrupo: (grupoId: string) =>
     apiClient.get(`/grupos/${grupoId}/reporte-asistencia`).then(r => r.data.data as ReporteAsistenciaGrupo),
+  enviarResumenSesion: (sesionId: string) =>
+    apiClient.post(`/sesiones-clase/${sesionId}/enviar-resumen`).then(r => r.data),
+  generarCheckinSesion: (sesionId: string) =>
+    apiClient.post(`/sesiones-clase/${sesionId}/generar-checkin`).then(r => r.data.data as SesionClase),
+  checkinSesion: (sesionId: string, codigo: string) =>
+    apiClient.post(`/sesiones-clase/${sesionId}/checkin`, { codigo }).then(r => r.data as { message?: string }),
+  enviarListaAsistenciaBlanco: (cargaAcademicaId: string) =>
+    apiClient.post(`/cargas-academicas/${cargaAcademicaId}/asistencia/enviar-lista-blanco`).then(r => r.data),
+  enviarReporteAsistenciaGrupo: (cargaAcademicaId: string) =>
+    apiClient.post(`/cargas-academicas/${cargaAcademicaId}/asistencia/enviar-reporte`).then(r => r.data),
+  enviarAsistenciaMasivo: (periodoId: string, tipo: 'blanco' | 'reporte') =>
+    apiClient.post('/admin/asistencias/enviar-masivo', { periodo_id: periodoId, tipo })
+      .then(r => r.data.data as { enviados: number; sin_correo: number }),
+  getListaAsistenciaPdf: (cargaAcademicaId: string, tipo: 'blanco' | 'reporte', rango?: { desde?: string; hasta?: string }) =>
+    apiClient.get(`/cargas-academicas/${cargaAcademicaId}/asistencia/${tipo === 'blanco' ? 'lista-blanco' : 'reporte'}/pdf`, {
+      responseType: 'blob',
+      params: tipo === 'reporte' ? rango : undefined,
+    }).then(r => new Blob([r.data], { type: 'application/pdf' })),
+  getReporteAsistenciaExcel: (cargaAcademicaId: string, rango?: { desde?: string; hasta?: string }) =>
+    apiClient.get(`/cargas-academicas/${cargaAcademicaId}/asistencia/reporte/excel`, { responseType: 'blob', params: rango })
+      .then(r => new Blob([r.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })),
   getAsistenciaAlumno: (alumnoId: string) =>
     apiClient.get(`/alumnos/${alumnoId}/asistencia`).then(r => r.data.data as AsistenciaRegistro[]),
   getAlertasInasistencia: (params?: Record<string, string | boolean>) =>
@@ -333,6 +542,8 @@ export const academicoApi = {
     apiClient.post('/horarios', { carga_academica_id, bloques }).then(r => r.data.data as Horario[]),
   deleteHorario: (id: string) =>
     apiClient.delete(`/horarios/${id}`),
+  updateHorario: (id: string, data: { dia_semana: string; hora_inicio: string; hora_fin: string; aula_id?: string | null }) =>
+    apiClient.patch(`/horarios/${id}`, data).then(r => r.data.data as Horario),
 
   // Admin — Periodos
   getPeriodos: () =>
@@ -366,12 +577,37 @@ export const academicoApi = {
     apiClient.get('/planeaciones-docentes', { params }).then(r => r.data.data),
   getMisPlaneaciones: (params?: Record<string, string>) =>
     apiClient.get('/planeaciones-docentes/mias', { params }).then(r => r.data.data as PlaneacionDocente[]),
-  savePlaneacion: (d: Partial<PlaneacionDocente>) =>
-    apiClient.post('/planeaciones-docentes', d).then(r => r.data.data as PlaneacionDocente),
-  entregarPlaneacion: (id: string) =>
-    apiClient.post(`/planeaciones-docentes/${id}/entregar`, {}).then(r => r.data.data as PlaneacionDocente),
-  cambiarEstatusPlaneacion: (id: string, estatus: string, observaciones?: string) =>
-    apiClient.patch(`/planeaciones-docentes/${id}/estatus`, { estatus, observaciones_revision: observaciones }).then(r => r.data.data as PlaneacionDocente),
+  getPlaneacion: (id: string) =>
+    apiClient.get(`/planeaciones-docentes/${id}`).then(r => r.data.data as PlaneacionDocente),
+  savePlaneacion: (d: Partial<PlaneacionDocente>, archivo?: File | null) => {
+    const fd = new FormData()
+    for (const [k, v] of Object.entries(d)) {
+      if (v === undefined || v === null || v === '') continue
+      fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v))
+    }
+    if (archivo) fd.append('archivo', archivo)
+    return apiClient.post('/planeaciones-docentes', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data.data as PlaneacionDocente)
+  },
+  descargarArchivoPlaneacion: (id: string, nombreSugerido: string) =>
+    apiClient.get(`/planeaciones-docentes/${id}/archivo`, { responseType: 'blob' }).then(r => {
+      const blob = new Blob([r.data])
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = nombreSugerido
+      a.click()
+      URL.revokeObjectURL(url)
+    }),
+  enviarPlaneacion: (id: string) =>
+    apiClient.post(`/planeaciones-docentes/${id}/enviar`, {}).then(r => r.data.data as PlaneacionDocente),
+  cambiarEstatusPlaneacion: (id: string, estatus: string, observaciones?: string, observacionesCampos?: ObservacionCampo[]) =>
+    apiClient.patch(`/planeaciones-docentes/${id}/estatus`, {
+      estatus,
+      observaciones_revision: observaciones,
+      observaciones_campos: observacionesCampos?.length ? observacionesCampos : undefined,
+    }).then(r => r.data.data as PlaneacionDocente),
 
   // ── Sprint 4 — Calificaciones ─────────────────────────────────────────────
 
@@ -381,6 +617,7 @@ export const academicoApi = {
   registrarCalificacion: (data: {
     alumno_id: string
     grupo_id: string
+    carga_academica_id: string
     parciales?: { parcial: number; calificacion: number }[]
     calificacion_final?: number
     oportunidad?: 'primera_oportunidad' | 'segunda_oportunidad'
@@ -403,8 +640,11 @@ export const academicoApi = {
   cerrarCurso: (grupoId: string, periodoId: string): Promise<void> =>
     apiClient.post('/cierres-de-curso', { grupo_id: grupoId, periodo_id: periodoId }).then(() => undefined),
 
-  firmarActa: (grupoId: string): Promise<ActaCalificaciones> =>
-    apiClient.patch(`/grupos/${grupoId}/acta-calificaciones/firmar`, {}).then(r => r.data.data),
+  reabrirCurso: (grupoId: string, periodoId: string, motivo: string): Promise<void> =>
+    apiClient.post(`/grupos/${grupoId}/cierre-de-curso/reabrir`, { periodo_id: periodoId, motivo }).then(() => undefined),
+
+  firmarActa: (grupoId: string, cargaAcademicaId?: string): Promise<ActaCalificaciones> =>
+    apiClient.patch(`/grupos/${grupoId}/acta-calificaciones/firmar`, { carga_academica_id: cargaAcademicaId }).then(r => r.data.data),
 
   getAlertas: (params?: { revisada?: boolean; carrera_id?: string }): Promise<{ data: AlertaBajaDefinitiva[]; meta: unknown }> =>
     apiClient.get('/alertas-baja-definitiva', { params: {
@@ -415,6 +655,41 @@ export const academicoApi = {
   revisarAlerta: (id: string): Promise<AlertaBajaDefinitiva> =>
     apiClient.patch(`/alertas-baja-definitiva/${id}/revisar`, {}).then(r => r.data.data),
 
+  // ── Cortes de captura de calificaciones ───────────────────────────────────
+
+  getCortesCaptura: (periodoId: string): Promise<CorteCaptura[]> =>
+    apiClient.get(`/admin/periodos/${periodoId}/cortes-captura`).then(r => r.data.data),
+
+  guardarCorteCaptura: (periodoId: string, data: {
+    numero: 1 | 2 | 3
+    nombre?: string
+    fecha_corte: string
+    fecha_limite_captura: string
+  }): Promise<CorteCaptura> =>
+    apiClient.post(`/admin/periodos/${periodoId}/cortes-captura`, data).then(r => r.data.data),
+
+  actualizarCorteCaptura: (corteId: string, data: {
+    nombre?: string
+    fecha_corte: string
+    fecha_limite_captura: string
+  }): Promise<CorteCaptura> =>
+    apiClient.patch(`/admin/cortes-captura/${corteId}`, data).then(r => r.data.data),
+
+  evaluarCorteCaptura: (corteId: string): Promise<ResumenCumplimientoCorte> =>
+    apiClient.post(`/cortes-captura/${corteId}/evaluar`, {}).then(r => r.data.data),
+
+  getCumplimientoCorte: (corteId: string): Promise<AlertaCorteCaptura[]> =>
+    apiClient.get(`/cortes-captura/${corteId}/cumplimiento`).then(r => r.data.data),
+
+  getAlertasCorteCaptura: (params?: { periodo_id?: string; pendiente?: boolean }): Promise<{ data: AlertaCorteCaptura[]; meta: unknown }> =>
+    apiClient.get('/alertas-corte-captura', { params: {
+      ...(params?.periodo_id && { periodo_id: params.periodo_id }),
+      ...(params?.pendiente !== undefined && { pendiente: params.pendiente ? 1 : 0 }),
+    }}).then(r => r.data.data),
+
+  marcarLeidaAlertaCorteCaptura: (id: string): Promise<AlertaCorteCaptura> =>
+    apiClient.patch(`/alertas-corte-captura/${id}/marcar-leida`, {}).then(r => r.data.data),
+
   // ── Builder de Horarios ──────────────────────────────────────────────────────
   getDisponibilidadDocente: (params: { docente_id: string; periodo_id: string }): Promise<{ bloques: DisponibilidadBloque[]; dias_no_laborables: DiaNoLaborable[] }> =>
     apiClient.get('/disponibilidad-docente', { params }).then(r => r.data.data),
@@ -422,21 +697,33 @@ export const academicoApi = {
   saveDisponibilidadDocente: (data: { docente_id: string; periodo_id: string; bloques: Omit<DisponibilidadBloque, 'id'>[] }): Promise<DisponibilidadBloque[]> =>
     apiClient.put('/disponibilidad-docente', data).then(r => r.data.data),
 
-  getBuilderGrid: (params: { periodo_id: string; docente_id: string; grupo_id?: string }): Promise<{ dias: BuilderDia[] }> =>
+  getBuilderGrid: (params: { periodo_id: string; docente_id?: string; grupo_id?: string; carrera_id?: string }): Promise<{ dias: BuilderDia[] }> =>
     apiClient.get('/horarios/builder-grid', { params }).then(r => r.data.data),
 
   verificarDisponibilidad: (data: {
     periodo_id: string; docente_id: string; dia_semana: string
     hora_inicio: string; hora_fin: string
-    aula_id?: string; grupo_id?: string; materia_id?: string; ignorar_carga_id?: string
-  }): Promise<{ resultado: VerificacionResultado; horas: ResumenHoras | null }> =>
+    aula_id?: string; grupo_ids?: string[]; materia_id?: string; ignorar_carga_id?: string
+  }): Promise<{ resultado: VerificacionResultado; horas: Record<string, ResumenHoras> | null }> =>
     apiClient.post('/horarios/verificar-disponibilidad', data).then(r => r.data.data),
 
   asignarHorario: (data: {
-    periodo_id: string; docente_id: string; materia_id: string; grupo_id: string
+    periodo_id: string; docente_id: string; materia_id: string; grupo_ids: string[]
     aula_id?: string; dia_semana: string; hora_inicio: string; hora_fin: string
-  }): Promise<{ carga: CargaAcademica; horario: Horario; horas: ResumenHoras | null }> =>
+  }): Promise<{ carga: CargaAcademica; horario: Horario; horas: Record<string, ResumenHoras> | null }> =>
     apiClient.post('/horarios/asignar', data).then(r => r.data.data),
+
+  actualizarGruposHorario: (horarioId: string, grupoIds: string[]): Promise<CargaAcademica> =>
+    apiClient.patch(`/horarios/${horarioId}/grupos`, { grupo_ids: grupoIds }).then(r => r.data.data),
+
+  getDiagnosticoHorario: (periodoId: string): Promise<{ empalmes: { tipo: string; mensaje: string; horario_a: string; horario_b: string }[]; total: number }> =>
+    apiClient.get('/horarios/diagnostico', { params: { periodo_id: periodoId } }).then(r => r.data.data),
+
+  buscarDisponibilidad: (data: {
+    periodo_id: string; materia_id: string; grupo_ids: string[]
+    carrera_id?: string; docente_id?: string; dia_semana?: string
+  }): Promise<{ propuestas: { dia_semana: string; hora_inicio: string; hora_fin: string; docente_id: string; docente_nombre: string; aula_id: string | null; aula_nombre: string | null }[] }> =>
+    apiClient.post('/horarios/disponibilidad/buscar', data).then(r => r.data.data),
 
   confirmarCarga: (cargaId: string): Promise<CargaAcademica> =>
     apiClient.patch(`/cargas-academicas/${cargaId}/confirmar`, {}).then(r => r.data.data),
@@ -453,8 +740,12 @@ export const academicoApi = {
   deleteDiaNoLaborable: (id: string): Promise<void> =>
     apiClient.delete(`/dias-no-laborables/${id}`).then(() => undefined),
 
-  getConcentradoUrl: (params: { periodo_id: string; carrera_id?: string }): string => {
-    const qs = new URLSearchParams({ periodo_id: params.periodo_id, ...(params.carrera_id ? { carrera_id: params.carrera_id } : {}) })
+  getConcentradoUrl: (params: { periodo_id: string; carrera_id?: string; turno?: string }): string => {
+    const qs = new URLSearchParams({
+      periodo_id: params.periodo_id,
+      ...(params.carrera_id ? { carrera_id: params.carrera_id } : {}),
+      ...(params.turno ? { turno: params.turno } : {}),
+    })
     return `/api/horarios/concentrado?${qs}`
   },
 
@@ -723,6 +1014,27 @@ export const academicoApi = {
   }): Promise<FichaSindical> =>
     apiClient.post(`/docentes/${docenteId}/ficha-sindical`, data).then(r => r.data.data),
 
+  actualizarFichaSindical: (docenteId: string, data: Partial<{
+    clave_plaza: string
+    tipo_nombramiento: 'Base' | 'Interino' | 'Hora-Clase' | 'Medio-Tiempo'
+    categoria_tbc?: string
+    nivel_tbc?: string
+    numero_issste?: string
+    fecha_ingreso_sep: string
+    fecha_ingreso_tecnm?: string
+    departamento_id?: string
+    activo?: boolean
+  }>): Promise<FichaSindical> =>
+    apiClient.patch(`/docentes/${docenteId}/ficha-sindical`, data).then(r => r.data.data),
+
+  subirFotoUsuario: (usuarioId: string, file: File): Promise<{ foto_path: string; foto_url: string }> => {
+    const fd = new FormData()
+    fd.append('foto', file)
+    return apiClient.post(`/admin/usuarios/${usuarioId}/foto`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data.data)
+  },
+
   getPlazas: (params?: { tipo_nombramiento?: string; activo?: boolean; departamento_id?: string; page?: number }): Promise<{ data: FichaSindical[]; total: number; current_page: number; last_page: number }> =>
     apiClient.get('/plazas', { params }).then(r => r.data.data),
 
@@ -779,6 +1091,7 @@ export interface Calificacion {
   id: string
   alumno_id: string
   grupo_id: string
+  carga_academica_id: string | null
   parciales: { parcial: number; calificacion: number }[] | null
   calificacion_final: number | null
   promedio: number | null
@@ -786,6 +1099,8 @@ export interface Calificacion {
   tipo_curso: 'ordinario' | 'repeticion' | 'especial' | null
   intento_numero: number | null
   oportunidad: string | null
+  publicada?: boolean
+  kardex_actualizado?: boolean
   alumno?: { id: string; numero_control: string; user?: { name: string } }
 }
 
@@ -794,6 +1109,48 @@ export interface SituacionAcademica {
     grupo?: { clave: string; cargas?: { materia?: { nombre: string } }[]; periodo?: { nombre: string } }
   })[]
   alertas_baja_definitiva: AlertaBajaDefinitiva[]
+}
+
+export interface CorteCaptura {
+  id: string
+  periodo_id: string
+  numero: 1 | 2 | 3
+  nombre: string | null
+  fecha_corte: string
+  fecha_limite_captura: string
+}
+
+export interface AlertaCorteCaptura {
+  id: string
+  corte_captura_id: string
+  carga_academica_id: string
+  docente_id: string
+  periodo_id: string
+  porcentaje_capturado: number
+  total_unidades_temario: number | null
+  unidades_esperadas: number | null
+  pendiente: boolean
+  leida_docente: boolean
+  leida_jefe: boolean
+  leida_director: boolean
+  corte_captura?: CorteCaptura
+  carga_academica?: { id: string; materia?: { nombre: string } }
+  docente?: { id: string; name: string }
+}
+
+export interface ResumenCumplimientoCorte {
+  cargas_evaluadas: number
+  cargas_pendientes: number
+  detalle: {
+    carga_academica_id: string
+    docente_id: string
+    docente_nombre: string | null
+    materia_nombre: string | null
+    porcentaje_capturado: number
+    total_unidades_temario: number | null
+    unidades_esperadas: number | null
+    pendiente: boolean
+  }[]
 }
 
 export interface ConfiguracionEvaluacion {
@@ -875,11 +1232,14 @@ export interface ExpedienteAlumnoResponse {
 export interface SesionClase {
   id: string
   grupo_id: string
+  carga_academica_id?: string | null
   docente_id: string
   fecha: string
   hora_inicio: string
   hora_fin: string
   tema?: string
+  codigo_checkin?: string | null
+  checkin_expira_en?: string | null
   grupo?: { id: string; clave: string; semestre: number; carrera?: { nombre: string }; periodo?: { nombre: string } }
   docente?: { id: string; name: string; email: string }
   asistencias?: AsistenciaRegistro[]
@@ -1368,13 +1728,14 @@ export interface BuilderSlot {
   materia?:     string
   materia_id?:  string
   grupo?:       string
-  grupo_id?:    string
+  grupo_ids?:   string[]
   aula?:        string
   aula_id?:     string
   carga_estado?: EstadoCarga
   hora_inicio?: string
   hora_fin?:    string
   docente?:     string
+  misma_carrera?: boolean | null
 }
 
 export interface BuilderDia {

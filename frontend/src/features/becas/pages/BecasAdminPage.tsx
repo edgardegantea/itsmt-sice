@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import apiClient from '../../../config/apiClient'
-import { inputCls, selectCls, mutationError } from '../../academico/pages/tabs/shared'
+import { inputCls, selectCls } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
+import DetailModal from '../../../components/ui/DetailModal'
 
 interface SolicitudBeca {
   id: string
@@ -40,15 +42,17 @@ export default function BecasAdminPage() {
   const [asignarForm, setAsignarForm] = useState({ monto_mensual: '', duracion_meses: '6', fecha_inicio: '' })
   const [motivoCancelacion, setMotivoCancelacion] = useState('')
   const [cancelarBeca, setCancelarBeca] = useState<BecaAsignada | null>(null)
+  const [detalleSolicitud, setDetalleSolicitud] = useState<SolicitudBeca | null>(null)
+  const [detalleBeca, setDetalleBeca] = useState<BecaAsignada | null>(null)
 
   const { data: periodos = [] } = useQuery<Periodo[]>({
     queryKey: ['periodos-lista'],
     queryFn: () => apiClient.get('/periodos').then(r => r.data.data ?? []),
   })
 
-  const { data: solicitudes, isLoading: loadingSol } = useQuery<{ data: SolicitudBeca[] }>({
+  const { data: solicitudes = [], isLoading: loadingSol } = useQuery<SolicitudBeca[]>({
     queryKey: ['solicitudes-beca', periodoId],
-    queryFn: () => apiClient.get('/solicitudes-beca', { params: periodoId ? { periodo_id: periodoId } : {} }).then(r => r.data),
+    queryFn: () => apiClient.get('/solicitudes-beca', { params: periodoId ? { periodo_id: periodoId } : {} }).then(r => r.data.data?.data ?? []),
   })
 
   const { data: padron = [], isLoading: loadingPadron } = useQuery<BecaAsignada[]>({
@@ -140,9 +144,9 @@ export default function BecasAdminPage() {
             <tbody className="divide-y divide-slate-100">
               {loadingSol ? (
                 <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-sm">Cargando…</td></tr>
-              ) : (solicitudes?.data ?? []).length === 0 ? (
+              ) : solicitudes.length === 0 ? (
                 <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-sm">Sin solicitudes</td></tr>
-              ) : (solicitudes?.data ?? []).map(s => (
+              ) : solicitudes.map(s => (
                 <tr key={s.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3">
                     <p className="font-medium text-slate-800">{s.alumno?.user?.name ?? '—'}</p>
@@ -178,6 +182,7 @@ export default function BecasAdminPage() {
                           className="text-xs text-green-600 hover:underline"
                         >Asignar beca</button>
                       )}
+                      <button onClick={() => setDetalleSolicitud(s)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </div>
                   </td>
                 </tr>
@@ -233,6 +238,7 @@ export default function BecasAdminPage() {
                         className="text-xs text-red-500 hover:underline"
                       >Cancelar</button>
                     )}
+                    <button onClick={() => setDetalleBeca(b)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap ml-2">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -298,6 +304,35 @@ export default function BecasAdminPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {detalleSolicitud && (
+        <DetailModal
+          title={detalleSolicitud.alumno?.user?.name ?? 'Solicitud de beca'}
+          onClose={() => setDetalleSolicitud(null)}
+          fields={[
+            { label: 'Número de control', value: detalleSolicitud.alumno?.numero_control },
+            { label: 'Tipo de beca', value: detalleSolicitud.tipo_beca },
+            { label: 'Promedio', value: detalleSolicitud.promedio },
+            { label: 'Ingreso familiar', value: detalleSolicitud.ingreso_familiar != null ? `$${Number(detalleSolicitud.ingreso_familiar).toFixed(2)}` : undefined },
+            { label: 'Estatus', value: <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${estatusColors[detalleSolicitud.estatus] ?? 'bg-slate-100 text-slate-600'}`}>{detalleSolicitud.estatus}</span> },
+            { label: 'Fecha de solicitud', value: detalleSolicitud.created_at },
+          ]}
+        />
+      )}
+
+      {detalleBeca && (
+        <DetailModal
+          title={detalleBeca.alumno?.user?.name ?? 'Beca'}
+          onClose={() => setDetalleBeca(null)}
+          fields={[
+            { label: 'Número de control', value: detalleBeca.alumno?.numero_control },
+            { label: 'Tipo de beca', value: detalleBeca.tipo_beca },
+            { label: 'Monto mensual', value: detalleBeca.monto_mensual != null ? `$${Number(detalleBeca.monto_mensual).toFixed(2)}` : undefined },
+            { label: 'Duración (meses)', value: detalleBeca.duracion_meses },
+            { label: 'Estatus', value: detalleBeca.estatus },
+          ]}
+        />
       )}
     </div>
   )

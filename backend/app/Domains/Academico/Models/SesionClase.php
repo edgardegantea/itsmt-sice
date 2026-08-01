@@ -16,6 +16,7 @@ class SesionClase extends Model
 
     protected $fillable = [
         'grupo_id',
+        'carga_academica_id',
         'docente_id',
         'fecha',
         'hora_inicio',
@@ -23,9 +24,18 @@ class SesionClase extends Model
         'tema',
     ];
 
+    protected $casts = [
+        'fecha' => 'date',
+    ];
+
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class);
+    }
+
+    public function cargaAcademica(): BelongsTo
+    {
+        return $this->belongsTo(CargaAcademica::class);
     }
 
     public function docente(): BelongsTo

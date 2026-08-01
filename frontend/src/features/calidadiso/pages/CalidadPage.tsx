@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
 import apiClient from '../../../config/apiClient'
-import { inputCls, selectCls, mutationError, ModalWrap } from '../../academico/pages/tabs/shared'
+import { inputCls, selectCls, ModalWrap } from '../../academico/pages/tabs/shared'
+import { mutationError } from '@/utils/apiErrors'
+import DetailModal from '../../../components/ui/DetailModal'
 
 interface EvidenciaCalidad {
   id: string
@@ -59,6 +61,7 @@ export default function CalidadPage() {
   const [showEvidenciaModal, setShowEvidenciaModal] = useState(false)
   const [showNcModal, setShowNcModal] = useState(false)
   const [accionModal, setAccionModal] = useState<NoConformidad | null>(null)
+  const [detalleEvidencia, setDetalleEvidencia] = useState<EvidenciaCalidad | null>(null)
 
   const [evidenciaForm, setEvidenciaForm] = useState({ proceso: '', descripcion: '', tipo_evidencia: '' })
   const [ncForm, setNcForm] = useState({ proceso: '', descripcion: '', detectada_por: '' })
@@ -69,15 +72,15 @@ export default function CalidadPage() {
     queryFn: () => apiClient.get('/periodos').then(r => r.data.data ?? []),
   })
 
-  const { data: evidencias } = useQuery<{ data: EvidenciaCalidad[] }>({
+  const { data: evidencias } = useQuery<EvidenciaCalidad[]>({
     queryKey: ['evidencias-calidad'],
-    queryFn: () => apiClient.get('/evidencias-calidad').then(r => r.data),
+    queryFn: () => apiClient.get('/evidencias-calidad').then(r => r.data.data?.data ?? []),
     enabled: tab === 'evidencias',
   })
 
-  const { data: noConformidades } = useQuery<{ data: NoConformidad[] }>({
+  const { data: noConformidades } = useQuery<NoConformidad[]>({
     queryKey: ['no-conformidades'],
-    queryFn: () => apiClient.get('/no-conformidades').then(r => r.data),
+    queryFn: () => apiClient.get('/no-conformidades').then(r => r.data.data?.data ?? []),
     enabled: tab === 'nc',
   })
 
@@ -179,12 +182,13 @@ export default function CalidadPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Tipo</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Validada</th>
                   {isDirector && <th />}
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {(evidencias?.data ?? []).length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-sm">Sin evidencias registradas</td></tr>
-                ) : (evidencias?.data ?? []).map(ev => (
+                {(evidencias ?? []).length === 0 ? (
+                  <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-sm">Sin evidencias registradas</td></tr>
+                ) : (evidencias ?? []).map(ev => (
                   <tr key={ev.id} className="hover:bg-slate-50/60">
                     <td className="px-4 py-3 font-medium text-slate-800">{ev.proceso}</td>
                     <td className="px-4 py-3 text-slate-600 line-clamp-1 max-w-xs">{ev.descripcion}</td>
@@ -203,6 +207,9 @@ export default function CalidadPage() {
                         )}
                       </td>
                     )}
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setDetalleEvidencia(ev)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -224,11 +231,11 @@ export default function CalidadPage() {
           </div>
 
           <div className="space-y-3">
-            {(noConformidades?.data ?? []).length === 0 && (
+            {(noConformidades ?? []).length === 0 && (
               <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">Sin no conformidades registradas</div>
             )}
 
-            {(noConformidades?.data ?? []).map(nc => (
+            {(noConformidades ?? []).map(nc => (
               <div key={nc.id} className="bg-white rounded-xl border border-slate-200">
                 <div className="px-4 py-3 flex items-start justify-between gap-3">
                   <div>
@@ -371,6 +378,23 @@ export default function CalidadPage() {
             <input type="date" value={accionForm.fecha_limite} onChange={e => setAccionForm(f => ({ ...f, fecha_limite: e.target.value }))} className={inputCls} />
           </div>
         </ModalWrap>
+      )}
+
+      {detalleEvidencia && (
+        <DetailModal
+          title={detalleEvidencia.proceso}
+          onClose={() => setDetalleEvidencia(null)}
+          fields={[
+            { label: 'Descripción', value: detalleEvidencia.descripcion, full: true },
+            { label: 'Tipo de evidencia', value: detalleEvidencia.tipo_evidencia },
+            { label: 'Registrada por', value: detalleEvidencia.registradoPor?.name },
+            { label: 'Validada', value: detalleEvidencia.validada ? 'Sí' : 'Pendiente' },
+            { label: 'Fecha de registro', value: detalleEvidencia.created_at },
+          ]}
+          footer={isDirector && !detalleEvidencia.validada ? (
+            <button onClick={() => { mutValidarEvidencia.mutate(detalleEvidencia.id); setDetalleEvidencia(null) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Validar</button>
+          ) : undefined}
+        />
       )}
     </div>
   )
