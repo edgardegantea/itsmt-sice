@@ -58,7 +58,7 @@ class DocenteHorarioSheet implements FromView, WithTitle
 
         return [
             'linea1' => $carga->materia?->nombre ?? '—',
-            'linea2' => ($carga->grupo?->clave ?? '—').' · '.($carga->aula?->nombre ?? '—'),
+            'linea2' => ($carga->grupos->pluck('clave')->implode(', ') ?: '—').' · '.($carga->aula?->nombre ?? '—'),
         ];
     }
 

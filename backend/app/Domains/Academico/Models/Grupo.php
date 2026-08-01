@@ -2,6 +2,7 @@
 
 namespace App\Domains\Academico\Models;
 
+use App\Domains\Catalogos\Models\Plantel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ class Grupo extends Model
     use HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'carrera_id', 'periodo_id', 'clave', 'semestre',
+        'carrera_id', 'periodo_id', 'plantel_id', 'clave', 'semestre',
         'turno', 'capacidad', 'activo', 'horarios_liberados',
     ];
 
@@ -36,6 +37,11 @@ class Grupo extends Model
         return $this->belongsTo(Periodo::class);
     }
 
+    public function plantel(): BelongsTo
+    {
+        return $this->belongsTo(Plantel::class);
+    }
+
     public function alumnos(): BelongsToMany
     {
         return $this->belongsToMany(Alumno::class, 'alumno_grupo')
@@ -43,8 +49,18 @@ class Grupo extends Model
             ->withTimestamps();
     }
 
-    public function cargas(): HasMany
+    public function cargas(): BelongsToMany
     {
-        return $this->hasMany(CargaAcademica::class);
+        return $this->belongsToMany(CargaAcademica::class, 'carga_academica_grupo')->withTimestamps();
+    }
+
+    /** Ventana horaria personalizada por día (0 filas = sin restricción). */
+    public function horariosDias(): HasMany
+    {
+        return $this->hasMany(GrupoHorarioDia::class)->orderByRaw(
+            "case dia_semana " .
+            "when 'lunes' then 1 when 'martes' then 2 when 'miercoles' then 3 " .
+            "when 'jueves' then 4 when 'viernes' then 5 when 'sabado' then 6 end"
+        );
     }
 }

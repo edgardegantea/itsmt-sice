@@ -8,6 +8,7 @@ use App\Domains\Academico\Models\Carrera;
 use App\Domains\Academico\Models\Especialidad;
 use App\Domains\Academico\Models\Grupo;
 use App\Domains\Academico\Models\InstrumentacionDidactica;
+use App\Domains\Academico\Models\MallaCurricular;
 use App\Domains\Academico\Models\Materia;
 use App\Domains\Academico\Models\Periodo;
 use App\Domains\Admision\Models\Aspirante;
@@ -23,6 +24,7 @@ class Sprint9Test extends TestCase
 
     private User    $director;
     private User    $jefe;
+    private User    $desarrolloAcademico;
     private User    $docente;
     private User    $alumno;
     private Carrera $carrera;
@@ -36,7 +38,8 @@ class Sprint9Test extends TestCase
 
         foreach (['superadmin', 'admin', 'docente', 'jefe_carrera', 'alumno',
                   'director_academico', 'control_escolar', 'direccion_general',
-                  'direccion_academica', 'subdireccion_academica', 'personal_administrativo'] as $r) {
+                  'direccion_academica', 'subdireccion_academica', 'personal_administrativo',
+                  'desarrollo_academico'] as $r) {
             Role::firstOrCreate(['name' => $r, 'guard_name' => 'web']);
         }
 
@@ -51,6 +54,9 @@ class Sprint9Test extends TestCase
             'email' => 'jefe.s9@test.com', 'carrera_id' => $this->carrera->id,
         ]);
         $this->jefe->assignRole('jefe_carrera');
+
+        $this->desarrolloAcademico = User::factory()->create(['email' => 'da.s9@test.com', 'carrera_id' => null]);
+        $this->desarrolloAcademico->assignRole('desarrollo_academico');
 
         $this->docente = User::factory()->create(['email' => 'doc.s9@test.com', 'carrera_id' => null]);
         $this->docente->assignRole('docente');
@@ -292,6 +298,23 @@ class Sprint9Test extends TestCase
         $this->assertEquals('enviada', $r->json('data.estatus'));
     }
 
+    public function test_enviar_instrumentacion_fuera_de_plazo_se_marca_como_tardia(): void
+    {
+        // El periodo fixture (fecha_inicio 2024-08-01) ya inició hace tiempo,
+        // por lo que cualquier envío hoy debe quedar marcado como tardío
+        // (TecNM PO-003 §3.4) sin bloquear el envío.
+        $asig = $this->crearAsignacion();
+        $inst = $this->crearInstrumentacion($asig, 'borrador');
+
+        $r = $this->actingAs($this->docente)
+            ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/enviar");
+
+        $r->assertOk();
+        $this->assertEquals('enviada', $r->json('data.estatus'));
+        $this->assertTrue($r->json('data.entrega_tardia'));
+        $this->assertNotNull($r->json('data.entrega_en'));
+    }
+
     public function test_no_se_puede_enviar_instrumentacion_ya_liberada(): void
     {
         $asig = $this->crearAsignacion();
@@ -316,12 +339,66 @@ class Sprint9Test extends TestCase
         $this->assertEquals('observaciones', $r->json('data.estatus'));
     }
 
+    // ── S9-03b: Desarrollo Académico aprueba o rechaza ───────────────────────────
+
+    public function test_desarrollo_academico_puede_aprobar_instrumentacion_enviada(): void
+    {
+        $asig = $this->crearAsignacion();
+        $inst = $this->crearInstrumentacion($asig, 'enviada');
+
+        $r = $this->actingAs($this->desarrolloAcademico)
+            ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/revisar-da", [
+                'accion' => 'aprobar',
+            ]);
+
+        $r->assertOk();
+        $this->assertEquals('enviada_jc', $r->json('data.estatus'));
+    }
+
+    public function test_desarrollo_academico_puede_rechazar_con_observaciones_por_seccion(): void
+    {
+        $asig = $this->crearAsignacion();
+        $inst = $this->crearInstrumentacion($asig, 'enviada');
+
+        $r = $this->actingAs($this->desarrolloAcademico)
+            ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/revisar-da", [
+                'accion'               => 'rechazar',
+                'observaciones_campos' => [
+                    ['id' => 'a1', 'seccion' => 'metodologia', 'texto' => 'Detallar más la metodología.'],
+                ],
+            ]);
+
+        $r->assertOk();
+        $this->assertEquals('observaciones', $r->json('data.estatus'));
+        $this->assertEquals('metodologia', $r->json('data.observaciones_campos.0.seccion'));
+    }
+
+    public function test_desarrollo_academico_no_puede_rechazar_sin_observaciones(): void
+    {
+        $asig = $this->crearAsignacion();
+        $inst = $this->crearInstrumentacion($asig, 'enviada');
+
+        $this->actingAs($this->desarrolloAcademico)
+            ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/revisar-da", ['accion' => 'rechazar'])
+            ->assertStatus(422);
+    }
+
+    public function test_jefe_no_puede_revisar_da(): void
+    {
+        $asig = $this->crearAsignacion();
+        $inst = $this->crearInstrumentacion($asig, 'enviada');
+
+        $this->actingAs($this->jefe)
+            ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/revisar-da", ['accion' => 'aprobar'])
+            ->assertStatus(403);
+    }
+
     // ── S9-04: Jefe libera o devuelve ────────────────────────────────────────────
 
     public function test_jefe_puede_liberar_instrumentacion_enviada(): void
     {
         $asig = $this->crearAsignacion();
-        $inst = $this->crearInstrumentacion($asig, 'enviada');
+        $inst = $this->crearInstrumentacion($asig, 'enviada_jc');
 
         $r = $this->actingAs($this->jefe)
             ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/liberar", [
@@ -336,12 +413,12 @@ class Sprint9Test extends TestCase
     public function test_jefe_puede_devolver_instrumentacion_con_observaciones(): void
     {
         $asig = $this->crearAsignacion();
-        $inst = $this->crearInstrumentacion($asig, 'enviada');
+        $inst = $this->crearInstrumentacion($asig, 'enviada_jc');
 
         $r = $this->actingAs($this->jefe)
             ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/liberar", [
-                'accion'        => 'devolver',
-                'observaciones' => 'Falta detallar unidades 3 y 4.',
+                'accion'              => 'devolver',
+                'observaciones_jefe'  => 'Falta detallar unidades 3 y 4.',
             ]);
 
         $r->assertOk();
@@ -359,10 +436,20 @@ class Sprint9Test extends TestCase
             ->assertStatus(422);
     }
 
-    public function test_docente_no_puede_liberar_instrumentacion(): void
+    public function test_jefe_no_puede_liberar_instrumentacion_aun_no_aprobada_por_da(): void
     {
         $asig = $this->crearAsignacion();
         $inst = $this->crearInstrumentacion($asig, 'enviada');
+
+        $this->actingAs($this->jefe)
+            ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/liberar", ['accion' => 'liberar'])
+            ->assertStatus(422);
+    }
+
+    public function test_docente_no_puede_liberar_instrumentacion(): void
+    {
+        $asig = $this->crearAsignacion();
+        $inst = $this->crearInstrumentacion($asig, 'enviada_jc');
 
         $this->actingAs($this->docente)
             ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/liberar", ['accion' => 'liberar'])
@@ -375,7 +462,7 @@ class Sprint9Test extends TestCase
             'nombre' => 'Adm. Industrial', 'clave' => 'ADI', 'codigo_it' => '08', 'activa' => true,
         ]);
         $asig = $this->crearAsignacion(['carrera_id' => $otraCarrera->id]);
-        $inst = $this->crearInstrumentacion($asig, 'enviada');
+        $inst = $this->crearInstrumentacion($asig, 'enviada_jc');
 
         $this->actingAs($this->jefe)
             ->patchJson("/api/instrumentaciones-didacticas/{$inst->id}/liberar", ['accion' => 'liberar'])
@@ -437,6 +524,13 @@ class Sprint9Test extends TestCase
         $r2->assertOk();
         $this->assertEquals('enviada', $r2->json('data.estatus'));
 
+        // Desarrollo Académico aprueba
+        $r2b = $this->actingAs($this->desarrolloAcademico)->patchJson("/api/instrumentaciones-didacticas/{$instId}/revisar-da", [
+            'accion' => 'aprobar',
+        ]);
+        $r2b->assertOk();
+        $this->assertEquals('enviada_jc', $r2b->json('data.estatus'));
+
         // Jefe libera
         $r3 = $this->actingAs($this->jefe)->patchJson("/api/instrumentaciones-didacticas/{$instId}/liberar", [
             'accion' => 'liberar',
@@ -461,19 +555,37 @@ class Sprint9Test extends TestCase
         $instId = $r1->json('data.id');
         $this->actingAs($this->docente)->patchJson("/api/instrumentaciones-didacticas/{$instId}/enviar");
 
-        // Jefe devuelve con observaciones
-        $r2 = $this->actingAs($this->jefe)->patchJson("/api/instrumentaciones-didacticas/{$instId}/liberar", [
-            'accion'        => 'devolver',
-            'observaciones' => 'Completar unidades.',
+        // Desarrollo Académico rechaza con observaciones (general + ancladas a sección)
+        $r2 = $this->actingAs($this->desarrolloAcademico)->patchJson("/api/instrumentaciones-didacticas/{$instId}/revisar-da", [
+            'accion'               => 'rechazar',
+            'observaciones_jefe'   => 'Completar unidades.',
+            'observaciones_campos' => [
+                ['id' => 'a1', 'seccion' => 'unidades', 'texto' => 'Faltan las unidades 3 y 4.'],
+            ],
         ]);
         $this->assertEquals('observaciones', $r2->json('data.estatus'));
+        $this->assertEquals('Completar unidades.', $r2->json('data.observaciones_jefe'));
+        $this->assertCount(1, $r2->json('data.observaciones_campos'));
 
-        // Docente edita y reenvía
+        // Docente edita y reenvía — las observaciones se limpian al reenviar
         $this->actingAs($this->docente)->patchJson("/api/instrumentaciones-didacticas/{$instId}", [
             'objetivo_general' => 'Objetivo mejorado',
         ]);
         $r3 = $this->actingAs($this->docente)->patchJson("/api/instrumentaciones-didacticas/{$instId}/enviar");
         $this->assertEquals('enviada', $r3->json('data.estatus'));
+        $this->assertNull($r3->json('data.observaciones_jefe'));
+        $this->assertNull($r3->json('data.observaciones_campos'));
+
+        // Segunda ronda: Desarrollo Académico aprueba y Jefatura devuelve con observación
+        $this->actingAs($this->desarrolloAcademico)->patchJson("/api/instrumentaciones-didacticas/{$instId}/revisar-da", [
+            'accion' => 'aprobar',
+        ]);
+        $r4 = $this->actingAs($this->jefe)->patchJson("/api/instrumentaciones-didacticas/{$instId}/liberar", [
+            'accion'             => 'devolver',
+            'observaciones_jefe' => 'Ajustar bibliografía.',
+        ]);
+        $this->assertEquals('observaciones', $r4->json('data.estatus'));
+        $this->assertEquals('Ajustar bibliografía.', $r4->json('data.observaciones_jefe'));
     }
 
     // ── Listado instrumentaciones ──────────────────────────────────────────────────
@@ -684,6 +796,34 @@ class Sprint9Test extends TestCase
             'especialidad_id' => $esp->id,
             'estatus'         => 'solicitada',
         ]);
+    }
+
+    public function test_alumno_no_puede_seleccionar_especialidad_sin_creditos_suficientes(): void
+    {
+        $alumno = $this->crearAlumno();
+
+        $materia = Materia::create([
+            'nombre' => 'Cálculo Diferencial', 'clave' => 'CD-ESP-01', 'creditos' => 100, 'tipo' => 'obligatoria',
+            'carrera_id' => $this->carrera->id, 'semestre' => 1,
+        ]);
+        MallaCurricular::create([
+            'carrera_id' => $this->carrera->id, 'materia_id' => $materia->id, 'semestre' => 1,
+        ]);
+
+        $esp = Especialidad::create([
+            'carrera_id'              => $this->carrera->id,
+            'nombre'                  => 'IA Aplicada',
+            'estatus'                 => 'activa',
+            'porcentaje_creditos_min' => 60,
+        ]);
+
+        $r = $this->actingAs($alumno->user)->postJson("/api/alumnos/{$alumno->id}/especialidad-seleccionada", [
+            'especialidad_id' => $esp->id,
+            'periodo_id'      => $this->periodo->id,
+        ]);
+
+        $r->assertStatus(422);
+        $this->assertDatabaseMissing('alumno_especialidad', ['alumno_id' => $alumno->id]);
     }
 
     public function test_alumno_no_puede_seleccionar_especialidad_de_otra_carrera(): void

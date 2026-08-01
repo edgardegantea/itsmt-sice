@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { academicoApi } from '../services/academico'
 import type { SeguimientoDistancia, IndicadoresDistancia } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 export default function SeguimientoDistanciaPage() {
   const toast = useToastStore()
@@ -9,6 +11,8 @@ export default function SeguimientoDistanciaPage() {
   const [indicadores, setIndicadores] = useState<IndicadoresDistancia | null>(null)
   const [loading, setLoading] = useState(true)
   const [filtroRiesgo, setFiltroRiesgo] = useState<'todos' | 'riesgo' | 'pendiente'>('todos')
+  const [vista, setVista] = useViewMode('seguimiento-distancia')
+  const [detalle, setDetalle] = useState<SeguimientoDistancia | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -66,42 +70,45 @@ export default function SeguimientoDistanciaPage() {
       )}
 
       {/* Filtros */}
-      <div className="flex gap-2">
-        {[
-          { key: 'todos',     label: 'Todos' },
-          { key: 'riesgo',    label: 'En riesgo' },
-          { key: 'pendiente', label: 'Módulo pendiente' },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFiltroRiesgo(key as 'todos' | 'riesgo' | 'pendiente')}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filtroRiesgo === key
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="flex gap-2 items-center justify-between flex-wrap">
+        <div className="flex gap-2">
+          {[
+            { key: 'todos',     label: 'Todos' },
+            { key: 'riesgo',    label: 'En riesgo' },
+            { key: 'pendiente', label: 'Módulo pendiente' },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFiltroRiesgo(key as 'todos' | 'riesgo' | 'pendiente')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                filtroRiesgo === key
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <ViewToggle value={vista} onChange={setVista} />
       </div>
 
       {loading ? (
         <div className="text-center py-12 text-gray-500">Cargando...</div>
-      ) : (
+      ) : filtrados.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border text-center py-10 text-gray-400">Sin alumnos en modalidad a distancia</div>
+      ) : vista === 'lista' ? (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Alumno', 'Programa / Modalidad', 'Semestres cursados', 'Tiempo cursado', 'Módulo Competencias', 'Alertas'].map(h => (
+                {['Alumno', 'Programa / Modalidad', 'Semestres cursados', 'Tiempo cursado', 'Módulo Competencias', 'Alertas', ''].map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtrados.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-10 text-gray-400">Sin alumnos en modalidad a distancia</td></tr>
-              ) : filtrados.map((s, i) => (
+              {filtrados.map((s, i) => (
                 <tr key={i} className={`hover:bg-gray-50 ${s.alerta_riesgo ? 'bg-red-50' : ''}`}>
                   <td className="px-5 py-4">
                     <p className="text-sm font-medium text-gray-900">{s.inscripcion.alumno?.name ?? '—'}</p>
@@ -156,11 +163,44 @@ export default function SeguimientoDistanciaPage() {
                       )}
                     </div>
                   </td>
+                  <td className="px-5 py-4 text-right">
+                    <button onClick={() => setDetalle(s)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtrados.map((s, i) => (
+            <div key={i} className={`bg-white border rounded-xl p-4 flex flex-col gap-2 ${s.alerta_riesgo ? 'border-red-200' : ''}`}>
+              <p className="font-medium text-gray-900 truncate">{s.inscripcion.alumno?.name ?? '—'}</p>
+              <p className="text-xs text-gray-400">{s.inscripcion.programa?.carrera?.nombre ?? '—'}</p>
+              <p className="text-xs text-gray-500">{s.semestres_cursados} / {s.semestres_maximos} semestres</p>
+              <div className="flex gap-1 flex-wrap">
+                {s.alerta_riesgo && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">⚠ Riesgo</span>}
+                {s.modulo_pendiente && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Módulo pendiente</span>}
+              </div>
+              <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.inscripcion.alumno?.name ?? 'Alumno'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Correo', value: detalle.inscripcion.alumno?.email },
+            { label: 'Carrera', value: detalle.inscripcion.programa?.carrera?.nombre },
+            { label: 'Modalidad', value: detalle.inscripcion.programa?.modalidad?.replace('_', ' ') },
+            { label: 'Semestres cursados', value: `${detalle.semestres_cursados} / ${detalle.semestres_maximos}` },
+            { label: 'Módulo de competencias', value: detalle.modulo_pendiente ? 'Pendiente' : 'Acreditado' },
+            { label: 'Alerta de riesgo', value: detalle.alerta_riesgo ? 'Sí — más de 50% del tiempo cursado' : 'No' },
+          ]}
+        />
       )}
     </div>
   )

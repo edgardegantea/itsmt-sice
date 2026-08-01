@@ -11,15 +11,19 @@ class ConcentradoHorarioExport implements WithMultipleSheets
     public function __construct(
         private readonly string $periodoId,
         private readonly ?string $carreraId = null,
+        private readonly ?string $turno = null,
     ) {}
 
     /** Una hoja Excel por docente con cargas en el periodo. */
     public function sheets(): array
     {
-        $cargas = CargaAcademica::with(['docente:id,name', 'materia:id,nombre', 'grupo:id,clave', 'aula:id,nombre', 'horarios'])
+        $cargas = CargaAcademica::with(['docente:id,name', 'materia:id,nombre', 'grupos:id,clave', 'aula:id,nombre', 'horarios'])
             ->where('periodo_id', $this->periodoId)
             ->when($this->carreraId, fn($q) =>
-                $q->whereHas('grupo', fn($gq) => $gq->where('carrera_id', $this->carreraId))
+                $q->whereHas('grupos', fn($gq) => $gq->where('carrera_id', $this->carreraId))
+            )
+            ->when($this->turno, fn($q) =>
+                $q->whereHas('grupos', fn($gq) => $gq->where('turno', $this->turno))
             )
             ->get();
 

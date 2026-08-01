@@ -11,16 +11,23 @@ interface Seleccion {
   modulo_sabatino?: 1 | 2 | null
 }
 
+interface Docente { id: string; name: string }
+
 const DIA_LABEL: Record<DiaSemana, string> = {
   lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
   jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
 }
 
+/**
+ * Uno de `docenteId` o `grupoId` viene fijo según desde dónde se abrió el
+ * modal (Builder por docente vs Builder por grupo); el otro se elige aquí.
+ */
 export default function AsignarSlotModal({
-  periodoId, docenteId, seleccion, onClose,
+  periodoId, docenteId: docenteIdFijo, grupoId: grupoIdFijo, seleccion, onClose,
 }: {
   periodoId: string
-  docenteId: string
+  docenteId?: string
+  grupoId?: string
   seleccion: Seleccion
   onClose: (asignado: boolean) => void
 }) {
@@ -28,13 +35,20 @@ export default function AsignarSlotModal({
   const toastSuccess = useToastStore(s => s.success)
   const toastError = useToastStore(s => s.error)
 
-  const [grupoId, setGrupoId] = useState('')
+  const [grupoId, setGrupoId] = useState(grupoIdFijo ?? '')
+  const [docenteId, setDocenteId] = useState(docenteIdFijo ?? '')
   const [materiaId, setMateriaId] = useState('')
   const [aulaId, setAulaId] = useState('')
 
   const { data: grupos = [] } = useQuery<Grupo[]>({
     queryKey: ['builder-grupos', periodoId],
     queryFn: () => academicoApi.getGrupos({ periodo_id: periodoId }),
+  })
+
+  const { data: docentes = [] } = useQuery<Docente[]>({
+    queryKey: ['docentes'],
+    queryFn: () => academicoApi.getDocentes(),
+    enabled: !docenteIdFijo,
   })
 
   const grupoSeleccionado = grupos.find(g => g.id === grupoId)
@@ -55,7 +69,7 @@ export default function AsignarSlotModal({
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!materiaId || !grupoId) {
+    if (!materiaId || !grupoId || !docenteId) {
       setVerificacion(null)
       setHorasInfo(null)
       return
@@ -70,23 +84,23 @@ export default function AsignarSlotModal({
         hora_inicio: seleccion.hora_inicio,
         hora_fin: seleccion.hora_fin,
         aula_id: aulaId || undefined,
-        grupo_id: grupoId,
+        grupo_ids: [grupoId],
         materia_id: materiaId,
       }).then(res => {
         setVerificacion(res.resultado)
-        setHorasInfo(res.horas)
+        setHorasInfo(res.horas?.[grupoId] ?? null)
       })
     }, 250)
 
     return () => { if (debounce.current) clearTimeout(debounce.current) }
-  }, [materiaId, grupoId, aulaId, periodoId, docenteId, seleccion])
+  }, [materiaId, grupoId, aulaId, docenteId, periodoId, seleccion])
 
   const mutAsignar = useMutation({
     mutationFn: () => academicoApi.asignarHorario({
       periodo_id: periodoId,
       docente_id: docenteId,
       materia_id: materiaId,
-      grupo_id: grupoId,
+      grupo_ids: [grupoId],
       aula_id: aulaId || undefined,
       dia_semana: seleccion.dia_semana,
       hora_inicio: seleccion.hora_inicio,
@@ -102,7 +116,7 @@ export default function AsignarSlotModal({
 
   const conflictos = verificacion?.conflictos ?? []
   const fueraDisponibilidad = verificacion ? !verificacion.dentro_disponibilidad : false
-  const puedeGuardar = !!materiaId && !!grupoId && conflictos.length === 0 && !fueraDisponibilidad && !mutAsignar.isPending
+  const puedeGuardar = !!materiaId && !!grupoId && !!docenteId && conflictos.length === 0 && !fueraDisponibilidad && !mutAsignar.isPending
 
   const materiaSeleccionada = useMemo(() => materias.find(m => m.id === materiaId), [materias, materiaId])
   const materiasModulo1 = materias.filter(m => m.modulo_sabatino === 1)
@@ -136,17 +150,27 @@ export default function AsignarSlotModal({
         </div>
       )}
 
-      <div className="col-span-2">
-        <label className="text-xs font-medium text-slate-600 mb-1 block">Grupo *</label>
-        <select value={grupoId} onChange={e => { setGrupoId(e.target.value); setMateriaId('') }} className={selectCls}>
-          <option value="">Selecciona un grupo</option>
-          {grupos.map(g => (
-            <option key={g.id} value={g.id}>
-              {g.clave}{g.carrera?.nombre ? ` · ${g.carrera.nombre}` : ''} ({g.capacidad ?? '—'} alumnos)
-            </option>
-          ))}
-        </select>
-      </div>
+      {grupoIdFijo ? (
+        <div className="col-span-2">
+          <label className="text-xs font-medium text-slate-600 mb-1 block">Docente *</label>
+          <select value={docenteId} onChange={e => setDocenteId(e.target.value)} className={selectCls}>
+            <option value="">Selecciona un docente</option>
+            {docentes.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </div>
+      ) : (
+        <div className="col-span-2">
+          <label className="text-xs font-medium text-slate-600 mb-1 block">Grupo *</label>
+          <select value={grupoId} onChange={e => { setGrupoId(e.target.value); setMateriaId('') }} className={selectCls}>
+            <option value="">Selecciona un grupo</option>
+            {grupos.map(g => (
+              <option key={g.id} value={g.id}>
+                {g.clave}{g.carrera?.nombre ? ` · ${g.carrera.nombre}` : ''} ({g.capacidad ?? '—'} alumnos)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="col-span-2">
         <label className="text-xs font-medium text-slate-600 mb-1 block">Materia *</label>
@@ -194,7 +218,7 @@ export default function AsignarSlotModal({
         </select>
       </div>
 
-      {!puedeGuardar && materiaId && grupoId && conflictos.length === 0 && !fueraDisponibilidad && (
+      {!puedeGuardar && materiaId && grupoId && docenteId && conflictos.length === 0 && !fueraDisponibilidad && (
         <p className="col-span-2 text-xs text-slate-400">Verificando disponibilidad…</p>
       )}
     </ModalWrap>

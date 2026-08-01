@@ -1,36 +1,26 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
-import { academicoApi, type PlaneacionDocente, type EstatusPlaneacion, type CargaAcademica } from '../services/academico'
-import { mutationError } from './tabs/shared'
+import { academicoApi, type PlaneacionDocente, type CargaAcademica } from '../services/academico'
 import apiClient from '../../../config/apiClient'
+import { ESTATUS_COLOR, ESTATUS_LABEL, SIN_INICIAR, PASOS, pasoCompletoPlaneacion, PasoBadge, selectCls } from './planeacionShared'
 
-const ESTATUS_COLOR: Record<EstatusPlaneacion, string> = {
-  borrador:  'bg-slate-100 text-slate-600',
-  entregada: 'bg-blue-100 text-blue-700',
-  revisada:  'bg-yellow-100 text-yellow-700',
-  liberada:  'bg-green-100 text-green-700',
-  devuelta:  'bg-red-100 text-red-700',
+// Etiquetas cortas para la columna de cada fase en la tabla — el label completo de PASOS
+// (p. ej. "Caracterización, intención y competencia") es demasiado largo para una columna
+// angosta y forzaba el encabezado a envolver en 2-3 líneas, descuadrando toda la tabla.
+const PASO_CORTO: Record<string, string> = {
+  generales: 'Caract.',
+  especificas: 'Compet.',
+  dosificacion: 'Dosif.',
+  calendarizacion: 'Calend.',
 }
-
-const ESTATUS_LABEL: Record<EstatusPlaneacion, string> = {
-  borrador:  'Borrador',
-  entregada: 'Entregada',
-  revisada:  'Revisada',
-  liberada:  'Liberada',
-  devuelta:  'Devuelta — requiere correcciones',
-}
-
-const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
-const selectCls = inputCls
 
 export default function PlaneacionDocentePage() {
   const { user } = useAuthStore()
-  const qc = useQueryClient()
-  const [periodoId, setPeriodoId] = useState('')
-  const [cargaSelId, setCargaSelId] = useState('')
-  const [form, setForm] = useState<Partial<PlaneacionDocente>>({})
-  const [saved, setSaved] = useState(false)
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const periodoId = searchParams.get('periodo') ?? ''
+  const setPeriodoId = (id: string) => setSearchParams(id ? { periodo: id } : {})
 
   const { data: periodos = [] } = useQuery({
     queryKey: ['periodos-select'],
@@ -50,209 +40,144 @@ export default function PlaneacionDocentePage() {
     enabled: !!user?.id,
   })
 
-  const cargaActual = (misCargas as CargaAcademica[]).find(c => c.id === cargaSelId)
-  const planeacionActual = (misPlaneaciones as PlaneacionDocente[]).find(p => p.carga_academica_id === cargaSelId)
+  // El constructor de horarios crea una CargaAcademica independiente por cada bloque de
+  // horario (día+hora), así que una misma materia+grupo puede tener varias filas. La
+  // Instrumentación Didáctica es por materia+grupo+periodo (no por bloque de horario), así
+  // que aquí se agrupan para mostrar una sola fila por combinación, prefiriendo como
+  // representante la carga que ya tenga una planeación iniciada (si existe alguna).
+  const misAsignaturas = (() => {
+    const grupos = new Map<string, CargaAcademica>()
+    for (const c of misCargas as CargaAcademica[]) {
+      const clave = `${c.materia_id}|${(c.grupos ?? []).map(g => g.id).sort().join(',')}`
+      const actual = grupos.get(clave)
+      const tienePlaneacion = (id: string) => (misPlaneaciones as PlaneacionDocente[]).some(p => p.carga_academica_id === id)
+      if (!actual || (!tienePlaneacion(actual.id) && tienePlaneacion(c.id))) {
+        grupos.set(clave, c)
+      }
+    }
+    return [...grupos.values()]
+  })()
 
-  const seleccionarCarga = (id: string) => {
-    setCargaSelId(id)
-    setSaved(false)
-    const p = (misPlaneaciones as PlaneacionDocente[]).find(pl => pl.carga_academica_id === id)
-    setForm(p ? {
-      caracterizacion:     p.caracterizacion ?? '',
-      intencion_didactica: p.intencion_didactica ?? '',
-      fuentes_informacion: p.fuentes_informacion ?? '',
-      apoyos_didacticos:   p.apoyos_didacticos ?? '',
-      archivo_url:         p.archivo_url ?? '',
-    } : {
-      caracterizacion: '', intencion_didactica: '', fuentes_informacion: '', apoyos_didacticos: '', archivo_url: '',
-    })
+  const abrirCarga = (cargaId: string) => {
+    navigate(`/docente/planeacion/${cargaId}?periodo=${periodoId}`)
   }
 
-  const set = (k: keyof PlaneacionDocente, v: unknown) => setForm(f => ({ ...f, [k]: v }))
-
-  const mutSave = useMutation({
-    mutationFn: () => academicoApi.savePlaneacion({
-      ...form,
-      carga_academica_id: cargaSelId,
-      periodo_id: periodoId,
-    }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['mis-planeaciones'] })
-      setSaved(true)
-    },
-  })
-
-  const mutEntregar = useMutation({
-    mutationFn: () => academicoApi.entregarPlaneacion(planeacionActual!.id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['mis-planeaciones'] }),
-  })
-
-  const puedeEntregar = planeacionActual &&
-    ['borrador', 'devuelta'].includes(planeacionActual.estatus) &&
-    (planeacionActual.caracterizacion || planeacionActual.archivo_url)
-
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-slate-800">Planeación didáctica</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Registra y entrega tu planeación por materia asignada.</p>
+        <h1 className="text-xl font-semibold text-slate-800">Instrumentación didáctica (Planeación)</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Formato oficial TecNM-AC-PO-003 — registra y entrega tu planeación por materia asignada.</p>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-white rounded-xl border border-slate-200 px-5 py-4 flex flex-wrap gap-4">
-        <div className="flex-1 min-w-48">
+      {/* Filtro de periodo */}
+      <div className="bg-white rounded-xl border border-slate-200 px-5 py-4">
+        <div className="max-w-xs">
           <label className="block text-xs font-medium text-slate-600 mb-1">Periodo *</label>
-          <select value={periodoId} onChange={e => { setPeriodoId(e.target.value); setCargaSelId('') }} className={selectCls}>
+          <select value={periodoId} onChange={e => setPeriodoId(e.target.value)} className={selectCls}>
             <option value="">— Selecciona —</option>
             {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}{p.activo ? ' (activo)' : ''}</option>)}
           </select>
         </div>
-        {periodoId && (
-          <div className="flex-1 min-w-48">
-            <label className="block text-xs font-medium text-slate-600 mb-1">Materia asignada</label>
-            <select value={cargaSelId} onChange={e => seleccionarCarga(e.target.value)} className={selectCls}>
-              <option value="">— Selecciona —</option>
-              {(misCargas as CargaAcademica[]).map(c => (
-                <option key={c.id} value={c.id}>{c.materia?.nombre} / {c.grupo?.clave}</option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
-      {/* Listado de planeaciones */}
-      {(misPlaneaciones as PlaneacionDocente[]).length > 0 && (
+      {/* Mis asignaturas — una fila por materia asignada, una columna por cada fase de la instrumentación */}
+      {periodoId && (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <p className="px-5 pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Mis planeaciones</p>
-          <div className="divide-y divide-slate-100">
-            {(misPlaneaciones as PlaneacionDocente[]).map(p => (
-              <div key={p.id} className="px-5 py-3 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-800">{p.carga_academica?.materia?.nombre ?? '—'}</p>
-                  <p className="text-xs text-slate-400">{p.carga_academica?.grupo?.clave ?? '—'} · {p.periodo?.nombre}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTATUS_COLOR[p.estatus]}`}>
-                    {ESTATUS_LABEL[p.estatus]}
-                  </span>
-                  {p.fecha_entrega && (
-                    <span className="text-xs text-slate-400">{new Date(p.fecha_entrega).toLocaleDateString('es-MX')}</span>
-                  )}
-                </div>
+          <p className="px-5 pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Mis asignaturas</p>
+          {misAsignaturas.length === 0 ? (
+            <p className="px-5 pb-4 text-sm text-slate-400">No tienes materias asignadas en este periodo.</p>
+          ) : (
+            <>
+              {/* Pantallas pequeñas: lista de tarjetas — la tabla completa no cabe sin cortarse. */}
+              <div className="sm:hidden divide-y divide-slate-100 border-t border-slate-100">
+                {misAsignaturas.map(c => {
+                  const p = (misPlaneaciones as PlaneacionDocente[]).find(pl => pl.carga_academica_id === c.id)
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => abrirCarga(c.id)}
+                      className="w-full text-left px-5 py-3.5 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-slate-800 truncate">{c.materia?.nombre ?? '—'}</p>
+                          <p className="text-xs text-slate-400">{c.grupos?.[0]?.clave ?? '—'}</p>
+                        </div>
+                        <span className="text-xs text-blue-600 font-medium shrink-0">{p ? 'Abrir' : 'Iniciar'}</span>
+                      </div>
+                      <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${p ? ESTATUS_COLOR[p.estatus] : 'bg-slate-100 text-slate-500'}`}>
+                        {p ? ESTATUS_LABEL[p.estatus] : SIN_INICIAR}
+                      </span>
+                      <div className="grid grid-cols-2 gap-1.5 mt-2.5">
+                        {PASOS.map(paso => {
+                          const completo = pasoCompletoPlaneacion(paso.id, p)
+                          return (
+                            <div key={paso.id} className="flex items-center gap-1.5 min-w-0">
+                              <PasoBadge completo={completo} />
+                              <span className={`text-[11px] truncate ${completo ? 'text-slate-600' : 'text-slate-400'}`}>
+                                {PASO_CORTO[paso.id]}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Editor */}
-      {cargaSelId && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-800">{cargaActual?.materia?.nombre}</p>
-              <p className="text-xs text-slate-500">{cargaActual?.grupo?.clave} · {cargaActual?.materia?.creditos} créditos</p>
-            </div>
-            {planeacionActual && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTATUS_COLOR[planeacionActual.estatus]}`}>
-                {ESTATUS_LABEL[planeacionActual.estatus]}
-              </span>
-            )}
-          </div>
-
-          {/* Observaciones de revisión */}
-          {planeacionActual?.observaciones_revision && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-              <p className="font-semibold text-xs mb-1">Observaciones del revisor:</p>
-              {planeacionActual.observaciones_revision}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Caracterización del grupo</label>
-              <textarea
-                rows={3} value={form.caracterizacion ?? ''}
-                onChange={e => set('caracterizacion', e.target.value)}
-                placeholder="Describe las características del grupo, contexto, nivel, etc."
-                className={inputCls + ' resize-none'}
-                disabled={planeacionActual?.estatus === 'liberada'}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Intención didáctica</label>
-              <textarea
-                rows={3} value={form.intencion_didactica ?? ''}
-                onChange={e => set('intencion_didactica', e.target.value)}
-                placeholder="¿Qué pretende lograr con esta planeación?"
-                className={inputCls + ' resize-none'}
-                disabled={planeacionActual?.estatus === 'liberada'}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Fuentes de información</label>
-              <textarea
-                rows={2} value={form.fuentes_informacion ?? ''}
-                onChange={e => set('fuentes_informacion', e.target.value)}
-                placeholder="Bibliografía, sitios web, recursos digitales…"
-                className={inputCls + ' resize-none'}
-                disabled={planeacionActual?.estatus === 'liberada'}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Apoyos didácticos</label>
-              <textarea
-                rows={2} value={form.apoyos_didacticos ?? ''}
-                onChange={e => set('apoyos_didacticos', e.target.value)}
-                placeholder="Equipo, software, material, laboratorio…"
-                className={inputCls + ' resize-none'}
-                disabled={planeacionActual?.estatus === 'liberada'}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">URL del archivo (PDF/Drive)</label>
-              <input
-                type="url" value={form.archivo_url ?? ''}
-                onChange={e => set('archivo_url', e.target.value)}
-                placeholder="https://drive.google.com/..."
-                className={inputCls}
-                disabled={planeacionActual?.estatus === 'liberada'}
-              />
-            </div>
-          </div>
-
-          {/* Errores */}
-          {mutSave.isError && (
-            <p className="text-xs text-red-600">{mutationError(mutSave.error)}</p>
-          )}
-          {mutEntregar.isError && (
-            <p className="text-xs text-red-600">{mutationError(mutEntregar.error)}</p>
-          )}
-          {saved && <p className="text-xs text-green-700">Borrador guardado correctamente.</p>}
-          {mutEntregar.isSuccess && (
-            <p className="text-xs text-green-700">Planeación entregada. El jefe de carrera la revisará a la brevedad.</p>
-          )}
-
-          {planeacionActual?.estatus !== 'liberada' && (
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={() => { setSaved(false); mutSave.mutate() }}
-                disabled={mutSave.isPending}
-                className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
-              >
-                {mutSave.isPending ? 'Guardando…' : 'Guardar borrador'}
-              </button>
-              <button
-                onClick={() => mutEntregar.mutate()}
-                disabled={!puedeEntregar || mutEntregar.isPending}
-                className="px-5 py-2 text-sm text-white bg-[#1a3a5c] rounded-lg hover:bg-[#234d7a] disabled:opacity-50"
-              >
-                {mutEntregar.isPending ? 'Entregando…' : 'Entregar planeación'}
-              </button>
-            </div>
+              {/* Pantallas medianas en adelante: tabla completa */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-t border-slate-100 text-xs text-slate-500">
+                      <th className="text-left font-medium px-5 py-2">Asignatura</th>
+                      <th className="text-left font-medium px-3 py-2">Estatus</th>
+                      {PASOS.map(p => (
+                        <th key={p.id} className="text-center font-medium px-2 py-2 w-16" title={p.label}>{PASO_CORTO[p.id]}</th>
+                      ))}
+                      <th className="px-3 py-2 w-20"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {misAsignaturas.map(c => {
+                      const p = (misPlaneaciones as PlaneacionDocente[]).find(pl => pl.carga_academica_id === c.id)
+                      return (
+                        <tr
+                          key={c.id}
+                          onClick={() => abrirCarga(c.id)}
+                          className="cursor-pointer hover:bg-slate-50 transition-colors"
+                        >
+                          <td className="px-5 py-3">
+                            <p className="font-medium text-slate-800">{c.materia?.nombre ?? '—'}</p>
+                            <p className="text-xs text-slate-400">{c.grupos?.[0]?.clave ?? '—'}</p>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${p ? ESTATUS_COLOR[p.estatus] : 'bg-slate-100 text-slate-500'}`}>
+                              {p ? ESTATUS_LABEL[p.estatus] : SIN_INICIAR}
+                            </span>
+                          </td>
+                          {PASOS.map(paso => (
+                            <td key={paso.id} className="text-center px-2 py-3">
+                              <PasoBadge completo={pasoCompletoPlaneacion(paso.id, p)} />
+                            </td>
+                          ))}
+                          <td className="px-3 py-3 text-right">
+                            <span className="text-xs text-blue-600 font-medium">{p ? 'Abrir' : 'Iniciar'}</span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
+    </div>
     </div>
   )
 }

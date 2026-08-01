@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type SesionTutoria } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 export default function SesionesTutoriaPage() {
   const qc = useQueryClient()
@@ -17,6 +19,8 @@ export default function SesionesTutoriaPage() {
     observaciones: '',
     alumnos_ids: '',
   })
+  const [vista, setVista] = useViewMode('sesiones-tutoria')
+  const [detalle, setDetalle] = useState<SesionTutoria | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['sesiones-tutoria'],
@@ -62,12 +66,15 @@ export default function SesionesTutoriaPage() {
             <h1 className="text-2xl font-bold text-slate-800">Mis Sesiones de Tutoría</h1>
             <p className="text-sm text-slate-500 mt-1">Registro de sesiones individuales y grupales</p>
           </div>
-          <button
-            onClick={() => setShowForm(v => !v)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            {showForm ? 'Cancelar' : '+ Registrar sesión'}
-          </button>
+          <div className="flex items-center gap-2">
+            <ViewToggle value={vista} onChange={setVista} />
+            <button
+              onClick={() => setShowForm(v => !v)}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {showForm ? 'Cancelar' : '+ Registrar sesión'}
+            </button>
+          </div>
         </div>
 
         {showForm && (
@@ -165,7 +172,7 @@ export default function SesionesTutoriaPage() {
               <p className="font-medium">Sin sesiones registradas</p>
               <p className="text-sm mt-1">Registra tu primera sesión de tutoría</p>
             </div>
-          ) : (
+          ) : vista === 'lista' ? (
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
@@ -174,6 +181,7 @@ export default function SesionesTutoriaPage() {
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">Duración</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-600">Temas tratados</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">Alumnos</th>
+                  <th className="text-right py-3 px-5" />
                 </tr>
               </thead>
               <tbody>
@@ -194,13 +202,44 @@ export default function SesionesTutoriaPage() {
                         {Array.isArray(s.alumnos_atendidos_ids) ? s.alumnos_atendidos_ids.length : 0}
                       </span>
                     </td>
+                    <td className="py-3 px-5 text-right">
+                      <button onClick={() => setDetalle(s)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+              {sesiones.map(s => (
+                <div key={s.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium text-slate-800">{formatFecha(s.fecha)}</p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${s.tipo === 'individual' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{s.tipo}</span>
+                  </div>
+                  <p className="text-sm text-slate-700 line-clamp-2">{s.temas_tratados}</p>
+                  <p className="text-xs text-slate-500">{s.duracion_minutos ? `${s.duracion_minutos} min` : '—'} · {Array.isArray(s.alumnos_atendidos_ids) ? s.alumnos_atendidos_ids.length : 0} alumno(s)</p>
+                  <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={`Sesión — ${formatFecha(detalle.fecha)}`}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Tipo', value: detalle.tipo },
+            { label: 'Duración', value: detalle.duracion_minutos ? `${detalle.duracion_minutos} min` : '—' },
+            { label: 'Temas tratados', full: true, value: detalle.temas_tratados },
+            { label: 'Observaciones', full: true, value: detalle.observaciones ?? '—' },
+            { label: 'Alumnos atendidos', value: Array.isArray(detalle.alumnos_atendidos_ids) ? detalle.alumnos_atendidos_ids.length : 0 },
+          ]}
+        />
+      )}
     </div>
   )
 }

@@ -31,11 +31,11 @@ class InformeSindicalController extends Controller
 
         // Enriquecer con grupos afectados de cada docente
         $permisos->each(function ($p) use ($periodo) {
-            $p->grupos_afectados = CargaAcademica::with(['grupo:id,clave,semestre', 'materia:id,nombre'])
+            $p->grupos_afectados = CargaAcademica::with(['grupos:id,clave,semestre,periodo_id', 'materia:id,nombre'])
                 ->where('docente_id', $p->docente_id)
-                ->whereHas('grupo', fn ($q) => $q->where('periodo_id', $periodo->id))
+                ->whereHas('grupos', fn ($q) => $q->where('periodo_id', $periodo->id))
                 ->get()
-                ->map(fn ($c) => ($c->grupo?->clave ?? '—') . ' — ' . ($c->materia?->nombre ?? '—'))
+                ->map(fn ($c) => ($c->grupos->pluck('clave')->implode(',') ?: '—') . ' — ' . ($c->materia?->nombre ?? '—'))
                 ->implode(', ');
         });
 

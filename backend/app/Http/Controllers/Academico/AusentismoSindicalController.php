@@ -45,12 +45,12 @@ class AusentismoSindicalController extends Controller
         // Grupos afectados: grupos de docentes con permisos activos
         $docentesIds = $permisosActivos->pluck('docente_id')->unique();
 
-        $gruposAfectados = CargaAcademica::with(['grupo:id,clave,semestre', 'materia:id,nombre'])
+        $gruposAfectados = CargaAcademica::with(['grupos:id,clave,semestre,periodo_id', 'materia:id,nombre'])
             ->whereIn('docente_id', $docentesIds)
-            ->when($periodoId, fn ($q) => $q->whereHas('grupo', fn ($gq) => $gq->where('periodo_id', $periodoId)))
+            ->when($periodoId, fn ($q) => $q->whereHas('grupos', fn ($gq) => $gq->where('periodo_id', $periodoId)))
             ->get()
             ->map(fn ($c) => [
-                'grupo'   => $c->grupo,
+                'grupo'   => $c->grupos->first(),
                 'materia' => $c->materia,
                 'docente_id' => $c->docente_id,
             ]);

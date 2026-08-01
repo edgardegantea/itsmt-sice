@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Domains\Academico\Models\Aula;
 use App\Domains\Academico\Models\CargaAcademica;
 use App\Domains\Academico\Models\Carrera;
+use App\Domains\Academico\Models\DisponibilidadDocente;
 use App\Domains\Academico\Models\Grupo;
 use App\Domains\Academico\Models\Horario;
 use App\Domains\Academico\Models\Materia;
@@ -104,10 +105,13 @@ class DocentesCargasSeeder extends Seeder
         ],
     ];
 
+    /** Número de periodos más recientes (por fecha_inicio) a poblar con grupos/cargas/disponibilidad. */
+    private const PERIODOS_A_POBLAR = 4;
+
     public function run(): void
     {
-        $periodo = Periodo::where('activo', true)->first() ?? Periodo::first();
-        if (! $periodo) {
+        $periodos = Periodo::orderByDesc('fecha_inicio')->take(self::PERIODOS_A_POBLAR)->get();
+        if ($periodos->isEmpty()) {
             $this->command->error('No existe ningún periodo. Crea al menos uno antes de ejecutar este seeder.');
             return;
         }
@@ -126,16 +130,26 @@ class DocentesCargasSeeder extends Seeder
         $this->command->info('Creando 52 docentes…');
         $docentes = $this->crearDocentes($carreras);
 
-        // ── 3. Crear grupos por carrera ────────────────────────────────────
-        $this->command->info('Creando grupos…');
-        $grupos = $this->crearGrupos($carreras, $periodo);
+        // ── 3-5. Grupos, cargas académicas, horarios y disponibilidad por cada uno de los periodos más recientes ──
+        // Se omiten los periodos que ya tienen cargas académicas (p.ej. el activo, sembrado en una corrida anterior)
+        // para no reasignar aulas/horarios con una combinación aleatoria distinta que choque con los ya existentes.
+        foreach ($periodos as $periodo) {
+            if (CargaAcademica::where('periodo_id', $periodo->id)->exists()) {
+                $this->command->line("  · Periodo '{$periodo->nombre}' ya tiene cargas académicas, se omite.");
+                $this->generarDisponibilidad($docentes, $periodo);
+                continue;
+            }
 
-        // ── 4. Asignar cargas académicas con horarios ─────────────────────
-        $this->command->info('Generando cargas académicas y horarios…');
-        $this->generarCargas($docentes, $grupos, $periodo, $aulas);
+            $this->command->info("Poblando periodo '{$periodo->nombre}'…");
+
+            $grupos = $this->crearGrupos($carreras, $periodo);
+            $this->generarCargas($docentes, $grupos, $periodo, $aulas);
+            $this->generarDisponibilidad($docentes, $periodo);
+        }
 
         $totalCargas = CargaAcademica::count();
-        $this->command->info("✓ Seeder completado: {$docentes->count()} docentes, {$grupos->count()} grupos, {$totalCargas} cargas académicas.");
+        $totalGrupos = Grupo::count();
+        $this->command->info("✓ Seeder completado: {$docentes->count()} docentes, {$totalGrupos} grupos, {$totalCargas} cargas académicas en {$periodos->count()} periodos.");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -283,8 +297,8 @@ class DocentesCargasSeeder extends Seeder
                 // Evitar duplicado exacto
                 $yaExiste = CargaAcademica::where('docente_id', $docente->id)
                     ->where('materia_id', $materia->id)
-                    ->where('grupo_id', $grupo->id)
                     ->where('periodo_id', $periodo->id)
+                    ->whereHas('grupos', fn($q) => $q->where('grupos.id', $grupo->id))
                     ->exists();
 
                 if ($yaExiste) {
@@ -295,28 +309,59 @@ class DocentesCargasSeeder extends Seeder
                 $carga = CargaAcademica::create([
                     'docente_id'   => $docente->id,
                     'materia_id'   => $materia->id,
-                    'grupo_id'     => $grupo->id,
                     'periodo_id'   => $periodo->id,
                     'aula_id'      => $aula->id,
                     'horas_semana' => $materia->horas_teoria + $materia->horas_practica ?: 5,
                 ]);
+                $carga->grupos()->sync([$grupo->id]);
 
-                // Asignar bloque de horario
+                // Asignar bloque de horario. Con muchos periodos/grupos puede coincidir el mismo
+                // aula+día+hora entre dos cargas distintas (viola la exclusion constraint de
+                // "sin traslape de aula"); en datos de prueba simplemente se omite ese bloque.
                 if (isset($bloquesDisponibles[$bloqueIdx])) {
                     [$dias, $inicio, $fin] = $bloquesDisponibles[$bloqueIdx];
                     foreach ($dias as $dia) {
-                        Horario::firstOrCreate([
-                            'carga_academica_id' => $carga->id,
-                            'dia_semana'         => $dia,
-                        ], [
-                            'hora_inicio' => $inicio . ':00',
-                            'hora_fin'    => $fin    . ':00',
-                        ]);
+                        try {
+                            Horario::firstOrCreate([
+                                'carga_academica_id' => $carga->id,
+                                'dia_semana'         => $dia,
+                            ], [
+                                'hora_inicio' => $inicio . ':00',
+                                'hora_fin'    => $fin    . ':00',
+                            ]);
+                        } catch (\Illuminate\Database\QueryException $e) {
+                            // Traslape de aula en datos de prueba: se omite este bloque.
+                        }
                     }
                     $bloqueIdx++;
                 }
 
                 $docenteIdx++;
+            }
+        }
+    }
+
+    /** Bloques de disponibilidad semanal simples, iguales para todos los docentes (datos de prueba). */
+    private function generarDisponibilidad(\Illuminate\Database\Eloquent\Collection $docentes, Periodo $periodo): void
+    {
+        $bloques = [
+            ['dia_semana' => 'lunes',     'hora_inicio' => '07:00', 'hora_fin' => '14:00'],
+            ['dia_semana' => 'martes',    'hora_inicio' => '07:00', 'hora_fin' => '13:00'],
+            ['dia_semana' => 'miercoles', 'hora_inicio' => '07:00', 'hora_fin' => '14:00'],
+            ['dia_semana' => 'jueves',    'hora_inicio' => '07:00', 'hora_fin' => '13:00'],
+            ['dia_semana' => 'viernes',   'hora_inicio' => '07:00', 'hora_fin' => '12:00'],
+        ];
+
+        foreach ($docentes as $docente) {
+            foreach ($bloques as $bloque) {
+                DisponibilidadDocente::firstOrCreate([
+                    'docente_id' => $docente->id,
+                    'periodo_id' => $periodo->id,
+                    'dia_semana' => $bloque['dia_semana'],
+                ], [
+                    'hora_inicio' => $bloque['hora_inicio'] . ':00',
+                    'hora_fin'    => $bloque['hora_fin'] . ':00',
+                ]);
             }
         }
     }

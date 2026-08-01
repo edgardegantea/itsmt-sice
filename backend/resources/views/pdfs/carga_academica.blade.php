@@ -69,7 +69,8 @@
   </table>
   <div class="sep"></div>
 
-  <div class="titulo">Carga Académica — {{ $periodo->nombre }}</div>
+  <div class="titulo">Formato de Carga Académica — {{ $periodo->nombre }}</div>
+  <div style="text-align:center; font-size:6.5pt; color:#888; margin-top:-6px; margin-bottom:6px; letter-spacing:0.5px;">TecNM-AC-PO-001</div>
 
   <table class="alumno-info">
     <tr>
@@ -120,9 +121,9 @@
         @foreach($cargas as $c)
         <tr>
           <td style="font-family:monospace">{{ $c->materia?->clave_oficial_tecnm ?? $c->materia?->clave ?? '—' }}</td>
-          <td>{{ $c->materia?->nombre ?? '—' }}{{ isset($repeticion[$c->materia_id]) ? ' *' : '' }}</td>
+          <td>{{ $c->materia?->nombre ?? '—' }}</td>
           <td>{{ $c->docente?->name ?? '—' }}</td>
-          <td>{{ $c->grupo?->clave ?? '—' }}</td>
+          <td>{{ $c->grupos->pluck('clave')->implode(', ') ?: '—' }}{{ isset($repeticion[$c->materia_id]) ? ' *' : '' }}</td>
           <td>{{ $c->aula?->nombre ?? '—' }}</td>
           <td style="text-align:center">{{ $c->materia?->creditos ?? '—' }}</td>
           <td style="text-align:center">{{ $c->horas_semana ?? '—' }}</td>

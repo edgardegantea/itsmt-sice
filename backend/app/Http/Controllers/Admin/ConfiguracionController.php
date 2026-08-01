@@ -115,6 +115,26 @@ class ConfiguracionController extends Controller
         );
     }
 
+    // PATCH /api/admin/configuracion/recordatorios-asistencia  (solo superadmin)
+    public function toggleRecordatoriosAsistencia(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->hasRole('superadmin'), 403, 'Solo el superadmin puede activar o desactivar los recordatorios de asistencia.');
+
+        $datos = $request->validate([
+            'recordatorios_asistencia_global_activo' => ['required', 'boolean'],
+        ]);
+
+        $config = ConfiguracionInstitucional::instancia();
+        $config->update(['recordatorios_asistencia_global_activo' => $datos['recordatorios_asistencia_global_activo']]);
+
+        $estado = $datos['recordatorios_asistencia_global_activo'] ? 'activados' : 'desactivados';
+
+        return ApiResponse::success(
+            ['recordatorios_asistencia_global_activo' => $config->fresh()->recordatorios_asistencia_global_activo],
+            "Recordatorios de asistencia {$estado} para todos los docentes."
+        );
+    }
+
     // DELETE /api/admin/configuracion/logo
     public function eliminarLogo(Request $request): JsonResponse
     {

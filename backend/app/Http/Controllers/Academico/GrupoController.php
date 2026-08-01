@@ -19,7 +19,7 @@ class GrupoController extends Controller
         $carreraParam  = $request->query('carrera_id');
         $carreraValida = $carreraParam && preg_match('/^[0-9a-f-]{36}$/i', $carreraParam) ? $carreraParam : null;
 
-        $grupos = Grupo::with(['carrera', 'periodo'])
+        $grupos = Grupo::with(['carrera', 'periodo', 'horariosDias', 'cargas.materia'])
             ->withCount('alumnos')
             ->when($carreraForzada,                                    fn($q, $v) => $q->where('carrera_id', $v))
             ->when(! $carreraForzada && $carreraValida,                fn($q)     => $q->where('carrera_id', $carreraValida))
@@ -37,7 +37,7 @@ class GrupoController extends Controller
 
         return ApiResponse::success(
             $grupo->load([
-                'carrera', 'periodo',
+                'carrera', 'periodo', 'horariosDias',
                 'alumnos.user',
                 'alumnos.inscripcion.aspirante',
                 'cargas.docente', 'cargas.materia', 'cargas.aula', 'cargas.horarios',
@@ -53,39 +53,74 @@ class GrupoController extends Controller
         }
     }
 
+    private function reglasHorariosDias(): array
+    {
+        return [
+            'horarios_dias'                => ['sometimes', 'array'],
+            'horarios_dias.*.dia_semana'   => ['required_with:horarios_dias', 'in:lunes,martes,miercoles,jueves,viernes,sabado', 'distinct'],
+            'horarios_dias.*.hora_inicio'  => ['required_with:horarios_dias', 'date_format:H:i'],
+            'horarios_dias.*.hora_fin'     => ['required_with:horarios_dias', 'date_format:H:i', 'after:horarios_dias.*.hora_inicio'],
+        ];
+    }
+
+    /** Reemplaza el horario por día del grupo con el array dado (vacío = sin restricción). */
+    private function guardarHorariosDias(Grupo $grupo, array $horariosDias): void
+    {
+        $grupo->horariosDias()->delete();
+        $grupo->horariosDias()->createMany(array_map(fn ($h) => [
+            'dia_semana'  => $h['dia_semana'],
+            'hora_inicio' => $h['hora_inicio'],
+            'hora_fin'    => $h['hora_fin'],
+        ], $horariosDias));
+    }
+
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
+        $data = $request->validate(array_merge([
             'carrera_id' => ['required', 'uuid', 'exists:carreras,id'],
             'periodo_id' => ['required', 'uuid', 'exists:periodos,id'],
-            'clave'      => ['required', 'string', 'max:20'],
+            'plantel_id' => ['nullable', 'integer', 'exists:planteles,id'],
+            'clave'      => ['required', 'string', 'max:30'],
             'semestre'   => ['required', 'integer', 'min:1', 'max:12'],
             'turno'      => ['required', Rule::in(['matutino', 'vespertino', 'sabatino'])],
             'capacidad'  => ['sometimes', 'integer', 'min:1', 'max:100'],
-        ]);
+        ], $this->reglasHorariosDias()));
 
         $this->verificarCarrera($request, $data['carrera_id']);
 
-        $grupo = Grupo::create($data);
+        $horariosDias = $data['horarios_dias'] ?? [];
+        unset($data['horarios_dias']);
 
-        return ApiResponse::success($grupo->load(['carrera', 'periodo']), 'Grupo creado.', 201);
+        $grupo = Grupo::create($data);
+        if (! empty($horariosDias)) {
+            $this->guardarHorariosDias($grupo, $horariosDias);
+        }
+
+        return ApiResponse::success($grupo->load(['carrera', 'periodo', 'plantel', 'horariosDias']), 'Grupo creado.', 201);
     }
 
     public function update(Request $request, Grupo $grupo): JsonResponse
     {
         $this->verificarCarrera($request, $grupo->carrera_id);
 
-        $data = $request->validate([
-            'clave'     => ['sometimes', 'string', 'max:20'],
-            'semestre'  => ['sometimes', 'integer', 'min:1', 'max:12'],
-            'turno'     => ['sometimes', Rule::in(['matutino', 'vespertino', 'sabatino'])],
-            'capacidad' => ['sometimes', 'integer', 'min:1', 'max:100'],
-            'activo'    => ['sometimes', 'boolean'],
-        ]);
+        $data = $request->validate(array_merge([
+            'clave'      => ['sometimes', 'string', 'max:30'],
+            'semestre'   => ['sometimes', 'integer', 'min:1', 'max:12'],
+            'turno'      => ['sometimes', Rule::in(['matutino', 'vespertino', 'sabatino'])],
+            'plantel_id' => ['sometimes', 'nullable', 'integer', 'exists:planteles,id'],
+            'capacidad'  => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'activo'     => ['sometimes', 'boolean'],
+        ], $this->reglasHorariosDias()));
+
+        $horariosDias = array_key_exists('horarios_dias', $data) ? $data['horarios_dias'] : null;
+        unset($data['horarios_dias']);
 
         $grupo->update($data);
+        if ($horariosDias !== null) {
+            $this->guardarHorariosDias($grupo, $horariosDias);
+        }
 
-        return ApiResponse::success($grupo->fresh(['carrera', 'periodo']), 'Grupo actualizado.');
+        return ApiResponse::success($grupo->fresh(['carrera', 'periodo', 'plantel', 'horariosDias']), 'Grupo actualizado.');
     }
 
     public function destroy(Request $request, Grupo $grupo): JsonResponse
@@ -186,5 +221,28 @@ class GrupoController extends Controller
 
         $estado = $data['liberar'] ? 'liberados' : 'ocultados';
         return ApiResponse::success(['grupos_afectados' => $count], "{$count} grupo(s) {$estado}.");
+    }
+
+    // POST /api/grupos/horarios-dias-bulk — aplica el mismo horario por día a varios grupos a la vez
+    public function aplicarHorariosDiasBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(array_merge([
+            'grupo_ids'   => ['required', 'array', 'min:1'],
+            'grupo_ids.*' => ['uuid', 'exists:grupos,id'],
+        ], $this->reglasHorariosDias()));
+
+        $grupos = Grupo::whereIn('id', $data['grupo_ids'])->get();
+
+        $carreraForzada = $request->user()?->carreraRestringida();
+        if ($carreraForzada && $grupos->contains(fn ($g) => $g->carrera_id !== $carreraForzada)) {
+            return ApiResponse::error('Solo puedes editar grupos de tu carrera.', 403);
+        }
+
+        $horariosDias = $data['horarios_dias'] ?? [];
+        foreach ($grupos as $grupo) {
+            $this->guardarHorariosDias($grupo, $horariosDias);
+        }
+
+        return ApiResponse::success(['grupos_afectados' => $grupos->count()], "Horario aplicado a {$grupos->count()} grupo(s).");
     }
 }

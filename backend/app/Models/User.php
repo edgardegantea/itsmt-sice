@@ -9,10 +9,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -55,11 +57,50 @@ class User extends Authenticatable
         'no_huella',
         'nombramiento',
         'tipo_horas',
+        'curp',
+        'rfc',
+        'fecha_nacimiento',
+        'sexo',
+        'estado_civil',
+        'direccion',
+        'telefono',
+        'contacto_emergencia_nombre',
+        'contacto_emergencia_telefono',
+        'foto_path',
+        'recordatorio_asistencia_activo',
     ];
+
+    protected $appends = ['foto_url'];
+
+    /** URL pública de la foto de perfil, o null si no tiene. */
+    public function getFotoUrlAttribute(): ?string
+    {
+        return $this->foto_path
+            ? Storage::disk('public')->url($this->foto_path)
+            : null;
+    }
 
     public function carrera(): BelongsTo
     {
         return $this->belongsTo(Carrera::class);
+    }
+
+    /**
+     * Carreras a las que un docente está asignado (muchos-a-muchos).
+     * Independiente de `carrera_id` (usado exclusivamente para restringir a
+     * jefe_carrera a una única carrera vía carreraRestringida()).
+     */
+    public function carreras(): BelongsToMany
+    {
+        return $this->belongsToMany(Carrera::class, 'docente_carrera', 'docente_id', 'carrera_id')
+            ->withPivot('horas_asignadas')
+            ->withTimestamps();
+    }
+
+    /** Local scope: filtra usuarios (docentes) asignados a una carrera dada vía la relación muchos-a-muchos. */
+    public function scopeDeCarrera($query, string $carreraId)
+    {
+        return $query->whereHas('carreras', fn($q) => $q->where('carreras.id', $carreraId));
     }
 
     public function cargas(): HasMany
@@ -88,6 +129,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'fecha_nacimiento'  => 'date',
+            'recordatorio_asistencia_activo' => 'boolean',
         ];
     }
 }

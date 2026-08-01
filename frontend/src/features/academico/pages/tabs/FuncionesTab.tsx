@@ -4,6 +4,7 @@ import { academicoApi, type FuncionPersonal } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
 import { Field, ModalWrap, Th, EmptyRow, icls, mutationError, extractApiErrors } from './shared'
 import apiClient from '../../../../config/apiClient'
+import DetailModal from '../../../../components/ui/DetailModal'
 
 function usePersonal() {
   return useQuery({
@@ -31,6 +32,7 @@ export default function FuncionesTab() {
   const [filtroActiva, setFiltroActiva] = useState<'todas' | 'activas' | 'inactivas'>('activas')
   const [modal, setModal] = useState<Partial<FuncionPersonal> | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [detalle, setDetalle] = useState<FuncionPersonal | null>(null)
 
   const { data: personal = [] } = usePersonal()
 
@@ -82,7 +84,7 @@ export default function FuncionesTab() {
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr><Th>Personal</Th><Th>Rol</Th><Th>Función</Th><Th>Área</Th><Th>Vigencia</Th><Th>Estado</Th><Th /></tr>
+            <tr><Th>Personal</Th><Th>Rol</Th><Th>Función</Th><Th>Área</Th><Th>Vigencia</Th><Th>Estado</Th><Th /><Th /></tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {isLoading && <EmptyRow cols={7} msg="Cargando…" />}
@@ -108,6 +110,9 @@ export default function FuncionesTab() {
                 <td className="px-4 py-3 text-right space-x-2">
                   <button onClick={() => setModal({ ...f, fecha_inicio: f.fecha_inicio?.slice(0, 10) ?? '', fecha_fin: f.fecha_fin?.slice(0, 10) ?? '' })} className="text-xs text-blue-600 hover:underline">Editar</button>
                   <button onClick={() => window.confirm('¿Eliminar función?') && del.mutate(f.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <button onClick={() => setDetalle(f)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                 </td>
               </tr>
             ))}
@@ -151,6 +156,23 @@ export default function FuncionesTab() {
             </Field>
           )}
         </ModalWrap>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.funcion}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Personal', value: detalle.user?.name },
+            { label: 'Email', value: detalle.user?.email },
+            { label: 'Rol', value: ROLE_LABEL[detalle.user?.roles?.[0]?.name ?? ''] },
+            { label: 'Área', value: detalle.area },
+            { label: 'Descripción', value: detalle.descripcion, full: true },
+            { label: 'Fecha inicio', value: detalle.fecha_inicio ? new Date(detalle.fecha_inicio).toLocaleDateString('es-MX') : undefined },
+            { label: 'Fecha fin', value: detalle.fecha_fin ? new Date(detalle.fecha_fin).toLocaleDateString('es-MX') : undefined },
+            { label: 'Estado', value: detalle.activa ? 'Activa' : 'Inactiva' },
+          ]}
+        />
       )}
     </div>
   )

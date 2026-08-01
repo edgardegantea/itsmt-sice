@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Domains\Catalogos\Models\EscuelaBachillerato;
 use App\Domains\Catalogos\Models\Estado;
 use App\Domains\Catalogos\Models\Municipio;
+use App\Domains\Catalogos\Models\Plantel;
 use App\Domains\Catalogos\Models\Turno;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
@@ -162,5 +163,39 @@ class CatalogoAdminController extends Controller
     {
         $turno->delete();
         return ApiResponse::success(null, 'Turno eliminado.');
+    }
+
+    // ── Planteles ─────────────────────────────────────────────────────────────
+
+    public function plantelesIndex(): JsonResponse
+    {
+        return ApiResponse::success(Plantel::orderBy('nombre')->get());
+    }
+
+    public function plantelesStore(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:100'],
+            'clave'  => ['required', 'string', 'max:10', 'unique:planteles,clave'],
+            'activo' => ['boolean'],
+        ]);
+        return ApiResponse::success(Plantel::create($data), 'Plantel creado.', 201);
+    }
+
+    public function plantelesUpdate(Plantel $plantel, Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:100'],
+            'clave'  => ['required', 'string', 'max:10', "unique:planteles,clave,{$plantel->id}"],
+            'activo' => ['boolean'],
+        ]);
+        $plantel->update($data);
+        return ApiResponse::success($plantel, 'Plantel actualizado.');
+    }
+
+    public function plantelesDestroy(Plantel $plantel): JsonResponse
+    {
+        $plantel->delete();
+        return ApiResponse::success(null, 'Plantel eliminado.');
     }
 }

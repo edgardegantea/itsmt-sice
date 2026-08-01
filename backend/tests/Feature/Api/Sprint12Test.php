@@ -161,12 +161,12 @@ class Sprint12Test extends TestCase
         ]);
 
         $r->assertStatus(201);
-        $this->assertDatabaseHas('sesiones_clase', [
-            'grupo_id'   => $this->grupo->id,
-            'docente_id' => $this->docente->id,
-            'fecha'      => '2025-02-10',
-            'tema'       => 'Introducción a algoritmos',
-        ]);
+        $sesion = \App\Domains\Academico\Models\SesionClase::where('grupo_id', $this->grupo->id)
+            ->where('docente_id', $this->docente->id)
+            ->first();
+        $this->assertNotNull($sesion);
+        $this->assertSame('2025-02-10', $sesion->fecha->toDateString());
+        $this->assertSame('Introducción a algoritmos', $sesion->tema);
     }
 
     public function test_docente_puede_crear_sesion_con_asistencias(): void
@@ -381,13 +381,13 @@ class Sprint12Test extends TestCase
             'activo'         => true,
         ]);
 
-        CargaAcademica::create([
+        $cargaReporte = CargaAcademica::create([
             'docente_id'  => $this->docente->id,
             'materia_id'  => $this->materia->id,
-            'grupo_id'    => $this->grupo->id,
             'periodo_id'  => $this->periodo->id,
             'horas_semana'=> 3,
         ]);
+        $cargaReporte->grupos()->attach($this->grupo->id);
 
         $r = $this->actingAs($this->director)->getJson('/api/reportes/carga-academica');
         $r->assertOk();

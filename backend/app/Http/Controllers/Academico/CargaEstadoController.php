@@ -24,7 +24,7 @@ class CargaEstadoController extends Controller
 
         $carga->update(['estado' => 'confirmada', 'comentario_docente' => null]);
 
-        return ApiResponse::success($carga->fresh(['materia', 'grupo', 'periodo', 'horarios']), 'Carga confirmada.');
+        return ApiResponse::success($carga->fresh(['materia', 'grupos', 'periodo', 'horarios']), 'Carga confirmada.');
     }
 
     // PATCH /cargas-academicas/{carga}/reportar-conflicto
@@ -44,6 +44,6 @@ class CargaEstadoController extends Controller
 
         $carga->update(['estado' => 'conflicto', 'comentario_docente' => $data['comentario']]);
 
-        return ApiResponse::success($carga->fresh(['materia', 'grupo', 'periodo', 'horarios']), 'Conflicto reportado.');
+        return ApiResponse::success($carga->fresh(['materia', 'grupos', 'periodo', 'horarios']), 'Conflicto reportado.');
     }
 }

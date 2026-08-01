@@ -116,9 +116,16 @@ export default function VinculacionAlumnoPage() {
 
   // Forms
   const [ssForm, setSsForm] = useState({ empresa: '', responsable: '', fecha_inicio: '' })
+  const [cartaFile, setCartaFile] = useState<File | null>(null)
   const [rpForm, setRpForm] = useState({
     opcion: 'propuesta_propia' as 'banco_proyectos' | 'propuesta_propia' | 'trabajador',
     nombre_empresa: '',
+    giro: '',
+    rfc: '',
+    domicilio: '',
+    mision: '',
+    titular: '',
+    asesor_externo: '',
     numero_seguro_social: '',
     tipo_seguro: 'imss' as 'imss' | 'issste',
     periodo_proyectado: '',
@@ -131,6 +138,7 @@ export default function VinculacionAlumnoPage() {
       empresa:      ssForm.empresa,
       responsable:  ssForm.responsable || undefined,
       fecha_inicio: ssForm.fecha_inicio || undefined,
+      carta_aceptacion: cartaFile!,
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['mi-ss', alumnoId] })
@@ -146,7 +154,15 @@ export default function VinculacionAlumnoPage() {
   const mutRP = useMutation({
     mutationFn: () => vinculacionApi.crearSolicitudRp({
       opcion:        rpForm.opcion,
-      datos_empresa: { nombre: rpForm.nombre_empresa },
+      datos_empresa: {
+        nombre:         rpForm.nombre_empresa,
+        giro:           rpForm.giro || undefined,
+        rfc:            rpForm.rfc || undefined,
+        domicilio:      rpForm.domicilio || undefined,
+        mision:         rpForm.mision || undefined,
+        titular:        rpForm.titular || undefined,
+        asesor_externo: rpForm.asesor_externo || undefined,
+      },
       numero_seguro_social: rpForm.numero_seguro_social || undefined,
       tipo_seguro:   rpForm.tipo_seguro,
       periodo_proyectado: rpForm.periodo_proyectado || undefined,
@@ -264,11 +280,21 @@ export default function VinculacionAlumnoPage() {
                     onChange={e => setSsForm(f => ({ ...f, fecha_inicio: e.target.value }))}
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Carta de aceptación *</label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="w-full border rounded px-3 py-1.5 text-sm bg-white"
+                    onChange={e => setCartaFile(e.target.files?.[0] ?? null)}
+                  />
+                  {cartaFile && <p className="text-xs text-emerald-600 mt-1">{cartaFile.name}</p>}
+                </div>
               </div>
 
               <button
                 onClick={() => mutSS.mutate()}
-                disabled={mutSS.isPending || !ssForm.empresa}
+                disabled={mutSS.isPending || !ssForm.empresa || !cartaFile}
                 className="px-4 py-2 rounded text-sm bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-50"
               >
                 {mutSS.isPending ? 'Registrando…' : 'Registrar Servicio Social'}
@@ -327,13 +353,13 @@ export default function VinculacionAlumnoPage() {
 
               {/* Actividades Complementarias */}
               <PrerequisiteRow
-                label="Actividades Complementarias acreditadas"
-                description="Debes tener al menos una Actividad Complementaria validada por la institución."
+                label="Todas las Actividades Complementarias completadas"
+                description="Debes tener completas (validadas y con las horas requeridas) todas las Actividades Complementarias oficiales."
                 met={prereqs?.ac_completadas}
                 loading={!prereqs}
                 detail={
-                  prereqs && !prereqs.ac_completadas
-                    ? 'Consulta a Control Escolar sobre las actividades disponibles.'
+                  prereqs && !prereqs.ac_completadas && prereqs.ac_faltantes?.length
+                    ? `Te falta completar: ${prereqs.ac_faltantes.map(a => a.nombre).join(', ')}.`
                     : undefined
                 }
               />
@@ -347,6 +373,19 @@ export default function VinculacionAlumnoPage() {
                 detail={
                   prereqs
                     ? `Semestre actual: ${prereqs.semestre_actual} de 12.`
+                    : undefined
+                }
+              />
+
+              {/* No estar en curso especial */}
+              <PrerequisiteRow
+                label="Sin materias en curso especial"
+                description="No debes tener una materia pendiente cursándose en oportunidad especial."
+                met={prereqs?.no_en_curso_especial}
+                loading={!prereqs}
+                detail={
+                  prereqs && !prereqs.no_en_curso_especial
+                    ? 'Resuelve tu materia en curso especial antes de solicitar Residencia Profesional.'
                     : undefined
                 }
               />
@@ -403,6 +442,60 @@ export default function VinculacionAlumnoPage() {
                     value={rpForm.nombre_empresa}
                     onChange={e => setRpForm(f => ({ ...f, nombre_empresa: e.target.value }))}
                   />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Giro de la empresa</label>
+                    <input
+                      className="w-full border rounded px-3 py-1.5 text-sm"
+                      value={rpForm.giro}
+                      onChange={e => setRpForm(f => ({ ...f, giro: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">RFC de la empresa</label>
+                    <input
+                      className="w-full border rounded px-3 py-1.5 text-sm"
+                      value={rpForm.rfc}
+                      onChange={e => setRpForm(f => ({ ...f, rfc: e.target.value.toUpperCase() }))}
+                      maxLength={13}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Domicilio de la empresa</label>
+                  <input
+                    className="w-full border rounded px-3 py-1.5 text-sm"
+                    value={rpForm.domicilio}
+                    onChange={e => setRpForm(f => ({ ...f, domicilio: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Misión de la empresa</label>
+                  <textarea
+                    className="w-full border rounded px-3 py-1.5 text-sm"
+                    rows={2}
+                    value={rpForm.mision}
+                    onChange={e => setRpForm(f => ({ ...f, mision: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Titular de la empresa</label>
+                    <input
+                      className="w-full border rounded px-3 py-1.5 text-sm"
+                      value={rpForm.titular}
+                      onChange={e => setRpForm(f => ({ ...f, titular: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Asesor externo (empresa)</label>
+                    <input
+                      className="w-full border rounded px-3 py-1.5 text-sm"
+                      value={rpForm.asesor_externo}
+                      onChange={e => setRpForm(f => ({ ...f, asesor_externo: e.target.value }))}
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>

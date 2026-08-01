@@ -35,15 +35,22 @@ class InscripcionController extends Controller
             return ApiResponse::error('El aspirante debe tener estatus "aceptado" para ser inscrito.', 422);
         }
 
+        // La verificación definitiva de "ya inscrito" ocurre dentro de
+        // AspiranteService::inscribir(), bajo el advisory lock, para evitar una
+        // condición de carrera entre esta comprobación y la inserción real.
         if ($aspirante->inscripcion()->exists()) {
             return ApiResponse::error('Este aspirante ya fue inscrito.', 422);
         }
 
-        $inscripcion = $this->service->inscribir(
-            $aspirante,
-            $request->user()->id,
-            $request->tipo_ingreso ?? 'nuevo_ingreso'
-        );
+        try {
+            $inscripcion = $this->service->inscribir(
+                $aspirante,
+                $request->user()->id,
+                $request->tipo_ingreso ?? 'nuevo_ingreso'
+            );
+        } catch (\App\Domains\Admision\Services\AspiranteYaInscritoException $e) {
+            return ApiResponse::error('Este aspirante ya fue inscrito.', 422);
+        }
 
         return ApiResponse::success($inscripcion, 'Aspirante inscrito. Expediente académico generado.', 201);
     }

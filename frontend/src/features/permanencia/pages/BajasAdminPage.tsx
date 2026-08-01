@@ -56,6 +56,11 @@ export default function BajasAdminPage() {
     },
   })
 
+  const reingresoMut = useMutation({
+    mutationFn: (id: string) => permanenciaApi.registrarReingreso(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['bajas-admin'] }),
+  })
+
   const lista: Baja[] = Array.isArray(data) ? data : data?.data ?? []
 
   function iniciarAccion(id: string, estatus: EstatusBaja) {
@@ -184,7 +189,28 @@ export default function BajasAdminPage() {
                   {baja.motivo_rechazo && (
                     <p className="text-xs text-red-600 mt-1">Rechazo: {baja.motivo_rechazo}</p>
                   )}
+                  {baja.tipo_baja === 'temporal' && baja.estatus === 'aprobada' && (
+                    <p className="text-xs mt-1">
+                      {baja.reingreso_registrado
+                        ? <span className="text-green-700">✓ Reingreso registrado{baja.fecha_reingreso ? ` — ${new Date(baja.fecha_reingreso).toLocaleDateString('es-MX')}` : ''}</span>
+                        : baja.reingreso_posible
+                          ? <span className="text-amber-600">Alumno en baja temporal — reingreso pendiente</span>
+                          : <span className="text-slate-400">Reingreso no permitido para esta baja</span>}
+                    </p>
+                  )}
                 </div>
+
+                {baja.tipo_baja === 'temporal' && baja.estatus === 'aprobada' && baja.reingreso_posible && !baja.reingreso_registrado && (
+                  <div className="shrink-0">
+                    <button
+                      onClick={() => { if (confirm('¿Registrar el reingreso? El alumno volverá a estatus activo.')) reingresoMut.mutate(baja.id) }}
+                      disabled={reingresoMut.isPending}
+                      className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+                    >
+                      Registrar reingreso
+                    </button>
+                  </div>
+                )}
 
                 {baja.estatus === 'pendiente' && (
                   <div className="shrink-0 flex flex-col gap-1.5">

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { configuracionApi, type ConfiguracionInstitucional } from '../services/configuracion'
 import { useToastStore } from '../../../store/toastStore'
 import { FONT_OPTIONS, loadGoogleFont, DEFAULT_FONT } from '../../../config/fonts'
@@ -321,6 +321,15 @@ export default function ConfiguracionPage() {
     queryKey: ['configuracion'],
     queryFn: configuracionApi.get,
     retry: 1,
+  })
+
+  const mutRecordatorios = useMutation({
+    mutationFn: (activo: boolean) => configuracionApi.toggleRecordatoriosAsistencia(activo),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['configuracion'] })
+      addToast('Preferencia de recordatorios actualizada.', 'success')
+    },
+    onError: () => addToast('No se pudo actualizar la preferencia.', 'error'),
   })
 
   useEffect(() => {
@@ -660,6 +669,47 @@ export default function ConfiguracionPage() {
                   </p>
                 )
               })()}
+            </section>
+
+            <section className="bg-white border border-slate-200 rounded-xl p-6 space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    Recordatorios de asistencia por correo
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 uppercase tracking-wide">
+                      Superadmin
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1 max-w-lg">
+                    El sistema envía un correo al docente ~10 minutos antes de que inicie cada una de sus clases,
+                    recordándole pasar lista. Este interruptor lo activa o desactiva para <strong>todos los docentes</strong>
+                    — puedes hacer excepciones individuales desde la ficha de cada docente.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => mutRecordatorios.mutate(!(data?.recordatorios_asistencia_global_activo ?? true))}
+                  disabled={mutRecordatorios.isPending}
+                  className={`shrink-0 relative w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${
+                    (data?.recordatorios_asistencia_global_activo ?? true) ? 'bg-emerald-500' : 'bg-slate-300'
+                  }`}
+                  aria-label="Activar o desactivar recordatorios de asistencia"
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      (data?.recordatorios_asistencia_global_activo ?? true) ? 'translate-x-6' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+              <p className="text-xs">
+                Estado actual:{' '}
+                {(data?.recordatorios_asistencia_global_activo ?? true) ? (
+                  <span className="text-emerald-700 font-medium">Activado para todos los docentes</span>
+                ) : (
+                  <span className="text-slate-500 font-medium">Desactivado para todos los docentes</span>
+                )}
+              </p>
             </section>
           </div>
         )}

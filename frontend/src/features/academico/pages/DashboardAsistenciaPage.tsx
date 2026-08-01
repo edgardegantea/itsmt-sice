@@ -1,5 +1,10 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { academicoApi, type DashboardAsistencia } from '../services/academico'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
+
+type CarreraRow = DashboardAsistencia['por_carrera'][number]
 
 function pctColor(pct?: number) {
   if (pct === undefined) return 'text-slate-500'
@@ -20,6 +25,9 @@ export default function DashboardAsistenciaPage() {
     queryKey: ['dashboard-asistencia'],
     queryFn: () => academicoApi.getDashboardAsistencia(),
   })
+
+  const [vista, setVista] = useViewMode('dashboard-asistencia')
+  const [detalle, setDetalle] = useState<CarreraRow | null>(null)
 
   const porCarrera = data?.por_carrera ?? []
   const totalAlertas = data?.total_alertas ?? 0
@@ -52,8 +60,9 @@ export default function DashboardAsistenciaPage() {
 
         {/* Tabla por carrera */}
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200">
+          <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
             <h2 className="font-semibold text-slate-800">Asistencia por Carrera</h2>
+            <ViewToggle value={vista} onChange={setVista} />
           </div>
 
           {isLoading ? (
@@ -65,7 +74,7 @@ export default function DashboardAsistenciaPage() {
               <p className="font-medium">Sin datos de asistencia</p>
               <p className="text-sm mt-1">Los indicadores se calculan una vez que hay sesiones registradas</p>
             </div>
-          ) : (
+          ) : vista === 'lista' ? (
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
@@ -74,6 +83,7 @@ export default function DashboardAsistenciaPage() {
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">% Asistencia prom.</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">Grupos en alerta</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">Alumnos en alerta</th>
+                  <th className="text-right py-3 px-5" />
                 </tr>
               </thead>
               <tbody>
@@ -110,14 +120,45 @@ export default function DashboardAsistenciaPage() {
                           <span className="text-slate-400 text-xs">0</span>
                         )}
                       </td>
+                      <td className="py-3 px-5 text-right">
+                        <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      </td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+              {porCarrera.map(c => (
+                <div key={c.carrera_id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                  <p className="font-medium text-slate-800">{c.carrera_nombre}</p>
+                  <p className="text-xs text-slate-500">{c.total_grupos} grupos</p>
+                  {c.pct_asistencia_promedio !== undefined && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold self-start ${pctBg(c.pct_asistencia_promedio)} ${pctColor(c.pct_asistencia_promedio)}`}>
+                      {c.pct_asistencia_promedio.toFixed(1)}% asistencia
+                    </span>
+                  )}
+                  <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.carrera_nombre}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Total de grupos', value: detalle.total_grupos },
+            { label: '% Asistencia promedio', value: detalle.pct_asistencia_promedio !== undefined ? `${detalle.pct_asistencia_promedio.toFixed(1)}%` : '—' },
+            { label: 'Grupos en alerta', value: detalle.grupos_en_alerta ?? 0 },
+            { label: 'Alumnos en alerta', value: detalle.alumnos_en_alerta ?? 0 },
+          ]}
+        />
+      )}
     </div>
   )
 }

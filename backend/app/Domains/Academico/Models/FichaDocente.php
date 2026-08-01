@@ -23,13 +23,23 @@ class FichaDocente extends Model
         'titulos_academicos',
         'horas_frente_grupo_por_periodo',
         'activo',
+        // Campos de CV — mantenidos por el propio docente
+        'semblanza',
+        'experiencia_laboral',
+        'cursos_capacitacion',
+        'publicaciones',
+        'cv_actualizado_en',
     ];
 
     protected $casts = [
         'especialidades'               => 'array',
         'titulos_academicos'           => 'array',
         'horas_frente_grupo_por_periodo' => 'array',
+        'experiencia_laboral'          => 'array',
+        'cursos_capacitacion'          => 'array',
+        'publicaciones'                => 'array',
         'fecha_ingreso'                => 'date',
+        'cv_actualizado_en'            => 'datetime',
         'activo'                       => 'boolean',
     ];
 

@@ -180,6 +180,10 @@ class InscripcionPdfController extends Controller
 
         $inscripcion->update(['carta_compromiso_docs_generada' => true]);
 
+        // TecNM-AC-PO-001-05: generar esta carta formaliza el compromiso de entrega
+        // de documentos pendientes y activa el bloqueo de reinscripción.
+        $inscripcion->alumno?->update(['pendiente_certificado_bachillerato' => true]);
+
         return response($pdf, 200, $this->headers("carta-compromiso-docs-{$inscripcion->numero_control}.pdf"));
     }
 
@@ -201,6 +205,21 @@ class InscripcionPdfController extends Controller
 
         $alumno = $inscripcion->alumno()->with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])->firstOrFail();
 
+        return $this->renderCredencial($alumno);
+    }
+
+    // GET /api/alumno/mi-credencial/pdf — autoservicio, sin necesidad de conocer el inscripcion_id
+    public function miCredencial(): Response
+    {
+        $alumno = Alumno::where('user_id', request()->user()->id)
+            ->with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])
+            ->firstOrFail();
+
+        return $this->renderCredencial($alumno);
+    }
+
+    private function renderCredencial(Alumno $alumno): Response
+    {
         $cfg             = ConfiguracionInstitucional::instancia();
         $directorGeneral = DirectorioPersonal::where('firma_documentos', true)
             ->where('clave_firma', 'director_general')->where('activo', true)->first();
@@ -266,15 +285,15 @@ class InscripcionPdfController extends Controller
                 ->where('periodo_id', $periodo->id)
                 ->pluck('id');
 
-            $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
-                ->whereIn('grupo_id', $grupoIds)
+            $cargas = CargaAcademica::with(['materia', 'grupos', 'docente', 'aula', 'horarios'])
+                ->whereHas('grupos', fn($q) => $q->whereIn('grupos.id', $grupoIds))
                 ->where('periodo_id', $periodo->id)
                 ->get();
 
             $materiasAntes = CargaAcademica::where('periodo_id', '!=', $periodo->id)
-                ->whereIn('grupo_id', \App\Domains\Academico\Models\Grupo::whereHas(
-                    'alumnos', fn($q) => $q->where('alumnos.id', $alumno->id)
-                )->pluck('id'))
+                ->whereHas('grupos', fn($q) => $q->whereIn('grupos.id', \App\Domains\Academico\Models\Grupo::whereHas(
+                    'alumnos', fn($q2) => $q2->where('alumnos.id', $alumno->id)
+                )->pluck('id')))
                 ->pluck('materia_id')
                 ->unique();
 
@@ -306,16 +325,16 @@ class InscripcionPdfController extends Controller
             ->where('periodo_id', $periodo->id)
             ->pluck('id');
 
-        $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
-            ->whereIn('grupo_id', $grupoIds)
+        $cargas = CargaAcademica::with(['materia', 'grupos', 'docente', 'aula', 'horarios'])
+            ->whereHas('grupos', fn($q) => $q->whereIn('grupos.id', $grupoIds))
             ->where('periodo_id', $periodo->id)
             ->get();
 
         // Materias en modalidad repetición (alumno ya cursó la materia antes)
         $materiasAntes = CargaAcademica::where('periodo_id', '!=', $periodo->id)
-            ->whereIn('grupo_id', \App\Domains\Academico\Models\Grupo::whereHas(
-                'alumnos', fn($q) => $q->where('alumnos.id', $alumno->id)
-            )->pluck('id'))
+            ->whereHas('grupos', fn($q) => $q->whereIn('grupos.id', \App\Domains\Academico\Models\Grupo::whereHas(
+                'alumnos', fn($q2) => $q2->where('alumnos.id', $alumno->id)
+            )->pluck('id')))
             ->pluck('materia_id')
             ->unique();
         $repeticion = $cargas->pluck('materia_id')

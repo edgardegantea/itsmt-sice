@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Grupo } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
-import { Field, ModalWrap, Th, EmptyRow, icls,  useCarreras, usePeriodos, useAlumnos, mutationError, extractApiErrors } from './shared'
+import { Field, ModalWrap, Th, EmptyRow, icls,  useCarreras, usePeriodos, useAlumnos, mutationError, extractApiErrors, HorarioPorDiaEditor } from './shared'
 
 const TURNO_LABEL = { matutino: 'Matutino', vespertino: 'Vespertino', sabatino: 'Sabatino' }
 
@@ -123,6 +123,18 @@ export default function GruposTab() {
                 <td className="px-4 py-3 text-right space-x-2">
                   <button onClick={() => { setDetalle(g); setAsignarOpen(false) }} className="text-xs text-green-700 hover:underline">Alumnos</button>
                   <button onClick={() => setModal(g)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                  <button
+                    onClick={() => setModal({
+                      carrera_id: g.carrera_id,
+                      periodo_id: g.periodo_id,
+                      plantel_id: g.plantel_id,
+                      semestre: g.semestre,
+                      turno: g.turno,
+                      capacidad: g.capacidad,
+                      horarios_dias: (g.horarios_dias ?? []).map(h => ({ dia_semana: h.dia_semana, hora_inicio: h.hora_inicio, hora_fin: h.hora_fin })),
+                    })}
+                    className="text-xs text-slate-500 hover:underline"
+                  >Duplicar</button>
                   <button onClick={() => window.confirm('¿Eliminar grupo?') && del.mutate(g.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
                 </td>
               </tr>
@@ -158,6 +170,9 @@ export default function GruposTab() {
             <select className={icls(errors.turno)} value={modal.turno ?? 'matutino'} onChange={e => set('turno', e.target.value)}>
               {Object.entries(TURNO_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
+          </Field>
+          <Field label="Horario por día (opcional)" full error={errors.horarios_dias}>
+            <HorarioPorDiaEditor value={modal.horarios_dias ?? []} onChange={v => set('horarios_dias', v)} />
           </Field>
           <Field label="Capacidad máxima" error={errors.capacidad}>
             <input className={icls(errors.capacidad)} type="number" min={1} max={100} value={modal.capacidad ?? 35} onChange={e => set('capacidad', Number(e.target.value))} />

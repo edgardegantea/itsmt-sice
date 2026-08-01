@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Academico;
 
 use App\Domains\Academico\Models\Alumno;
 use App\Domains\Academico\Models\AlumnoEspecialidad;
+use App\Domains\Academico\Models\Calificacion;
 use App\Domains\Academico\Models\Carrera;
 use App\Domains\Academico\Models\Especialidad;
+use App\Domains\Academico\Models\MallaCurricular;
 use App\Domains\Academico\Models\Periodo;
 use App\Domains\Academico\Models\SolicitudAperturaEspecialidad;
 use App\Http\Controllers\Controller;
@@ -212,6 +214,20 @@ class EspecialidadController extends Controller
             return ApiResponse::error('La especialidad no pertenece a la carrera del alumno.', 422);
         }
 
+        // Política 3.1.5 TecNM-AC-PO-007: el alumno debe cubrir el porcentaje de
+        // créditos mínimo de la especialidad (mismo cálculo que SalidaLateralController).
+        // Si la carrera aún no tiene malla curricular cargada no hay base para calcular
+        // el porcentaje, así que no se bloquea (evita inutilizar la selección por falta
+        // de captura de un módulo distinto).
+        $creditos = $this->calcularPorcentajeCreditos($alumno);
+        $minimo   = $especialidad->porcentaje_creditos_min ?? 60;
+        if ($creditos['total'] > 0 && $creditos['porcentaje'] < $minimo) {
+            return ApiResponse::error(
+                "Necesitas al menos {$minimo}% de créditos para seleccionar esta especialidad. Tienes {$creditos['porcentaje']}%.",
+                422
+            );
+        }
+
         $existente = AlumnoEspecialidad::where('alumno_id', $alumno->id)
             ->whereIn('estatus', ['solicitada', 'inscrita'])
             ->first();
@@ -229,5 +245,29 @@ class EspecialidadController extends Controller
             'Especialidad seleccionada.',
             201
         );
+    }
+
+    // Mismo cálculo que SalidaLateralController::calcularPorcentajeCreditos —
+    // créditos acreditados del alumno sobre el total de la malla de su carrera.
+    private function calcularPorcentajeCreditos(Alumno $alumno): array
+    {
+        $total = MallaCurricular::where('mallas_curriculares.carrera_id', $alumno->carrera_id)
+            ->join('materias', 'mallas_curriculares.materia_id', '=', 'materias.id')
+            ->sum('materias.creditos');
+
+        if ($total === 0) {
+            return ['porcentaje' => 0, 'acreditados' => 0, 'total' => 0];
+        }
+
+        $acreditados = Calificacion::where('calificaciones.alumno_id', $alumno->id)
+            ->where('calificaciones.acreditado', true)
+            ->join('carga_academica_grupo', 'calificaciones.grupo_id', '=', 'carga_academica_grupo.grupo_id')
+            ->join('cargas_academicas', 'carga_academica_grupo.carga_academica_id', '=', 'cargas_academicas.id')
+            ->join('materias', 'cargas_academicas.materia_id', '=', 'materias.id')
+            ->sum('materias.creditos');
+
+        $porcentaje = round(($acreditados / $total) * 100, 1);
+
+        return ['porcentaje' => $porcentaje, 'acreditados' => $acreditados, 'total' => $total];
     }
 }

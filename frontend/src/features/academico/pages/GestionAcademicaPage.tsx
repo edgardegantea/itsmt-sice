@@ -6,7 +6,6 @@ import TutoriasTab     from './tabs/TutoriasTab'
 import FuncionesTab    from './tabs/FuncionesTab'
 import MallaTab        from './tabs/MallaTab'
 import AulasTab        from './tabs/AulasTab'
-import HorariosTab     from './tabs/HorariosTab'
 import PlaneacionesTab from './tabs/PlaneacionesTab'
 
 const TABS = [
@@ -15,7 +14,6 @@ const TABS = [
   { id: 'grupos',      label: 'Grupos' },
   { id: 'aulas',       label: 'Aulas' },
   { id: 'cargas',      label: 'Cargas Académicas' },
-  { id: 'horarios',    label: 'Horarios' },
   { id: 'planeaciones',label: 'Planeaciones' },
   { id: 'tutorias',    label: 'Tutorías' },
   { id: 'funciones',   label: 'Funciones del Personal' },
@@ -55,7 +53,6 @@ export default function GestionAcademicaPage() {
         {tab === 'grupos'       && <GruposTab />}
         {tab === 'aulas'        && <AulasTab />}
         {tab === 'cargas'       && <CargasTab />}
-        {tab === 'horarios'     && <HorariosTab />}
         {tab === 'planeaciones' && <PlaneacionesTab />}
         {tab === 'tutorias'     && <TutoriasTab />}
         {tab === 'funciones'    && <FuncionesTab />}

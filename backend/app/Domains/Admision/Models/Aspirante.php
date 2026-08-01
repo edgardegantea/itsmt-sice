@@ -7,6 +7,7 @@ use App\Domains\Academico\Models\Periodo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -52,6 +53,7 @@ class Aspirante extends Model
         'modalidad',
         'nivel',
         'constancia_bachillerato',
+        'foto_path',
     ];
 
     protected static function booted(): void
@@ -97,5 +99,21 @@ class Aspirante extends Model
     public function inscripcion(): HasOne
     {
         return $this->hasOne(Inscripcion::class);
+    }
+
+    public function estatusHistorial(): HasMany
+    {
+        return $this->hasMany(AspiranteEstatusHistorial::class)->latest('created_at');
+    }
+
+    /** Foto de perfil embebida en base64, para renderizarla en PDFs (credencial). */
+    public function fotoBase64(): ?string
+    {
+        if ($this->foto_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->foto_path)) {
+            $mime = \Illuminate\Support\Facades\Storage::disk('public')->mimeType($this->foto_path);
+            $data = base64_encode(\Illuminate\Support\Facades\Storage::disk('public')->get($this->foto_path));
+            return "data:{$mime};base64,{$data}";
+        }
+        return null;
     }
 }

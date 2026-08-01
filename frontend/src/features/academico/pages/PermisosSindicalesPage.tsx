@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { academicoApi } from '../services/academico'
 import type { PermisoSindical } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const TIPO_LABEL: Record<string, string> = {
   comision_sindical:   'Comisión sindical',
@@ -32,6 +34,8 @@ export default function PermisosSindicalesPage() {
     motivo: '',
     periodo_id: '',
   })
+  const [vista, setVista] = useViewMode('permisos-sindicales')
+  const [detalle, setDetalle] = useState<PermisoSindical | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -87,12 +91,15 @@ export default function PermisosSindicalesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Permisos Sindicales</h1>
           <p className="text-sm text-gray-500 mt-1">Diferenciados de permisos institucionales (S10) — SNTE / STIJNM</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
-        >
-          + Registrar permiso
-        </button>
+        <div className="flex items-center gap-2">
+          <ViewToggle value={vista} onChange={setVista} />
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          >
+            + Registrar permiso
+          </button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -179,20 +186,20 @@ export default function PermisosSindicalesPage() {
 
       {loading ? (
         <div className="text-center py-12 text-gray-500">Cargando...</div>
-      ) : (
+      ) : permisos.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border text-center py-10 text-gray-400">Sin permisos sindicales registrados</div>
+      ) : vista === 'lista' ? (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Docente', 'Tipo permiso', 'Período', 'Días', 'Goce', 'Oficio', 'Acciones'].map(h => (
+                {['Docente', 'Tipo permiso', 'Período', 'Días', 'Goce', 'Oficio', 'Acciones', ''].map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {permisos.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-10 text-gray-400">Sin permisos sindicales registrados</td></tr>
-              ) : permisos.map(p => (
+              {permisos.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-5 py-4">
                     <p className="text-sm font-medium text-gray-900">{p.docente?.name ?? '—'}</p>
@@ -228,11 +235,47 @@ export default function PermisosSindicalesPage() {
                       Oficio PDF
                     </button>
                   </td>
+                  <td className="px-5 py-4 text-right">
+                    <button onClick={() => setDetalle(p)} className="text-xs font-medium text-slate-500 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {permisos.map(p => (
+            <div key={p.id} className="bg-white border rounded-xl p-4 flex flex-col gap-2">
+              <p className="font-medium text-gray-900 truncate">{p.docente?.name ?? '—'}</p>
+              <span className={`text-xs px-2 py-0.5 rounded font-medium self-start ${TIPO_BADGE[p.tipo_permiso] ?? 'bg-gray-100 text-gray-700'}`}>
+                {TIPO_LABEL[p.tipo_permiso]}
+              </span>
+              <p className="text-xs text-gray-500">{new Date(p.fecha_inicio).toLocaleDateString('es-MX')} al {new Date(p.fecha_fin).toLocaleDateString('es-MX')} · {p.dias_totales} días</p>
+              <div className="flex gap-3 mt-1">
+                <button onClick={() => descargarOficio(p.id)} className="text-xs text-blue-600 hover:underline font-medium">Oficio PDF</button>
+                <button onClick={() => setDetalle(p)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.docente?.name ?? 'Permiso sindical'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Correo', value: detalle.docente?.email },
+            { label: 'Tipo de permiso', value: TIPO_LABEL[detalle.tipo_permiso] },
+            { label: 'Fecha inicio', value: new Date(detalle.fecha_inicio).toLocaleDateString('es-MX') },
+            { label: 'Fecha fin', value: new Date(detalle.fecha_fin).toLocaleDateString('es-MX') },
+            { label: 'Días totales', value: detalle.dias_totales },
+            { label: 'Goce de sueldo', value: detalle.con_goce_sueldo ? 'Con goce' : 'Sin goce' },
+            { label: 'Oficio', value: detalle.oficio_generado ? 'Generado' : 'Pendiente' },
+          ]}
+          footer={<button onClick={() => descargarOficio(detalle.id)} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Oficio PDF</button>}
+        />
       )}
     </div>
   )

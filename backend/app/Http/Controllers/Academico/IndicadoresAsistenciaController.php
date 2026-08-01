@@ -27,7 +27,7 @@ class IndicadoresAsistenciaController extends Controller
 
         $periodoId = $request->query('periodo_id');
         if (! $periodoId) {
-            $periodoId = Periodo::where('activo', true)->value('id');
+            $periodoId = Periodo::activo()?->id;
         }
 
         // Leer desde la vista materializada (tabla en SQLite)
@@ -62,7 +62,7 @@ class IndicadoresAsistenciaController extends Controller
 
         $periodoId = $request->query('periodo_id');
         if (! $periodoId) {
-            $periodoId = Periodo::where('activo', true)->value('id');
+            $periodoId = Periodo::activo()?->id;
         }
 
         $carrera = Carrera::findOrFail($carreraId);

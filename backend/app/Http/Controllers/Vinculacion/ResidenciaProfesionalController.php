@@ -2,18 +2,25 @@
 
 namespace App\Http\Controllers\Vinculacion;
 
+use App\Domains\Vinculacion\Models\EvaluacionRp;
 use App\Domains\Vinculacion\Models\ResidenciaProfesional;
 use App\Domains\Vinculacion\Models\SolicitudRp;
+use App\Domains\Vinculacion\Services\PrerequisitosResidenciaService;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Mail\AsesorInternoAsignadoMail;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ResidenciaProfesionalController extends Controller
 {
+    public function __construct(private PrerequisitosResidenciaService $prerequisitos) {}
+
     // GET /residencias
     public function index(Request $request): JsonResponse
     {
@@ -86,14 +93,46 @@ class ResidenciaProfesionalController extends Controller
         ]);
 
         $asesor = User::findOrFail($data['asesor_id']);
+        if (! $asesor->hasRole('docente')) {
+            return ApiResponse::error('El asesor interno debe ser un usuario con rol de docente.', 422);
+        }
+
+        $residenciaProfesional->loadMissing('alumno', 'solicitudRp.alumno');
+        $alumno = $residenciaProfesional->alumno;
+        if ($alumno && ! $this->prerequisitos->cumple($alumno)) {
+            return ApiResponse::error(
+                'El alumno ya no cumple los prerequisitos TecNM para continuar la Residencia Profesional; revisa su situación antes de asignar asesor.',
+                422
+            );
+        }
 
         $residenciaProfesional->update([
-            'asesor_id' => $asesor->id,
-            'estatus'   => 'en_curso',
+            'asesor_id'    => $asesor->id,
+            'estatus'      => 'en_curso',
+            'etapa_actual' => 2, // 1=creada, 2=asesor asignado, 3-4=seguimientos, 5=evaluada
         ]);
+        $residenciaProfesional = $residenciaProfesional->fresh(['alumno.user', 'asesor']);
+
+        foreach ([
+            ['email' => $asesor->email, 'paraAsesor' => true],
+            ['email' => $residenciaProfesional->alumno?->user?->email, 'paraAsesor' => false],
+        ] as $destino) {
+            if (! $destino['email']) {
+                continue;
+            }
+            try {
+                Mail::to($destino['email'])->queue(new AsesorInternoAsignadoMail($residenciaProfesional, $destino['paraAsesor']));
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo notificar la asignación de Asesor Interno.', [
+                    'residencia_id' => $residenciaProfesional->id,
+                    'para_asesor'   => $destino['paraAsesor'],
+                    'error'         => $e->getMessage(),
+                ]);
+            }
+        }
 
         return ApiResponse::success(
-            $residenciaProfesional->fresh(['alumno.user', 'asesor']),
+            $residenciaProfesional,
             'Asesor interno asignado. Se generará el Oficio de Asignación (PO-004-02).'
         );
     }
@@ -138,12 +177,23 @@ class ResidenciaProfesionalController extends Controller
 
         $campo = 'calificacion_' . $data['tipo'];
 
-        $updates = [$campo => $data['calificacion']];
+        $updates = [
+            $campo         => $data['calificacion'],
+            'etapa_actual' => $data['tipo'] === 'seguimiento_1' ? 3 : 4,
+        ];
         if (isset($data['horas_acumuladas'])) {
             $updates['horas_acumuladas'] = $data['horas_acumuladas'];
         }
 
         $residenciaProfesional->update($updates);
+
+        EvaluacionRp::create([
+            'residencia_id'    => $residenciaProfesional->id,
+            'tipo'             => $data['tipo'],
+            'evaluador_tipo'   => 'interno',
+            'calificacion'     => $data['calificacion'],
+            'fecha_evaluacion' => now()->toDateString(),
+        ]);
 
         return ApiResponse::success(
             $residenciaProfesional->fresh(['alumno.user', 'asesor']),
@@ -173,6 +223,15 @@ class ResidenciaProfesionalController extends Controller
             'calificacion_reporte_final' => $reporte,
             'calificacion_final'         => $final,
             'estatus'                    => $final >= 70 ? 'acreditado' : 'no_acreditado',
+            'etapa_actual'               => 5,
+        ]);
+
+        EvaluacionRp::create([
+            'residencia_id'    => $residenciaProfesional->id,
+            'tipo'             => 'reporte_final',
+            'evaluador_tipo'   => 'interno',
+            'calificacion'     => $reporte,
+            'fecha_evaluacion' => now()->toDateString(),
         ]);
 
         return ApiResponse::success(

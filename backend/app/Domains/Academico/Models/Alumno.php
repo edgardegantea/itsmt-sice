@@ -31,6 +31,17 @@ class Alumno extends Model
         'observaciones_estatus',
     ];
 
+    protected static function booted(): void
+    {
+        // Libro de Registro de Números de Control (TecNM-AC-PO-001 S1-13): una vez
+        // asignado, el número de control es permanente y no puede reasignarse.
+        static::updating(function (self $alumno) {
+            if ($alumno->isDirty('numero_control') && $alumno->getOriginal('numero_control')) {
+                throw new \RuntimeException('El número de control ya asignado no puede modificarse (Libro de Registro NC).');
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [

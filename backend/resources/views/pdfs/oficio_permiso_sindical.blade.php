@@ -66,7 +66,7 @@
             <td style="padding:4px 8px; background:#f0f4f8; font-weight:bold; vertical-align:top;">Grupos afectados:</td>
             <td style="padding:4px 8px;">
                 @foreach($grupos as $c)
-                    {{ $c->grupo?->clave ?? '—' }} — {{ $c->materia?->nombre ?? '—' }}<br>
+                    {{ $c->grupos->pluck('clave')->implode(', ') ?: '—' }} — {{ $c->materia?->nombre ?? '—' }}<br>
                 @endforeach
             </td>
         </tr>

@@ -6,6 +6,7 @@ use App\Domains\Academico\Models\Alumno;
 use App\Domains\Permanencia\Models\Constancia;
 use App\Mail\ConstanciaSolicitadaMail;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -13,14 +14,41 @@ class ConstanciaService
 {
     public function solicitar(Alumno $alumno, string $tipo, User $solicitante): Constancia
     {
-        $constancia = Constancia::create([
-            'alumno_id'      => $alumno->id,
-            'tipo'           => $tipo,
-            'folio_unico'    => Constancia::generarFolio($tipo),
-            'estatus'        => 'solicitada',
-            'solicitada_por' => $solicitante->id,
-        ]);
+        // Reintenta ante colisión de folio_unico (constraint UNIQUE) en motores sin
+        // advisory lock (el lock de Postgres cubre el caso normal; esto es la red
+        // de seguridad para SQLite/MySQL u otra condición de carrera residual).
+        $intentosRestantes = 3;
 
+        do {
+            try {
+                return DB::transaction(function () use ($alumno, $tipo, $solicitante) {
+                    if (DB::getDriverName() === 'pgsql') {
+                        DB::statement('SELECT pg_advisory_xact_lock(?)', [crc32('folio_constancia:' . $tipo . ':' . now()->year)]);
+                    }
+
+                    $constancia = Constancia::create([
+                        'alumno_id'      => $alumno->id,
+                        'tipo'           => $tipo,
+                        'folio_unico'    => Constancia::generarFolio($tipo),
+                        'estatus'        => 'solicitada',
+                        'solicitada_por' => $solicitante->id,
+                    ]);
+
+                    $this->notificarControlEscolar($constancia);
+
+                    return $constancia;
+                });
+            } catch (QueryException $e) {
+                $esViolacionUnicidad = str_contains($e->getMessage(), 'folio_unico');
+                if (! $esViolacionUnicidad || --$intentosRestantes <= 0) {
+                    throw $e;
+                }
+            }
+        } while (true);
+    }
+
+    private function notificarControlEscolar(Constancia $constancia): void
+    {
         // Notificar al personal de Control Escolar (S2-03)
         $ceEmails = User::role(['admin', 'personal_administrativo'])
             ->whereNotNull('email')
@@ -32,8 +60,6 @@ class ConstanciaService
                 Mail::to($email)->queue(new ConstanciaSolicitadaMail($constancia));
             }
         }
-
-        return $constancia;
     }
 
     public function emitir(Constancia $constancia, User $emisor): Constancia

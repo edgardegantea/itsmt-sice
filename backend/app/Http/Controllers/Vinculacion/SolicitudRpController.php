@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Vinculacion;
 
 use App\Domains\Academico\Models\Alumno;
-use App\Domains\Vinculacion\Models\ServicioSocial;
 use App\Domains\Vinculacion\Models\SolicitudRp;
+use App\Domains\Vinculacion\Services\PrerequisitosResidenciaService;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Domains\Institucional\Models\ConfiguracionInstitucional;
@@ -15,6 +15,8 @@ use Illuminate\Http\Response;
 
 class SolicitudRpController extends Controller
 {
+    public function __construct(private PrerequisitosResidenciaService $prerequisitos) {}
+
     // GET /solicitudes-rp  (admin/jefe_carrera lista; alumno ve las suyas)
     public function index(Request $request): JsonResponse
     {
@@ -53,35 +55,40 @@ class SolicitudRpController extends Controller
             return ApiResponse::error('No se encontró el registro de alumno.', 404);
         }
 
-        // Verificar SS acreditado
-        $ssAcreditado = ServicioSocial::where('alumno_id', $alumno->id)
-            ->where('estatus', 'acreditado')
-            ->exists();
-        if (! $ssAcreditado) {
+        // Verificar prerequisitos TecNM completos (política 3.4.5 PO-004): SS
+        // acreditado, TODAS las actividades complementarias oficiales, ≥80%
+        // créditos, no estar en curso especial, y dentro de 12 semestres.
+        $prereq = $this->prerequisitos->verificar($alumno);
+
+        if (! $prereq['ss_acreditado']) {
             return ApiResponse::error('Debes tener el Servicio Social acreditado para solicitar Residencia Profesional (política 3.4.5 PO-004).', 422);
         }
 
-        // Verificar AC completadas
-        $acCompletadas = \App\Domains\Calidad\Models\ActividadComplementaria::where('alumno_id', $alumno->id)
-            ->where('estatus', 'validada')
-            ->exists();
-        if (! $acCompletadas) {
-            return ApiResponse::error('Debes tener Actividades Complementarias acreditadas para solicitar Residencia Profesional (política 3.4.5 PO-004).', 422);
-        }
-
-        // Verificar ≥80% créditos
-        $porcentaje = $this->porcentajeCreditos($alumno);
-        if ($porcentaje < 80) {
+        if (! $prereq['ac_completadas']) {
+            $faltantes = collect($prereq['ac_faltantes'])->pluck('nombre')->implode(', ');
             return ApiResponse::error(
-                "Necesitas al menos 80% de créditos acreditados para solicitar Residencia Profesional. Tienes {$porcentaje}%.",
+                "Debes completar todas las Actividades Complementarias oficiales para solicitar Residencia Profesional (política 3.4.5 PO-004). Te faltan: {$faltantes}.",
                 422
             );
         }
 
-        // Verificar dentro del límite de 12 semestres (política 3.4.5 PO-004)
-        if ($alumno->semestre_actual > 12) {
+        if ($prereq['porcentaje_creditos'] < 80) {
+            return ApiResponse::error(
+                "Necesitas al menos 80% de créditos acreditados para solicitar Residencia Profesional. Tienes {$prereq['porcentaje_creditos']}%.",
+                422
+            );
+        }
+
+        if (! $prereq['dentro_limite_semestres']) {
             return ApiResponse::error(
                 'Para solicitar Residencia Profesional debes estar dentro de los primeros 12 semestres. Tienes ' . $alumno->semestre_actual . ' semestres cursados.',
+                422
+            );
+        }
+
+        if (! $prereq['no_en_curso_especial']) {
+            return ApiResponse::error(
+                'No puedes solicitar Residencia Profesional mientras tengas una materia pendiente en oportunidad especial.',
                 422
             );
         }
@@ -146,22 +153,5 @@ class SolicitudRpController extends Controller
         ])->setPaper('letter');
 
         return $pdf->download("carta_presentacion_rp_{$solicitudRp->id}.pdf");
-    }
-
-    private function porcentajeCreditos(Alumno $alumno): float
-    {
-        $total = \App\Domains\Academico\Models\MallaCurricular::where('mallas_curriculares.carrera_id', $alumno->carrera_id)
-            ->join('materias', 'mallas_curriculares.materia_id', '=', 'materias.id')
-            ->sum('materias.creditos');
-
-        if ($total == 0) return 0;
-
-        $acreditados = \App\Domains\Academico\Models\Calificacion::where('calificaciones.alumno_id', $alumno->id)
-            ->where('calificaciones.acreditado', true)
-            ->join('cargas_academicas', 'calificaciones.grupo_id', '=', 'cargas_academicas.grupo_id')
-            ->join('materias', 'cargas_academicas.materia_id', '=', 'materias.id')
-            ->sum('materias.creditos');
-
-        return round(($acreditados / $total) * 100, 1);
     }
 }

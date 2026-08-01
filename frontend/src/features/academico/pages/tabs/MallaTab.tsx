@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type MallaCurricular } from '../../services/academico'
 import { Field, ModalWrap, Th, selectCls, useCarreras } from './shared'
+import DetailModal from '../../../../components/ui/DetailModal'
 
 export default function MallaTab() {
   const qc = useQueryClient()
   const { data: carreras = [] } = useCarreras()
   const [carreraId, setCarreraId] = useState('')
   const [modal, setModal] = useState(false)
+  const [detalle, setDetalle] = useState<MallaCurricular | null>(null)
   const [form, setForm] = useState<Partial<MallaCurricular>>({ semestre: 1, es_especialidad: false })
   const set = (k: keyof MallaCurricular, v: unknown) => setForm(f => ({ ...f, [k]: v }))
 
@@ -77,7 +79,7 @@ export default function MallaTab() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100">
-                      <Th>Clave</Th><Th>Clave TecNM</Th><Th>Nombre</Th><Th>Créditos</Th><Th>Tipo</Th><Th>Especialidad</Th><Th></Th>
+                      <Th>Clave</Th><Th>Clave TecNM</Th><Th>Nombre</Th><Th>Créditos</Th><Th>Tipo</Th><Th>Especialidad</Th><Th></Th><Th></Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -98,6 +100,9 @@ export default function MallaTab() {
                             onClick={() => { if (confirm('¿Retirar materia de la malla?')) mutDelete.mutate(m.id) }}
                             className="text-xs text-red-500 hover:underline"
                           >Retirar</button>
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <button onClick={() => setDetalle(m)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                         </td>
                       </tr>
                     ))}
@@ -129,6 +134,22 @@ export default function MallaTab() {
             </label>
           </Field>
         </ModalWrap>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.materia?.nombre ?? 'Materia'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Clave', value: detalle.materia?.clave },
+            { label: 'Clave TecNM', value: detalle.materia?.clave_oficial_tecnm },
+            { label: 'Semestre', value: detalle.semestre },
+            { label: 'Créditos', value: detalle.materia?.creditos },
+            { label: 'Tipo', value: detalle.materia?.tipo },
+            { label: 'Especialidad', value: detalle.es_especialidad ? 'Sí' : 'No' },
+          ]}
+          footer={<button onClick={() => { if (confirm('¿Retirar materia de la malla?')) { mutDelete.mutate(detalle.id); setDetalle(null) } }} className="text-xs font-medium text-white bg-red-600 px-3 py-1.5 rounded-lg">Retirar</button>}
+        />
       )}
     </div>
   )

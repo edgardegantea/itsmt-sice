@@ -16,6 +16,12 @@ class CuerpoAcademicoController extends Controller
 {
     private array $rolesDireccion = ['superadmin', 'admin', 'director_academico', 'direccion_academica'];
 
+    private function esLiderOGestion(Request $request, CuerpoAcademico $ca): bool
+    {
+        $user = $request->user();
+        return $user->hasAnyRole($this->rolesDireccion) || $ca->lider_id === $user->id;
+    }
+
     // GET /api/cuerpos-academicos
     public function index(Request $request): JsonResponse
     {
@@ -64,6 +70,8 @@ class CuerpoAcademicoController extends Controller
     // POST /api/cuerpos-academicos/{ca}/lgac
     public function agregarLgac(Request $request, CuerpoAcademico $ca): JsonResponse
     {
+        abort_unless($this->esLiderOGestion($request, $ca), 403, 'Solo el líder del cuerpo académico o dirección académica puede agregar LGAC.');
+
         $data = $request->validate([
             'nombre'      => ['required', 'string', 'max:200'],
             'descripcion' => ['nullable', 'string'],
@@ -77,6 +85,8 @@ class CuerpoAcademicoController extends Controller
     // POST /api/cuerpos-academicos/{ca}/integrantes
     public function agregarIntegrante(Request $request, CuerpoAcademico $ca): JsonResponse
     {
+        abort_unless($this->esLiderOGestion($request, $ca), 403, 'Solo el líder del cuerpo académico o dirección académica puede agregar integrantes.');
+
         $data = $request->validate([
             'docente_id'    => ['required', 'uuid', 'exists:users,id'],
             'rol'           => ['nullable', 'in:lider,integrante,colaborador'],
@@ -94,6 +104,8 @@ class CuerpoAcademicoController extends Controller
     // PATCH /api/integrantes-ca/{integrante}/baja
     public function bajaIntegrante(Request $request, IntegranteCa $integrante): JsonResponse
     {
+        abort_unless($this->esLiderOGestion($request, $integrante->cuerpoAcademico), 403, 'Solo el líder del cuerpo académico o dirección académica puede dar de baja integrantes.');
+
         $integrante->update(['fecha_baja' => now()->toDateString()]);
 
         return ApiResponse::success($integrante->fresh(), 'Integrante dado de baja del cuerpo académico.');
@@ -138,6 +150,10 @@ class CuerpoAcademicoController extends Controller
     // PATCH /api/proyectos-investigacion/{proyecto}/estatus
     public function actualizarEstatusProyecto(Request $request, ProyectoInvestigacion $proyecto): JsonResponse
     {
+        $esResponsable = $proyecto->responsable_id === $request->user()->id;
+        abort_unless($esResponsable || $request->user()->hasAnyRole($this->rolesDireccion), 403, 'Solo el responsable del proyecto o dirección académica puede actualizar su estatus.');
+        abort_if(in_array($proyecto->estatus, ['concluido', 'cancelado']), 422, 'Este proyecto ya fue cerrado.');
+
         $data = $request->validate([
             'estatus'   => ['required', 'in:registrado,en_proceso,concluido,cancelado'],
             'fecha_fin' => ['nullable', 'date'],

@@ -18,6 +18,15 @@ export interface AsignacionDocente {
   instrumentacion?: InstrumentacionDidactica | null
 }
 
+export type SeccionInstrumentacion =
+  'objetivo_general' | 'competencias' | 'unidades' | 'metodologia' | 'criterios_evaluacion' | 'bibliografia'
+
+export interface ObservacionCampoInstrumentacion {
+  id: string
+  seccion: SeccionInstrumentacion
+  texto: string
+}
+
 export interface InstrumentacionDidactica {
   id: string
   asignacion_id: string
@@ -28,10 +37,13 @@ export interface InstrumentacionDidactica {
   metodologia: string | null
   criterios_evaluacion: Record<string, number> | null
   bibliografia: string | null
-  estatus: 'borrador' | 'enviada' | 'observaciones' | 'liberada' | 'vigente'
+  estatus: 'borrador' | 'enviada' | 'observaciones' | 'enviada_jc' | 'liberada' | 'vigente'
   observaciones_jefe: string | null
+  observaciones_campos: ObservacionCampoInstrumentacion[] | null
   liberada_por: string | null
   visto_bueno_por: string | null
+  entrega_en: string | null
+  entrega_tardia: boolean
   asignacion?: AsignacionDocente
   liberadaPor?: { id: string; name: string } | null
   vistoBuenoPor?: { id: string; name: string } | null
@@ -94,10 +106,25 @@ export const planeacionApi = {
   enviarInstrumentacion: (id: string) =>
     apiClient.patch(`/instrumentaciones-didacticas/${id}/enviar`).then(r => r.data.data as InstrumentacionDidactica),
 
-  liberarInstrumentacion: (id: string, accion: 'liberar' | 'devolver', observaciones?: string) =>
-    apiClient.patch(`/instrumentaciones-didacticas/${id}/liberar`, { accion, observaciones })
+  // Desarrollo Académico: aprueba (envía a Jefatura) o rechaza (devuelve al docente) — 'enviada' -> 'enviada_jc' | 'observaciones'
+  revisarDesarrolloAcademico: (
+    id: string, accion: 'aprobar' | 'rechazar',
+    observaciones_jefe?: string, observaciones_campos?: ObservacionCampoInstrumentacion[]
+  ) =>
+    apiClient.patch(`/instrumentaciones-didacticas/${id}/revisar-da`, { accion, observaciones_jefe, observaciones_campos })
+      .then(r => r.data.data as InstrumentacionDidactica),
+
+  // Jefatura de Carrera: libera o devuelve — 'enviada_jc' -> 'liberada' | 'observaciones'
+  liberarInstrumentacion: (
+    id: string, accion: 'liberar' | 'devolver',
+    observaciones_jefe?: string, observaciones_campos?: ObservacionCampoInstrumentacion[]
+  ) =>
+    apiClient.patch(`/instrumentaciones-didacticas/${id}/liberar`, { accion, observaciones_jefe, observaciones_campos })
       .then(r => r.data.data as InstrumentacionDidactica),
 
   vistoBueno: (id: string) =>
     apiClient.patch(`/instrumentaciones-didacticas/${id}/visto-bueno`).then(r => r.data.data as InstrumentacionDidactica),
+
+  getInstrumentacionPdf: (id: string) =>
+    apiClient.get(`/instrumentaciones-didacticas/${id}/pdf`, { responseType: 'blob' }).then(r => r.data as Blob),
 }

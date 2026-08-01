@@ -18,6 +18,7 @@ class ServicioSocial extends Model
     protected $fillable = [
         'alumno_id', 'empresa', 'responsable', 'fecha_inicio', 'fecha_fin',
         'estatus', 'horas_acumuladas', 'nivel_desempeno', 'creditos_otorgados', 'documentos',
+        'carta_aceptacion_path',
     ];
 
     protected $casts = [

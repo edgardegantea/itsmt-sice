@@ -39,6 +39,7 @@ class ConfiguracionInstitucional extends Model
         'color_sidebar',
         'radio_bordes',
         'maestria_habilitada',
+        'recordatorios_asistencia_global_activo',
     ];
 
     protected function casts(): array
@@ -48,6 +49,7 @@ class ConfiguracionInstitucional extends Model
             'fecha_fin_actualizacion_datos'    => 'date',
             'login_opacidad_fondo'             => 'float',
             'maestria_habilitada'              => 'boolean',
+            'recordatorios_asistencia_global_activo' => 'boolean',
         ];
     }
 

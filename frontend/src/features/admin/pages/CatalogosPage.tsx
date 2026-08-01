@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Modal from '../../../components/ui/Modal'
+import DetailModal from '../../../components/ui/DetailModal'
 import { useToastStore } from '../../../store/toastStore'
 import { usePuedeEliminar } from '../../../hooks/usePermisos'
 import {
@@ -552,6 +553,7 @@ function AreasTab() {
   const [modal, setModal] = useState<'nueva' | DirectorioArea | null>(null)
   const [form, setForm]   = useState({ nombre: '', descripcion: '', tipo: 'departamento', orden: 0, activo: true })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [detalle, setDetalle] = useState<DirectorioArea | null>(null)
 
   const { data: areas = [], isLoading } = useQuery({ queryKey: ['dir-areas'], queryFn: directorioApi.getAreas })
 
@@ -617,6 +619,7 @@ function AreasTab() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
+                    <button onClick={() => setDetalle(a)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
                     <button onClick={() => abrirModal(a)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
                     {puedeEliminar && <button onClick={() => eliminar.mutate(a.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
@@ -626,6 +629,21 @@ function AreasTab() {
           </tbody>
         </table>
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.nombre}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Tipo', value: TIPOS_AREA.find(t => t.value === detalle.tipo)?.label ?? detalle.tipo },
+            { label: 'Orden de aparición', value: detalle.orden },
+            { label: 'Estado', value: detalle.activo ? 'Activo' : 'Inactivo' },
+            { label: 'Personal asignado', value: detalle.personal_count },
+            { label: 'Descripción', value: detalle.descripcion, full: true },
+          ]}
+          footer={<button onClick={() => { abrirModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg">Editar</button>}
+        />
+      )}
 
       {modal && (
         <Modal title={modal === 'nueva' ? 'Nueva área / departamento' : `Editar: ${(modal as DirectorioArea).nombre}`} onClose={() => { setModal(null); setErrors({}) }}>
@@ -680,6 +698,7 @@ function PuestosTab() {
   const [modal, setModal] = useState<'nuevo' | DirectorioPuesto | null>(null)
   const [form, setForm]   = useState({ nombre: '', descripcion: '', area_id: '', firma_documentos: false, orden: 0, activo: true })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [detalle, setDetalle] = useState<DirectorioPuesto | null>(null)
 
   const { data: areas = [] }   = useQuery({ queryKey: ['dir-areas'], queryFn: directorioApi.getAreas })
   const { data: puestos = [], isLoading } = useQuery({ queryKey: ['dir-puestos'], queryFn: directorioApi.getPuestos })
@@ -755,6 +774,7 @@ function PuestosTab() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
+                    <button onClick={() => setDetalle(p)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
                     <button onClick={() => abrirModal(p)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
                     {puedeEliminar && <button onClick={() => eliminar.mutate(p.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
@@ -764,6 +784,22 @@ function PuestosTab() {
           </tbody>
         </table>
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.nombre}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Área / Departamento', value: detalle.area?.nombre ?? 'Sin asignar' },
+            { label: 'Firma documentos oficiales', value: detalle.firma_documentos ? 'Sí' : 'No' },
+            { label: 'Orden de aparición', value: detalle.orden },
+            { label: 'Estado', value: detalle.activo ? 'Activo' : 'Inactivo' },
+            { label: 'Personal asignado', value: detalle.personal_count },
+            { label: 'Descripción', value: detalle.descripcion, full: true },
+          ]}
+          footer={<button onClick={() => { abrirModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg">Editar</button>}
+        />
+      )}
 
       {modal && (
         <Modal title={modal === 'nuevo' ? 'Nuevo puesto' : `Editar: ${(modal as DirectorioPuesto).nombre}`} onClose={() => { setModal(null); setErrors({}) }}>

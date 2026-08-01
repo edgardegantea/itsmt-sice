@@ -108,7 +108,7 @@ class PrecargaController extends Controller
             return ApiResponse::error('No se encontró el registro de alumno.', 404);
         }
 
-        $periodo = Periodo::where('activo', true)->first();
+        $periodo = Periodo::activo();
 
         if (! $periodo) {
             return ApiResponse::success(null, 'No hay periodo activo.');
@@ -140,8 +140,8 @@ class PrecargaController extends Controller
                     'Los horarios aún no han sido liberados por la administración.');
             }
 
-            $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
-                ->whereIn('grupo_id', $gruposObj->pluck('id'))
+            $cargas = CargaAcademica::with(['materia', 'grupos', 'docente', 'aula', 'horarios'])
+                ->whereHas('grupos', fn($q) => $q->whereIn('grupos.id', $gruposObj->pluck('id')))
                 ->where('periodo_id', $periodo->id)
                 ->get();
 
@@ -161,8 +161,8 @@ class PrecargaController extends Controller
             ->where('horarios_liberados', true)
             ->pluck('id');
 
-        $cargasSemActual = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
-            ->whereIn('grupo_id', $gruposSemActual)
+        $cargasSemActual = CargaAcademica::with(['materia', 'grupos', 'docente', 'aula', 'horarios'])
+            ->whereHas('grupos', fn($q) => $q->whereIn('grupos.id', $gruposSemActual))
             ->where('periodo_id', $periodo->id)
             ->get();
 
@@ -178,8 +178,8 @@ class PrecargaController extends Controller
                 ->where('periodo_id', $periodo->id)
                 ->pluck('id');
 
-            $cargasPendientes = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
-                ->whereIn('grupo_id', $gruposAnteriores)
+            $cargasPendientes = CargaAcademica::with(['materia', 'grupos', 'docente', 'aula', 'horarios'])
+                ->whereHas('grupos', fn($q) => $q->whereIn('grupos.id', $gruposAnteriores))
                 ->whereIn('materia_id', $materiasPendientesIds)
                 ->where('periodo_id', $periodo->id)
                 ->get();
@@ -231,17 +231,17 @@ class PrecargaController extends Controller
             return ApiResponse::error('Esta acción solo está disponible para alumnos de semestre 2 en adelante.', 422);
         }
 
-        $periodo = Periodo::where('activo', true)->first();
+        $periodo = Periodo::activo();
 
         if (! $periodo) {
             return ApiResponse::error('No hay periodo activo.', 422);
         }
 
-        $carga = CargaAcademica::with(['horarios', 'materia'])->findOrFail($data['carga_academica_id']);
+        $carga = CargaAcademica::with(['horarios', 'materia', 'grupos'])->findOrFail($data['carga_academica_id']);
 
-        $grupo = Grupo::find($carga->grupo_id);
+        $grupo = $carga->grupos->firstWhere('carrera_id', $alumno->carrera_id);
 
-        if (! $grupo || $grupo->carrera_id !== $alumno->carrera_id) {
+        if (! $grupo) {
             return ApiResponse::error('La carga no pertenece a tu carrera.', 422);
         }
 
@@ -330,7 +330,7 @@ class PrecargaController extends Controller
             abort(403, 'Registro de alumno no encontrado.');
         }
 
-        $periodo = Periodo::where('activo', true)->first();
+        $periodo = Periodo::activo();
 
         if (! $periodo) {
             abort(403, 'No hay periodo activo.');
@@ -349,8 +349,8 @@ class PrecargaController extends Controller
                 abort(403, 'Horarios no liberados.');
             }
 
-            $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
-                ->whereIn('grupo_id', $grupos)
+            $cargas = CargaAcademica::with(['materia', 'grupos', 'docente', 'aula', 'horarios'])
+                ->whereHas('grupos', fn($q) => $q->whereIn('grupos.id', $grupos))
                 ->where('periodo_id', $periodo->id)
                 ->get();
         } else {
@@ -358,7 +358,7 @@ class PrecargaController extends Controller
                 ->where('periodo_id', $periodo->id)
                 ->pluck('carga_academica_id');
 
-            $cargas = CargaAcademica::with(['materia', 'grupo', 'docente', 'aula', 'horarios'])
+            $cargas = CargaAcademica::with(['materia', 'grupos', 'docente', 'aula', 'horarios'])
                 ->whereIn('id', $seleccionIds)
                 ->get();
         }

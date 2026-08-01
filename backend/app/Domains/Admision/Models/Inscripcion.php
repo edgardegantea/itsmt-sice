@@ -34,6 +34,17 @@ class Inscripcion extends Model
         'carta_compromiso_docs_generada',
     ];
 
+    protected static function booted(): void
+    {
+        // Libro de Registro de Números de Control (TecNM-AC-PO-001 S1-13): una vez
+        // asignado, el número de control es permanente y no puede reasignarse.
+        static::updating(function (self $inscripcion) {
+            if ($inscripcion->isDirty('numero_control') && $inscripcion->getOriginal('numero_control')) {
+                throw new \RuntimeException('El número de control ya asignado no puede modificarse (Libro de Registro NC).');
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [

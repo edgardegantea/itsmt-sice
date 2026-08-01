@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vinculacion;
 
 use App\Domains\Vinculacion\Models\DictamenAnteproyecto;
 use App\Domains\Vinculacion\Models\SolicitudRp;
+use App\Domains\Vinculacion\Services\PrerequisitosResidenciaService;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -13,11 +14,17 @@ use Illuminate\Http\Response;
 
 class DictamenAnteproyectoController extends Controller
 {
-    // POST /dictamenes-anteproyecto  (jefe_carrera/admin registra dictamen — S6-07)
+    public function __construct(private PrerequisitosResidenciaService $prerequisitos) {}
+
+    // POST /dictamenes-anteproyecto  (jefe_carrera registra dictamen — S6-07)
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', ...\App\Models\User::ROLES_DIRECTIVOS])) {
+        // Restringido a jefe_carrera (el actor que la historia especifica) con
+        // superadmin/admin como respaldo operativo — antes cualquier rol
+        // directivo genérico (control_escolar, dirección general, etc.) podía
+        // registrar un dictamen académico que no le corresponde.
+        if (! $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera'])) {
             abort(403);
         }
 
@@ -45,6 +52,16 @@ class DictamenAnteproyectoController extends Controller
         // Solo se puede emitir un dictamen si la solicitud está pendiente
         if ($solicitud->estatus !== 'pendiente_dictamen') {
             return ApiResponse::error('Esta solicitud ya cuenta con un dictamen.', 422);
+        }
+
+        // Re-verificar los prerequisitos TecNM al momento del dictamen: pudieron
+        // haber cambiado desde que el alumno envió la solicitud (p.ej. cayó por
+        // debajo del 80% de créditos, o entró a un curso especial).
+        if ($data['dictamen'] === 'aceptado' && $solicitud->alumno && ! $this->prerequisitos->cumple($solicitud->alumno)) {
+            return ApiResponse::error(
+                'El alumno ya no cumple los prerequisitos TecNM (SS acreditado, AC completas, ≥80% créditos, fuera de curso especial, dentro de 12 semestres) para aceptar este anteproyecto.',
+                422
+            );
         }
 
         $dictamen = DictamenAnteproyecto::create(array_merge($data, [

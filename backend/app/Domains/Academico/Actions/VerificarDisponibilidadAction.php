@@ -3,18 +3,18 @@
 namespace App\Domains\Academico\Actions;
 
 use App\Domains\Academico\Models\DisponibilidadDocente;
+use App\Domains\Academico\Models\Grupo;
 use App\Domains\Academico\Models\Horario;
 use App\Domains\Academico\Models\Materia;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Verifica si una carga académica propuesta es válida:
  *  - No se traslapa con otra carga del mismo docente o aula en el mismo periodo.
- *  - No se traslapa con otra carga del mismo grupo (misma materia, otro horario).
+ *  - No se traslapa con otra carga de ninguno de los grupos seleccionados.
  *  - Cae dentro de un bloque de disponibilidad declarado por el docente.
- *  - No excede las horas semanales declaradas en la materia.
- *  - Los sábados, respeta el módulo sabatino (módulo 1 y 2 pueden coexistir
- *    en el mismo horario ya que corresponden a semanas distintas).
+ *  - No excede las horas semanales declaradas en la materia (por grupo).
+ *  - Los sábados, respeta el módulo sabatino y exige que cada grupo tenga
+ *    nombre terminado en F/B (convención de grupo sabatino).
  */
 class VerificarDisponibilidadAction
 {
@@ -26,10 +26,11 @@ class VerificarDisponibilidadAction
         string $horaInicio,
         string $horaFin,
         ?string $aulaId = null,
-        ?string $grupoId = null,
+        ?array $grupoIds = null,
         ?string $ignorarCargaId = null,
         ?string $materiaId = null,
     ): array {
+        $grupoIds = array_values(array_filter($grupoIds ?? []));
         $conflictos = [];
 
         $moduloSabatino = ($diaSemana === 'sabado' && $materiaId)
@@ -46,21 +47,61 @@ class VerificarDisponibilidadAction
             $conflictos[] = ['tipo' => 'aula', 'mensaje' => 'El aula ya está ocupada en ese horario.'];
         }
 
-        // ── Conflicto grupo ───────────────────────────────────────────────────
-        if ($grupoId && $this->tieneConflictoGrupo($periodoId, $diaSemana, $horaInicio, $horaFin, $grupoId, $ignorarCargaId, $moduloSabatino)) {
-            $conflictos[] = ['tipo' => 'grupo', 'mensaje' => 'El grupo ya tiene clase en ese horario.'];
-        }
+        if (! empty($grupoIds)) {
+            $grupos = Grupo::whereIn('id', $grupoIds)->get()->keyBy('id');
 
-        // ── Horas semanales ───────────────────────────────────────────────────
-        if ($materiaId && $grupoId) {
-            $mensajeHoras = $this->excedeHorasSemana($materiaId, $grupoId, $periodoId, $horaInicio, $horaFin, $ignorarCargaId);
-            if ($mensajeHoras) {
-                $conflictos[] = ['tipo' => 'horas_semana', 'mensaje' => $mensajeHoras];
+            // ── Conflicto grupo (cualquiera de los grupos ya ocupado) ──────────
+            foreach ($grupoIds as $grupoId) {
+                if ($this->tieneConflictoGrupo($periodoId, $diaSemana, $horaInicio, $horaFin, $grupoId, $ignorarCargaId, $moduloSabatino)) {
+                    $nombre = $grupos->get($grupoId)?->clave ?? $grupoId;
+                    $conflictos[] = ['tipo' => 'grupo', 'mensaje' => "El grupo {$nombre} ya tiene clase en ese horario."];
+                }
+            }
+
+            // ── Ventana horaria propia de cada grupo ───────────────────────────
+            foreach ($grupoIds as $grupoId) {
+                $mensajeVentana = $this->fueraDeVentanaGrupo($grupoId, $diaSemana, $horaInicio, $horaFin);
+                if ($mensajeVentana) {
+                    $conflictos[] = ['tipo' => 'ventana_grupo', 'mensaje' => $mensajeVentana];
+                }
+            }
+
+            // ── Conflicto carrera/semestre (asignatura en paralelo u otra materia) ─
+            foreach ($grupoIds as $grupoId) {
+                $conflictoCarrera = $this->tieneConflictoCarreraSemestre(
+                    $periodoId, $diaSemana, $horaInicio, $horaFin, $grupoId, $grupoIds, $materiaId, $ignorarCargaId, $moduloSabatino
+                );
+                if ($conflictoCarrera) {
+                    $conflictos[] = $conflictoCarrera;
+                }
+            }
+
+            // ── Horas semanales (por grupo) ────────────────────────────────────
+            if ($materiaId) {
+                foreach ($grupoIds as $grupoId) {
+                    $mensajeHoras = $this->excedeHorasSemana($materiaId, $grupoId, $periodoId, $horaInicio, $horaFin, $ignorarCargaId);
+                    if ($mensajeHoras) {
+                        $conflictos[] = ['tipo' => 'horas_semana', 'mensaje' => $mensajeHoras];
+                    }
+                }
+            }
+
+            // ── Convención de nombre para grupos sabatinos ─────────────────────
+            if ($diaSemana === 'sabado') {
+                foreach ($grupoIds as $grupoId) {
+                    $grupo = $grupos->get($grupoId);
+                    if ($grupo && ! preg_match('/[fb]$/i', $grupo->clave)) {
+                        $conflictos[] = [
+                            'tipo'    => 'grupo_no_sabatino',
+                            'mensaje' => "El grupo {$grupo->clave} no está habilitado para sábado (su clave debe terminar en F o B).",
+                        ];
+                    }
+                }
             }
         }
 
         // ── Disponibilidad declarada ──────────────────────────────────────────
-        [$dentro, $mensajeDisp] = $this->cabeEnDisponibilidad($docenteId, $periodoId, $diaSemana, $horaInicio, $horaFin);
+        [$dentro, $mensajeDisp] = $this->cabeEnDisponibilidad($docenteId, $periodoId, $diaSemana, $horaInicio, $horaFin, $moduloSabatino);
 
         return [
             'conflictos'               => $conflictos,
@@ -134,7 +175,7 @@ class VerificarDisponibilidadAction
             ->where('hora_fin', '>', $horaInicio)
             ->whereHas('cargaAcademica', function ($q) use ($periodoId, $grupoId, $ignorarCargaId, $diaSemana, $moduloSabatino) {
                 $q->where('periodo_id', $periodoId)
-                  ->where('grupo_id', $grupoId)
+                  ->whereHas('grupos', fn($gq) => $gq->where('grupos.id', $grupoId))
                   ->when($ignorarCargaId, fn($q2) => $q2->where('id', '!=', $ignorarCargaId))
                   ->when($moduloSabatino !== null && $diaSemana === 'sabado', function ($q2) use ($moduloSabatino) {
                       $q2->whereHas('materia', function ($q3) use ($moduloSabatino) {
@@ -144,6 +185,104 @@ class VerificarDisponibilidadAction
                   });
             })
             ->exists();
+    }
+
+    /**
+     * Todos los grupos de un mismo semestre+carrera comparten la misma rejilla
+     * horaria: ningún otro grupo de ese semestre puede tener clase en el mismo
+     * bloque, salvo que sea la misma materia (sección paralela). Devuelve el
+     * conflicto encontrado (con mensaje distinto según sea la misma materia u
+     * otra), o null si no hay traslape.
+     *
+     * @param array<string> $gruposSeleccionados Todos los grupos del bloque que se está validando (para no marcarlos como "otro grupo").
+     * @return array{tipo: string, mensaje: string}|null
+     */
+    private function tieneConflictoCarreraSemestre(
+        string $periodoId,
+        string $diaSemana,
+        string $horaInicio,
+        string $horaFin,
+        string $grupoId,
+        array $gruposSeleccionados,
+        ?string $materiaId,
+        ?string $ignorarCargaId,
+        ?int $moduloSabatino,
+    ): ?array {
+        $grupo = Grupo::find($grupoId);
+        if (!$grupo) {
+            return null;
+        }
+
+        $horarioColision = Horario::query()
+            ->where('dia_semana', $diaSemana)
+            ->where('hora_inicio', '<', $horaFin)
+            ->where('hora_fin', '>', $horaInicio)
+            ->whereHas('cargaAcademica', function ($q) use ($periodoId, $grupo, $gruposSeleccionados, $ignorarCargaId, $diaSemana, $moduloSabatino) {
+                $q->where('periodo_id', $periodoId)
+                  ->whereDoesntHave('grupos', fn($gq) => $gq->whereIn('grupos.id', $gruposSeleccionados))
+                  ->whereHas('grupos', fn($gq) => $gq->where('carrera_id', $grupo->carrera_id)->where('semestre', $grupo->semestre))
+                  ->when($ignorarCargaId, fn($q2) => $q2->where('id', '!=', $ignorarCargaId))
+                  ->when($moduloSabatino !== null && $diaSemana === 'sabado', function ($q2) use ($moduloSabatino) {
+                      $q2->whereHas('materia', function ($q3) use ($moduloSabatino) {
+                          $q3->where('modulo_sabatino', $moduloSabatino)
+                             ->orWhereNull('modulo_sabatino');
+                      });
+                  });
+            })
+            ->with(['cargaAcademica.materia', 'cargaAcademica.grupos'])
+            ->first();
+
+        if (!$horarioColision) {
+            return null;
+        }
+
+        $carga = $horarioColision->cargaAcademica;
+        $otroGrupo = $carga->grupos->first();
+        $mismaMateria = $materiaId && $carga->materia_id === $materiaId;
+
+        if ($mismaMateria) {
+            return [
+                'tipo'    => 'asignatura',
+                'mensaje' => "La materia \"{$carga->materia?->nombre}\" ya se imparte al grupo {$otroGrupo?->clave} en este horario.",
+            ];
+        }
+
+        return [
+            'tipo'    => 'carrera',
+            'mensaje' => "El grupo {$otroGrupo?->clave} ({$grupo->semestre}° semestre de esta carrera) ya tiene clase de \"{$carga->materia?->nombre}\" en este horario.",
+        ];
+    }
+
+    /**
+     * Ventana horaria propia del grupo, personalizada por día de la semana.
+     * Si el grupo no tiene ninguna fila configurada en `horarios_dias`, no hay
+     * restricción. Si tiene al menos una, solo esos días están habilitados
+     * para el grupo y cada uno con su propia ventana.
+     */
+    private function fueraDeVentanaGrupo(string $grupoId, string $diaSemana, string $horaInicio, string $horaFin): ?string
+    {
+        $grupo = Grupo::with('horariosDias')->find($grupoId);
+        if (!$grupo || $grupo->horariosDias->isEmpty()) {
+            return null;
+        }
+
+        $ventana = $grupo->horariosDias->firstWhere('dia_semana', $diaSemana);
+        if (!$ventana) {
+            return "El grupo {$grupo->clave} no tiene horario configurado para el día {$diaSemana}.";
+        }
+
+        $inicio = $this->aMinutos($horaInicio);
+        $fin    = $this->aMinutos($horaFin);
+
+        if ($inicio < $this->aMinutos($ventana->hora_inicio)) {
+            return "El horario inicia antes de la ventana permitida del grupo {$grupo->clave} ese día ({$ventana->hora_inicio} - {$ventana->hora_fin}).";
+        }
+
+        if ($fin > $this->aMinutos($ventana->hora_fin)) {
+            return "El horario termina después de la ventana permitida del grupo {$grupo->clave} ese día ({$ventana->hora_inicio} - {$ventana->hora_fin}).";
+        }
+
+        return null;
     }
 
     private function excedeHorasSemana(
@@ -171,7 +310,8 @@ class VerificarDisponibilidadAction
 
         if ($total > $limite) {
             $totalHoras = number_format($total / 60, 1);
-            return "\"{$materia->nombre}\" quedaría con {$totalHoras}h asignadas (límite: {$horasSemana}h/semana).";
+            $grupo = Grupo::find($grupoId);
+            return "\"{$materia->nombre}\" quedaría con {$totalHoras}h asignadas para el grupo {$grupo?->clave} (límite: {$horasSemana}h/semana).";
         }
 
         return null;
@@ -181,8 +321,8 @@ class VerificarDisponibilidadAction
     {
         $bloques = Horario::whereHas('cargaAcademica', function ($q) use ($materiaId, $grupoId, $periodoId, $ignorarCargaId) {
             $q->where('materia_id', $materiaId)
-              ->where('grupo_id', $grupoId)
               ->where('periodo_id', $periodoId)
+              ->whereHas('grupos', fn($gq) => $gq->where('grupos.id', $grupoId))
               ->when($ignorarCargaId, fn($q2) => $q2->where('id', '!=', $ignorarCargaId));
         })->get(['hora_inicio', 'hora_fin']);
 
@@ -196,10 +336,14 @@ class VerificarDisponibilidadAction
         string $diaSemana,
         string $horaInicio,
         string $horaFin,
+        ?int $moduloSabatino = null,
     ): array {
         $bloques = DisponibilidadDocente::where('docente_id', $docenteId)
             ->where('periodo_id', $periodoId)
             ->where('dia_semana', $diaSemana)
+            ->when($diaSemana === 'sabado' && $moduloSabatino !== null, fn($q) =>
+                $q->where(fn($q2) => $q2->where('modulo_sabatino', $moduloSabatino)->orWhereNull('modulo_sabatino'))
+            )
             ->orderBy('hora_inicio')
             ->get(['hora_inicio', 'hora_fin']);
 
@@ -219,7 +363,8 @@ class VerificarDisponibilidadAction
             return [false, 'El horario está fuera de la disponibilidad declarada del docente.'];
         }
 
-        // Límite laboral: 8h entre semana, 12h los sábados
+        // Límite laboral: 8h entre semana, 12h los sábados, medido desde el
+        // inicio del primer bloque de disponibilidad declarado ese día.
         $limiteHoras = $diaSemana === 'sabado' ? 12 : 8;
         $limiteMaximo = $this->aMinutos($bloques->first()->hora_inicio) + $limiteHoras * 60;
 

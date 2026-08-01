@@ -24,10 +24,16 @@ class FichaDocenteController extends Controller
             abort(403);
         }
 
+        $carreraForzada = $request->user()->carreraRestringida();
+
         $fichas = FichaDocente::with('docente')
+            ->when($carreraForzada, fn($q, $v) =>
+                $q->whereHas('docente', fn($uq) => $uq->deCarrera($v))
+            )
             ->when($request->activo !== null, fn($q) =>
                 $q->where('activo', filter_var($request->activo, FILTER_VALIDATE_BOOLEAN)))
             ->when($request->tipo_contrato, fn($q, $v) => $q->where('tipo_contrato', $v))
+            ->when($request->query('docente_id'), fn($q, $v) => $q->where('docente_id', $v))
             ->latest()
             ->paginate(20);
 
@@ -89,6 +95,58 @@ class FichaDocenteController extends Controller
         $ficha->update($data);
 
         return ApiResponse::success($ficha->fresh('docente'), 'Ficha actualizada.');
+    }
+
+    // GET /api/mi-ficha-docente  (docente ve/crea su propia ficha para editar su CV)
+    public function miFicha(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->hasAnyRole(['docente', 'jefe_carrera', 'director_academico', 'admin', 'superadmin']), 403);
+
+        $ficha = FichaDocente::firstOrCreate(
+            ['docente_id' => $request->user()->id],
+            ['tipo_contrato' => 'hora_clase']
+        );
+
+        return ApiResponse::success($ficha);
+    }
+
+    // PUT /api/mi-ficha-docente  (docente actualiza su propio CV — no los datos administrativos)
+    public function actualizarMiCv(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->hasAnyRole(['docente', 'jefe_carrera', 'director_academico', 'admin', 'superadmin']), 403);
+
+        $ficha = FichaDocente::firstOrCreate(
+            ['docente_id' => $request->user()->id],
+            ['tipo_contrato' => 'hora_clase']
+        );
+
+        $data = $request->validate([
+            'semblanza'                        => ['nullable', 'string', 'max:2000'],
+            'titulos_academicos'                => ['nullable', 'array'],
+            'titulos_academicos.*.grado'         => ['required_with:titulos_academicos', 'string', 'max:150'],
+            'titulos_academicos.*.institucion'   => ['nullable', 'string', 'max:200'],
+            'titulos_academicos.*.anio'          => ['nullable', 'integer', 'min:1950', 'max:2100'],
+            'experiencia_laboral'               => ['nullable', 'array'],
+            'experiencia_laboral.*.puesto'       => ['required_with:experiencia_laboral', 'string', 'max:150'],
+            'experiencia_laboral.*.institucion'  => ['nullable', 'string', 'max:200'],
+            'experiencia_laboral.*.fecha_inicio' => ['nullable', 'string', 'max:20'],
+            'experiencia_laboral.*.fecha_fin'    => ['nullable', 'string', 'max:20'],
+            'experiencia_laboral.*.descripcion'  => ['nullable', 'string', 'max:1000'],
+            'cursos_capacitacion'                => ['nullable', 'array'],
+            'cursos_capacitacion.*.nombre'       => ['required_with:cursos_capacitacion', 'string', 'max:200'],
+            'cursos_capacitacion.*.institucion'  => ['nullable', 'string', 'max:200'],
+            'cursos_capacitacion.*.fecha'        => ['nullable', 'string', 'max:20'],
+            'cursos_capacitacion.*.horas'        => ['nullable', 'integer', 'min:0', 'max:2000'],
+            'publicaciones'                      => ['nullable', 'array'],
+            'publicaciones.*.titulo'             => ['required_with:publicaciones', 'string', 'max:250'],
+            'publicaciones.*.medio'              => ['nullable', 'string', 'max:200'],
+            'publicaciones.*.anio'               => ['nullable', 'integer', 'min:1950', 'max:2100'],
+            'publicaciones.*.url'                => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $ficha->update(array_merge($data, ['cv_actualizado_en' => now()]));
+
+        return ApiResponse::success($ficha->fresh(), 'CV actualizado.');
     }
 
     // Suma de horas semanales asignadas al docente por período

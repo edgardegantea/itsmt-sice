@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Convalidacion } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 export default function ConvalidacionesPage() {
   const qc = useQueryClient()
@@ -18,6 +20,8 @@ export default function ConvalidacionesPage() {
     institucion_origen: '',
     dictamen_url: '',
   })
+  const [vista, setVista] = useViewMode('convalidaciones')
+  const [detalle, setDetalle] = useState<Convalidacion | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['convalidaciones', filtroAlumno],
@@ -57,10 +61,13 @@ export default function ConvalidacionesPage() {
             <h1 className="text-2xl font-bold text-slate-800">Convalidaciones</h1>
             <p className="text-sm text-slate-500 mt-1">Registro de materias convalidadas por cambio de plan de estudios — TecNM Cap. 7</p>
           </div>
-          <button onClick={() => setShowForm(v => !v)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-            {showForm ? 'Cancelar' : '+ Registrar convalidación'}
-          </button>
+          <div className="flex items-center gap-2">
+            <ViewToggle value={vista} onChange={setVista} />
+            <button onClick={() => setShowForm(v => !v)}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              {showForm ? 'Cancelar' : '+ Registrar convalidación'}
+            </button>
+          </div>
         </div>
 
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
@@ -135,7 +142,7 @@ export default function ConvalidacionesPage() {
             <div className="flex flex-col items-center py-16 text-slate-400">
               <p className="font-medium">Sin convalidaciones registradas</p>
             </div>
-          ) : (
+          ) : vista === 'lista' ? (
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
@@ -144,6 +151,7 @@ export default function ConvalidacionesPage() {
                   <th className="text-left py-3 px-4 font-semibold text-slate-600">Institución</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">Calificación</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-600">Equivalente ITSMT</th>
+                  <th className="text-right py-3 px-5" />
                 </tr>
               </thead>
               <tbody>
@@ -165,13 +173,44 @@ export default function ConvalidacionesPage() {
                     <td className="py-3 px-4 text-slate-600 text-xs">
                       {c.materia_equivalente?.nombre ?? <span className="text-slate-300">—</span>}
                     </td>
+                    <td className="py-3 px-5 text-right">
+                      <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+              {convalidaciones.map(c => (
+                <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                  <p className="font-medium text-slate-800">{c.alumno?.name ?? c.alumno_id}</p>
+                  <p className="text-sm text-slate-600">{c.materia_origen_nombre} <span className="text-xs text-slate-400">({c.materia_origen_clave})</span></p>
+                  <p className="text-xs text-slate-500">{c.institucion_origen}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold self-start ${
+                    Number(c.calificacion_obtenida) >= 70 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+                  }`}>{c.calificacion_obtenida}</span>
+                  <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.name ?? 'Convalidación'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Materia de origen', value: detalle.materia_origen_nombre },
+            { label: 'Clave de origen', value: detalle.materia_origen_clave },
+            { label: 'Institución de origen', value: detalle.institucion_origen },
+            { label: 'Calificación obtenida', value: detalle.calificacion_obtenida },
+            { label: 'Equivalente ITSMT', value: detalle.materia_equivalente?.nombre ?? '—' },
+          ]}
+        />
+      )}
     </div>
   )
 }

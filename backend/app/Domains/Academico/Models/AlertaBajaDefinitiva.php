@@ -16,9 +16,12 @@ class AlertaBajaDefinitiva extends Model
     protected $fillable = [
         'alumno_id',
         'grupo_id',
+        'carga_academica_id',
+        'calificacion_id',
         'periodo_id',
         'materia_nombre',
         'intento_numero',
+        'requiere_revision_manual',
         'revisada',
         'revisada_por',
         'revisada_en',
@@ -27,9 +30,15 @@ class AlertaBajaDefinitiva extends Model
     protected function casts(): array
     {
         return [
-            'revisada'   => 'boolean',
-            'revisada_en'=> 'datetime',
+            'revisada'                 => 'boolean',
+            'requiere_revision_manual' => 'boolean',
+            'revisada_en'              => 'datetime',
         ];
+    }
+
+    public function calificacion(): BelongsTo
+    {
+        return $this->belongsTo(Calificacion::class);
     }
 
     public function alumno(): BelongsTo
@@ -40,6 +49,11 @@ class AlertaBajaDefinitiva extends Model
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class);
+    }
+
+    public function cargaAcademica(): BelongsTo
+    {
+        return $this->belongsTo(CargaAcademica::class);
     }
 
     public function periodo(): BelongsTo

@@ -8,12 +8,18 @@ use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
 use App\Domains\Calidad\Models\ActividadComplementaria;
 use App\Domains\Calidad\Models\TipoActividad;
+use App\Domains\Academico\Models\CargaAcademica;
+use App\Domains\Academico\Models\Calificacion;
+use App\Domains\Academico\Models\Grupo;
+use App\Domains\Academico\Models\MallaCurricular;
+use App\Domains\Academico\Models\Materia;
 use App\Domains\Academico\Models\Periodo;
 use App\Domains\Vinculacion\Models\DictamenAnteproyecto;
 use App\Domains\Vinculacion\Models\ResidenciaProfesional;
 use App\Domains\Vinculacion\Models\ServicioSocial;
 use App\Domains\Vinculacion\Models\SolicitudRp;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -97,6 +103,74 @@ class Sprint6Test extends TestCase
         ]);
     }
 
+    /**
+     * Deja a $this->alumno cumpliendo TODOS los prerequisitos TecNM 3.4.5 para
+     * Residencia Profesional: SS acreditado y ≥80% de créditos (vía una malla +
+     * calificación acreditada). No se agrega ningún TipoActividad, por lo que
+     * "todas las AC" se satisface trivialmente (catálogo vacío = nada que exigir).
+     */
+    private function cumplirPrerequisitosRp(): void
+    {
+        ServicioSocial::create([
+            'alumno_id'          => $this->alumno->id,
+            'empresa'            => 'Empresa SS',
+            'estatus'            => 'acreditado',
+            'horas_acumuladas'   => 480,
+            'creditos_otorgados' => 10,
+        ]);
+
+        $this->darCreditosSuficientes();
+    }
+
+    /** Deja a $this->alumno con 100% de créditos acreditados, sin tocar Servicio Social. */
+    private function darCreditosSuficientes(): void
+    {
+        $materia = Materia::create([
+            'carrera_id'     => $this->carrera->id,
+            'clave'          => 'MAT-S6',
+            'nombre'         => 'Materia de prueba',
+            'semestre'       => 1,
+            'creditos'       => 10,
+            'horas_teoria'   => 3,
+            'horas_practica' => 2,
+            'tipo'           => 'obligatoria',
+        ]);
+
+        MallaCurricular::create([
+            'carrera_id' => $this->carrera->id,
+            'materia_id' => $materia->id,
+            'semestre'   => 1,
+        ]);
+
+        $grupo = Grupo::create([
+            'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id,
+            'clave'      => 'S6-1A',
+            'semestre'   => 1,
+            'turno'      => 'matutino',
+            'capacidad'  => 30,
+        ]);
+
+        $docenteTitular = User::factory()->create();
+
+        $carga = CargaAcademica::create([
+            'docente_id'   => $docenteTitular->id,
+            'materia_id'   => $materia->id,
+            'periodo_id'   => $this->periodo->id,
+            'horas_semana' => 5,
+        ]);
+        $carga->grupos()->attach($grupo->id);
+
+        Calificacion::create([
+            'alumno_id'          => $this->alumno->id,
+            'grupo_id'           => $grupo->id,
+            'carga_academica_id' => $carga->id,
+            'calificacion_final' => 90,
+            'promedio'           => 90,
+            'acreditado'         => true,
+        ]);
+    }
+
     // ── S6-01 / S6-03: Alumno registra y admin actualiza SS ──────────────────
 
     public function test_alumno_puede_registrar_servicio_social_con_creditos_suficientes(): void
@@ -118,6 +192,43 @@ class Sprint6Test extends TestCase
         $this->assertEquals('Empresa Test SA de CV', $ss->empresa);
     }
 
+    // S6-01: envío real vía API, incluida la carta de aceptación (antes no existía
+    // ningún test que ejercitara el endpoint completo con archivo adjunto).
+    public function test_alumno_registra_ss_via_api_con_carta_aceptacion(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $this->darCreditosSuficientes(); // deja ≥80% créditos, sobra para el 70% de SS
+
+        $carta = \Illuminate\Http\UploadedFile::fake()->create('carta.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($this->alumnoUser)
+            ->post('/api/servicio-social', [
+                'empresa'          => 'Empresa API SA de CV',
+                'responsable'      => 'Ing. Responsable',
+                'carta_aceptacion' => $carta,
+            ], ['Accept' => 'application/json']);
+
+        $response->assertStatus(201)
+                 ->assertJsonPath('data.empresa', 'Empresa API SA de CV');
+
+        $ss = ServicioSocial::where('alumno_id', $this->alumno->id)->first();
+        $this->assertNotNull($ss->carta_aceptacion_path);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($ss->carta_aceptacion_path);
+    }
+
+    public function test_registrar_ss_sin_carta_aceptacion_retorna_422(): void
+    {
+        $this->darCreditosSuficientes();
+
+        $response = $this->actingAs($this->alumnoUser)
+            ->postJson('/api/servicio-social', [
+                'empresa' => 'Empresa Sin Carta',
+            ]);
+
+        $response->assertStatus(422)
+                 ->assertJsonValidationErrors(['carta_aceptacion']);
+    }
+
     public function test_admin_lista_servicio_social(): void
     {
         ServicioSocial::create([
@@ -135,6 +246,8 @@ class Sprint6Test extends TestCase
 
     public function test_admin_actualiza_estatus_servicio_social(): void
     {
+        Mail::fake();
+
         $ss = ServicioSocial::create([
             'alumno_id' => $this->alumno->id,
             'empresa'   => 'Empresa Test',
@@ -149,6 +262,11 @@ class Sprint6Test extends TestCase
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('servicio_social', ['id' => $ss->id, 'estatus' => 'aprobado']);
+
+        // S6-02: el alumno debe recibir notificación del cambio de estatus
+        Mail::assertQueued(\App\Mail\ServicioSocialEstatusActualizadoMail::class, fn ($m) =>
+            $m->hasTo($this->alumnoUser->email)
+        );
     }
 
     public function test_admin_acredita_ss_con_480_horas(): void
@@ -237,14 +355,15 @@ class Sprint6Test extends TestCase
             'creditos_otorgados'=> 10,
         ]);
 
-        // Crear AC validada
+        // Crear AC validada cubriendo TODAS las horas requeridas del tipo (S6-06:
+        // el chequeo exige completar la totalidad, no solo tener un registro)
         $tipo = TipoActividad::create(['clave' => 'DEP', 'nombre' => 'Deportiva', 'horas_requeridas' => 10]);
         ActividadComplementaria::create([
             'alumno_id'                    => $this->alumno->id,
             'tipo_id'                      => $tipo->id,
             'titulo'                       => 'Evento Deportivo',
             'fecha'                        => now()->subDays(10)->toDateString(),
-            'horas'                        => 8,
+            'horas'                        => 10,
             'estatus'                      => 'validada',
             'semestre_alumno_al_registrar' => 9,
         ]);
@@ -260,6 +379,39 @@ class Sprint6Test extends TestCase
         // Esperamos 422 pero por créditos insuficientes, no por SS/AC
         $response->assertStatus(422)
                  ->assertJsonPath('message', fn($m) => str_contains($m, 'créditos'));
+    }
+
+    // S6-06: el chequeo de AC exige TODAS las actividades oficiales completas,
+    // no solo una — un tipo con horas insuficientes debe bloquear la solicitud.
+    public function test_alumno_con_ac_incompleta_no_puede_solicitar_rp(): void
+    {
+        ServicioSocial::create([
+            'alumno_id'          => $this->alumno->id,
+            'empresa'            => 'Empresa SS',
+            'estatus'            => 'acreditado',
+            'horas_acumuladas'   => 480,
+            'creditos_otorgados' => 10,
+        ]);
+
+        $tipo = TipoActividad::create(['clave' => 'DEP', 'nombre' => 'Deportiva', 'horas_requeridas' => 10]);
+        ActividadComplementaria::create([
+            'alumno_id'                    => $this->alumno->id,
+            'tipo_id'                      => $tipo->id,
+            'titulo'                       => 'Evento Deportivo',
+            'fecha'                        => now()->subDays(10)->toDateString(),
+            'horas'                        => 4, // menos de las 10 requeridas
+            'estatus'                      => 'validada',
+            'semestre_alumno_al_registrar' => 9,
+        ]);
+
+        $response = $this->actingAs($this->alumnoUser)
+            ->postJson('/api/solicitudes-rp', [
+                'opcion'        => 'propuesta_propia',
+                'datos_empresa' => ['nombre' => 'Empresa RP'],
+            ]);
+
+        $response->assertStatus(422)
+                 ->assertJsonPath('message', fn($m) => str_contains($m, 'Actividades Complementarias'));
     }
 
     public function test_admin_lista_solicitudes_rp(): void
@@ -282,6 +434,8 @@ class Sprint6Test extends TestCase
 
     public function test_admin_registra_dictamen_aceptado(): void
     {
+        $this->cumplirPrerequisitosRp();
+
         $solicitud = SolicitudRp::create([
             'alumno_id'     => $this->alumno->id,
             'opcion'        => 'propuesta_propia',
@@ -379,6 +533,9 @@ class Sprint6Test extends TestCase
 
     public function test_admin_asigna_asesor_a_residencia(): void
     {
+        Mail::fake();
+        $this->cumplirPrerequisitosRp();
+
         $solicitud = SolicitudRp::create([
             'alumno_id'     => $this->alumno->id,
             'opcion'        => 'propuesta_propia',
@@ -403,10 +560,44 @@ class Sprint6Test extends TestCase
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('residencias_profesionales', [
-            'id'       => $residencia->id,
-            'asesor_id'=> $asesor->id,
-            'estatus'  => 'en_curso',
+            'id'           => $residencia->id,
+            'asesor_id'    => $asesor->id,
+            'estatus'      => 'en_curso',
+            'etapa_actual' => 2,
         ]);
+
+        // S6-04: notifica tanto al asesor como al alumno
+        Mail::assertQueued(\App\Mail\AsesorInternoAsignadoMail::class, fn ($m) => $m->hasTo($asesor->email));
+        Mail::assertQueued(\App\Mail\AsesorInternoAsignadoMail::class, fn ($m) => $m->hasTo($this->alumnoUser->email));
+    }
+
+    public function test_no_se_puede_asignar_asesor_sin_rol_docente(): void
+    {
+        $this->cumplirPrerequisitosRp();
+
+        $solicitud = SolicitudRp::create([
+            'alumno_id'     => $this->alumno->id,
+            'opcion'        => 'propuesta_propia',
+            'datos_empresa' => ['nombre' => 'Empresa RP'],
+            'estatus'       => 'con_dictamen_aceptado',
+        ]);
+
+        $residencia = ResidenciaProfesional::create([
+            'solicitud_rp_id' => $solicitud->id,
+            'alumno_id'       => $this->alumno->id,
+            'empresa'         => 'Empresa RP',
+            'estatus'         => 'asignado',
+        ]);
+
+        $noDocente = User::factory()->create();
+        $noDocente->assignRole('alumno');
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson("/api/residencias/{$residencia->id}/asesor", [
+                'asesor_id' => $noDocente->id,
+            ]);
+
+        $response->assertStatus(422);
     }
 
     private function crearResidencia(array $extra = []): ResidenciaProfesional

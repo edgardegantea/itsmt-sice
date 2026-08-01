@@ -6,6 +6,7 @@ import {
   type SolicitudPersonal,
   type SolicitudParams,
 } from '../services/personal'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const ESTATUS_BADGE: Record<string, string> = {
   pendiente: 'bg-yellow-100 text-yellow-800',
@@ -21,6 +22,7 @@ export default function SolicitudesPersonalPage() {
   const [resolving, setResolving]     = useState<SolicitudPersonal | null>(null)
   const [accion, setAccion]           = useState<'aprobada' | 'rechazada'>('aprobada')
   const [observaciones, setObs]       = useState('')
+  const [detalle, setDetalle]         = useState<SolicitudPersonal | null>(null)
 
   const isDirector = user?.roles?.some((r: string) =>
     ['superadmin', 'admin', 'director_academico', 'direccion_academica', 'subdireccion_academica'].includes(r)
@@ -36,7 +38,10 @@ export default function SolicitudesPersonalPage() {
     queryKey: ['solicitudes-personal'],
     queryFn: () => personalService.getSolicitudes(),
   })
-  const solicitudes: SolicitudPersonal[] = (solResp?.data as { data?: SolicitudPersonal[] })?.data ?? []
+  const solicitudesPage = (solResp?.data as { data?: { data?: SolicitudPersonal[] } | SolicitudPersonal[] })?.data
+  const solicitudes: SolicitudPersonal[] = Array.isArray(solicitudesPage)
+    ? solicitudesPage
+    : (solicitudesPage?.data ?? [])
 
   // Form state
   const [form, setForm] = useState<Partial<SolicitudParams>>({})
@@ -224,12 +229,13 @@ export default function SolicitudesPersonalPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Fecha fin</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Estatus</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Acciones</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {solicitudes.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-gray-400">
+                  <td colSpan={7} className="text-center py-10 text-gray-400">
                     No hay solicitudes registradas.
                   </td>
                 </tr>
@@ -264,11 +270,35 @@ export default function SolicitudesPersonalPage() {
                       </button>
                     )}
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => setDetalle(sol)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.solicitante?.name ?? 'Solicitud de permiso'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Tipo', value: detalle.tipo?.nombre },
+            { label: 'Fecha inicio', value: detalle.fecha_inicio },
+            { label: 'Fecha fin', value: detalle.fecha_fin },
+            { label: 'Estatus', value: <span className={`px-2 py-1 rounded-full text-xs font-medium ${ESTATUS_BADGE[detalle.estatus]}`}>{detalle.estatus}</span> },
+            { label: 'Motivo', value: detalle.motivo, full: true },
+          ]}
+          footer={
+            isDirector && detalle.estatus === 'pendiente'
+              ? <button onClick={() => { setResolving(detalle); setAccion('aprobada'); setDetalle(null) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Resolver</button>
+              : detalle.estatus === 'aprobada'
+                ? <button onClick={() => descargarPdf(detalle)} className="text-xs font-medium text-white bg-green-700 px-3 py-1.5 rounded-lg">Descargar PDF</button>
+                : undefined
+          }
+        />
       )}
     </div>
   )

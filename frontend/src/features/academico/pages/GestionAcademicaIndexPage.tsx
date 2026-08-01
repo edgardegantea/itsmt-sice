@@ -131,9 +131,27 @@ const SECCIONES: SeccionCard[] = [
     icono: <IconClipboard />,
   },
   {
-    titulo: 'Horarios',
-    descripcion: 'Configura los bloques horarios de cada carga académica.',
-    ruta: '/admin/gestion-academica/horarios',
+    titulo: 'Constructor de Horarios',
+    descripcion: 'Arma el horario de cada grupo asignando materias, docentes y aulas en la rejilla.',
+    ruta: '/admin/gestion-academica/cargas/builder',
+    icono: <IconClock />,
+  },
+  {
+    titulo: 'Disponibilidad Docente',
+    descripcion: 'Consulta y administra los bloques de disponibilidad declarados por los docentes.',
+    ruta: '/admin/horarios/disponibilidad',
+    icono: <IconClock />,
+  },
+  {
+    titulo: 'Buscador de Disponibilidad',
+    descripcion: 'Dado un grupo y una materia, encuentra automáticamente día/hora/docente/aula libres.',
+    ruta: '/admin/gestion-academica/horarios/buscar',
+    icono: <IconClock />,
+  },
+  {
+    titulo: 'Diagnóstico de Horarios',
+    descripcion: 'Audita traslapes de docente, aula o grupo que se hayan colado fuera del constructor.',
+    ruta: '/admin/gestion-academica/horarios/diagnostico',
     icono: <IconClock />,
   },
   {
@@ -165,6 +183,12 @@ const SECCIONES: SeccionCard[] = [
     descripcion: 'Registra sesiones de clase y controla la asistencia de alumnos por sesión.',
     ruta: '/admin/gestion-academica/asistencias',
     icono: <IconClipboard />,
+  },
+  {
+    titulo: 'Captura de Calificaciones',
+    descripcion: 'Los docentes capturan las calificaciones de sus materias asignadas; directivos pueden revisar cualquier grupo.',
+    ruta: '/admin/gestion-academica/calificaciones',
+    icono: <IconBook />,
   },
 ]
 

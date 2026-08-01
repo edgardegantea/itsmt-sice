@@ -54,7 +54,7 @@ export default function EvaluacionDocentePage() {
     const docentes = grupoActivo.materias.map(m => m.docente).filter(Boolean).join(', ')
 
     return (
-      <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-2xl mx-auto space-y-6">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <button
           onClick={() => { setGrupoActivo(null); setRespuestas({}) }}
           className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1"

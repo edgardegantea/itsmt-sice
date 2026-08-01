@@ -17,6 +17,22 @@ function Badge({ estatus }: { estatus: string }) {
   )
 }
 
+const ETAPA_LABEL: Record<number, string> = {
+  1: 'Creada',
+  2: 'Asesor asignado',
+  3: 'Seguimiento 1',
+  4: 'Seguimiento 2',
+  5: 'Evaluada',
+}
+
+function EtapaBadge({ etapa }: { etapa: number }) {
+  return (
+    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+      Etapa {etapa}/5 — {ETAPA_LABEL[etapa] ?? '—'}
+    </span>
+  )
+}
+
 export default function ResidenciasAdminPage() {
   const qc = useQueryClient()
   const [filtroEstatus, setFiltroEstatus] = useState('')
@@ -92,7 +108,10 @@ export default function ResidenciasAdminPage() {
                   <p className="text-xs text-slate-500">{r.alumno?.numero_control} · {r.alumno?.carrera?.nombre}</p>
                   <p className="text-sm text-slate-600 mt-1">{r.empresa ?? '—'} · {r.proyecto ?? 'Sin proyecto'}</p>
                 </div>
-                <Badge estatus={r.estatus} />
+                <div className="flex flex-col items-end gap-1.5">
+                  <Badge estatus={r.estatus} />
+                  <EtapaBadge etapa={r.etapa_actual} />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">

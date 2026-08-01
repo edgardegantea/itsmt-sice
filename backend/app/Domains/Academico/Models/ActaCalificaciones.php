@@ -15,6 +15,7 @@ class ActaCalificaciones extends Model
 
     protected $fillable = [
         'grupo_id',
+        'carga_academica_id',
         'periodo_id',
         'docente_id',
         'url_pdf',
@@ -36,6 +37,11 @@ class ActaCalificaciones extends Model
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class);
+    }
+
+    public function cargaAcademica(): BelongsTo
+    {
+        return $this->belongsTo(CargaAcademica::class);
     }
 
     public function periodo(): BelongsTo

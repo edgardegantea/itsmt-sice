@@ -8,6 +8,7 @@ use App\Domains\Permanencia\Models\Baja;
 use App\Mail\BajaSolicitadaMail;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class BajaService
@@ -105,5 +106,41 @@ class BajaService
         }
 
         return $baja;
+    }
+
+    /**
+     * Formaliza el reingreso de un alumno cuya baja temporal fue aprobada,
+     * regresándolo a estatus activo. Cierra el hueco funcional en el que
+     * reingreso_posible se guardaba pero nunca se usaba (S2 complementario).
+     */
+    public function registrarReingreso(Baja $baja, User $por): Baja
+    {
+        if ($baja->tipo_baja !== 'temporal') {
+            throw new \DomainException('Solo las bajas temporales admiten reingreso.');
+        }
+        if ($baja->estatus !== 'aprobada') {
+            throw new \DomainException('Solo se puede registrar el reingreso de una baja aprobada.');
+        }
+        if (! $baja->reingreso_posible) {
+            throw new \DomainException('Esta baja no permite reingreso.');
+        }
+        if ($baja->reingreso_registrado) {
+            throw new \DomainException('El reingreso de esta baja ya fue registrado.');
+        }
+        if ($baja->alumno->estatus !== 'baja_temporal') {
+            throw new \DomainException('El alumno no se encuentra actualmente en baja temporal.');
+        }
+
+        return DB::transaction(function () use ($baja, $por) {
+            $baja->update([
+                'reingreso_registrado' => true,
+                'fecha_reingreso'      => now()->toDateString(),
+                'reingreso_por'        => $por->id,
+            ]);
+
+            $baja->alumno->update(['estatus' => 'activo']);
+
+            return $baja->fresh(['alumno.user', 'periodo', 'reingresoPor']);
+        });
     }
 }

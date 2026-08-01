@@ -20,7 +20,7 @@ class EncuestaSocioeconomicaController extends Controller
 
         $periodo = $request->query('periodo_id')
             ? Periodo::findOrFail($request->query('periodo_id'))
-            : Periodo::where('activo', true)->firstOrFail();
+            : (Periodo::activo() ?? abort(404, 'No hay periodo activo.'));
 
         $encuesta = EncuestaSocioeconomica::where('alumno_id', $alumno->id)
             ->where('periodo_id', $periodo->id)

@@ -46,19 +46,17 @@ class Constancia extends Model
         return $this->belongsTo(User::class, 'emitida_por');
     }
 
+    // Debe invocarse dentro del advisory lock de ConstanciaService::solicitar()
     public static function generarFolio(string $tipo): string
     {
         $prefijos = ['estudios' => 'CE', 'inscripcion' => 'CI', 'calificaciones' => 'CC'];
         $prefijo  = $prefijos[$tipo] ?? 'CX';
         $año      = now()->format('Y');
 
-        $seq = DB::transaction(function () use ($año, $tipo) {
-            return DB::table('constancias')
-                ->whereYear('created_at', $año)
-                ->where('tipo', $tipo)
-                ->lockForUpdate()
-                ->count() + 1;
-        });
+        $seq = DB::table('constancias')
+            ->whereYear('created_at', $año)
+            ->where('tipo', $tipo)
+            ->count() + 1;
 
         return sprintf('%s-%s-%05d', $prefijo, $año, $seq);
     }

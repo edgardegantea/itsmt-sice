@@ -9,10 +9,14 @@ function destinoSegunRol(roles: string[]): string {
   if (roles.includes('admin'))                   return '/admin'
   if (roles.includes('director_academico'))      return '/admin'
   if (roles.includes('personal_administrativo')) return '/admin/aspirantes'
-  if (roles.includes('jefe_carrera'))            return '/admin/aspirantes'
+  if (roles.includes('jefe_carrera'))            return '/jefe-carrera/dashboard'
+  if (roles.includes('desarrollo_academico'))    return '/desarrollo-academico/instrumentaciones'
   if (roles.includes('docente'))                 return '/docente'
   if (roles.includes('alumno'))                  return '/alumno/dashboard'
-  return '/login'
+  // Cualquier otro rol de personal (jefaturas, control escolar, etc.) sin una ruta
+  // dedicada cae aquí — nunca a '/login', que dejaría al usuario ya autenticado
+  // varado en la pantalla de login sin ningún mensaje de error visible.
+  return '/admin'
 }
 
 export function useLogin() {

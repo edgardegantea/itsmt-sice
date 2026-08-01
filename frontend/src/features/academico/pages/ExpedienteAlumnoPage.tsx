@@ -41,7 +41,7 @@ export default function ExpedienteAlumnoPage() {
 
   return (
     <div className="min-h-full bg-slate-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="space-y-6">
 
         {/* Breadcrumb */}
         <div>

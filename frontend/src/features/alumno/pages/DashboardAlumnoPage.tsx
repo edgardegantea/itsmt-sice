@@ -1,7 +1,11 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../../store/authStore'
 import { academicoApi, type SituacionAcademica } from '../../academico/services/academico'
+import apiClient from '../../../config/apiClient'
+import { openPdfPreview } from '../../../utils/pdfHelpers'
+import { useToastStore } from '../../../store/toastStore'
 
 const ESTATUS_COLOR: Record<string, string> = {
   activo:          'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
@@ -30,6 +34,8 @@ const ACCESOS_RAPIDOS = [
 
 export default function DashboardAlumnoPage() {
   const { user } = useAuthStore()
+  const { toast } = useToastStore()
+  const [generandoCredencial, setGenerandoCredencial] = useState(false)
 
   const { data: situacion } = useQuery<SituacionAcademica>({
     queryKey: ['situacion-academica', user?.alumno_id],
@@ -40,8 +46,23 @@ export default function DashboardAlumnoPage() {
 
   const estatus = user?.estatus ?? 'activo'
 
+  async function handleCredencial() {
+    setGenerandoCredencial(true)
+    toast('Generando credencial…', 'info')
+    try {
+      const response = await apiClient.get('/alumno/mi-credencial/pdf', { responseType: 'blob' })
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      openPdfPreview(blob, `credencial-${user?.numero_control ?? 'alumno'}.pdf`)
+      toast('Credencial generada correctamente.', 'success')
+    } catch {
+      toast('No se pudo generar la credencial. Intenta de nuevo.', 'error')
+    } finally {
+      setGenerandoCredencial(false)
+    }
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="w-full px-4 sm:px-6 py-8 space-y-8">
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -68,9 +89,9 @@ export default function DashboardAlumnoPage() {
         </div>
 
         {/* Credencial */}
-        {/* <button
+        <button
           onClick={handleCredencial}
-          disabled={!!generandoCredencial || !user?.alumno_id}
+          disabled={generandoCredencial || !user?.alumno_id}
           className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity disabled:opacity-50"
           style={{ backgroundColor: 'var(--color-primario, #1a3a5c)' }}
         >
@@ -79,7 +100,7 @@ export default function DashboardAlumnoPage() {
               d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.306.835 2.417 2 2.83V18m-2-2.83A2.67 2.67 0 006 18" />
           </svg>
           {generandoCredencial ? 'Generando…' : 'Credencial PDF'}
-        </button> */}
+        </button>
       </div>
 
       {/* ── Datos académicos ──────────────────────────────────────────── */}

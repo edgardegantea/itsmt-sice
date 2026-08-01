@@ -214,6 +214,17 @@ class AuthController extends Controller
             ],
         ];
 
+        // jefe_carrera (y cualquier otro rol con carrera_id) — misma forma que /auth/me,
+        // para que el dashboard tenga el nombre de la carrera desde el primer login sin
+        // necesitar un refetch adicional.
+        if ($user->carrera_id) {
+            $user->loadMissing('carrera');
+            $data['user']['carrera_id'] = $user->carrera_id;
+            $data['user']['carrera']    = $user->carrera
+                ? ['id' => $user->carrera->id, 'nombre' => $user->carrera->nombre, 'clave' => $user->carrera->clave]
+                : null;
+        }
+
         if ($user->hasRole('alumno')) {
             $alumnoModel = $alumno
                 ? $alumno->load(['carrera', 'periodoIngreso', 'inscripcion'])

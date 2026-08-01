@@ -21,4 +21,9 @@ class BajaPolicy
     {
         return $user->hasRole('alumno');
     }
+
+    public function reingreso(User $user): bool
+    {
+        return $user->hasAnyRole(['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera']);
+    }
 }

@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import { permanenciaApi, type Constancia, type TipoConstancia } from '../services/permanencia'
 import { useConstanciaPdf } from '../hooks/useConstanciaPdf'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
+import BulkActionBar, { SelectCheckbox, ToggleSelectionButton } from '../../../components/ui/BulkActionBar'
 
 const TIPO_LABEL: Record<TipoConstancia, string> = {
   estudios:      'Constancia de estudios',
@@ -28,6 +31,15 @@ export default function ConstanciasAdminPage() {
   const [filtroEstatus,  setFiltroEstatus]  = useState('')
   const [filtroCarrera,  setFiltroCarrera]  = useState('')
   const { descargar, generando } = useConstanciaPdf()
+  const [vista, setVista] = useViewMode('constancias')
+  const [detalle, setDetalle] = useState<Constancia | null>(null)
+  const [modoSeleccion, setModoSeleccion] = useState(false)
+  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
+  const toggleSel = (id: string) => setSeleccionados(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
 
   const { data: carreras = [] } = useQuery<{ id: string; nombre: string; clave: string }[]>({
     queryKey: ['carreras-select'],
@@ -48,7 +60,19 @@ export default function ConstanciasAdminPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['constancias-admin'] }),
   })
 
+  const mutEmitirBulk = useMutation({
+    mutationFn: () => Promise.allSettled(
+      constancias.filter(c => seleccionados.has(c.id) && c.estatus === 'solicitada').map(c => permanenciaApi.emitirConstancia(c.id))
+    ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['constancias-admin'] })
+      setSeleccionados(new Set())
+      setModoSeleccion(false)
+    },
+  })
+
   const constancias: Constancia[] = data?.data ?? data ?? []
+  const seleccionSolicitadas = constancias.filter(c => seleccionados.has(c.id) && c.estatus === 'solicitada').length
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -57,7 +81,9 @@ export default function ConstanciasAdminPage() {
           <h1 className="text-xl font-semibold text-slate-800">Constancias</h1>
           <p className="text-sm text-slate-500 mt-0.5">Solicitudes recibidas de alumnos.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          <ToggleSelectionButton active={modoSeleccion} onClick={() => { setModoSeleccion(v => !v); setSeleccionados(new Set()) }} />
+          <ViewToggle value={vista} onChange={setVista} />
           <select
             value={filtroCarrera}
             onChange={e => setFiltroCarrera(e.target.value)}
@@ -86,80 +112,123 @@ export default function ConstanciasAdminPage() {
         </div>
       ) : (
         <>
-          {/* Desktop */}
-          <div className="hidden sm:block bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  {['Alumno', 'NC', 'Tipo', 'Folio', 'Estatus', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {constancias.map(c => (
-                  <tr key={c.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
-                    <td className="px-4 py-3 font-medium text-slate-800">{c.alumno?.user?.name ?? '—'}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{c.alumno?.numero_control}</td>
-                    <td className="px-4 py-3 text-slate-600">{TIPO_LABEL[c.tipo]}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{c.folio_unico}</td>
-                    <td className="px-4 py-3"><Badge estatus={c.estatus} /></td>
-                    <td className="px-4 py-3 text-xs text-slate-400">
-                      {c.emitida_en ? new Date(c.emitida_en).toLocaleDateString('es-MX') : new Date(c.created_at).toLocaleDateString('es-MX')}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-3">
-                        {c.estatus === 'solicitada' && (
-                          <button
-                            onClick={() => mutEmitir.mutate(c.id)}
-                            disabled={mutEmitir.isPending}
-                            className="text-xs font-medium text-green-700 hover:underline disabled:opacity-50"
-                          >Emitir</button>
-                        )}
-                        {c.estatus === 'emitida' && (
-                          <button
-                            onClick={() => descargar(c)}
-                            disabled={generando === c.id}
-                            className="text-xs font-medium text-[#1a3a5c] hover:underline disabled:opacity-50"
-                          >{generando === c.id ? 'Generando…' : 'PDF'}</button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {modoSeleccion && seleccionados.size > 0 && (
+            <BulkActionBar count={seleccionados.size} onCancel={() => { setSeleccionados(new Set()); setModoSeleccion(false) }}>
+              <button
+                onClick={() => mutEmitirBulk.mutate()}
+                disabled={mutEmitirBulk.isPending || seleccionSolicitadas === 0}
+                className="px-3 py-1.5 text-xs font-medium bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                Emitir {seleccionSolicitadas > 0 ? `(${seleccionSolicitadas})` : ''}
+              </button>
+            </BulkActionBar>
+          )}
 
-          {/* Mobile */}
-          <div className="sm:hidden space-y-3">
-            {constancias.map(c => (
-              <div key={c.id} className="bg-white rounded-xl border border-slate-200 px-4 py-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-800">{c.alumno?.user?.name}</p>
-                  <Badge estatus={c.estatus} />
+          {vista === 'lista' ? (
+            <div className="hidden sm:block bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    {modoSeleccion && <th className="w-8" />}
+                    {['Alumno', 'NC', 'Tipo', 'Folio', 'Estatus', 'Fecha', 'Acciones', ''].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {constancias.map(c => (
+                    <tr key={c.id} className="hover:bg-blue-50/60 transition-colors">
+                      {modoSeleccion && <td className="pl-4"><SelectCheckbox checked={seleccionados.has(c.id)} onChange={() => toggleSel(c.id)} /></td>}
+                      <td className="px-4 py-3 font-medium text-slate-800">{c.alumno?.user?.name ?? '—'}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-600">{c.alumno?.numero_control}</td>
+                      <td className="px-4 py-3 text-slate-600">{TIPO_LABEL[c.tipo]}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-500">{c.folio_unico}</td>
+                      <td className="px-4 py-3"><Badge estatus={c.estatus} /></td>
+                      <td className="px-4 py-3 text-xs text-slate-400">
+                        {c.emitida_en ? new Date(c.emitida_en).toLocaleDateString('es-MX') : new Date(c.created_at).toLocaleDateString('es-MX')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-3">
+                          {c.estatus === 'solicitada' && (
+                            <button
+                              onClick={() => mutEmitir.mutate(c.id)}
+                              disabled={mutEmitir.isPending}
+                              className="text-xs font-medium text-green-700 hover:underline disabled:opacity-50"
+                            >Emitir</button>
+                          )}
+                          {c.estatus === 'emitida' && (
+                            <button
+                              onClick={() => descargar(c)}
+                              disabled={generando === c.id}
+                              className="text-xs font-medium text-[#1a3a5c] hover:underline disabled:opacity-50"
+                            >{generando === c.id ? 'Generando…' : 'PDF'}</button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+
+          {(
+            <div className={`${vista === 'lista' ? 'sm:hidden' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'} space-y-3 sm:space-y-0 gap-4`}>
+              {constancias.map(c => (
+                <div key={c.id} className="bg-white rounded-xl border border-slate-200 px-4 py-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {modoSeleccion && <SelectCheckbox checked={seleccionados.has(c.id)} onChange={() => toggleSel(c.id)} />}
+                      <p className="text-sm font-semibold text-slate-800 truncate">{c.alumno?.user?.name}</p>
+                    </div>
+                    <Badge estatus={c.estatus} />
+                  </div>
+                  <p className="text-xs text-slate-500">{TIPO_LABEL[c.tipo]} · <span className="font-mono">{c.folio_unico}</span></p>
+                  <div className="flex gap-2 mt-2">
+                    {c.estatus === 'solicitada' && (
+                      <button
+                        onClick={() => mutEmitir.mutate(c.id)}
+                        className="flex-1 py-2 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-medium"
+                      >Emitir</button>
+                    )}
+                    {c.estatus === 'emitida' && (
+                      <button
+                        onClick={() => descargar(c)}
+                        disabled={generando === c.id}
+                        className="flex-1 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-50"
+                        style={{ backgroundColor: 'var(--color-primario)' }}
+                      >{generando === c.id ? 'Generando…' : 'Descargar PDF'}</button>
+                    )}
+                  </div>
+                  <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
                 </div>
-                <p className="text-xs text-slate-500">{TIPO_LABEL[c.tipo]} · <span className="font-mono">{c.folio_unico}</span></p>
-                <div className="flex gap-2 mt-2">
-                  {c.estatus === 'solicitada' && (
-                    <button
-                      onClick={() => mutEmitir.mutate(c.id)}
-                      className="flex-1 py-2 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-medium"
-                    >Emitir</button>
-                  )}
-                  {c.estatus === 'emitida' && (
-                    <button
-                      onClick={() => descargar(c)}
-                      disabled={generando === c.id}
-                      className="flex-1 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-50"
-                      style={{ backgroundColor: 'var(--color-primario)' }}
-                    >{generando === c.id ? 'Generando…' : 'Descargar PDF'}</button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.user?.name ?? 'Constancia'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Número de control', value: detalle.alumno?.numero_control },
+            { label: 'Tipo', value: TIPO_LABEL[detalle.tipo] },
+            { label: 'Folio', value: detalle.folio_unico },
+            { label: 'Estatus', value: <Badge estatus={detalle.estatus} /> },
+            { label: 'Solicitada', value: new Date(detalle.created_at).toLocaleDateString('es-MX') },
+            { label: 'Emitida', value: detalle.emitida_en ? new Date(detalle.emitida_en).toLocaleDateString('es-MX') : 'Aún no emitida' },
+          ]}
+          footer={
+            detalle.estatus === 'emitida'
+              ? <button onClick={() => descargar(detalle)} disabled={generando === detalle.id} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg disabled:opacity-50">{generando === detalle.id ? 'Generando…' : 'Descargar PDF'}</button>
+              : <button onClick={() => mutEmitir.mutate(detalle.id)} disabled={mutEmitir.isPending} className="text-xs font-medium text-white bg-green-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Emitir</button>
+          }
+        />
       )}
     </div>
   )

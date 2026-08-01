@@ -247,6 +247,8 @@ export default function RegistroAspirantePage() {
     tiene_equipo_computo: '',
   })
   const [constanciaFile, setConstanciaFile] = useState<File | null>(null)
+  const [fotoFile, setFotoFile] = useState<File | null>(null)
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [documentos, setDocumentos] = useState<Record<string, boolean>>({})
   const [errores,    setErrores]    = useState<Record<string, string>>({})
   const [tocados,    setTocados]    = useState<Record<string, boolean>>({})
@@ -434,6 +436,9 @@ export default function RegistroAspirantePage() {
     if (!constanciaFile)                   e.constancia_bachillerato = 'La constancia de estudios es obligatoria.'
     else if (constanciaFile.size > 10 * 1024 * 1024)
                                            e.constancia_bachillerato = 'El archivo no puede pesar más de 10 MB.'
+    if (!fotoFile)                          e.foto = 'La fotografía para tu credencial es obligatoria.'
+    else if (fotoFile.size > 5 * 1024 * 1024)
+                                           e.foto = 'La foto no puede pesar más de 5 MB.'
     const eEmail = validarEmail(form.email)
     if (eEmail)                            e.email                = eEmail
     const eTel = validarTelefono(form.telefono)
@@ -467,6 +472,7 @@ export default function RegistroAspirantePage() {
       modalidad:              form.modalidad || undefined,
       nivel:                  form.nivel,
       constancia_bachillerato: constanciaFile!,
+      foto:                    fotoFile!,
       documentos:             Object.keys(documentos).length ? documentos : undefined,
     }, {
       onError: (err: unknown) => {
@@ -734,6 +740,47 @@ export default function RegistroAspirantePage() {
                     {err('puntaje_exani') && <p className="mt-1 text-xs text-red-600">{err('puntaje_exani')}</p>}
                   </div>
                 </div>
+              </div>
+
+              {/* Fotografía para credencial */}
+              <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6">
+                <Section title="Fotografía para tu credencial" />
+                <p className="text-xs text-slate-600 leading-relaxed mb-3">
+                  Sube una foto tipo credencial reciente (rostro visible, fondo claro). Se usará para imprimir tu credencial de estudiante.
+                </p>
+                <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg px-4 py-6 cursor-pointer transition-colors ${
+                  errores.foto && tocados.foto
+                    ? 'border-red-300 bg-red-50'
+                    : fotoFile ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 hover:border-[#1a3a5c] hover:bg-slate-50'
+                }`}>
+                  <input type="file" accept=".jpg,.jpeg,.png" className="sr-only"
+                    onChange={e => {
+                      const f = e.target.files?.[0] ?? null
+                      setFotoFile(f)
+                      tocar('foto')
+                      setErrores(prev => ({ ...prev, foto: f && f.size > 5 * 1024 * 1024 ? 'La foto no puede pesar más de 5 MB.' : '' }))
+                      if (fotoPreview) URL.revokeObjectURL(fotoPreview)
+                      setFotoPreview(f ? URL.createObjectURL(f) : null)
+                    }} />
+                  {fotoFile ? (
+                    <>
+                      {fotoPreview && (
+                        <img src={fotoPreview} alt="Vista previa" className="w-20 h-24 object-cover rounded-md border border-emerald-300" />
+                      )}
+                      <span className="text-sm font-medium text-emerald-700">{fotoFile.name}</span>
+                      <span className="text-xs text-emerald-600">{(fotoFile.size / 1024 / 1024).toFixed(2)} MB — haz clic para cambiar</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-2xl text-slate-400">📷</span>
+                      <span className="text-sm font-medium text-slate-600">Haz clic para seleccionar tu foto</span>
+                      <span className="text-xs text-slate-400">JPG o PNG · máximo 5 MB</span>
+                    </>
+                  )}
+                </label>
+                {errores.foto && tocados.foto && (
+                  <p className="mt-1.5 text-xs text-red-600">{errores.foto}</p>
+                )}
               </div>
 
               {/* Constancia de estudios */}

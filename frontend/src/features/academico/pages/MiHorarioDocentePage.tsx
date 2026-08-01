@@ -11,12 +11,37 @@ const DIA_LABEL: Record<string, string> = {
   lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
   jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
 }
+const DIA_LABEL_CORTO: Record<string, string> = {
+  lunes: 'Lun', martes: 'Mar', miercoles: 'Mié',
+  jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb',
+}
 
 const ESTADO_CHIP: Record<EstadoCarga, { label: string; cls: string }> = {
   pendiente:  { label: 'Pendiente de confirmación', cls: 'bg-blue-100 text-blue-700' },
   confirmada: { label: 'Confirmada', cls: 'bg-emerald-100 text-emerald-700' },
   conflicto:  { label: 'Con conflicto reportado', cls: 'bg-red-100 text-red-700' },
 }
+
+const ESTADO_RING: Record<EstadoCarga, string> = {
+  pendiente:  'ring-2 ring-blue-400',
+  confirmada: '',
+  conflicto:  'ring-2 ring-red-500',
+}
+
+/** Paleta de colores por asignatura, igual criterio que el constructor de horarios. */
+const MATERIA_PALETTE = [
+  'bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-rose-600', 'bg-amber-600',
+  'bg-cyan-600', 'bg-fuchsia-600', 'bg-lime-600', 'bg-orange-600', 'bg-teal-600',
+  'bg-indigo-600', 'bg-pink-600', 'bg-sky-600', 'bg-violet-600', 'bg-green-600',
+]
+
+function colorPorMateria(clave: string): string {
+  let hash = 0
+  for (let i = 0; i < clave.length; i++) hash = (hash * 31 + clave.charCodeAt(i)) >>> 0
+  return MATERIA_PALETTE[hash % MATERIA_PALETTE.length]
+}
+
+type VistaHorario = 'lista' | 'calendario'
 
 export default function MiHorarioDocentePage() {
   const { user } = useAuthStore()
@@ -26,6 +51,14 @@ export default function MiHorarioDocentePage() {
   const [periodoId, setPeriodoId] = useState('')
   const [reportandoId, setReportandoId] = useState<string | null>(null)
   const [comentario, setComentario] = useState('')
+  const [vista, setVista] = useState<VistaHorario>(() => {
+    const saved = localStorage.getItem('mi-horario-docente:vista')
+    return saved === 'calendario' || saved === 'lista' ? saved : 'lista'
+  })
+  function cambiarVista(v: VistaHorario) {
+    setVista(v)
+    localStorage.setItem('mi-horario-docente:vista', v)
+  }
 
   const { data: periodos = [] } = usePeriodos()
 
@@ -72,6 +105,41 @@ export default function MiHorarioDocentePage() {
 
   const pendientes = cargas.filter((c: any) => !c.estado || c.estado === 'pendiente')
 
+  // ── Datos para la vista de calendario semanal ──────────────────────────────
+  type EventoCalendario = {
+    carga: any
+    dia_semana: string
+    hora_inicio: string
+    hora_fin: string
+    estado: EstadoCarga
+  }
+
+  const eventos: EventoCalendario[] = cargas.flatMap((c: any) =>
+    (c.horarios ?? []).map((h: any) => ({
+      carga: c,
+      dia_semana: h.dia_semana,
+      hora_inicio: (h.hora_inicio ?? '07:00').slice(0, 5),
+      hora_fin: (h.hora_fin ?? '08:00').slice(0, 5),
+      estado: c.estado ?? 'pendiente',
+    }))
+  )
+
+  const horaMin = eventos.length
+    ? Math.min(...eventos.map(e => parseInt(e.hora_inicio.slice(0, 2), 10)))
+    : 7
+  const horaMax = eventos.length
+    ? Math.max(...eventos.map(e => {
+        const h = parseInt(e.hora_fin.slice(0, 2), 10)
+        const m = parseInt(e.hora_fin.slice(3, 5), 10)
+        return m > 0 ? h + 1 : h
+      }))
+    : 21
+  const horasCalendario = Array.from({ length: Math.max(horaMax - horaMin, 1) }, (_, i) => horaMin + i)
+
+  // Para cada día, rastrea hasta qué fila (hora) ya está cubierta por un evento con rowSpan.
+  const cubiertoHasta: Record<string, number> = {}
+  DIAS_ORDEN.forEach(d => { cubiertoHasta[d] = -1 })
+
   return (
     <div className="min-h-full bg-slate-50 p-6 space-y-6">
       <div>
@@ -89,6 +157,25 @@ export default function MiHorarioDocentePage() {
           <option value="">Selecciona un periodo</option>
           {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
         </select>
+
+        {periodoId && (
+          <div className="inline-flex rounded-lg border border-slate-300 overflow-hidden shrink-0">
+            <button
+              type="button"
+              onClick={() => cambiarVista('lista')}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${vista === 'lista' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+            >
+              Lista
+            </button>
+            <button
+              type="button"
+              onClick={() => cambiarVista('calendario')}
+              className={`px-3 py-2 text-xs font-medium border-l border-slate-300 transition-colors ${vista === 'calendario' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+            >
+              Calendario
+            </button>
+          </div>
+        )}
 
         {periodoId && pendientes.length > 0 && (
           <button
@@ -120,6 +207,66 @@ export default function MiHorarioDocentePage() {
         <div className="bg-white rounded-xl border border-slate-200 px-6 py-12 text-center text-slate-400 text-sm">
           Sin cargas académicas asignadas en este periodo.
         </div>
+      ) : vista === 'calendario' ? (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          {/* Leyenda */}
+          <div className="flex flex-wrap gap-3 text-[11px] text-slate-500 px-5 py-3 border-b border-slate-100">
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-600 ring-2 ring-blue-400" />Pendiente de confirmación</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-600" />Confirmada (color por asignatura)</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-600 ring-2 ring-red-500" />Con conflicto reportado</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-[800px] w-full text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-3 py-2 text-left text-slate-500 font-medium w-16">Hora</th>
+                  {DIAS_ORDEN.map(dia => (
+                    <th key={dia} className="px-1 py-2 text-center text-slate-700 font-semibold">{DIA_LABEL_CORTO[dia]}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {horasCalendario.map((hora, rowIdx) => (
+                  <tr key={hora} className="border-b border-slate-50">
+                    <td className="px-3 py-1 text-slate-400 font-mono tabular-nums align-top">{String(hora).padStart(2, '0')}:00</td>
+                    {DIAS_ORDEN.map(dia => {
+                      if (cubiertoHasta[dia] >= rowIdx) return null // cubierto por rowSpan de un evento previo
+
+                      const evento = eventos.find(e =>
+                        e.dia_semana === dia && parseInt(e.hora_inicio.slice(0, 2), 10) === hora
+                      )
+
+                      if (!evento) {
+                        return <td key={dia} className="px-0.5 py-0.5 border-l border-slate-50 h-9" />
+                      }
+
+                      const finHora = parseInt(evento.hora_fin.slice(0, 2), 10) + (parseInt(evento.hora_fin.slice(3, 5), 10) > 0 ? 1 : 0)
+                      const span = Math.max(finHora - hora, 1)
+                      cubiertoHasta[dia] = rowIdx + span - 1
+
+                      const color = colorPorMateria(evento.carga.materia_id ?? evento.carga.materia?.nombre ?? '')
+
+                      return (
+                        <td key={dia} rowSpan={span} className="px-0.5 py-0.5 border-l border-slate-50 align-top">
+                          <div
+                            className={`rounded p-1.5 text-white h-full ${color} ${ESTADO_RING[evento.estado]}`}
+                            title={`${evento.carga.materia?.nombre ?? ''} · ${evento.carga.grupos?.map((g: { clave: string }) => g.clave).join(', ') ?? ''}${evento.carga.aula?.nombre ? ` · ${evento.carga.aula.nombre}` : ''}\n${evento.hora_inicio}–${evento.hora_fin}`}
+                          >
+                            <p className="font-medium truncate">{evento.carga.materia?.nombre ?? '—'}</p>
+                            <p className="opacity-80 text-[10px] truncate">
+                              {evento.carga.grupos?.map((g: { clave: string }) => g.clave).join(', ') ?? '—'}
+                            </p>
+                            <p className="opacity-70 text-[10px] font-mono">{evento.hora_inicio}–{evento.hora_fin}</p>
+                          </div>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : (
         <div className="space-y-4">
           {DIAS_ORDEN.filter(d => cargasPorDia[d]).map(dia => (
@@ -150,7 +297,7 @@ export default function MiHorarioDocentePage() {
                       <div className="flex-1 min-w-48">
                         <p className="font-medium text-slate-900 text-sm">{carga.materia?.nombre ?? '—'}</p>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          {carga.grupo?.clave ?? '—'}
+                          {carga.grupos?.map((g: { clave: string }) => g.clave).join(", ") ?? '—'}
                           {carga.aula?.nombre && ` · ${carga.aula.nombre}`}
                         </p>
                       </div>

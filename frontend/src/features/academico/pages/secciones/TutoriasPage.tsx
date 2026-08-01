@@ -6,8 +6,9 @@ import { useToastStore } from '../../../../store/toastStore'
 import { Field, Th, SkeletonRows, EmptyRow, icls, selectCls, usePeriodos, useAlumnos, mutationError, extractApiErrors } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
 import { usePuedeEliminar } from '../../../../hooks/usePermisos'
+import DetailModal from '../../../../components/ui/DetailModal'
 
-type Vista = 'lista' | 'por-tutor'
+type Vista = 'lista' | 'por-tutor' | 'cards'
 
 export default function TutoriasPage() {
   const qc = useQueryClient()
@@ -19,9 +20,10 @@ export default function TutoriasPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { confirm, dialog: confirmDialog } = useConfirm()
   const puedeEliminar = usePuedeEliminar()
+  const [detalle, setDetalle] = useState<Tutoria | null>(null)
 
   const { data: periodos = [] } = usePeriodos()
-  const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
+  const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: () => academicoApi.getDocentes(), staleTime: 60_000 })
   const { data: alumnos = [] } = useAlumnos()
 
   const { data: tutorias = [], isLoading } = useQuery({
@@ -140,6 +142,16 @@ export default function TutoriasPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
               </svg>
             </button>
+            <button
+              onClick={() => setVista('cards')}
+              title="Vista tarjetas"
+              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'cards' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -191,16 +203,16 @@ export default function TutoriasPage() {
               })}
             </div>
           )
-        ) : (
+        ) : vista === 'lista' ? (
           /* Vista lista plana */
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
-                <tr><Th>Tutor</Th><Th>Alumno</Th><Th>Carrera</Th><Th>Periodo</Th><Th /></tr>
+                <tr><Th>Tutor</Th><Th>Alumno</Th><Th>Carrera</Th><Th>Periodo</Th><Th /><Th /></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {isLoading && <SkeletonRows cols={5} />}
-                {!isLoading && tutorias.length === 0 && <EmptyRow cols={5} />}
+                {isLoading && <SkeletonRows cols={6} />}
+                {!isLoading && tutorias.length === 0 && <EmptyRow cols={6} />}
                 {tutorias.map(t => (
                   <tr key={t.id} className="hover:bg-blue-50/60 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-900">{t.tutor?.name ?? '—'}</td>
@@ -213,13 +225,49 @@ export default function TutoriasPage() {
                     <td className="px-4 py-3 text-right">
                       {puedeEliminar && <button onClick={() => window.confirm('¿Eliminar tutoría?') && del.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        ) : isLoading ? (
+          <div className="text-center py-12 text-slate-400 text-sm">Cargando…</div>
+        ) : tutorias.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 px-5 py-12 text-center text-sm text-slate-400">Sin tutorías registradas.</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {tutorias.map(t => (
+              <div key={t.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                <p className="font-medium text-slate-800">{t.alumno?.user?.name ?? '—'}</p>
+                <p className="text-xs text-slate-500 font-mono">{t.alumno?.numero_control}</p>
+                <p className="text-xs text-slate-500">Tutor: {t.tutor?.name ?? '—'}</p>
+                <p className="text-xs text-slate-400">{t.alumno?.carrera?.nombre ?? '—'} · {t.periodo?.nombre ?? '—'}</p>
+                <div className="flex gap-3 mt-1">
+                  {puedeEliminar && <button onClick={() => window.confirm('¿Eliminar tutoría?') && del.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
+                  <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.user?.name ?? 'Tutoría'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Número de control', value: detalle.alumno?.numero_control },
+            { label: 'Carrera', value: detalle.alumno?.carrera?.nombre },
+            { label: 'Tutor', value: detalle.tutor?.name },
+            { label: 'Periodo', value: detalle.periodo?.nombre },
+          ]}
+          footer={puedeEliminar ? <button onClick={() => { setDetalle(null); confirm({ title: '¿Eliminar tutoría?', description: `Se eliminará la tutoría de ${detalle.alumno?.user?.name ?? detalle.alumno?.numero_control}.`, confirmLabel: 'Eliminar', onConfirm: () => del.mutateAsync(detalle.id) }) }} className="text-xs font-medium text-white bg-red-600 px-3 py-1.5 rounded-lg">Eliminar</button> : undefined}
+        />
+      )}
 
       {confirmDialog}
 

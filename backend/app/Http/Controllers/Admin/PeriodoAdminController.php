@@ -17,6 +17,7 @@ class PeriodoAdminController extends Controller
     {
         if (! $request->user()?->hasAnyRole([
             'superadmin', 'admin', 'director_academico', 'personal_administrativo',
+            'docente', 'jefe_carrera', 'desarrollo_academico',
             ...\App\Models\User::ROLES_DIRECTIVOS,
         ])) {
             return ApiResponse::error('No autorizado.', 403);
@@ -32,6 +33,10 @@ class PeriodoAdminController extends Controller
     {
         $datos = $request->validated();
 
+        if (array_key_exists('activo', $datos) && ! $request->user()->hasRole('superadmin')) {
+            unset($datos['activo']);
+        }
+
         if (! empty($datos['activo'])) {
             Periodo::where('activo', true)->update(['activo' => false]);
         }
@@ -43,6 +48,10 @@ class PeriodoAdminController extends Controller
     public function update(PeriodoRequest $request, Periodo $periodo): JsonResponse
     {
         $datos = $request->validated();
+
+        if (array_key_exists('activo', $datos) && ! $request->user()->hasRole('superadmin')) {
+            unset($datos['activo']);
+        }
 
         DB::transaction(function () use ($datos, $periodo) {
             if (! empty($datos['activo'])) {
@@ -93,9 +102,7 @@ class PeriodoAdminController extends Controller
     // PATCH /api/admin/periodos/{periodo}/activar
     public function activar(Request $request, Periodo $periodo): JsonResponse
     {
-        if (! $request->user()?->hasAnyRole(['superadmin', 'admin', ...\App\Models\User::ROLES_DIRECTIVOS])) {
-            return ApiResponse::error('No autorizado.', 403);
-        }
+        abort_unless($request->user()?->hasRole('superadmin'), 403, 'Solo el superadministrador puede cambiar el periodo activo global.');
 
         DB::transaction(function () use ($periodo) {
             Periodo::where('activo', true)->update(['activo' => false]);

@@ -31,7 +31,7 @@ class ReporteDirectivoController extends Controller
         ]);
 
         $periodoId = $request->query('periodo_id');
-        $periodo   = $periodoId ? Periodo::find($periodoId) : Periodo::where('activo', true)->first();
+        $periodo   = $periodoId ? Periodo::find($periodoId) : Periodo::activo();
 
         $inscritos = Alumno::with(['carrera', 'inscripcion'])
             ->when($periodoId, fn ($q) => $q->where('periodo_ingreso_id', $periodoId))

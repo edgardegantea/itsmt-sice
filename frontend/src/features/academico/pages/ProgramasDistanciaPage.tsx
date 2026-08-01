@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { academicoApi } from '../services/academico'
 import type { ProgramaDistancia } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const MODALIDAD_LABEL: Record<string, string> = {
   no_escolarizada: 'No escolarizada',
@@ -22,6 +24,8 @@ export default function ProgramasDistanciaPage() {
     semestres_maximos: '16',
     permite_trimestral: true,
   })
+  const [vista, setVista] = useViewMode('programas-distancia')
+  const [detalle, setDetalle] = useState<ProgramaDistancia | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -67,12 +71,15 @@ export default function ProgramasDistanciaPage() {
           <h1 className="text-2xl font-bold text-gray-900">Programas a Distancia</h1>
           <p className="text-sm text-gray-500 mt-1">TecNM Cap. 16 — Modalidad no escolarizada y mixta</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
-        >
-          + Configurar programa
-        </button>
+        <div className="flex items-center gap-2">
+          <ViewToggle value={vista} onChange={setVista} />
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          >
+            + Configurar programa
+          </button>
+        </div>
       </div>
 
       {/* Compliance notice */}
@@ -168,20 +175,20 @@ export default function ProgramasDistanciaPage() {
 
       {loading ? (
         <div className="text-center py-12 text-gray-500">Cargando...</div>
-      ) : (
+      ) : programas.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border text-center py-10 text-gray-400">Sin programas a distancia configurados</div>
+      ) : vista === 'lista' ? (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Carrera', 'Modalidad', 'Créditos mín.', 'Créditos máx.', 'Sem. máx.', 'Trimestral', 'Estado'].map(h => (
+                {['Carrera', 'Modalidad', 'Créditos mín.', 'Créditos máx.', 'Sem. máx.', 'Trimestral', 'Estado', ''].map(h => (
                   <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {programas.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-10 text-gray-400">Sin programas a distancia configurados</td></tr>
-              ) : programas.map(p => (
+              {programas.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.carrera?.nombre ?? p.carrera_id}</td>
                   <td className="px-6 py-4">
@@ -202,11 +209,47 @@ export default function ProgramasDistanciaPage() {
                       p.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>{p.activo ? 'Activo' : 'Inactivo'}</span>
                   </td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => setDetalle(p)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {programas.map(p => (
+            <div key={p.id} className="bg-white border rounded-xl p-4 flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-medium text-gray-900 truncate">{p.carrera?.nombre ?? p.carrera_id}</p>
+                <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${p.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {p.activo ? 'Activo' : 'Inactivo'}
+                </span>
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded font-medium self-start ${p.modalidad === 'mixta' ? 'bg-purple-100 text-purple-800' : 'bg-indigo-100 text-indigo-800'}`}>
+                {MODALIDAD_LABEL[p.modalidad]}
+              </span>
+              <p className="text-xs text-gray-500">{p.creditos_minimos_carga}–{p.creditos_maximos_carga} créditos · {p.semestres_maximos} sem. máx.</p>
+              <button onClick={() => setDetalle(p)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.carrera?.nombre ?? 'Programa a distancia'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Modalidad', value: MODALIDAD_LABEL[detalle.modalidad] },
+            { label: 'Créditos mínimos', value: detalle.creditos_minimos_carga },
+            { label: 'Créditos máximos', value: detalle.creditos_maximos_carga },
+            { label: 'Semestres máximos', value: detalle.semestres_maximos },
+            { label: 'Permite trimestral', value: detalle.permite_trimestral ? 'Sí' : 'No' },
+            { label: 'Estado', value: detalle.activo ? 'Activo' : 'Inactivo' },
+          ]}
+        />
       )}
     </div>
   )

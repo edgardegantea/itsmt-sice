@@ -6,6 +6,7 @@ use App\Domains\Academico\Models\Alumno;
 use App\Domains\Academico\Models\Aula;
 use App\Domains\Academico\Models\CargaAcademica;
 use App\Domains\Academico\Models\Carrera;
+use App\Domains\Academico\Models\DisponibilidadDocente;
 use App\Domains\Academico\Models\Grupo;
 use App\Domains\Academico\Models\MallaCurricular;
 use App\Domains\Academico\Models\Materia;
@@ -31,6 +32,7 @@ class Sprint3Test extends TestCase
     private User    $admin;
     private User    $docente;
     private User    $jefeCarrera;
+    private User    $desarrolloAcademico;
     private Carrera $carrera;
     private Periodo $periodo;
     private Materia $materia;
@@ -41,7 +43,7 @@ class Sprint3Test extends TestCase
     {
         parent::setUp();
 
-        foreach (['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera', 'docente', 'director_academico', 'alumno'] as $role) {
+        foreach (['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera', 'docente', 'director_academico', 'alumno', 'desarrollo_academico'] as $role) {
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
         }
 
@@ -71,6 +73,9 @@ class Sprint3Test extends TestCase
         $this->jefeCarrera = User::factory()->create(['carrera_id' => $this->carrera->id]);
         $this->jefeCarrera->assignRole('jefe_carrera');
 
+        $this->desarrolloAcademico = User::factory()->create();
+        $this->desarrolloAcademico->assignRole('desarrollo_academico');
+
         $this->materia = Materia::create([
             'carrera_id'          => $this->carrera->id,
             'clave'               => 'SC001',
@@ -99,6 +104,22 @@ class Sprint3Test extends TestCase
             'capacidad'  => 30,
             'activo'     => true,
         ]);
+
+        $this->declararDisponibilidad($this->docente);
+    }
+
+    /** Declara disponibilidad amplia (L-S, 07:00-20:00) para que HorarioService/VerificarDisponibilidadAction no rechace por falta de disponibilidad declarada. */
+    private function declararDisponibilidad(User $docente): void
+    {
+        foreach (['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as $dia) {
+            DisponibilidadDocente::create([
+                'docente_id'  => $docente->id,
+                'periodo_id'  => $this->periodo->id,
+                'dia_semana'  => $dia,
+                'hora_inicio' => '07:00',
+                'hora_fin'    => '20:00',
+            ]);
+        }
     }
 
     // ── S3-01: Malla curricular ────────────────────────────────────────────────
@@ -119,6 +140,43 @@ class Sprint3Test extends TestCase
             ])
             ->assertStatus(201)
             ->assertJsonPath('data.clave_oficial_tecnm', 'AEC-1022');
+    }
+
+    public function test_cargar_materia_fuera_de_malla_retorna_422(): void
+    {
+        // $this->materia NO está en mallas_curriculares para esta carrera/semestre (no se llamó a POST /mallas-curriculares)
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/cargas-academicas', [
+                'docente_id'   => $this->docente->id,
+                'materia_id'   => $this->materia->id,
+                'grupo_ids'    => [$this->grupo->id],
+                'periodo_id'   => $this->periodo->id,
+                'aula_id'      => $this->aula->id,
+                'horas_semana' => 5,
+            ])
+            ->assertStatus(422);
+
+        $this->assertDatabaseMissing('cargas_academicas', ['materia_id' => $this->materia->id]);
+    }
+
+    public function test_cargar_materia_en_malla_se_permite(): void
+    {
+        MallaCurricular::create([
+            'carrera_id' => $this->carrera->id,
+            'materia_id' => $this->materia->id,
+            'semestre'   => $this->grupo->semestre,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/cargas-academicas', [
+                'docente_id'   => $this->docente->id,
+                'materia_id'   => $this->materia->id,
+                'grupo_ids'    => [$this->grupo->id],
+                'periodo_id'   => $this->periodo->id,
+                'aula_id'      => $this->aula->id,
+                'horas_semana' => 5,
+            ])
+            ->assertStatus(201);
     }
 
     public function test_materia_tipo_invalido_retorna_422(): void
@@ -177,14 +235,15 @@ class Sprint3Test extends TestCase
 
     private function crearCargaAcademica(): CargaAcademica
     {
-        return CargaAcademica::create([
+        $carga = CargaAcademica::create([
             'docente_id'  => $this->docente->id,
             'materia_id'  => $this->materia->id,
-            'grupo_id'    => $this->grupo->id,
             'periodo_id'  => $this->periodo->id,
             'aula_id'     => $this->aula->id,
             'horas_semana' => 5,
         ]);
+        $carga->grupos()->attach($this->grupo->id);
+        return $carga;
     }
 
     public function test_admin_guarda_horarios(): void
@@ -227,11 +286,11 @@ class Sprint3Test extends TestCase
         $carga2 = CargaAcademica::create([
             'docente_id'  => $this->docente->id, // mismo docente
             'materia_id'  => $materia2->id,
-            'grupo_id'    => $grupo2->id,
             'periodo_id'  => $this->periodo->id,
             'aula_id'     => $this->aula->id,
             'horas_semana' => 4,
         ]);
+        $carga2->grupos()->attach($grupo2->id);
 
         $this->actingAs($this->admin, 'sanctum')
             ->postJson('/api/horarios', [
@@ -255,6 +314,7 @@ class Sprint3Test extends TestCase
         // Otro docente, misma aula, mismo bloque
         $docente2 = User::factory()->create();
         $docente2->assignRole('docente');
+        $this->declararDisponibilidad($docente2);
         $materia2 = Materia::create([
             'carrera_id' => $this->carrera->id, 'clave' => 'SC098', 'clave_oficial_tecnm' => 'AEC-1023',
             'nombre' => 'Física', 'semestre' => 1, 'creditos' => 4,
@@ -267,11 +327,11 @@ class Sprint3Test extends TestCase
         $carga2 = CargaAcademica::create([
             'docente_id'  => $docente2->id,
             'materia_id'  => $materia2->id,
-            'grupo_id'    => $grupo2->id,
             'periodo_id'  => $this->periodo->id,
             'aula_id'     => $this->aula->id, // misma aula
             'horas_semana' => 4,
         ]);
+        $carga2->grupos()->attach($grupo2->id);
 
         $this->actingAs($this->admin, 'sanctum')
             ->postJson('/api/horarios', [
@@ -297,7 +357,7 @@ class Sprint3Test extends TestCase
             ->assertJsonPath('data.estatus', 'borrador');
     }
 
-    public function test_docente_entrega_planeacion_notifica_jefe_carrera(): void
+    public function test_docente_entrega_planeacion_notifica_desarrollo_academico(): void
     {
         Mail::fake();
 
@@ -307,15 +367,17 @@ class Sprint3Test extends TestCase
             'docente_id'         => $this->docente->id,
             'periodo_id'         => $this->periodo->id,
             'estatus'            => 'borrador',
+            'archivo_path'       => 'planeaciones_docentes/test.pdf',
+            'archivo_nombre'     => 'test.pdf',
         ]);
 
         $this->actingAs($this->docente, 'sanctum')
-            ->postJson("/api/planeaciones-docentes/{$planeacion->id}/entregar")
+            ->postJson("/api/planeaciones-docentes/{$planeacion->id}/enviar")
             ->assertStatus(200)
-            ->assertJsonPath('data.estatus', 'entregada');
+            ->assertJsonPath('data.estatus', 'enviada_da');
 
         Mail::assertQueued(PlaneacionDocenteEntregadaMail::class, fn ($m) =>
-            $m->hasTo($this->jefeCarrera->email)
+            $m->hasTo($this->desarrolloAcademico->email)
         );
     }
 
@@ -326,7 +388,7 @@ class Sprint3Test extends TestCase
             'carga_academica_id' => $carga->id,
             'docente_id'         => $this->docente->id,
             'periodo_id'         => $this->periodo->id,
-            'estatus'            => 'entregada',
+            'estatus'            => 'enviada_jc',
         ]);
 
         $this->actingAs($this->jefeCarrera, 'sanctum')
@@ -344,7 +406,7 @@ class Sprint3Test extends TestCase
             'carga_academica_id' => $carga->id,
             'docente_id'         => $this->docente->id,
             'periodo_id'         => $this->periodo->id,
-            'estatus'            => 'entregada',
+            'estatus'            => 'enviada_jc',
         ]);
 
         $this->actingAs($this->docente, 'sanctum')
@@ -388,10 +450,10 @@ class Sprint3Test extends TestCase
         $carga = CargaAcademica::create([
             'docente_id'  => $this->docente->id,
             'materia_id'  => $this->materia->id,
-            'grupo_id'    => $grupoPeriodo->id,
             'periodo_id'  => $periodoProximo->id,
             'horas_semana' => 5,
         ]);
+        $carga->grupos()->attach($grupoPeriodo->id);
 
         $this->actingAs($this->docente, 'sanctum')
             ->postJson('/api/planeaciones-docentes', [
@@ -461,16 +523,16 @@ class Sprint3Test extends TestCase
             'carga_academica_id' => $carga->id,
             'docente_id'         => $this->docente->id,
             'periodo_id'         => $this->periodo->id,
-            'estatus'            => 'entregada',
+            'estatus'            => 'enviada_jc',
         ]);
 
         $this->actingAs($this->jefeCarrera, 'sanctum')
             ->patchJson("/api/planeaciones-docentes/{$planeacion->id}/estatus", [
-                'estatus'                => 'devuelta',
+                'estatus'                => 'devuelta_jc',
                 'observaciones_revision' => 'Falta bibliografía actualizada.',
             ])
             ->assertStatus(200)
-            ->assertJsonPath('data.estatus', 'devuelta');
+            ->assertJsonPath('data.estatus', 'devuelta_jc');
 
         $this->assertDatabaseHas('planeaciones_docentes', [
             'id'                     => $planeacion->id,
@@ -486,13 +548,57 @@ class Sprint3Test extends TestCase
             'docente_id'         => $this->docente->id,
             'periodo_id'         => $this->periodo->id,
             'estatus'            => 'borrador',
+            'archivo_path'       => 'planeaciones_docentes/test.pdf',
+            'archivo_nombre'     => 'test.pdf',
         ]);
 
         $this->actingAs($this->docente, 'sanctum')
-            ->postJson("/api/planeaciones-docentes/{$planeacion->id}/entregar")
+            ->postJson("/api/planeaciones-docentes/{$planeacion->id}/enviar")
             ->assertStatus(200);
 
         $this->assertNotNull($planeacion->fresh()->entregada_en);
+    }
+
+    public function test_entregar_planeacion_sin_archivo_es_permitido(): void
+    {
+        $carga      = $this->crearCargaAcademica();
+        $planeacion = PlaneacionDocente::create([
+            'carga_academica_id' => $carga->id,
+            'docente_id'         => $this->docente->id,
+            'periodo_id'         => $this->periodo->id,
+            'estatus'            => 'borrador',
+        ]);
+
+        $this->actingAs($this->docente, 'sanctum')
+            ->postJson("/api/planeaciones-docentes/{$planeacion->id}/enviar")
+            ->assertStatus(200);
+
+        $this->assertSame('enviada_da', $planeacion->fresh()->estatus);
+    }
+
+    public function test_docente_sube_archivo_de_planeacion(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $carga = $this->crearCargaAcademica();
+
+        $archivo = \Illuminate\Http\UploadedFile::fake()->create('planeacion.pdf', 200, 'application/pdf');
+
+        $response = $this->actingAs($this->docente, 'sanctum')
+            ->post('/api/planeaciones-docentes', [
+                'carga_academica_id' => $carga->id,
+                'periodo_id'         => $this->periodo->id,
+                'archivo'            => $archivo,
+            ]);
+
+        $response->assertStatus(201);
+        $planeacion = PlaneacionDocente::first();
+        $this->assertNotNull($planeacion->archivo_path);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($planeacion->archivo_path);
+
+        $this->actingAs($this->docente, 'sanctum')
+            ->postJson("/api/planeaciones-docentes/{$planeacion->id}/enviar")
+            ->assertStatus(200)
+            ->assertJsonPath('data.estatus', 'enviada_da');
     }
 
     public function test_materia_no_se_elimina_si_tiene_cargas_academicas(): void
@@ -645,13 +751,13 @@ class Sprint3Test extends TestCase
             'estatus'            => 'activo',
         ]);
 
-        CargaAcademica::create([
+        $cargaPdf = CargaAcademica::create([
             'docente_id'   => $this->docente->id,
             'materia_id'   => $this->materia->id,
-            'grupo_id'     => $this->grupo->id,
             'periodo_id'   => $this->periodo->id,
             'horas_semana' => 5,
         ]);
+        $cargaPdf->grupos()->attach($this->grupo->id);
 
         \Illuminate\Support\Facades\DB::table('alumno_grupo')->insert([
             'id'              => (string) \Illuminate\Support\Str::uuid(),

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Egresado } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const SECTORES = ['publico', 'privado', 'emprendimiento', 'desempleado', 'otro'] as const
 
@@ -15,6 +17,8 @@ export default function EgresadosPage() {
   const [titulado, setTitulado] = useState<boolean | undefined>()
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Egresado | null>(null)
+  const [vista, setVista] = useViewMode('egresados')
+  const [detalle, setDetalle] = useState<Egresado | null>(null)
 
   const [form, setForm] = useState({
     alumno_id: '',
@@ -105,12 +109,15 @@ export default function EgresadosPage() {
             <h1 className="text-2xl font-bold text-slate-800">Egresados</h1>
             <p className="text-sm text-slate-500 mt-1">Registro y seguimiento de egresados institucionales</p>
           </div>
-          <button
-            onClick={openCreate}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            + Registrar Egresado
-          </button>
+          <div className="flex items-center gap-2">
+            <ViewToggle value={vista} onChange={setVista} />
+            <button
+              onClick={openCreate}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              + Registrar Egresado
+            </button>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -150,7 +157,7 @@ export default function EgresadosPage() {
               <p className="font-medium">Sin egresados registrados</p>
               <p className="text-sm mt-1">Registra el primer egresado usando el botón superior</p>
             </div>
-          ) : (
+          ) : vista === 'lista' ? (
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
@@ -160,6 +167,7 @@ export default function EgresadosPage() {
                   <th className="text-left py-3 px-4 font-semibold text-slate-600">Sector</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-600">Empresa</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-600">Correo</th>
+                  <th className="py-3 px-4" />
                   <th className="py-3 px-4" />
                 </tr>
               </thead>
@@ -184,13 +192,51 @@ export default function EgresadosPage() {
                         Editar
                       </button>
                     </td>
+                    <td className="py-3 px-4 text-right">
+                      <button onClick={() => setDetalle(eg)} className="text-xs font-medium text-slate-500 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+              {egresados.map(eg => (
+                <div key={eg.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium text-slate-800 truncate">{eg.alumno?.name ?? eg.alumno_id.slice(0, 8)}</p>
+                    <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${eg.titulado ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {eg.titulado ? 'Titulado' : 'No titulado'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">{eg.anio_egreso} · <span className="capitalize">{eg.sector ?? '—'}</span></p>
+                  <p className="text-xs text-slate-500">{eg.empresa_actual ?? '—'}</p>
+                  <div className="flex gap-3 mt-1">
+                    <button onClick={() => openEdit(eg)} className="text-blue-600 hover:text-blue-800 text-xs font-medium">Editar</button>
+                    <button onClick={() => setDetalle(eg)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.name ?? 'Egresado'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Año de egreso', value: detalle.anio_egreso },
+            { label: 'Titulado', value: detalle.titulado ? 'Sí' : 'No' },
+            { label: 'Sector', value: detalle.sector ?? '—' },
+            { label: 'Empresa actual', value: detalle.empresa_actual ?? '—' },
+            { label: 'Puesto actual', value: detalle.puesto_actual ?? '—' },
+            { label: 'Correo', value: detalle.correo_actualizado ?? detalle.alumno?.email ?? '—' },
+          ]}
+          footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Editar</button>}
+        />
+      )}
 
       {/* Modal form */}
       {showForm && (

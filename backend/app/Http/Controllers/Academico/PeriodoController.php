@@ -12,7 +12,7 @@ class PeriodoController extends Controller
     // GET /api/periodos/activo
     public function activo(): JsonResponse
     {
-        $periodo = Periodo::where('activo', true)->first();
+        $periodo = Periodo::activo();
 
         if (! $periodo) {
             return ApiResponse::error('No hay un periodo de inscripción activo.', 404);

@@ -27,6 +27,15 @@ class DisponibilidadDocenteController extends Controller
             $data['docente_id'] = $user->id;
         }
 
+        $carreraForzada = $user->carreraRestringida();
+        if ($carreraForzada && $data['docente_id'] !== $user->id) {
+            abort_unless(
+                \App\Models\User::query()->whereKey($data['docente_id'])->deCarrera($carreraForzada)->exists(),
+                403,
+                'Sin acceso a la disponibilidad de docentes de otras carreras.'
+            );
+        }
+
         $bloques = DisponibilidadDocente::where('docente_id', $data['docente_id'])
             ->where('periodo_id', $data['periodo_id'])
             ->orderBy('dia_semana')
@@ -58,6 +67,10 @@ class DisponibilidadDocenteController extends Controller
             'bloques.*.hora_fin'    => ['required', 'date_format:H:i', 'after:bloques.*.hora_inicio'],
         ]);
 
+        if ($error = $this->validarLimitesDeHoras($data['bloques'])) {
+            return ApiResponse::error($error, 422);
+        }
+
         $user = $request->user();
 
         // Docente solo puede editar su propia disponibilidad
@@ -80,5 +93,36 @@ class DisponibilidadDocenteController extends Controller
         });
 
         return ApiResponse::success($creados, 'Disponibilidad actualizada.');
+    }
+
+    /**
+     * Valida que la disponibilidad declarada no exceda 8h por día (12h los
+     * sábados) ni 40h por semana en total. Devuelve un mensaje de error o
+     * null si todo está dentro de los límites.
+     */
+    private function validarLimitesDeHoras(array $bloques): ?string
+    {
+        $minutos = fn(string $h): int => (int) explode(':', $h)[0] * 60 + (int) explode(':', $h)[1];
+
+        $porDia = [];
+        foreach ($bloques as $b) {
+            $dia = $b['dia_semana'];
+            $porDia[$dia] = ($porDia[$dia] ?? 0) + ($minutos($b['hora_fin']) - $minutos($b['hora_inicio']));
+        }
+
+        $totalSemana = 0;
+        foreach ($porDia as $dia => $min) {
+            $limite = $dia === 'sabado' ? 12 * 60 : 8 * 60;
+            if ($min > $limite) {
+                return sprintf('El %s no puede exceder %dh de disponibilidad (declaraste %.1fh).', $dia, $limite / 60, $min / 60);
+            }
+            $totalSemana += $min;
+        }
+
+        if ($totalSemana > 40 * 60) {
+            return sprintf('La disponibilidad semanal no puede exceder 40h (declaraste %.1fh).', $totalSemana / 60);
+        }
+
+        return null;
     }
 }

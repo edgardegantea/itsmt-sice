@@ -23,7 +23,7 @@ class HorarioTrabajoController extends Controller
 
         $horarios = HorarioTrabajo::with(['docente', 'periodo'])
             ->when($carreraForzada, fn($q, $v) =>
-                $q->whereHas('docente', fn($uq) => $uq->where('carrera_id', $v))
+                $q->whereHas('docente', fn($uq) => $uq->deCarrera($v))
             )
             ->when($request->query('periodo_id'), fn($q, $v) => $q->where('periodo_id', $v))
             ->when($request->query('docente_id'), fn($q, $v) => $q->where('docente_id', $v))
@@ -44,7 +44,7 @@ class HorarioTrabajoController extends Controller
         if ($periodoId) {
             $query->where('periodo_id', $periodoId);
         } else {
-            $periodoActivo = Periodo::where('activo', true)->first();
+            $periodoActivo = Periodo::activo();
             if ($periodoActivo) {
                 $query->where('periodo_id', $periodoActivo->id);
             }

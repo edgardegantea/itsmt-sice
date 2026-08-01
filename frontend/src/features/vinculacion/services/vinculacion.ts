@@ -14,6 +14,7 @@ export interface ServicioSocial {
   nivel_desempeno: 'excelente' | 'notable' | 'bueno' | 'suficiente' | 'insuficiente' | null
   creditos_otorgados: number
   documentos: unknown[] | null
+  carta_aceptacion_path: string | null
   alumno?: { id: string; numero_control: string; user?: { name: string }; carrera?: { nombre: string } }
   created_at: string
   updated_at: string
@@ -107,11 +108,13 @@ export interface AsesoriaRp {
 export interface PrerequisitosRp {
   ss_acreditado: boolean
   ac_completadas: boolean
+  ac_faltantes: { clave: string; nombre: string }[]
   porcentaje_creditos: number
   creditos_acreditados: number
   creditos_totales: number
   dentro_limite_semestres: boolean
   semestre_actual: number
+  no_en_curso_especial: boolean
   puede_solicitar_rp: boolean
 }
 
@@ -122,8 +125,15 @@ export const vinculacionApi = {
   getServicioSocial: (params?: { estatus?: string; alumno_id?: string; carrera_id?: string }) =>
     apiClient.get('/servicio-social', { params }).then(r => r.data.data),
 
-  registrarServicioSocial: (data: { empresa: string; responsable?: string; fecha_inicio?: string; documentos?: unknown[] }) =>
-    apiClient.post('/servicio-social', data).then(r => r.data.data as ServicioSocial),
+  registrarServicioSocial: (data: { empresa: string; responsable?: string; fecha_inicio?: string; documentos?: unknown[]; carta_aceptacion: File }) => {
+    const fd = new FormData()
+    fd.append('empresa', data.empresa)
+    if (data.responsable) fd.append('responsable', data.responsable)
+    if (data.fecha_inicio) fd.append('fecha_inicio', data.fecha_inicio)
+    fd.append('carta_aceptacion', data.carta_aceptacion)
+    return apiClient.post('/servicio-social', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      .then(r => r.data.data as ServicioSocial)
+  },
 
   actualizarEstatusServicioSocial: (
     id: string,

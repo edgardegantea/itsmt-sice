@@ -18,6 +18,8 @@ class Periodo extends Model
         'horarios_liberados',
     ];
 
+    protected $appends = ['codigo'];
+
     protected function casts(): array
     {
         return [
@@ -30,6 +32,24 @@ class Periodo extends Model
         ];
     }
 
+    /**
+     * Código corto tipo TecNM: AAAA-1 (ene-jun) o AAAA-2 (ago-dic), derivado de
+     * fecha_inicio — se usa como prefijo en la clave autogenerada de grupos.
+     */
+    public function getCodigoAttribute(): ?string
+    {
+        if (! $this->fecha_inicio) {
+            return null;
+        }
+        $semestre = $this->fecha_inicio->month <= 6 ? 1 : 2;
+        return "{$this->fecha_inicio->year}-{$semestre}";
+    }
+
+    public static function activo(): ?self
+    {
+        return static::where('activo', true)->first();
+    }
+
     public function aspirantes(): HasMany
     {
         return $this->hasMany(Aspirante::class);
@@ -38,5 +58,10 @@ class Periodo extends Model
     public function inscripciones(): HasMany
     {
         return $this->hasMany(Inscripcion::class);
+    }
+
+    public function cortesCaptura(): HasMany
+    {
+        return $this->hasMany(CorteCaptura::class)->orderBy('numero');
     }
 }

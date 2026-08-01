@@ -14,7 +14,7 @@ $DIAS = array_keys($DIAS_LABEL);
 // Slots de hora (07:00 → 21:00, franjas de 1 hora)
 $slots = [];
 for ($h = 7; $h < 21; $h++) { $slots[]=sprintf('%02d:00', $h); } // Construir mapa slot × día → etiqueta (grupo-aula)
-    $horarioGrid=[]; foreach ($cargas as $carga) { $etiqueta=($carga->grupo?->clave ?? '?') . ($carga->aula ? '-' .
+    $horarioGrid=[]; foreach ($cargas as $carga) { $etiqueta=($carga->grupos->pluck('clave')->implode(',') ?: '?') . ($carga->aula ? '-' .
     $carga->aula->nombre : '');
     foreach ($carga->horarios ?? [] as $h) {
     $inicioMin = intval(substr($h->hora_inicio, 0, 2)) * 60 + intval(substr($h->hora_inicio, 3, 2));
@@ -402,16 +402,16 @@ for ($h = 7; $h < 21; $h++) { $slots[]=sprintf('%02d:00', $h); } // Construir ma
                     @php $acum = 0; @endphp
                     @forelse($cargas as $i => $carga)
                     @php
-                    $carreraClave = $carga->grupo?->carrera?->clave
+                    $carreraClave = $carga->grupos->first()?->carrera?->clave
                     ?? $carga->materia?->carrera?->clave
                     ?? 'N/A';
-                    $semestre = $carga->grupo?->semestre ?? '?';
+                    $semestre = $carga->grupos->first()?->semestre ?? '?';
                     $acum += $carga->horas_semana;
                     $esUltima = $i === $cargas->count() - 1;
                     @endphp
                     <tr @if($esUltima) class="total-row" @endif>
                         <td class="carr">{{ $carreraClave }}/{{ str_pad($semestre, 2, '0', STR_PAD_LEFT) }}</td>
-                        <td style="text-align:center; font-weight:bold;">{{ $carga->grupo?->clave ?? '—' }}</td>
+                        <td style="text-align:center; font-weight:bold;">{{ $carga->grupos->pluck('clave')->implode(', ') ?: '—' }}</td>
                         <td style="font-family:monospace; font-size:7pt;">{{ $carga->materia?->clave ?? '—' }}</td>
                         <td>{{ $carga->materia?->nombre ?? '—' }}</td>
                         <td style="text-align:center; font-weight:bold;">{{ $carga->horas_semana }}</td>

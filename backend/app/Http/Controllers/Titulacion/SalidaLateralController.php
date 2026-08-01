@@ -83,7 +83,8 @@ class SalidaLateralController extends Controller
         // Validar que la asignatura de especialidad esté acreditada
         $asignaturaAcreditada = Calificacion::where('calificaciones.alumno_id', $alumno->id)
             ->where('calificaciones.acreditado', true)
-            ->join('cargas_academicas', 'calificaciones.grupo_id', '=', 'cargas_academicas.grupo_id')
+            ->join('carga_academica_grupo', 'calificaciones.grupo_id', '=', 'carga_academica_grupo.grupo_id')
+            ->join('cargas_academicas', 'carga_academica_grupo.carga_academica_id', '=', 'cargas_academicas.id')
             ->where('cargas_academicas.materia_id', $data['asignatura_especialidad_id'])
             ->exists();
 
@@ -167,7 +168,8 @@ class SalidaLateralController extends Controller
 
         $acreditados = Calificacion::where('calificaciones.alumno_id', $alumno->id)
             ->where('calificaciones.acreditado', true)
-            ->join('cargas_academicas', 'calificaciones.grupo_id', '=', 'cargas_academicas.grupo_id')
+            ->join('carga_academica_grupo', 'calificaciones.grupo_id', '=', 'carga_academica_grupo.grupo_id')
+            ->join('cargas_academicas', 'carga_academica_grupo.carga_academica_id', '=', 'cargas_academicas.id')
             ->join('materias', 'cargas_academicas.materia_id', '=', 'materias.id')
             ->sum('materias.creditos');
 

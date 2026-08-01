@@ -17,6 +17,7 @@ class DisponibilidadDocente extends Model
         'docente_id',
         'periodo_id',
         'dia_semana',
+        'modulo_sabatino',
         'hora_inicio',
         'hora_fin',
     ];

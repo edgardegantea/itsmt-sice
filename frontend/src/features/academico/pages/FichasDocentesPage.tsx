@@ -5,6 +5,8 @@ import { academicoApi, type FichaDocente } from '../services/academico'
 import { Field, SkeletonRows, EmptyRow, inputCls, selectCls, ModalWrap, mutationError } from './tabs/shared'
 import { useToastStore } from '../../../store/toastStore'
 import apiClient from '../../../config/apiClient'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 interface Docente {
   id: string
@@ -31,6 +33,8 @@ export default function FichasDocentesPage() {
   const [modal, setModal] = useState<null | 'nuevo' | FichaDocente>(null)
   const [form, setForm] = useState<FichaForm>({})
   const set = (k: keyof FichaForm, v: unknown) => setForm(f => ({ ...f, [k]: v }))
+  const [vista, setVista] = useViewMode('fichas-docentes')
+  const [detalle, setDetalle] = useState<FichaDocente | null>(null)
 
   const { data: fichasData, isLoading } = useQuery({
     queryKey: ['fichas-docentes'],
@@ -112,32 +116,40 @@ export default function FichasDocentesPage() {
               <h1 className="text-xl font-bold text-slate-900">Fichas Docentes</h1>
               <p className="text-sm text-slate-500 mt-0.5">Contrato, categoría, especialidades y carga histórica</p>
             </div>
-            <button onClick={openNuevo} className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
-              + Nueva ficha
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <ViewToggle value={vista} onChange={setVista} />
+              <button onClick={openNuevo} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+                + Nueva ficha
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Tabla */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Docente</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Contrato</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Categoría</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Especialidades</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <SkeletonRows cols={6} />
-              ) : fichas.length === 0 ? (
-                <EmptyRow cols={6} />
-              ) : (
-                fichas.map(f => (
+        {/* Fichas */}
+        {isLoading ? (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm"><tbody><SkeletonRows cols={6} /></tbody></table>
+          </div>
+        ) : fichas.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm"><tbody><EmptyRow cols={6} /></tbody></table>
+          </div>
+        ) : vista === 'lista' ? (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Docente</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Contrato</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Categoría</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Especialidades</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
+                  <th />
+                  <th />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {fichas.map(f => (
                   <tr key={f.id} className="hover:bg-blue-50/60 transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-800">{f.docente?.name ?? '—'}</p>
@@ -176,12 +188,39 @@ export default function FichasDocentesPage() {
                     <td className="px-4 py-3 text-right">
                       <button onClick={() => openEdit(f)} className="text-xs text-blue-600 hover:underline">Editar</button>
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setDetalle(f)} className="text-xs font-medium text-slate-500 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {fichas.map(f => (
+              <div key={f.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium text-slate-800 truncate">{f.docente?.name ?? '—'}</p>
+                  <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${f.activo ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {f.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium self-start ${
+                  f.tipo_contrato === 'base' ? 'bg-blue-100 text-blue-700'
+                  : f.tipo_contrato === 'interino' ? 'bg-purple-100 text-purple-700'
+                  : f.tipo_contrato === 'medio_tiempo' ? 'bg-orange-100 text-orange-700'
+                  : 'bg-slate-100 text-slate-600'
+                }`}>{CONTRATO_LABEL[f.tipo_contrato]}</span>
+                <p className="text-xs text-slate-500">{f.categoria ?? '—'}</p>
+                <div className="flex gap-3 mt-1">
+                  <button onClick={() => openEdit(f)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                  <button onClick={() => setDetalle(f)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Carga histórica por período */}
         {fichas.length > 0 && fichas.some(f => f.horas_frente_grupo_por_periodo && f.horas_frente_grupo_por_periodo.length > 0) && (
@@ -260,6 +299,28 @@ export default function FichasDocentesPage() {
             </label>
           </Field>
         </ModalWrap>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.docente?.name ?? 'Ficha docente'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Correo', value: detalle.docente?.email },
+            { label: 'Tipo de contrato', value: CONTRATO_LABEL[detalle.tipo_contrato] },
+            { label: 'Categoría', value: detalle.categoria ?? '—' },
+            { label: 'Fecha de ingreso', value: detalle.fecha_ingreso ?? '—' },
+            { label: 'Estado', value: detalle.activo ? 'Activo' : 'Inactivo' },
+            { label: 'Especialidades', full: true, value: detalle.especialidades?.length ? detalle.especialidades.join(', ') : '—' },
+            {
+              label: 'Títulos académicos', full: true,
+              value: detalle.titulos_academicos?.length
+                ? <ul className="list-disc list-inside">{detalle.titulos_academicos.map((t, i) => <li key={i}>{t.nivel}: {t.nombre}</li>)}</ul>
+                : '—',
+            },
+          ]}
+          footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Editar</button>}
+        />
       )}
     </div>
   )

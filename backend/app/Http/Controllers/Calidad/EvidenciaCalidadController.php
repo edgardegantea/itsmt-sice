@@ -96,6 +96,10 @@ class EvidenciaCalidadController extends Controller
     // POST /api/no-conformidades
     public function crearNoConformidad(Request $request): JsonResponse
     {
+        if (! $request->user()->hasAnyRole(['superadmin', 'admin', 'director_academico', 'direccion_academica'])) {
+            abort(403, 'Sin permiso para registrar no conformidades.');
+        }
+
         $data = $request->validate([
             'tipo'                  => ['nullable', 'in:interna,externa,observacion'],
             'proceso'               => ['required', 'string', 'max:150'],
@@ -121,6 +125,12 @@ class EvidenciaCalidadController extends Controller
     // POST /api/no-conformidades/{nc}/acciones
     public function agregarAccion(Request $request, NoConformidad $nc): JsonResponse
     {
+        if (! $request->user()->hasAnyRole(['superadmin', 'admin', 'director_academico', 'direccion_academica'])) {
+            abort(403, 'Sin permiso para registrar acciones correctivas.');
+        }
+
+        abort_if($nc->estatus === 'cerrada', 422, 'No se pueden agregar acciones a una no conformidad ya cerrada.');
+
         $data = $request->validate([
             'descripcion'       => ['required', 'string'],
             'fecha_compromiso'  => ['required', 'date', 'after_or_equal:today'],

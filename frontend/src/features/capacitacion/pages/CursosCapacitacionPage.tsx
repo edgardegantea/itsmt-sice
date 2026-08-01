@@ -7,6 +7,7 @@ import {
   type DatosCedula,
   type CursoParams,
 } from '../services/capacitacion'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const ESTATUS_BADGE: Record<string, string> = {
   planeado:   'bg-blue-100 text-blue-800',
@@ -37,6 +38,7 @@ export default function CursosCapacitacionPage() {
 
   const [tab, setTab]               = useState<'lista' | 'nuevo' | 'inscritos' | 'inscribir'>('lista')
   const [selectedCurso, setSelected] = useState<CursoCapacitacion | null>(null)
+  const [detalleInscrito, setDetalleInscrito] = useState<any | null>(null)
 
   const [cursoForm, setCursoForm] = useState<Partial<CursoParams>>({ tipo: 'formacion_docente', modalidad: 'presencial', origen: 'interno' })
   const [cedulaForm, setCedula]   = useState<Partial<DatosCedula>>({ sexo: 'H' })
@@ -45,14 +47,17 @@ export default function CursosCapacitacionPage() {
     queryKey: ['cursos-capacitacion'],
     queryFn: () => capacitacionService.getCursos(),
   })
-  const cursos: CursoCapacitacion[] = (cursosResp?.data as { data?: CursoCapacitacion[] })?.data ?? []
+  const cursosPage = (cursosResp?.data as { data?: { data?: CursoCapacitacion[] } | CursoCapacitacion[] })?.data
+  const cursos: CursoCapacitacion[] = Array.isArray(cursosPage)
+    ? cursosPage
+    : (cursosPage?.data ?? [])
 
   const { data: inscritosResp } = useQuery({
     queryKey: ['inscritos', selectedCurso?.id],
     queryFn: () => capacitacionService.getInscritos(selectedCurso!.id),
     enabled: !!selectedCurso && tab === 'inscritos',
   })
-  const inscritos = inscritosResp?.data ?? []
+  const inscritos = (inscritosResp?.data as { data?: unknown[] })?.data ?? []
 
   const crearMut = useMutation({
     mutationFn: (d: CursoParams) => capacitacionService.crearCurso(d),
@@ -335,12 +340,13 @@ export default function CursosCapacitacionPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Puesto</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Estatus</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Cédula</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {Array.isArray(inscritos) && inscritos.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-gray-400">
+                  <td colSpan={6} className="text-center py-8 text-gray-400">
                     No hay inscritos aún.
                   </td>
                 </tr>
@@ -359,6 +365,9 @@ export default function CursosCapacitacionPage() {
                     >
                       PDF
                     </button>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => setDetalleInscrito(ced)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -448,6 +457,23 @@ export default function CursosCapacitacionPage() {
             </div>
           </form>
         </div>
+      )}
+
+      {detalleInscrito && (
+        <DetailModal
+          title={detalleInscrito.usuario?.name ?? 'Inscrito'}
+          onClose={() => setDetalleInscrito(null)}
+          fields={[
+            { label: 'RFC', value: detalleInscrito.rfc },
+            { label: 'CURP', value: detalleInscrito.curp },
+            { label: 'Puesto', value: detalleInscrito.puesto },
+            { label: 'Área de adscripción', value: detalleInscrito.area_adscripcion },
+            { label: 'Carrera', value: detalleInscrito.nombre_carrera },
+            { label: 'Jefe inmediato', value: detalleInscrito.jefe_inmediato },
+            { label: 'Estatus', value: detalleInscrito.estatus },
+          ]}
+          footer={<button onClick={() => descargarCedula(detalleInscrito.id)} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Descargar PDF</button>}
+        />
       )}
     </div>
   )

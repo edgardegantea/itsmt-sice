@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type AlertaInasistencia } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const PCT_COLOR = (pct: number) =>
   pct >= 50 ? 'text-red-700 bg-red-100' : pct >= 25 ? 'text-orange-700 bg-orange-100' : 'text-yellow-700 bg-yellow-100'
@@ -9,6 +12,8 @@ export default function AlertasInasistenciaPage() {
   const qc = useQueryClient()
   const toastSuccess = useToastStore(s => s.success)
   const toastError   = useToastStore(s => s.error)
+  const [vista, setVista] = useViewMode('alertas-inasistencia')
+  const [detalle, setDetalle] = useState<AlertaInasistencia | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['alertas-inasistencia'],
@@ -29,9 +34,12 @@ export default function AlertasInasistenciaPage() {
   return (
     <div className="min-h-full bg-slate-50 p-6">
       <div className="space-y-5">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Alertas de Inasistencia</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Alumnos que han superado el 25% de inasistencias</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Alertas de Inasistencia</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Alumnos que han superado el 25% de inasistencias</p>
+          </div>
+          <ViewToggle value={vista} onChange={setVista} />
         </div>
 
         {isLoading ? (
@@ -45,7 +53,7 @@ export default function AlertasInasistenciaPage() {
             </svg>
             <p className="text-slate-500 text-sm">Sin alertas activas. Todos los alumnos están dentro del rango aceptable.</p>
           </div>
-        ) : (
+        ) : vista === 'lista' ? (
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -55,6 +63,7 @@ export default function AlertasInasistenciaPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">% Inasistencia</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Leída</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Fecha</th>
+                  <th />
                   <th />
                 </tr>
               </thead>
@@ -95,14 +104,52 @@ export default function AlertasInasistenciaPage() {
                           Marcar leída
                         </button>
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={() => setDetalle(a)} className="text-xs font-medium text-slate-500 hover:underline whitespace-nowrap">Ver detalle</button>
+                      </td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {alertas.map(a => (
+              <div key={a.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                <p className="font-medium text-slate-800 truncate">{a.alumno?.name ?? '—'}</p>
+                <p className="text-xs text-slate-500">{a.grupo?.clave ?? '—'}</p>
+                <span className={`text-sm font-bold px-2 py-0.5 rounded-full self-start ${PCT_COLOR(a.porcentaje_inasistencia)}`}>
+                  {a.porcentaje_inasistencia.toFixed(1)}%
+                </span>
+                <div className="flex gap-3 mt-1">
+                  <button onClick={() => mutLeer.mutate(a.id)} disabled={mutLeer.isPending} className="text-xs text-blue-600 hover:underline disabled:opacity-50">Marcar leída</button>
+                  <button onClick={() => setDetalle(a)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.name ?? 'Alerta'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Correo', value: detalle.alumno?.email },
+            { label: 'Grupo', value: detalle.grupo?.clave },
+            { label: 'Carrera', value: detalle.grupo?.carrera?.nombre },
+            { label: 'Periodo', value: detalle.grupo?.periodo?.nombre },
+            { label: '% Inasistencia', value: `${detalle.porcentaje_inasistencia.toFixed(1)}%` },
+            { label: 'Leída por docente', value: detalle.leida_docente ? 'Sí' : 'No' },
+            { label: 'Leída por jefe', value: detalle.leida_jefe ? 'Sí' : 'No' },
+            { label: 'Leída por director', value: detalle.leida_director ? 'Sí' : 'No' },
+            { label: 'Fecha', value: new Date(detalle.created_at).toLocaleDateString('es-MX') },
+          ]}
+          footer={<button onClick={() => mutLeer.mutate(detalle.id)} disabled={mutLeer.isPending} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Marcar leída</button>}
+        />
+      )}
     </div>
   )
 }

@@ -3,17 +3,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type CargaAcademica } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
 import { Field, ModalWrap, Th, EmptyRow, icls, usePeriodos, mutationError, extractApiErrors } from './shared'
+import DetailModal from '../../../../components/ui/DetailModal'
 
 export default function CargasTab() {
   const qc = useQueryClient()
   const { toast: addToast } = useToastStore()
   const [filtroPeriodo, setFiltroPeriodo] = useState('')
   const [filtroDocente, setFiltroDocente] = useState('')
-  const [modal, setModal] = useState<Partial<CargaAcademica> | null>(null)
+  const [modal, setModal] = useState<(Partial<CargaAcademica> & { grupo_ids?: string[] }) | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [detalle, setDetalle] = useState<CargaAcademica | null>(null)
 
   const { data: periodos = [] } = usePeriodos()
-  const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
+  const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: () => academicoApi.getDocentes(), staleTime: 60_000 })
   const { data: materias = [] } = useQuery({ queryKey: ['materias'], queryFn: () => academicoApi.getMaterias(), staleTime: 30_000 })
   const { data: grupos = [] } = useQuery({ queryKey: ['grupos'], queryFn: () => academicoApi.getGrupos(), staleTime: 30_000 })
 
@@ -43,7 +45,12 @@ export default function CargasTab() {
     onError: (e) => addToast(mutationError(e), 'error'),
   })
 
-  const set = (k: keyof CargaAcademica, v: unknown) => setModal(m => ({ ...m, [k]: v }))
+  const set = (k: keyof CargaAcademica | 'grupo_ids', v: unknown) => setModal(m => ({ ...m, [k]: v }))
+  const toggleModalGrupo = (id: string) => setModal(m => {
+    const actuales = m?.grupo_ids ?? m?.grupos?.map(g => g.id) ?? []
+    const siguientes = actuales.includes(id) ? actuales.filter(x => x !== id) : [...actuales, id]
+    return { ...m, grupo_ids: siguientes }
+  })
 
   // Resumen de horas por docente
   const horasPorDocente = cargas.reduce<Record<string, number>>((acc, c) => {
@@ -80,7 +87,7 @@ export default function CargasTab() {
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr><Th>Docente</Th><Th>Materia</Th><Th>Grupo</Th><Th>Periodo</Th><Th>Horas/sem</Th><Th /></tr>
+            <tr><Th>Docente</Th><Th>Materia</Th><Th>Grupo</Th><Th>Periodo</Th><Th>Horas/sem</Th><Th /><Th /></tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {isLoading && <EmptyRow cols={6} msg="Cargando…" />}
@@ -89,12 +96,17 @@ export default function CargasTab() {
               <tr key={c.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-900">{c.docente?.name ?? '—'}</td>
                 <td className="px-4 py-3 text-slate-700">{c.materia?.nombre ?? '—'}</td>
-                <td className="px-4 py-3 font-mono text-xs text-slate-600">{c.grupo?.clave ?? '—'}</td>
+                <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                  {c.grupos?.[0]?.clave ?? '—'}{(c.grupos?.length ?? 0) > 1 && ` +${c.grupos!.length - 1}`}
+                </td>
                 <td className="px-4 py-3 text-slate-600">{c.periodo?.nombre ?? '—'}</td>
                 <td className="px-4 py-3 text-center font-semibold text-slate-800">{c.horas_semana}h</td>
                 <td className="px-4 py-3 text-right space-x-2">
                   <button onClick={() => setModal(c)} className="text-xs text-blue-600 hover:underline">Editar</button>
                   <button onClick={() => window.confirm('¿Eliminar carga?') && del.mutate(c.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                 </td>
               </tr>
             ))}
@@ -116,11 +128,18 @@ export default function CargasTab() {
               {materias.map(m => <option key={m.id} value={m.id}>{m.nombre} ({m.clave})</option>)}
             </select>
           </Field>
-          <Field label="Grupo" error={errors.grupo_id}>
-            <select className={icls(errors.grupo_id)} value={modal.grupo_id ?? ''} onChange={e => set('grupo_id', e.target.value)}>
-              <option value="">— Seleccionar grupo —</option>
-              {grupos.map(g => <option key={g.id} value={g.id}>{g.clave} — {g.carrera?.clave}</option>)}
-            </select>
+          <Field label="Grupo(s)" full error={errors.grupo_ids}>
+            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
+              {grupos.map(g => {
+                const seleccionados = modal.grupo_ids ?? modal.grupos?.map(x => x.id) ?? []
+                return (
+                  <label key={g.id} className="flex items-center gap-2 text-sm px-1 py-0.5 rounded cursor-pointer hover:bg-slate-50">
+                    <input type="checkbox" checked={seleccionados.includes(g.id)} onChange={() => toggleModalGrupo(g.id)} />
+                    <span>{g.clave} — {g.carrera?.clave}</span>
+                  </label>
+                )
+              })}
+            </div>
           </Field>
           <Field label="Periodo" error={errors.periodo_id}>
             <select className={icls(errors.periodo_id)} value={modal.periodo_id ?? ''} onChange={e => set('periodo_id', e.target.value)}>
@@ -132,6 +151,19 @@ export default function CargasTab() {
             <input className={icls(errors.horas_semana)} type="number" min={1} max={40} value={modal.horas_semana ?? 3} onChange={e => set('horas_semana', Number(e.target.value))} />
           </Field>
         </ModalWrap>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.materia?.nombre ?? 'Carga académica'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Docente', value: detalle.docente?.name },
+            { label: 'Periodo', value: detalle.periodo?.nombre },
+            { label: 'Horas por semana', value: `${detalle.horas_semana}h` },
+            { label: 'Grupos', value: detalle.grupos?.map(g => g.clave).join(', '), full: true },
+          ]}
+        />
       )}
     </div>
   )

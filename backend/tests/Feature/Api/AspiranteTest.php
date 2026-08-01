@@ -68,6 +68,7 @@ class AspiranteTest extends TestCase
             'medio_enterado'          => 'redes sociales',
             'tiene_equipo_computo'    => true,
             'constancia_bachillerato' => UploadedFile::fake()->create('constancia.pdf', 100, 'application/pdf'),
+            'foto' => UploadedFile::fake()->image('foto.jpg', 400, 500),
             'email'                   => 'laura@test.com',
             'carrera_id'              => $this->carrera->id,
             'periodo_id'              => $this->periodo->id,
@@ -114,6 +115,7 @@ class AspiranteTest extends TestCase
             'curp'             => 'PEPJ990101HVZRRA09',
             'email'            => 'juan@test.com',
             'constancia_bachillerato' => UploadedFile::fake()->create('constancia.pdf', 100, 'application/pdf'),
+            'foto' => UploadedFile::fake()->image('foto.jpg', 400, 500),
         ]), ['Accept' => 'application/json']);
 
         $response->assertStatus(201)
@@ -335,6 +337,7 @@ class AspiranteTest extends TestCase
             'curp'  => 'DOCM990101HVZDCX11',
             'email' => 'docs@test.com',
             'constancia_bachillerato' => UploadedFile::fake()->create('cert.pdf', 100, 'application/pdf'),
+            'foto' => UploadedFile::fake()->image('foto.jpg', 400, 500),
         ]), ['Accept' => 'application/json'])->assertStatus(201);
 
         $aspirante = \App\Domains\Admision\Models\Aspirante::where('email', 'docs@test.com')->first();
@@ -477,6 +480,24 @@ class AspiranteTest extends TestCase
 
         $r->assertOk();
         $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    public function test_carta_compromiso_docs_activa_bandera_certificado_pendiente(): void
+    {
+        $this->mock(GotenbergService::class, fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
+        $inscripcion = $this->crearInscripcion();
+
+        // Simular que el alumno ya no tenía la bandera activa (p. ej. se desbloqueó antes)
+        $inscripcion->alumno->update(['pendiente_certificado_bachillerato' => false]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/inscripciones/{$inscripcion->id}/carta-compromiso-docs/pdf")
+            ->assertOk();
+
+        $this->assertDatabaseHas('alumnos', [
+            'id' => $inscripcion->alumno->id,
+            'pendiente_certificado_bachillerato' => true,
+        ]);
     }
 
     public function test_puede_generar_libro_registro_nc(): void

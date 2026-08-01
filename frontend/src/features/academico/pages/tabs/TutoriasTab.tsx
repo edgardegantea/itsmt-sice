@@ -13,7 +13,7 @@ export default function TutoriasTab() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { data: periodos = [] } = usePeriodos()
-  const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
+  const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: () => academicoApi.getDocentes(), staleTime: 60_000 })
   const { data: alumnos = [] } = useAlumnos()
 
   const { data: tutorias = [], isLoading } = useQuery({

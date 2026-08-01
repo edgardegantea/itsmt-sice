@@ -23,26 +23,38 @@ class BuilderHorarioController extends Controller
     /**
      * GET /horarios/builder-grid
      *
-     * Devuelve el estado de cada franja horaria (disponible/fuera_disponibilidad/
-     * reservado_actual/reservado_otro) para un docente en un periodo, con la
-     * opción de superponer la ocupación de un grupo específico.
+     * Modo docente (docente_id presente): estado de cada franja horaria
+     * (disponible/fuera_disponibilidad/reservado/grupo_ocupado) para ESE
+     * docente, con la opción de superponer la ocupación de un grupo específico.
+     *
+     * Modo grupo (solo grupo_id, sin docente_id): estado de cada franja para
+     * ESE grupo (con cualquier docente) — no hay concepto de "disponibilidad"
+     * porque no hay un docente fijo todavía; toda franja libre es "disponible".
      */
     public function gridData(Request $request): JsonResponse
     {
         $data = $request->validate([
             'periodo_id' => ['required', 'uuid', 'exists:periodos,id'],
-            'docente_id' => ['required', 'uuid', 'exists:users,id'],
+            'docente_id' => ['nullable', 'uuid', 'exists:users,id'],
             'grupo_id'   => ['nullable', 'uuid', 'exists:grupos,id'],
+            'carrera_id' => ['nullable', 'uuid', 'exists:carreras,id'],
         ]);
 
-        $carreraForzada = $request->user()?->carreraRestringida();
+        abort_if(empty($data['docente_id']) && empty($data['grupo_id']), 422, 'Debes indicar docente_id o grupo_id.');
 
+        return empty($data['docente_id'])
+            ? $this->gridDataPorGrupo($data)
+            : $this->gridDataPorDocente($data);
+    }
+
+    private function gridDataPorDocente(array $data): JsonResponse
+    {
         $disponibilidad = DisponibilidadDocente::where('docente_id', $data['docente_id'])
             ->where('periodo_id', $data['periodo_id'])
             ->get(['dia_semana', 'hora_inicio', 'hora_fin']);
 
         // Cargas del docente en el periodo (cualquier carrera) con sus horarios
-        $cargasDocente = CargaAcademica::with(['materia:id,nombre,modulo_sabatino', 'grupo:id,clave', 'aula:id,nombre', 'horarios'])
+        $cargasDocente = CargaAcademica::with(['materia:id,nombre,modulo_sabatino', 'grupos:id,clave,carrera_id', 'aula:id,nombre', 'horarios'])
             ->where('periodo_id', $data['periodo_id'])
             ->where('docente_id', $data['docente_id'])
             ->get();
@@ -51,7 +63,7 @@ class BuilderHorarioController extends Controller
         $cargasGrupo = ($data['grupo_id'] ?? null)
             ? CargaAcademica::with(['materia:id,nombre', 'docente:id,name', 'horarios'])
                 ->where('periodo_id', $data['periodo_id'])
-                ->where('grupo_id', $data['grupo_id'])
+                ->whereHas('grupos', fn($q) => $q->where('grupos.id', $data['grupo_id']))
                 ->get()
             : collect();
 
@@ -69,14 +81,93 @@ class BuilderHorarioController extends Controller
                     'hora_inicio' => substr($b->hora_inicio, 0, 5),
                     'hora_fin'    => substr($b->hora_fin, 0, 5),
                 ])->values(),
-                'horas'         => $this->construirHoras($slots, $cargasDia, $cargasGrupoDia, $bloquesDia, $dia, $data['grupo_id'] ?? null, 1),
+                'horas'         => $this->construirHoras($slots, $cargasDia, $cargasGrupoDia, $bloquesDia, $dia, $data['grupo_id'] ?? null, 1, $data['carrera_id'] ?? null),
                 'horas_modulo2' => $dia === 'sabado'
-                    ? $this->construirHoras($slots, $cargasDia, $cargasGrupoDia, $bloquesDia, $dia, $data['grupo_id'] ?? null, 2)
+                    ? $this->construirHoras($slots, $cargasDia, $cargasGrupoDia, $bloquesDia, $dia, $data['grupo_id'] ?? null, 2, $data['carrera_id'] ?? null)
                     : null,
             ];
         }
 
         return ApiResponse::success(['dias' => $dias]);
+    }
+
+    private function gridDataPorGrupo(array $data): JsonResponse
+    {
+        // Cargas del grupo en el periodo (con cualquier docente) con sus horarios
+        $cargasGrupo = CargaAcademica::with(['materia:id,nombre,modulo_sabatino', 'docente:id,name', 'aula:id,nombre', 'horarios', 'grupos:id,clave'])
+            ->where('periodo_id', $data['periodo_id'])
+            ->whereHas('grupos', fn($q) => $q->where('grupos.id', $data['grupo_id']))
+            ->get();
+
+        $slots = $this->generarSlots();
+        $dias  = [];
+
+        foreach (self::DIAS as $dia) {
+            $cargasDia = $cargasGrupo->filter(fn($c) => $c->horarios->where('dia_semana', $dia)->isNotEmpty());
+
+            $dias[] = [
+                'dia_semana'    => $dia,
+                'disponibilidad'=> [],
+                'horas'         => $this->construirHorasGrupo($slots, $cargasDia, $dia, 1),
+                'horas_modulo2' => $dia === 'sabado'
+                    ? $this->construirHorasGrupo($slots, $cargasDia, $dia, 2)
+                    : null,
+            ];
+        }
+
+        return ApiResponse::success(['dias' => $dias]);
+    }
+
+    /** Igual que construirHoras() pero sin docente fijo: toda franja libre queda "disponible". */
+    private function construirHorasGrupo(array $slots, $cargasDia, string $dia, int $modulo): array
+    {
+        $horas = [];
+
+        foreach ($slots as $hora) {
+            $inicioMin = $this->aMinutos($hora);
+            $finMin    = $inicioMin + 60;
+
+            $cargasFiltradas = $dia === 'sabado'
+                ? $cargasDia->filter(fn($c) => (int)($c->materia?->modulo_sabatino ?? 1) === $modulo
+                    || (int)($c->materia?->modulo_sabatino ?? 0) === 0)
+                : $cargasDia;
+
+            $carga = $cargasFiltradas->first(function ($c) use ($inicioMin, $finMin, $dia) {
+                return $c->horarios->where('dia_semana', $dia)->contains(function ($h) use ($inicioMin, $finMin) {
+                    return $this->aMinutos($h->hora_inicio) < $finMin
+                        && $this->aMinutos($h->hora_fin) > $inicioMin;
+                });
+            });
+
+            if ($carga) {
+                $bloqueDelDia = $carga->horarios->where('dia_semana', $dia)->first(function ($h) use ($inicioMin, $finMin) {
+                    return $this->aMinutos($h->hora_inicio) < $finMin && $this->aMinutos($h->hora_fin) > $inicioMin;
+                }) ?? $carga->horarios->where('dia_semana', $dia)->first();
+
+                $horas[] = [
+                    'hora'        => $hora,
+                    'estado'      => 'reservado',
+                    'carga_id'    => $carga->id,
+                    'horario_id'  => $bloqueDelDia?->id,
+                    'materia'     => $carga->materia?->nombre,
+                    'materia_id'  => $carga->materia_id,
+                    'grupo'       => $carga->grupos->pluck('clave')->implode(', '),
+                    'grupo_ids'   => $carga->grupos->pluck('id'),
+                    'docente'     => $carga->docente?->name,
+                    'docente_id'  => $carga->docente_id,
+                    'aula'        => $carga->aula?->nombre,
+                    'aula_id'     => $carga->aula_id,
+                    'carga_estado'=> $carga->estado,
+                    'hora_inicio' => $bloqueDelDia?->hora_inicio,
+                    'hora_fin'    => $bloqueDelDia?->hora_fin,
+                ];
+                continue;
+            }
+
+            $horas[] = ['hora' => $hora, 'estado' => 'disponible'];
+        }
+
+        return $horas;
     }
 
     /**
@@ -91,7 +182,8 @@ class BuilderHorarioController extends Controller
             'hora_inicio'      => ['required', 'date_format:H:i'],
             'hora_fin'         => ['required', 'date_format:H:i', 'after:hora_inicio'],
             'aula_id'          => ['nullable', 'uuid', 'exists:aulas,id'],
-            'grupo_id'         => ['nullable', 'uuid', 'exists:grupos,id'],
+            'grupo_ids'        => ['nullable', 'array'],
+            'grupo_ids.*'      => ['uuid', 'exists:grupos,id'],
             'materia_id'       => ['nullable', 'uuid', 'exists:materias,id'],
             'ignorar_carga_id' => ['nullable', 'uuid', 'exists:cargas_academicas,id'],
         ]);
@@ -103,13 +195,15 @@ class BuilderHorarioController extends Controller
             horaInicio:      $data['hora_inicio'],
             horaFin:         $data['hora_fin'],
             aulaId:          $data['aula_id'] ?? null,
-            grupoId:         $data['grupo_id'] ?? null,
+            grupoIds:        $data['grupo_ids'] ?? null,
             ignorarCargaId:  $data['ignorar_carga_id'] ?? null,
             materiaId:       $data['materia_id'] ?? null,
         );
 
-        $resumenHoras = ($data['materia_id'] ?? null) && ($data['grupo_id'] ?? null)
-            ? $accion->resumenHoras($data['materia_id'], $data['grupo_id'], $data['periodo_id'], $data['ignorar_carga_id'] ?? null)
+        $resumenHoras = ($data['materia_id'] ?? null) && ! empty($data['grupo_ids'])
+            ? collect($data['grupo_ids'])->mapWithKeys(fn($gid) => [
+                $gid => $accion->resumenHoras($data['materia_id'], $gid, $data['periodo_id'], $data['ignorar_carga_id'] ?? null),
+            ])->filter()
             : null;
 
         return ApiResponse::success([
@@ -132,7 +226,8 @@ class BuilderHorarioController extends Controller
             'periodo_id'  => ['required', 'uuid', 'exists:periodos,id'],
             'docente_id'  => ['required', 'uuid', 'exists:users,id'],
             'materia_id'  => ['required', 'uuid', 'exists:materias,id'],
-            'grupo_id'    => ['required', 'uuid', 'exists:grupos,id'],
+            'grupo_ids'   => ['required', 'array', 'min:1'],
+            'grupo_ids.*' => ['uuid', 'exists:grupos,id'],
             'aula_id'     => ['nullable', 'uuid', 'exists:aulas,id'],
             'dia_semana'  => ['required', 'in:lunes,martes,miercoles,jueves,viernes,sabado'],
             'hora_inicio' => ['required', 'date_format:H:i'],
@@ -141,8 +236,8 @@ class BuilderHorarioController extends Controller
 
         $carreraForzada = $request->user()?->carreraRestringida();
         if ($carreraForzada) {
-            $grupo = Grupo::findOrFail($data['grupo_id']);
-            if ($grupo->carrera_id !== $carreraForzada) {
+            $grupos = Grupo::whereIn('id', $data['grupo_ids'])->get();
+            if ($grupos->contains(fn($g) => $g->carrera_id !== $carreraForzada)) {
                 return ApiResponse::error('Solo puedes asignar cargas a grupos de tu carrera.', 403);
             }
         }
@@ -150,10 +245,13 @@ class BuilderHorarioController extends Controller
         return DB::transaction(function () use ($data, $accion) {
             // Advisory locks: serializa asignaciones concurrentes sobre el mismo
             // docente/aula para que la verificación de conflictos sea confiable.
-            $llaves = array_filter([crc32('docente:' . $data['docente_id']), ($data['aula_id'] ?? null) ? crc32('aula:' . $data['aula_id']) : null]);
-            sort($llaves);
-            foreach ($llaves as $llave) {
-                DB::statement('SELECT pg_advisory_xact_lock(?)', [$llave]);
+            // Solo aplica en Postgres; en SQLite (tests) no existe la función.
+            if (DB::getDriverName() === 'pgsql') {
+                $llaves = array_filter([crc32('docente:' . $data['docente_id']), ($data['aula_id'] ?? null) ? crc32('aula:' . $data['aula_id']) : null]);
+                sort($llaves);
+                foreach ($llaves as $llave) {
+                    DB::statement('SELECT pg_advisory_xact_lock(?)', [$llave]);
+                }
             }
 
             $resultado = $accion->ejecutar(
@@ -163,7 +261,7 @@ class BuilderHorarioController extends Controller
                 horaInicio: $data['hora_inicio'],
                 horaFin:    $data['hora_fin'],
                 aulaId:     $data['aula_id'] ?? null,
-                grupoId:    $data['grupo_id'],
+                grupoIds:   $data['grupo_ids'],
                 materiaId:  $data['materia_id'],
             );
 
@@ -177,43 +275,41 @@ class BuilderHorarioController extends Controller
 
             $materia = Materia::findOrFail($data['materia_id']);
 
-            $carga = CargaAcademica::firstOrCreate(
-                [
-                    'docente_id' => $data['docente_id'],
-                    'materia_id' => $data['materia_id'],
-                    'grupo_id'   => $data['grupo_id'],
-                    'periodo_id' => $data['periodo_id'],
-                ],
-                [
-                    'aula_id'      => $data['aula_id'] ?? null,
-                    'horas_semana' => max(1, ($materia->horas_teoria ?? 0) + ($materia->horas_practica ?? 0)),
-                    'estado'       => 'pendiente',
-                ]
-            );
+            // Cada bloque de horario (día+hora) es una CargaAcademica independiente
+            // con sus propios grupos — no se reutiliza entre bloques distintos del
+            // mismo docente+materia (así una materia puede darse a grupos distintos
+            // en días distintos).
+            $carga = CargaAcademica::create([
+                'docente_id'   => $data['docente_id'],
+                'materia_id'   => $data['materia_id'],
+                'periodo_id'   => $data['periodo_id'],
+                'aula_id'      => $data['aula_id'] ?? null,
+                'horas_semana' => max(1, ($materia->horas_teoria ?? 0) + ($materia->horas_practica ?? 0)),
+                'estado'       => 'pendiente',
+            ]);
 
-            if (! $carga->wasRecentlyCreated && ! empty($data['aula_id']) && ! $carga->aula_id) {
-                $carga->update(['aula_id' => $data['aula_id']]);
-            }
+            $carga->grupos()->sync($data['grupo_ids']);
 
-            $yaExiste = $carga->horarios()
-                ->where('dia_semana', $data['dia_semana'])
-                ->where('hora_inicio', $data['hora_inicio'])
-                ->where('hora_fin', $data['hora_fin'])
-                ->exists();
-
-            $horario = $yaExiste
-                ? $carga->horarios()->where('dia_semana', $data['dia_semana'])->where('hora_inicio', $data['hora_inicio'])->first()
-                : Horario::create([
+            try {
+                $horario = Horario::create([
                     'carga_academica_id' => $carga->id,
                     'dia_semana'         => $data['dia_semana'],
                     'hora_inicio'        => $data['hora_inicio'],
                     'hora_fin'           => $data['hora_fin'],
                 ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if (\App\Domains\Academico\Services\HorarioService::esViolacionDeExclusion($e)) {
+                    return ApiResponse::error('El horario se empalma con otro registro existente (docente o aula ya ocupados).', 422);
+                }
+                throw $e;
+            }
 
-            $resumenHoras = $accion->resumenHoras($data['materia_id'], $data['grupo_id'], $data['periodo_id']);
+            $resumenHoras = collect($data['grupo_ids'])->mapWithKeys(fn($gid) => [
+                $gid => $accion->resumenHoras($data['materia_id'], $gid, $data['periodo_id']),
+            ])->filter();
 
             return ApiResponse::success([
-                'carga'   => $carga->fresh(['docente', 'materia', 'grupo', 'aula']),
+                'carga'   => $carga->fresh(['docente', 'materia', 'grupos', 'aula']),
                 'horario' => $horario,
                 'horas'   => $resumenHoras,
             ], 'Clase asignada.', 201);
@@ -239,6 +335,7 @@ class BuilderHorarioController extends Controller
         string $dia,
         ?string $grupoId,
         int $modulo,
+        ?string $carreraId = null,
     ): array {
         $horas = [];
 
@@ -271,13 +368,14 @@ class BuilderHorarioController extends Controller
                     'horario_id'  => $bloqueDelDia?->id,
                     'materia'     => $carga->materia?->nombre,
                     'materia_id'  => $carga->materia_id,
-                    'grupo'       => $carga->grupo?->clave,
-                    'grupo_id'    => $carga->grupo_id,
+                    'grupo'       => $carga->grupos->pluck('clave')->implode(', '),
+                    'grupo_ids'   => $carga->grupos->pluck('id'),
                     'aula'        => $carga->aula?->nombre,
                     'aula_id'     => $carga->aula_id,
                     'carga_estado'=> $carga->estado,
                     'hora_inicio' => $bloqueDelDia?->hora_inicio,
                     'hora_fin'    => $bloqueDelDia?->hora_fin,
+                    'misma_carrera' => $carreraId ? $carga->grupos->contains(fn($g) => $g->carrera_id === $carreraId) : null,
                 ];
                 continue;
             }

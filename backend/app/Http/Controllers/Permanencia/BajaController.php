@@ -102,6 +102,11 @@ class BajaController extends Controller
     {
         $this->authorize('create', Baja::class);
 
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada && $baja->alumno->carrera_id !== $carreraForzada) {
+            return ApiResponse::error('Solo puedes gestionar bajas de alumnos de tu carrera.', 403);
+        }
+
         if ($baja->estatus !== 'pendiente') {
             return ApiResponse::error('Solo se pueden aprobar o rechazar bajas en estado pendiente.', 422);
         }
@@ -127,9 +132,14 @@ class BajaController extends Controller
     }
 
     // GET /api/alumnos/{alumno}/bajas
-    public function porAlumno(Alumno $alumno): JsonResponse
+    public function porAlumno(Request $request, Alumno $alumno): JsonResponse
     {
         $this->authorize('viewAny', Baja::class);
+
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada && $alumno->carrera_id !== $carreraForzada) {
+            return ApiResponse::error('Sin acceso a las bajas de alumnos de otras carreras.', 403);
+        }
 
         $bajas = Baja::with(['periodo', 'registradaPor'])
             ->where('alumno_id', $alumno->id)
@@ -137,6 +147,25 @@ class BajaController extends Controller
             ->get();
 
         return ApiResponse::success($bajas);
+    }
+
+    // PATCH /api/bajas/{baja}/reingreso  (admin/jefe formaliza el reingreso de una baja temporal aprobada)
+    public function registrarReingreso(Request $request, Baja $baja): JsonResponse
+    {
+        $this->authorize('reingreso', Baja::class);
+
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada && $baja->alumno->carrera_id !== $carreraForzada) {
+            return ApiResponse::error('Solo puedes gestionar bajas de alumnos de tu carrera.', 403);
+        }
+
+        try {
+            $baja = $this->service->registrarReingreso($baja, $request->user());
+        } catch (\DomainException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        return ApiResponse::success($baja, 'Reingreso registrado. El alumno vuelve a estatus activo.');
     }
 
     // GET /api/bajas/mias  (alumno ve sus propias bajas)

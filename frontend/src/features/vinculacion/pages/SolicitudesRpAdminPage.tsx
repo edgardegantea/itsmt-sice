@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vinculacionApi, type SolicitudRp } from '../services/vinculacion'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const ESTATUS_COLOR: Record<string, string> = {
   pendiente_dictamen:       'bg-yellow-100 text-yellow-800',
@@ -36,6 +38,8 @@ export default function SolicitudesRpAdminPage() {
   const qc = useQueryClient()
   const [filtroEstatus, setFiltroEstatus] = useState('')
   const [dictamenOpen, setDictamenOpen] = useState<string | null>(null)
+  const [vista, setVista] = useViewMode('solicitudes-rp')
+  const [detalle, setDetalle] = useState<SolicitudRp | null>(null)
   const [form, setForm] = useState<DictamenForm>({
     solicitud_rp_id: '',
     anteproyecto: '',
@@ -82,11 +86,45 @@ export default function SolicitudesRpAdminPage() {
     setDictamenOpen(s.id)
   }
 
+  function Acciones({ s }: { s: SolicitudRp }) {
+    return (
+      <div className="flex gap-2 flex-wrap">
+        {s.estatus === 'pendiente_dictamen' && (
+          <button
+            onClick={() => abrirDictamen(s)}
+            className="px-2.5 py-1 rounded text-xs font-medium bg-blue-700 text-white hover:bg-blue-900"
+          >
+            Emitir dictamen
+          </button>
+        )}
+        {s.estatus === 'con_dictamen_aceptado' && !s.dictamen && (
+          <button
+            onClick={() => mutCrearResidencia.mutate(s.id)}
+            className="px-2.5 py-1 rounded text-xs font-medium bg-green-700 text-white hover:bg-green-900"
+          >
+            Crear expediente RP
+          </button>
+        )}
+        {s.dictamen && (
+          <button
+            onClick={() => window.open(vinculacionApi.getDictamenPdfUrl(s.dictamen!.id), '_blank')}
+            className="px-2.5 py-1 rounded text-xs border border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            Dictamen PDF
+          </button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-800">Solicitudes de Residencia Profesional</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Gestión de solicitudes y dictámenes de anteproyecto (TecNM-AC-PO-004-04).</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-800">Solicitudes de Residencia Profesional</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Gestión de solicitudes y dictámenes de anteproyecto (TecNM-AC-PO-004-04).</p>
+        </div>
+        <ViewToggle value={vista} onChange={setVista} />
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -106,12 +144,12 @@ export default function SolicitudesRpAdminPage() {
         <p className="text-slate-500 text-sm">Cargando…</p>
       ) : solicitudes.length === 0 ? (
         <p className="text-slate-400 text-sm">No hay solicitudes.</p>
-      ) : (
+      ) : vista === 'lista' ? (
         <div className="overflow-x-auto rounded-lg border border-slate-200">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50">
               <tr>
-                {['Alumno', 'NC', 'Empresa', 'Opción', 'Estatus', 'Acciones'].map(h => (
+                {['Alumno', 'NC', 'Empresa', 'Opción', 'Estatus', 'Acciones', ''].map(h => (
                   <th key={h} className="px-4 py-2.5 text-left font-medium text-slate-600 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -129,39 +167,48 @@ export default function SolicitudesRpAdminPage() {
                   <td className="px-4 py-3 text-slate-700">{s.datos_empresa?.nombre ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600 capitalize">{s.opcion?.replace('_', ' ')}</td>
                   <td className="px-4 py-3"><Badge estatus={s.estatus} /></td>
+                  <td className="px-4 py-3"><Acciones s={s} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2 flex-wrap">
-                      {s.estatus === 'pendiente_dictamen' && (
-                        <button
-                          onClick={() => abrirDictamen(s)}
-                          className="px-2.5 py-1 rounded text-xs font-medium bg-blue-700 text-white hover:bg-blue-900"
-                        >
-                          Emitir dictamen
-                        </button>
-                      )}
-                      {s.estatus === 'con_dictamen_aceptado' && !s.dictamen && (
-                        <button
-                          onClick={() => mutCrearResidencia.mutate(s.id)}
-                          className="px-2.5 py-1 rounded text-xs font-medium bg-green-700 text-white hover:bg-green-900"
-                        >
-                          Crear expediente RP
-                        </button>
-                      )}
-                      {s.dictamen && (
-                        <button
-                          onClick={() => window.open(vinculacionApi.getDictamenPdfUrl(s.dictamen!.id), '_blank')}
-                          className="px-2.5 py-1 rounded text-xs border border-slate-300 text-slate-700 hover:bg-slate-50"
-                        >
-                          Dictamen PDF
-                        </button>
-                      )}
-                    </div>
+                    <button onClick={() => setDetalle(s)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {solicitudes.map((s: SolicitudRp) => (
+            <div key={s.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-800 truncate">{s.alumno?.user?.name ?? '—'}</p>
+                  <p className="text-xs text-slate-400 font-mono">{s.alumno?.numero_control ?? '—'}</p>
+                </div>
+                <Badge estatus={s.estatus} />
+              </div>
+              <p className="text-sm text-slate-600 truncate">{s.datos_empresa?.nombre ?? '—'}</p>
+              <p className="text-xs text-slate-500 capitalize">{s.opcion?.replace('_', ' ')}</p>
+              <Acciones s={s} />
+              <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.user?.name ?? 'Solicitud RP'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Número de control', value: detalle.alumno?.numero_control },
+            { label: 'Carrera', value: detalle.alumno?.carrera?.nombre },
+            { label: 'Empresa', value: detalle.datos_empresa?.nombre },
+            { label: 'Opción', value: detalle.opcion?.replace('_', ' ') },
+            { label: 'Estatus', value: <Badge estatus={detalle.estatus} /> },
+          ]}
+          footer={<Acciones s={detalle} />}
+        />
       )}
 
       {/* Modal dictamen */}

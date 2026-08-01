@@ -21,7 +21,7 @@ class EvaluacionDocenteController extends Controller
 
         if ($user->hasRole('alumno')) {
             $alumno  = Alumno::where('user_id', $user->id)->firstOrFail();
-            $periodo = Periodo::where('activo', true)->first();
+            $periodo = Periodo::activo();
 
             if (! $periodo) {
                 return ApiResponse::success([]);
@@ -71,7 +71,7 @@ class EvaluacionDocenteController extends Controller
         }
 
         $alumno  = Alumno::where('user_id', $request->user()->id)->firstOrFail();
-        $periodo = Periodo::where('activo', true)->firstOrFail();
+        $periodo = (Periodo::activo() ?? abort(404, 'No hay periodo activo.'));
 
         $data = $request->validate([
             'grupo_id'   => ['required', 'uuid', 'exists:grupos,id'],

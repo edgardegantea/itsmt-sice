@@ -18,7 +18,7 @@
       </tr>
       <tr>
         <td style="padding:6px 12px;background:#f5f7fa;font-weight:bold">Grupo</td>
-        <td style="padding:6px 12px;border-bottom:1px solid #eee">{{ $planeacion->cargaAcademica?->grupo?->nombre ?? '—' }}</td>
+        <td style="padding:6px 12px;border-bottom:1px solid #eee">{{ $planeacion->cargaAcademica?->grupos->pluck('clave')->implode(', ') ?: '—' }}</td>
       </tr>
       <tr>
         <td style="padding:6px 12px;background:#f5f7fa;font-weight:bold">Periodo</td>

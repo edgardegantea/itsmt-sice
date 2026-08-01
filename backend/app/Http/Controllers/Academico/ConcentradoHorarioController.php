@@ -10,12 +10,13 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ConcentradoHorarioController extends Controller
 {
-    // GET /horarios/concentrado?periodo_id=&carrera_id=
+    // GET /horarios/concentrado?periodo_id=&carrera_id=&turno=
     public function export(Request $request): BinaryFileResponse
     {
         $data = $request->validate([
             'periodo_id' => ['required', 'uuid', 'exists:periodos,id'],
             'carrera_id' => ['nullable', 'uuid', 'exists:carreras,id'],
+            'turno'      => ['nullable', 'in:matutino,vespertino,sabatino'],
         ]);
 
         $carreraForzada = $request->user()?->carreraRestringida();
@@ -24,6 +25,7 @@ class ConcentradoHorarioController extends Controller
             new ConcentradoHorarioExport(
                 periodoId: $data['periodo_id'],
                 carreraId: $carreraForzada ?? ($data['carrera_id'] ?? null),
+                turno: $data['turno'] ?? null,
             ),
             'concentrado-horarios.xlsx',
         );

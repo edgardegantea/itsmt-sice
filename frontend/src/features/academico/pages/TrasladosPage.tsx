@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Traslado } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 type EstatusTraslado = 'solicitado' | 'aceptado' | 'rechazado'
 
@@ -33,6 +35,8 @@ export default function TrasladosPage() {
     instituto_origen: '', instituto_destino: '',
     fecha_solicitud: new Date().toISOString().split('T')[0],
   })
+  const [vista, setVista] = useViewMode('traslados')
+  const [detalle, setDetalle] = useState<Traslado | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['traslados', filtroEstatus, filtroTipo],
@@ -73,12 +77,15 @@ export default function TrasladosPage() {
             <h1 className="text-2xl font-bold text-slate-800">Traslados</h1>
             <p className="text-sm text-slate-500 mt-1">Solicitudes de traslado de entrada y salida — TecNM Cap. 6</p>
           </div>
-          <button
-            onClick={() => setShowForm(v => !v)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            {showForm ? 'Cancelar' : '+ Nuevo traslado'}
-          </button>
+          <div className="flex items-center gap-2">
+            <ViewToggle value={vista} onChange={setVista} />
+            <button
+              onClick={() => setShowForm(v => !v)}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {showForm ? 'Cancelar' : '+ Nuevo traslado'}
+            </button>
+          </div>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
@@ -200,7 +207,7 @@ export default function TrasladosPage() {
               <p className="font-medium">Sin solicitudes de traslado</p>
               <p className="text-sm mt-1">Registra la primera solicitud</p>
             </div>
-          ) : (
+          ) : vista === 'lista' ? (
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
@@ -210,6 +217,7 @@ export default function TrasladosPage() {
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">Fecha</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">Estatus</th>
                   <th className="text-center py-3 px-4 font-semibold text-slate-600">Acciones</th>
+                  <th className="text-right py-3 px-5" />
                 </tr>
               </thead>
               <tbody>
@@ -246,13 +254,61 @@ export default function TrasladosPage() {
                         )}
                       </div>
                     </td>
+                    <td className="py-3 px-5 text-right">
+                      <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+              {traslados.map(t => (
+                <div key={t.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium text-slate-800 truncate">{t.alumno?.name ?? t.alumno_id}</p>
+                    <EstatusChip estatus={t.estatus} />
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold self-start ${t.tipo === 'entrada' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{t.tipo}</span>
+                  <p className="text-xs text-slate-500">{t.tipo === 'entrada' ? t.instituto_origen : t.instituto_destino} · {t.fecha_solicitud}</p>
+                  <div className="flex gap-2 mt-1">
+                    {t.estatus === 'solicitado' && (
+                      <button onClick={() => { setGestionId(t.id); setGestionForm({ estatus: 'aceptado', motivo_rechazo: '' }) }}
+                        className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">Gestionar</button>
+                    )}
+                    {t.tipo === 'salida' && t.estatus === 'aceptado' && (
+                      <a href={academicoApi.kardexTrasladoPdfUrl(t.id)} target="_blank" rel="noreferrer"
+                        className="text-xs px-2 py-1 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">Kardex PDF</a>
+                    )}
+                    <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.name ?? 'Traslado'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Tipo', value: detalle.tipo },
+            { label: 'Instituto origen', value: detalle.instituto_origen },
+            { label: 'Instituto destino', value: detalle.instituto_destino },
+            { label: 'Fecha de solicitud', value: detalle.fecha_solicitud },
+            { label: 'Estatus', value: <EstatusChip estatus={detalle.estatus} /> },
+          ]}
+          footer={
+            detalle.estatus === 'solicitado'
+              ? <button onClick={() => { setGestionId(detalle.id); setGestionForm({ estatus: 'aceptado', motivo_rechazo: '' }); setDetalle(null) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Gestionar</button>
+              : detalle.tipo === 'salida' && detalle.estatus === 'aceptado'
+                ? <a href={academicoApi.kardexTrasladoPdfUrl(detalle.id)} target="_blank" rel="noreferrer" className="text-xs font-medium text-white bg-slate-700 px-3 py-1.5 rounded-lg">Kardex PDF</a>
+                : undefined
+          }
+        />
+      )}
     </div>
   )
 }

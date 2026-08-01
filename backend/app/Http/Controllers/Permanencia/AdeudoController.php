@@ -13,6 +13,8 @@ class AdeudoController extends Controller
     // GET /api/adeudos  — lista admin
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Adeudo::class);
+
         $carreraForzada = $request->user()->carreraRestringida();
 
         $adeudos = Adeudo::with(['alumno.user', 'alumno.carrera'])
@@ -35,6 +37,8 @@ class AdeudoController extends Controller
     // POST /api/adeudos
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Adeudo::class);
+
         $data = $request->validate([
             'alumno_id' => ['required', 'uuid', 'exists:alumnos,id'],
             'concepto'  => ['required', 'string', 'max:200'],
@@ -57,6 +61,8 @@ class AdeudoController extends Controller
     // PATCH /api/adeudos/{adeudo}/pagar
     public function marcarPagado(Request $request, Adeudo $adeudo): JsonResponse
     {
+        $this->authorize('update', $adeudo);
+
         $carreraForzada = $request->user()->carreraRestringida();
         if ($carreraForzada) {
             $adeudo->loadMissing('alumno');
@@ -73,6 +79,8 @@ class AdeudoController extends Controller
     // DELETE /api/adeudos/{adeudo}
     public function destroy(Request $request, Adeudo $adeudo): JsonResponse
     {
+        $this->authorize('delete', $adeudo);
+
         $carreraForzada = $request->user()->carreraRestringida();
         if ($carreraForzada) {
             $adeudo->loadMissing('alumno');

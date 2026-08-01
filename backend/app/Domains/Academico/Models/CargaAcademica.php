@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -16,7 +17,7 @@ class CargaAcademica extends Model
     protected $table = 'cargas_academicas';
 
     protected $fillable = [
-        'docente_id', 'materia_id', 'grupo_id', 'periodo_id', 'aula_id', 'horas_semana',
+        'docente_id', 'materia_id', 'periodo_id', 'aula_id', 'horas_semana',
         'estado', 'comentario_docente',
     ];
 
@@ -37,9 +38,10 @@ class CargaAcademica extends Model
         return $this->belongsTo(Materia::class);
     }
 
-    public function grupo(): BelongsTo
+    /** Una carga puede impartirse a varios grupos combinados a la vez (N:N). */
+    public function grupos(): BelongsToMany
     {
-        return $this->belongsTo(Grupo::class);
+        return $this->belongsToMany(Grupo::class, 'carga_academica_grupo')->withTimestamps();
     }
 
     public function periodo(): BelongsTo

@@ -94,6 +94,7 @@ export interface Reinscripcion {
   aprobado_en: string | null
   resello_registrado: boolean
   fecha_resello: string | null
+  recibo_cobro_id: string | null
   created_at: string
   alumno?: {
     id: string
@@ -138,6 +139,8 @@ export interface Baja {
   fecha_efectiva: string | null
   fecha_aprobacion: string | null
   reingreso_posible: boolean
+  reingreso_registrado: boolean
+  fecha_reingreso: string | null
   numero_semestres_cursados: number | null
   alumno?: {
     id: string
@@ -203,8 +206,16 @@ export const permanenciaApi = {
   actualizarEstatusReinscripcion: (id: string, estatus: EstatusReinscripcion, observaciones?: string): Promise<Reinscripcion> =>
     apiClient.patch(`/reinscripciones/${id}/estatus`, { estatus, observaciones }).then(r => r.data.data),
 
-  registrarResello: (id: string): Promise<Reinscripcion> =>
-    apiClient.patch(`/reinscripciones/${id}/resello-credencial`, {}).then(r => r.data.data),
+  registrarResello: (id: string, recibo: {
+    folio_fiscal: string
+    nombre_pagador: string
+    rfc_pagador?: string
+    concepto?: string
+    importe: number
+    sello_digital_cfdi?: string
+    numero_certificado_sat?: string
+  }): Promise<Reinscripcion> =>
+    apiClient.patch(`/reinscripciones/${id}/resello-credencial`, recibo).then(r => r.data.data),
 
   // Adeudos
   getAdeudos: (alumnoId: string): Promise<Adeudo[]> =>
@@ -228,6 +239,9 @@ export const permanenciaApi = {
 
   actualizarEstatusBaja: (id: string, estatus: EstatusBaja, motivo_rechazo?: string): Promise<Baja> =>
     apiClient.patch(`/bajas/${id}/estatus`, { estatus, motivo_rechazo }).then(r => r.data.data),
+
+  registrarReingreso: (id: string): Promise<Baja> =>
+    apiClient.patch(`/bajas/${id}/reingreso`, {}).then(r => r.data.data),
 
   // Orden de reinscripción
   publicarOrden: (data: {

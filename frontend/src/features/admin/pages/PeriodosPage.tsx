@@ -4,6 +4,7 @@ import apiClient from '../../../config/apiClient'
 import Modal from '../../../components/ui/Modal'
 import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
+import { academicoApi, type CorteCaptura, type ResumenCumplimientoCorte } from '../../academico/services/academico'
 
 interface Periodo {
   id: string
@@ -42,12 +43,14 @@ function PeriodoForm({
   onCancelar,
   cargando,
   errors = {},
+  esSuperadmin,
 }: {
   inicial?: Partial<Periodo>
   onGuardar: (d: Partial<Periodo>) => void
   onCancelar: () => void
   cargando: boolean
   errors?: Record<string, string>
+  esSuperadmin: boolean
 }) {
   const [form, setForm] = useState<Partial<Periodo>>(inicial ? {
     ...inicial,
@@ -78,14 +81,16 @@ function PeriodoForm({
           </select>
           <FieldErr msg={errors.tipo} />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Activo</label>
-          <label className="flex items-center gap-2 mt-2">
-            <input type="checkbox" checked={!!form.activo} onChange={e => set('activo', e.target.checked)}
-              className="w-4 h-4 accent-[#1a3a5c]" />
-            <span className="text-sm text-slate-700">Periodo actual (desactiva los demás)</span>
-          </label>
-        </div>
+        {esSuperadmin && (
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Activo</label>
+            <label className="flex items-center gap-2 mt-2">
+              <input type="checkbox" checked={!!form.activo} onChange={e => set('activo', e.target.checked)}
+                className="w-4 h-4 accent-[#1a3a5c]" />
+              <span className="text-sm text-slate-700">Periodo actual (desactiva los demás)</span>
+            </label>
+          </div>
+        )}
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Fecha inicio *</label>
           <input required type="date" value={form.fecha_inicio ?? ''} onChange={e => set('fecha_inicio', e.target.value)}
@@ -122,6 +127,120 @@ function PeriodoForm({
 }
 
 type ApiError = { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }
+
+const NOMBRES_CORTE_DEFAULT: Record<1 | 2 | 3, string> = {
+  1: 'Primer parcial',
+  2: 'Segundo parcial',
+  3: 'Tercer parcial',
+}
+
+function CortesCapturaEditor({ periodoId }: { periodoId: string }) {
+  const qc = useQueryClient()
+  const { success, error: toastError } = useToastStore()
+  const [resumen, setResumen] = useState<Record<string, ResumenCumplimientoCorte>>({})
+
+  const { data: cortes = [], isLoading } = useQuery({
+    queryKey: ['cortes-captura', periodoId],
+    queryFn: () => academicoApi.getCortesCaptura(periodoId),
+  })
+
+  const porNumero = (n: 1 | 2 | 3): Partial<CorteCaptura> =>
+    cortes.find(c => c.numero === n) ?? { numero: n, nombre: NOMBRES_CORTE_DEFAULT[n], fecha_corte: '', fecha_limite_captura: '' }
+
+  const guardarCorte = useMutation({
+    mutationFn: (d: { numero: 1 | 2 | 3; nombre?: string; fecha_corte: string; fecha_limite_captura: string; id?: string }) =>
+      d.id ? academicoApi.actualizarCorteCaptura(d.id, d) : academicoApi.guardarCorteCaptura(periodoId, d),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cortes-captura', periodoId] })
+      success('Corte de captura guardado.')
+    },
+    onError: () => toastError('Error al guardar el corte de captura.'),
+  })
+
+  const evaluarCorte = useMutation({
+    mutationFn: (corteId: string) => academicoApi.evaluarCorteCaptura(corteId),
+    onSuccess: (data, corteId) => {
+      setResumen(r => ({ ...r, [corteId]: data }))
+      success(`Evaluación completa: ${data.cargas_pendientes} de ${data.cargas_evaluadas} cargas con calificaciones pendientes.`)
+    },
+    onError: () => toastError('Error al evaluar el cumplimiento del corte.'),
+  })
+
+  if (isLoading) return <p className="text-xs text-slate-400">Cargando cortes…</p>
+
+  return (
+    <div className="mt-4 pt-4 border-t border-slate-200">
+      <h3 className="text-sm font-medium text-slate-700 mb-2">Cortes de captura de calificaciones</h3>
+      <p className="text-xs text-slate-500 mb-3">
+        Fechas de revisión del avance de captura por parte de los docentes. Al vencer la fecha límite, las
+        calificaciones ya capturadas para ese parcial quedan bloqueadas para el docente (solo admin/director puede modificarlas).
+      </p>
+      <div className="space-y-3">
+        {[1, 2, 3].map(n => {
+          const numero = n as 1 | 2 | 3
+          const corte = porNumero(numero)
+          const res = corte.id ? resumen[corte.id] : undefined
+          return (
+            <div key={numero} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end bg-slate-50 rounded-lg p-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Corte {numero}</label>
+                <input key={corte.id ?? `nuevo-${numero}`} defaultValue={corte.nombre ?? ''} className={cls}
+                  placeholder={NOMBRES_CORTE_DEFAULT[numero]} id={`nombre-corte-${numero}`} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Fecha de corte</label>
+                <input key={corte.id ?? `nuevo-${numero}`} type="date" defaultValue={toDateInput(corte.fecha_corte)} className={cls} id={`fecha-corte-${numero}`} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Límite de captura</label>
+                <input key={corte.id ?? `nuevo-${numero}`} type="date" defaultValue={toDateInput(corte.fecha_limite_captura)} className={cls} id={`fecha-limite-${numero}`} />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={guardarCorte.isPending}
+                  onClick={() => {
+                    const nombre = (document.getElementById(`nombre-corte-${numero}`) as HTMLInputElement)?.value
+                    const fecha_corte = (document.getElementById(`fecha-corte-${numero}`) as HTMLInputElement)?.value
+                    const fecha_limite_captura = (document.getElementById(`fecha-limite-${numero}`) as HTMLInputElement)?.value
+                    if (!fecha_corte || !fecha_limite_captura) { toastError('Completa ambas fechas del corte.'); return }
+                    guardarCorte.mutate({ numero, nombre, fecha_corte, fecha_limite_captura, id: corte.id })
+                  }}
+                  className="px-3 py-2 text-xs text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg"
+                >
+                  Guardar
+                </button>
+                {corte.id && (
+                  <button
+                    type="button"
+                    disabled={evaluarCorte.isPending}
+                    onClick={() => evaluarCorte.mutate(corte.id!)}
+                    className="px-3 py-2 text-xs text-[#1a3a5c] border border-[#1a3a5c]/30 rounded-lg hover:bg-[#1a3a5c]/5 disabled:opacity-60"
+                  >
+                    Evaluar
+                  </button>
+                )}
+              </div>
+              {res && (
+                <div className="sm:col-span-4 text-xs text-slate-500 space-y-1">
+                  <p>Última evaluación: {res.cargas_pendientes} de {res.cargas_evaluadas} cargas con calificaciones pendientes.</p>
+                  {res.detalle.some(d => d.unidades_esperadas != null) && (
+                    <p className="text-slate-400">
+                      Unidades esperadas a este corte (según temario de cada materia): {' '}
+                      {res.detalle.filter(d => d.unidades_esperadas != null)
+                        .map(d => `${d.materia_nombre ?? 'Materia'} (${d.unidades_esperadas}/${d.total_unidades_temario})`)
+                        .join(', ')}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 export default function PeriodosPage() {
   const qc = useQueryClient()
@@ -187,7 +306,10 @@ export default function PeriodosPage() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-800">Periodos escolares</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Solo un periodo puede estar activo a la vez.</p>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Solo un periodo puede estar activo a la vez.
+            {!esSuperadmin && ' Solo el superadministrador puede cambiar cuál es el periodo activo global.'}
+          </p>
         </div>
         <button
           onClick={() => { setModal('nuevo'); setFormErrors({}) }}
@@ -232,7 +354,7 @@ export default function PeriodosPage() {
                 </div>
               </div>
               <div className="flex gap-2 shrink-0 flex-wrap">
-                {!p.activo && (
+                {!p.activo && esSuperadmin && (
                   <button
                     onClick={() => activar.mutate(p.id)}
                     disabled={activar.isPending}
@@ -240,6 +362,11 @@ export default function PeriodosPage() {
                   >
                     Activar
                   </button>
+                )}
+                {!p.activo && !esSuperadmin && (
+                  <span className="px-3 py-1.5 text-xs text-slate-400" title="Solo el superadministrador puede cambiar el periodo activo global.">
+                    Activar (solo superadmin)
+                  </span>
                 )}
                 <button
                   onClick={() => liberar.mutate({ id: p.id, liberar: !p.horarios_liberados })}
@@ -284,7 +411,9 @@ export default function PeriodosPage() {
             onCancelar={closeModal}
             cargando={guardar.isPending}
             errors={formErrors}
+            esSuperadmin={esSuperadmin}
           />
+          {modal !== 'nuevo' && <CortesCapturaEditor periodoId={(modal as Periodo).id} />}
         </Modal>
       )}
     </div>

@@ -17,6 +17,7 @@ class Calificacion extends Model
     protected $fillable = [
         'alumno_id',
         'grupo_id',
+        'carga_academica_id',
         'parciales',
         'calificacion_final',
         'promedio',
@@ -24,6 +25,8 @@ class Calificacion extends Model
         'tipo_curso',
         'intento_numero',
         'oportunidad',
+        'publicada',
+        'kardex_actualizado',
     ];
 
     protected function casts(): array
@@ -34,6 +37,8 @@ class Calificacion extends Model
             'promedio'         => 'decimal:2',
             'acreditado'       => 'boolean',
             'intento_numero'   => 'integer',
+            'publicada'        => 'boolean',
+            'kardex_actualizado' => 'boolean',
         ];
     }
 
@@ -45,5 +50,34 @@ class Calificacion extends Model
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class);
+    }
+
+    public function cargaAcademica(): BelongsTo
+    {
+        return $this->belongsTo(CargaAcademica::class);
+    }
+
+    /**
+     * Determina tipo_curso e intento_numero para un alumno en una materia (identificada
+     * por la carga académica exacta), contando cuántos intentos previos reprobó.
+     * segundo intento => repeticion, tercer intento (o más) => especial.
+     */
+    public static function resolverTipoCurso(string $alumnoId, CargaAcademica $carga): array
+    {
+        $intentosPrevios = static::whereHas(
+            'cargaAcademica',
+            fn($q) => $q->where('materia_id', $carga->materia_id)
+        )
+            ->where('alumno_id', $alumnoId)
+            ->where('carga_academica_id', '!=', $carga->id)
+            ->whereNotNull('acreditado')
+            ->where('acreditado', false)
+            ->count();
+
+        return match (true) {
+            $intentosPrevios === 0 => ['ordinario', 1],
+            $intentosPrevios === 1 => ['repeticion', 2],
+            default               => ['especial', 3],
+        };
     }
 }

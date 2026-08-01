@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { academicoApi } from '../services/academico'
 import type { FichaSindical } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const TIPO_BADGE: Record<string, string> = {
   Base:         'bg-green-100 text-green-800',
@@ -21,6 +23,8 @@ export default function FichasSindicalesPage() {
   const [showForm, setShowForm] = useState(false)
   const [showMovForm, setShowMovForm] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [vista, setVista] = useViewMode('fichas-sindicales')
+  const [detalle, setDetalle] = useState<FichaSindical | null>(null)
 
   const [form, setForm] = useState({
     docente_id: '',
@@ -130,6 +134,7 @@ export default function FichasSindicalesPage() {
           <p className="text-sm text-gray-500 mt-1">Plazas docentes TecNM — Historial de movimientos inmutable</p>
         </div>
         <div className="flex gap-2">
+          <ViewToggle value={vista} onChange={setVista} />
           <button
             onClick={descargarPDF}
             className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium"
@@ -298,20 +303,20 @@ export default function FichasSindicalesPage() {
 
       {loading ? (
         <div className="text-center py-12 text-gray-500">Cargando...</div>
-      ) : (
+      ) : fichas.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border text-center py-10 text-gray-400">Sin fichas sindicales registradas</div>
+      ) : vista === 'lista' ? (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Docente', 'Clave plaza', 'Nombramiento', 'Categoría / Nivel', 'Ingreso SEP', 'Años servicio', 'Movimientos', 'Acciones'].map(h => (
+                {['Docente', 'Clave plaza', 'Nombramiento', 'Categoría / Nivel', 'Ingreso SEP', 'Años servicio', 'Movimientos', 'Acciones', ''].map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {fichas.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-10 text-gray-400">Sin fichas sindicales registradas</td></tr>
-              ) : fichas.map(f => (
+              {fichas.map(f => (
                 <tr key={f.id} className="hover:bg-gray-50">
                   <td className="px-5 py-4">
                     <p className="text-sm font-medium text-gray-900">{f.docente?.name ?? '—'}</p>
@@ -345,11 +350,52 @@ export default function FichasSindicalesPage() {
                       + Movimiento
                     </button>
                   </td>
+                  <td className="px-5 py-4 text-right">
+                    <button onClick={() => setDetalle(f)} className="text-xs font-medium text-gray-500 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {fichas.map(f => (
+            <div key={f.id} className="bg-white border rounded-xl p-4 flex flex-col gap-2">
+              <p className="font-medium text-gray-900 truncate">{f.docente?.name ?? '—'}</p>
+              <span className={`text-xs px-2 py-0.5 rounded font-medium self-start ${TIPO_BADGE[f.tipo_nombramiento] ?? 'bg-gray-100 text-gray-700'}`}>{f.tipo_nombramiento}</span>
+              <p className="text-xs text-gray-500 font-mono">{f.clave_plaza}</p>
+              <p className="text-xs text-gray-500">{f.anios_servicio} años de servicio · {f.movimientos?.length ?? 0} movimiento(s)</p>
+              <div className="flex gap-3 mt-1">
+                <button onClick={() => setShowMovForm(f.id)} className="text-xs text-blue-600 hover:underline font-medium">+ Movimiento</button>
+                <button onClick={() => setDetalle(f)} className="text-xs font-medium text-gray-500 hover:underline">Ver detalle</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.docente?.name ?? 'Ficha sindical'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Correo', value: detalle.docente?.email },
+            { label: 'Clave de plaza', value: detalle.clave_plaza },
+            { label: 'Tipo de nombramiento', value: detalle.tipo_nombramiento },
+            { label: 'Categoría TBC', value: detalle.categoria_tbc ?? '—' },
+            { label: 'Nivel TBC', value: detalle.nivel_tbc ?? '—' },
+            { label: 'Ingreso SEP', value: detalle.fecha_ingreso_sep ? new Date(detalle.fecha_ingreso_sep).toLocaleDateString('es-MX') : '—' },
+            { label: 'Años de servicio', value: detalle.anios_servicio },
+            {
+              label: 'Movimientos', full: true,
+              value: detalle.movimientos?.length
+                ? <ul className="list-disc list-inside space-y-0.5">{detalle.movimientos.map(m => <li key={m.id}>{m.tipo_movimiento} — {new Date(m.fecha_efectiva).toLocaleDateString('es-MX')}</li>)}</ul>
+                : 'Sin movimientos registrados',
+            },
+          ]}
+          footer={<button onClick={() => { setDetalle(null); setShowMovForm(detalle.id) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">+ Movimiento</button>}
+        />
       )}
     </div>
   )

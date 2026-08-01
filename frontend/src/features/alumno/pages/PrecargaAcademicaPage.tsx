@@ -178,7 +178,7 @@ function TablaAsignaturas({
                 {pendientes && (
                   <td className="px-4 py-3">
                     <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                      {c.grupo?.semestre}° sem
+                      {c.grupos?.[0]?.semestre}° sem
                     </span>
                   </td>
                 )}

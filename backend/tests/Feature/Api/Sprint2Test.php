@@ -7,6 +7,7 @@ use App\Domains\Academico\Models\Carrera;
 use App\Domains\Academico\Models\Periodo;
 use App\Domains\Admision\Models\Aspirante;
 use App\Domains\Admision\Models\Inscripcion;
+use App\Domains\Permanencia\Models\Adeudo;
 use App\Domains\Permanencia\Models\Baja;
 use App\Domains\Permanencia\Models\Constancia;
 use App\Domains\Permanencia\Models\OrdenReinscripcion;
@@ -103,6 +104,17 @@ class Sprint2Test extends TestCase
 
     public function test_alumno_solicita_reinscripcion_sin_adeudos(): void
     {
+        OrdenReinscripcion::create([
+            'periodo_id'                 => $this->periodo->id,
+            'carrera_id'                 => $this->carrera->id,
+            'semestre'                   => 1,
+            'fecha_inicio_reinscripcion' => now()->subDays(2)->toDateString(),
+            'fecha_fin_reinscripcion'    => now()->addDays(10)->toDateString(),
+            'publicado'                  => true,
+            'publicado_por'              => $this->admin->id,
+            'publicado_en'               => now()->subDays(7),
+        ]);
+
         $response = $this->actingAs($this->userAlumno, 'sanctum')
             ->postJson('/api/reinscripciones', ['periodo_id' => $this->periodo->id]);
 
@@ -188,7 +200,39 @@ class Sprint2Test extends TestCase
         );
     }
 
+    private function reciboCfdiPayload(string $folio = 'CFDI-0001'): array
+    {
+        return [
+            'folio_fiscal'   => $folio,
+            'nombre_pagador' => 'Padre de Familia de Prueba',
+            'importe'        => 850.00,
+        ];
+    }
+
     public function test_admin_registra_resello_de_credencial(): void
+    {
+        $reinscripcion = Reinscripcion::create([
+            'alumno_id'  => $this->alumno->id,
+            'periodo_id' => $this->periodo->id,
+            'estatus'    => 'aprobada',
+        ]);
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/reinscripciones/{$reinscripcion->id}/resello-credencial", $this->reciboCfdiPayload());
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.resello_registrado', true);
+
+        $reinscripcion->refresh();
+        $this->assertNotNull($reinscripcion->recibo_cobro_id);
+        $this->assertDatabaseHas('recibos_cobro', [
+            'id'           => $reinscripcion->recibo_cobro_id,
+            'folio_fiscal' => 'CFDI-0001',
+            'alumno_id'    => $this->alumno->id,
+        ]);
+    }
+
+    public function test_resello_sin_datos_cfdi_falla_validacion(): void
     {
         $reinscripcion = Reinscripcion::create([
             'alumno_id'  => $this->alumno->id,
@@ -199,8 +243,30 @@ class Sprint2Test extends TestCase
         $response = $this->actingAs($this->admin, 'sanctum')
             ->patchJson("/api/reinscripciones/{$reinscripcion->id}/resello-credencial", []);
 
-        $response->assertStatus(200)
-            ->assertJsonPath('data.resello_registrado', true);
+        $response->assertStatus(422);
+        $this->assertFalse($reinscripcion->fresh()->resello_registrado);
+    }
+
+    public function test_admin_no_puede_resellar_con_adeudos_pendientes(): void
+    {
+        Adeudo::create([
+            'alumno_id' => $this->alumno->id,
+            'concepto'  => 'Reinscripción',
+            'monto'     => 500,
+            'pagado'    => false,
+        ]);
+
+        $reinscripcion = Reinscripcion::create([
+            'alumno_id'  => $this->alumno->id,
+            'periodo_id' => $this->periodo->id,
+            'estatus'    => 'aprobada',
+        ]);
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/reinscripciones/{$reinscripcion->id}/resello-credencial", $this->reciboCfdiPayload());
+
+        $response->assertStatus(422);
+        $this->assertFalse($reinscripcion->fresh()->resello_registrado);
     }
 
     public function test_alumno_no_puede_aprobar_reinscripciones(): void
@@ -227,6 +293,24 @@ class Sprint2Test extends TestCase
             ->getJson("/api/alumnos/{$this->alumno->id}/adeudos");
 
         $response->assertStatus(200);
+    }
+
+    public function test_jefe_carrera_no_puede_consultar_adeudos_de_alumno_de_otra_carrera(): void
+    {
+        $otraCarrera = Carrera::create([
+            'nombre'    => 'Ingeniería Industrial',
+            'clave'     => 'IIN',
+            'codigo_it' => '07',
+            'activa'    => true,
+        ]);
+
+        $jefe = User::factory()->create(['carrera_id' => $otraCarrera->id]);
+        $jefe->assignRole('jefe_carrera');
+
+        $response = $this->actingAs($jefe, 'sanctum')
+            ->getJson("/api/alumnos/{$this->alumno->id}/adeudos");
+
+        $response->assertStatus(403);
     }
 
     // ── Bajas ─────────────────────────────────────────────────────────────────
@@ -301,6 +385,72 @@ class Sprint2Test extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure(['data' => ['data']]);
+    }
+
+    public function test_admin_registra_reingreso_de_baja_temporal(): void
+    {
+        $baja = Baja::create([
+            'alumno_id'       => $this->alumno->id,
+            'periodo_id'      => $this->periodo->id,
+            'tipo_baja'       => 'temporal',
+            'estatus'         => 'aprobada',
+            'fecha_solicitud' => '2026-09-01',
+            'registrada_por'  => $this->admin->id,
+            'reingreso_posible' => true,
+        ]);
+        $this->alumno->update(['estatus' => 'baja_temporal']);
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/bajas/{$baja->id}/reingreso");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.reingreso_registrado', true);
+
+        $this->assertDatabaseHas('alumnos', [
+            'id'      => $this->alumno->id,
+            'estatus' => 'activo',
+        ]);
+    }
+
+    public function test_reingreso_falla_si_baja_no_permite_reingreso(): void
+    {
+        $baja = Baja::create([
+            'alumno_id'       => $this->alumno->id,
+            'periodo_id'      => $this->periodo->id,
+            'tipo_baja'       => 'temporal',
+            'estatus'         => 'aprobada',
+            'fecha_solicitud' => '2026-09-01',
+            'registrada_por'  => $this->admin->id,
+            'reingreso_posible' => false,
+        ]);
+        $this->alumno->update(['estatus' => 'baja_temporal']);
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/bajas/{$baja->id}/reingreso");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('alumnos', [
+            'id'      => $this->alumno->id,
+            'estatus' => 'baja_temporal',
+        ]);
+    }
+
+    public function test_reingreso_falla_para_baja_definitiva(): void
+    {
+        $baja = Baja::create([
+            'alumno_id'       => $this->alumno->id,
+            'periodo_id'      => $this->periodo->id,
+            'tipo_baja'       => 'definitiva',
+            'estatus'         => 'aprobada',
+            'fecha_solicitud' => '2026-09-01',
+            'registrada_por'  => $this->admin->id,
+        ]);
+        $this->alumno->update(['estatus' => 'baja_definitiva']);
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/bajas/{$baja->id}/reingreso");
+
+        $response->assertStatus(422);
     }
 
     public function test_alumno_no_puede_registrar_baja_de_otro_alumno(): void
@@ -506,13 +656,14 @@ class Sprint2Test extends TestCase
         $response->assertStatus(201);
     }
 
-    public function test_alumno_puede_reinscribirse_sin_orden_publicado(): void
+    public function test_alumno_no_puede_reinscribirse_sin_orden_publicado(): void
     {
-        // Si no hay orden publicado, no se bloquea (orden opcional)
+        // Si Control Escolar no ha publicado el Orden de Reinscripción para la
+        // carrera/semestre del alumno, se bloquea por defecto (TecNM-AC-PO-002).
         $response = $this->actingAs($this->userAlumno, 'sanctum')
             ->postJson('/api/reinscripciones', ['periodo_id' => $this->periodo->id]);
 
-        $response->assertStatus(201);
+        $response->assertStatus(422);
     }
 
     // ── Correos (S2-03, S2-06, S2-07) ────────────────────────────────────────

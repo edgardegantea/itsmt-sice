@@ -12,6 +12,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class FichaSindicalController extends Controller
 {
@@ -75,6 +76,53 @@ class FichaSindicalController extends Controller
                 ? 'Ficha sindical registrada. Alerta: fecha_ingreso_sep es posterior a fecha_ingreso_tecnm.'
                 : 'Ficha sindical registrada.',
             201
+        );
+    }
+
+    // PATCH /api/docentes/{docente}/ficha-sindical
+    public function update(Request $request, User $docente): JsonResponse
+    {
+        if (! $request->user()->hasAnyRole(self::ROLES_ADMIN)) {
+            return ApiResponse::error('No tienes permiso.', 403);
+        }
+
+        $ficha = FichaSindical::where('docente_id', $docente->id)->first();
+
+        if (! $ficha) {
+            return ApiResponse::error('Este docente no tiene ficha sindical registrada. Usa el registro inicial.', 404);
+        }
+
+        $validated = $request->validate([
+            'clave_plaza'          => ['sometimes', 'string', 'max:50', Rule::unique('fichas_sindicales', 'clave_plaza')->ignore($ficha->id)],
+            'tipo_nombramiento'    => 'sometimes|in:Base,Interino,Hora-Clase,Medio-Tiempo',
+            'categoria_tbc'        => 'sometimes|nullable|string|max:20',
+            'nivel_tbc'            => 'sometimes|nullable|string|max:20',
+            'numero_issste'        => ['sometimes', 'nullable', 'string', 'max:20', Rule::unique('fichas_sindicales', 'numero_issste')->ignore($ficha->id)],
+            'fecha_ingreso_sep'    => 'sometimes|date',
+            'fecha_ingreso_tecnm'  => 'sometimes|nullable|date',
+            'departamento_id'      => 'sometimes|nullable|uuid|exists:directorio_areas,id',
+            'activo'               => 'sometimes|boolean',
+        ]);
+
+        $ficha->fill($validated);
+
+        if (array_key_exists('fecha_ingreso_sep', $validated)) {
+            $ficha->anios_servicio = Carbon::parse($validated['fecha_ingreso_sep'])->diffInYears(now());
+        }
+
+        $ficha->save();
+
+        $fechaSep = $ficha->fecha_ingreso_sep;
+        $fechaTecnm = $ficha->fecha_ingreso_tecnm;
+        $alerta = $fechaSep && $fechaTecnm && $fechaSep->gt($fechaTecnm);
+
+        $data = $ficha->fresh(['docente', 'departamento']);
+
+        return ApiResponse::success(
+            array_merge($data->toArray(), ['alerta_fecha' => $alerta]),
+            $alerta
+                ? 'Ficha sindical actualizada. Alerta: fecha_ingreso_sep es posterior a fecha_ingreso_tecnm.'
+                : 'Ficha sindical actualizada.'
         );
     }
 

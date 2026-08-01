@@ -113,6 +113,10 @@ class InventarioController extends Controller
     // PATCH /api/prestamos-equipo/{prestamo}/devolver
     public function devolverPrestamo(Request $request, PrestamoEquipo $prestamo): JsonResponse
     {
+        $esGestor = $request->user()->hasAnyRole($this->rolesGestion);
+        abort_if(! $esGestor && $prestamo->solicitante_id !== $request->user()->id, 403, 'Sin permiso para devolver este préstamo.');
+        abort_if($prestamo->estatus !== 'prestado', 422, 'Este préstamo ya fue cerrado.');
+
         $data = $request->validate([
             'estatus'       => ['nullable', 'in:devuelto,dañado'],
             'observaciones' => ['nullable', 'string'],
@@ -177,6 +181,8 @@ class InventarioController extends Controller
             abort(403, 'Sin permiso para aprobar reservas de espacios.');
         }
 
+        abort_if($reserva->estatus !== 'pendiente', 422, 'Solo se pueden actualizar reservas pendientes.');
+
         $data = $request->validate([
             'estatus' => ['required', 'in:aprobada,rechazada,cancelada'],
         ]);
@@ -229,6 +235,8 @@ class InventarioController extends Controller
         if (! $request->user()->hasAnyRole($this->rolesGestion)) {
             abort(403, 'Sin permiso para atender solicitudes de mantenimiento.');
         }
+
+        abort_if(in_array($solicitud->estatus, ['resuelta', 'cancelada']), 422, 'Esta solicitud ya fue cerrada.');
 
         $data = $request->validate([
             'estatus'          => ['required', 'in:en_proceso,resuelta,cancelada'],

@@ -14,6 +14,7 @@ use App\Domains\Academico\Models\ConfiguracionEvaluacion;
 use App\Domains\Academico\Models\Grupo;
 use App\Domains\Academico\Models\Materia;
 use App\Domains\Academico\Models\Periodo;
+use App\Domains\Academico\Models\PlaneacionDocente;
 use App\Models\User;
 use App\Services\GotenbergService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -89,10 +90,10 @@ class Sprint4Test extends TestCase
         $this->carga = CargaAcademica::create([
             'docente_id' => $this->docente->id,
             'materia_id' => $this->materia->id,
-            'grupo_id'   => $this->grupo->id,
             'periodo_id' => $this->periodo->id,
             'horas_semana'=> 5,
         ]);
+        $this->carga->grupos()->attach($this->grupo->id);
 
         // Crear alumno con inscripción (requerido por NOT NULL constraint)
         $alumnoUser = User::factory()->create(['email' => 'alumno4@test.com']);
@@ -202,6 +203,7 @@ class Sprint4Test extends TestCase
             ->postJson('/api/calificaciones', [
                 'alumno_id'         => $this->alumno->id,
                 'grupo_id'          => $this->grupo->id,
+                'carga_academica_id'=> $this->carga->id,
                 'parciales'         => [
                     ['parcial' => 1, 'calificacion' => 85],
                     ['parcial' => 2, 'calificacion' => 90],
@@ -227,6 +229,7 @@ class Sprint4Test extends TestCase
             ->postJson('/api/calificaciones', [
                 'alumno_id'          => $this->alumno->id,
                 'grupo_id'           => $this->grupo->id,
+                'carga_academica_id' => $this->carga->id,
                 'calificacion_final' => 75,
             ])
             ->assertStatus(403);
@@ -241,6 +244,7 @@ class Sprint4Test extends TestCase
             ->postJson('/api/calificaciones', [
                 'alumno_id'         => $this->alumno->id,
                 'grupo_id'          => $this->grupo->id,
+                'carga_academica_id'=> $this->carga->id,
                 'parciales'         => [
                     ['parcial' => 1, 'calificacion' => 90],
                     ['parcial' => 2, 'calificacion' => 80],
@@ -272,6 +276,7 @@ class Sprint4Test extends TestCase
             ->postJson('/api/calificaciones', [
                 'alumno_id'         => $this->alumno->id,
                 'grupo_id'          => $this->grupo->id,
+                'carga_academica_id'=> $this->carga->id,
                 'parciales'         => [
                     ['parcial' => 1, 'calificacion' => 50],
                     ['parcial' => 2, 'calificacion' => 55],
@@ -285,10 +290,95 @@ class Sprint4Test extends TestCase
         $this->assertFalse($cal->acreditado);
     }
 
+    // ── Ponderación por unidades de la instrumentación didáctica (planeación) ──
+
+    public function test_promedio_usa_porcentajes_por_unidad_de_la_planeacion_liberada(): void
+    {
+        // Config genérica de carrera: 30/30/40 — debe ser IGNORADA porque hay
+        // una planeación con unidades propias para esta materia.
+        ConfiguracionEvaluacion::create([
+            'carrera_id'          => $this->carrera->id,
+            'num_parciales'       => 3,
+            'calificacion_minima' => 70,
+            'peso_parciales'      => [
+                ['parcial' => 1, 'peso' => 0.3],
+                ['parcial' => 2, 'peso' => 0.3],
+                ['parcial' => 3, 'peso' => 0.4],
+            ],
+        ]);
+
+        PlaneacionDocente::create([
+            'carga_academica_id' => $this->carga->id,
+            'docente_id'         => $this->docente->id,
+            'periodo_id'         => $this->periodo->id,
+            'estatus'            => 'liberada',
+            'competencias'       => [
+                ['numero' => 1, 'nombre_unidad' => 'Fundamentos', 'porcentaje' => 20],
+                ['numero' => 2, 'nombre_unidad' => 'Aplicación',   'porcentaje' => 30],
+                ['numero' => 3, 'nombre_unidad' => 'Integración',  'porcentaje' => 50],
+            ],
+        ]);
+
+        $this->actingAs($this->docente, 'sanctum')
+            ->postJson('/api/calificaciones', [
+                'alumno_id'         => $this->alumno->id,
+                'grupo_id'          => $this->grupo->id,
+                'carga_academica_id'=> $this->carga->id,
+                'parciales'         => [
+                    ['parcial' => 1, 'calificacion' => 100],
+                    ['parcial' => 2, 'calificacion' => 100],
+                    ['parcial' => 3, 'calificacion' => 60],
+                ],
+            ])
+            ->assertStatus(201);
+
+        // Con pesos de la planeación (20/30/50): 100*.2 + 100*.3 + 60*.5 = 80
+        // Con pesos genéricos de carrera (30/30/40) habría dado: 100*.3+100*.3+60*.4 = 84
+        $cal = Calificacion::where('alumno_id', $this->alumno->id)->first();
+        $this->assertEquals(80.0, (float) $cal->promedio);
+        $this->assertTrue($cal->acreditado);
+    }
+
+    public function test_numero_de_parciales_se_acota_a_unidades_de_la_planeacion(): void
+    {
+        PlaneacionDocente::create([
+            'carga_academica_id' => $this->carga->id,
+            'docente_id'         => $this->docente->id,
+            'periodo_id'         => $this->periodo->id,
+            'estatus'            => 'borrador',
+            'competencias'       => [
+                ['numero' => 1, 'nombre_unidad' => 'Unidad 1', 'porcentaje' => 50],
+                ['numero' => 2, 'nombre_unidad' => 'Unidad 2', 'porcentaje' => 50],
+            ],
+        ]);
+
+        // Parcial 3 no existe en la planeación (solo tiene 2 unidades) → rechazado
+        $this->actingAs($this->docente, 'sanctum')
+            ->postJson('/api/calificaciones', [
+                'alumno_id'         => $this->alumno->id,
+                'grupo_id'          => $this->grupo->id,
+                'carga_academica_id'=> $this->carga->id,
+                'parciales'         => [
+                    ['parcial' => 3, 'calificacion' => 90],
+                ],
+            ])
+            ->assertStatus(422);
+    }
+
     // ── S4-04: Cierre de curso ──────────────────────────────────────────────────
 
     public function test_admin_cierra_curso(): void
     {
+        // S4-04: el cierre exige que todas las calificaciones finales ya estén capturadas
+        Calificacion::create([
+            'alumno_id'          => $this->alumno->id,
+            'grupo_id'           => $this->grupo->id,
+            'carga_academica_id' => $this->carga->id,
+            'calificacion_final' => 80,
+            'promedio'           => 80,
+            'acreditado'         => true,
+        ]);
+
         $this->actingAs($this->admin, 'sanctum')
             ->postJson('/api/cierres-de-curso', [
                 'grupo_id'  => $this->grupo->id,
@@ -333,6 +423,7 @@ class Sprint4Test extends TestCase
             ->postJson('/api/calificaciones', [
                 'alumno_id'          => $this->alumno->id,
                 'grupo_id'           => $this->grupo->id,
+                'carga_academica_id' => $this->carga->id,
                 'calificacion_final' => 90,
             ])
             ->assertStatus(422);
@@ -357,6 +448,7 @@ class Sprint4Test extends TestCase
         Calificacion::create([
             'alumno_id'          => $this->alumno->id,
             'grupo_id'           => $this->grupo->id,
+            'carga_academica_id' => $this->carga->id,
             'parciales'          => [],
             'calificacion_final' => 40,
             'promedio'           => 40,
@@ -383,6 +475,7 @@ class Sprint4Test extends TestCase
         Calificacion::create([
             'alumno_id'          => $this->alumno->id,
             'grupo_id'           => $this->grupo->id,
+            'carga_academica_id' => $this->carga->id,
             'parciales'          => [],
             'calificacion_final' => 85,
             'promedio'           => 85,
@@ -423,11 +516,28 @@ class Sprint4Test extends TestCase
 
     public function test_admin_firma_acta_calificaciones(): void
     {
+        // El curso debe estar cerrado antes de poder firmar el acta (S4-07)
+        CierreDeCurso::create([
+            'grupo_id'    => $this->grupo->id,
+            'periodo_id'  => $this->periodo->id,
+            'cerrado_por' => $this->admin->id,
+            'fecha_cierre'=> now(),
+        ]);
+
         // Crear el acta antes de firmar
         \App\Domains\Academico\Models\ActaCalificaciones::create([
-            'grupo_id'   => $this->grupo->id,
-            'periodo_id' => $this->periodo->id,
-            'docente_id' => $this->docente->id,
+            'grupo_id'           => $this->grupo->id,
+            'periodo_id'         => $this->periodo->id,
+            'carga_academica_id' => $this->carga->id,
+            'docente_id'         => $this->docente->id,
+        ]);
+
+        Calificacion::create([
+            'alumno_id'          => $this->alumno->id,
+            'grupo_id'           => $this->grupo->id,
+            'carga_academica_id' => $this->carga->id,
+            'promedio'           => 85,
+            'acreditado'         => true,
         ]);
 
         $this->actingAs($this->admin, 'sanctum')
@@ -435,13 +545,27 @@ class Sprint4Test extends TestCase
             ->assertStatus(200)
             ->assertJsonPath('data.firmada', true)
             ->assertJsonPath('data.integrada_libro_actas', true);
+
+        $this->assertDatabaseHas('calificaciones', [
+            'alumno_id'          => $this->alumno->id,
+            'grupo_id'           => $this->grupo->id,
+            'kardex_actualizado' => true,
+        ]);
     }
 
     public function test_firmar_acta_dos_veces_retorna_422(): void
     {
+        CierreDeCurso::create([
+            'grupo_id'    => $this->grupo->id,
+            'periodo_id'  => $this->periodo->id,
+            'cerrado_por' => $this->admin->id,
+            'fecha_cierre'=> now(),
+        ]);
+
         \App\Domains\Academico\Models\ActaCalificaciones::create([
             'grupo_id'               => $this->grupo->id,
             'periodo_id'             => $this->periodo->id,
+            'carga_academica_id'     => $this->carga->id,
             'docente_id'             => $this->docente->id,
             'firmada'                => true,
             'fecha_firma'            => now()->toDateString(),
@@ -624,6 +748,14 @@ class Sprint4Test extends TestCase
 
     public function test_admin_puede_descargar_pdf_acta_calificaciones(): void
     {
+        // El curso debe estar cerrado antes de poder generar el acta (S4-07)
+        CierreDeCurso::create([
+            'grupo_id'    => $this->grupo->id,
+            'periodo_id'  => $this->periodo->id,
+            'cerrado_por' => $this->admin->id,
+            'fecha_cierre'=> now(),
+        ]);
+
         $this->mock(GotenbergService::class,
             fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
 
@@ -642,5 +774,182 @@ class Sprint4Test extends TestCase
         $this->actingAs($otroDocente, 'sanctum')
             ->get("/api/grupos/{$this->grupo->id}/acta-calificaciones/pdf")
             ->assertStatus(403);
+    }
+
+    // ── Mejora: acta por grupo/materia (no solo por grupo) ───────────────────
+
+    public function test_acta_requiere_carga_academica_id_si_grupo_tiene_varias_materias(): void
+    {
+        $otraMateria = Materia::create([
+            'carrera_id' => $this->carrera->id,
+            'clave' => 'SC002', 'clave_oficial_tecnm' => 'AEC-1022',
+            'nombre' => 'Otra materia', 'semestre' => 1, 'creditos' => 5,
+            'horas_teoria' => 2, 'horas_practica' => 3, 'tipo' => 'obligatoria',
+        ]);
+        $otraCarga = CargaAcademica::create([
+            'docente_id' => $this->docente->id, 'materia_id' => $otraMateria->id,
+            'periodo_id' => $this->periodo->id, 'horas_semana' => 4,
+        ]);
+        $otraCarga->grupos()->attach($this->grupo->id);
+
+        CierreDeCurso::create([
+            'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+            'cerrado_por' => $this->admin->id, 'fecha_cierre' => now(),
+        ]);
+
+        $this->mock(GotenbergService::class, fn($m) => $m->shouldReceive('htmlToPdf')->andReturn('%PDF fake'));
+
+        // Sin especificar carga_academica_id → 422 (ambigüedad entre 2 materias)
+        $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/grupos/{$this->grupo->id}/acta-calificaciones/pdf")
+            ->assertStatus(422);
+
+        // Especificando carga_academica_id → 200
+        $this->actingAs($this->admin, 'sanctum')
+            ->get("/api/grupos/{$this->grupo->id}/acta-calificaciones/pdf?carga_academica_id={$this->carga->id}")
+            ->assertOk();
+    }
+
+    // ── Mejora: kardex permanente ─────────────────────────────────────────────
+
+    public function test_firmar_acta_crea_registro_de_kardex(): void
+    {
+        CierreDeCurso::create([
+            'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+            'cerrado_por' => $this->admin->id, 'fecha_cierre' => now(),
+        ]);
+
+        \App\Domains\Academico\Models\ActaCalificaciones::create([
+            'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+            'carga_academica_id' => $this->carga->id, 'docente_id' => $this->docente->id,
+        ]);
+
+        Calificacion::create([
+            'alumno_id' => $this->alumno->id, 'grupo_id' => $this->grupo->id,
+            'carga_academica_id' => $this->carga->id, 'promedio' => 90, 'acreditado' => true,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/grupos/{$this->grupo->id}/acta-calificaciones/firmar")
+            ->assertOk();
+
+        $this->assertDatabaseHas('kardex', [
+            'alumno_id' => $this->alumno->id,
+            'carga_academica_id' => $this->carga->id,
+            'promedio' => 90,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/alumnos/{$this->alumno->id}/kardex")
+            ->assertOk();
+
+        $this->assertCount(1, $r->json('data'));
+    }
+
+    // ── Mejora: cola de revisión manual para alertas no clasificables ─────────
+
+    public function test_cierre_registra_revision_manual_si_calificacion_sin_carga_academica(): void
+    {
+        Calificacion::create([
+            'alumno_id' => $this->alumno->id, 'grupo_id' => $this->grupo->id,
+            'carga_academica_id' => null,
+            'calificacion_final' => 40, 'promedio' => 40, 'acreditado' => false,
+            'tipo_curso' => 'especial', 'intento_numero' => 3,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/cierres-de-curso', [
+                'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+            ])
+            ->assertStatus(201);
+
+        $this->assertDatabaseHas('alertas_baja_definitiva', [
+            'alumno_id' => $this->alumno->id,
+            'requiere_revision_manual' => true,
+        ]);
+    }
+
+    // ── Mejora: reabrir curso ──────────────────────────────────────────────────
+
+    public function test_admin_reabre_curso_cerrado(): void
+    {
+        CierreDeCurso::create([
+            'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+            'cerrado_por' => $this->admin->id, 'fecha_cierre' => now(),
+        ]);
+        Calificacion::create([
+            'alumno_id' => $this->alumno->id, 'grupo_id' => $this->grupo->id,
+            'carga_academica_id' => $this->carga->id, 'promedio' => 85, 'acreditado' => true,
+            'publicada' => true,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/grupos/{$this->grupo->id}/cierre-de-curso/reabrir", [
+                'periodo_id' => $this->periodo->id,
+                'motivo'     => 'Cierre hecho por error, faltaba capturar un alumno.',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseMissing('cierres_de_curso', [
+            'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+        ]);
+        $this->assertDatabaseHas('calificaciones', [
+            'alumno_id' => $this->alumno->id, 'publicada' => false,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'accion' => 'reabrir_curso', 'entidad_id' => $this->grupo->id,
+        ]);
+    }
+
+    public function test_no_se_puede_reabrir_curso_con_acta_firmada(): void
+    {
+        CierreDeCurso::create([
+            'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+            'cerrado_por' => $this->admin->id, 'fecha_cierre' => now(),
+        ]);
+        \App\Domains\Academico\Models\ActaCalificaciones::create([
+            'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+            'carga_academica_id' => $this->carga->id, 'docente_id' => $this->docente->id,
+            'firmada' => true, 'fecha_firma' => now()->toDateString(),
+            'firmada_por' => $this->admin->id, 'integrada_libro_actas' => true,
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/grupos/{$this->grupo->id}/cierre-de-curso/reabrir", [
+                'periodo_id' => $this->periodo->id,
+                'motivo'     => 'Intento de reapertura indebido.',
+            ])
+            ->assertStatus(422);
+    }
+
+    public function test_docente_no_puede_reabrir_curso(): void
+    {
+        CierreDeCurso::create([
+            'grupo_id' => $this->grupo->id, 'periodo_id' => $this->periodo->id,
+            'cerrado_por' => $this->admin->id, 'fecha_cierre' => now(),
+        ]);
+
+        $this->actingAs($this->docente, 'sanctum')
+            ->postJson("/api/grupos/{$this->grupo->id}/cierre-de-curso/reabrir", [
+                'periodo_id' => $this->periodo->id,
+                'motivo'     => 'Intento no autorizado.',
+            ])
+            ->assertStatus(403);
+    }
+
+    // ── Mejora: gating de periodo de captura activo ────────────────────────────
+
+    public function test_no_se_puede_capturar_si_periodo_no_esta_activo(): void
+    {
+        $this->periodo->update(['activo' => false]);
+
+        $this->actingAs($this->docente, 'sanctum')
+            ->postJson('/api/calificaciones', [
+                'alumno_id'          => $this->alumno->id,
+                'grupo_id'           => $this->grupo->id,
+                'carga_academica_id' => $this->carga->id,
+                'calificacion_final' => 90,
+            ])
+            ->assertStatus(422);
     }
 }

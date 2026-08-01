@@ -25,7 +25,7 @@ class CargaDocentePdfController extends Controller
         $periodoId = $request->query('periodo_id');
         $periodo   = $periodoId
             ? Periodo::findOrFail($periodoId)
-            : (Periodo::where('activo', true)->first() ?? Periodo::latest()->first());
+            : (Periodo::activo() ?? Periodo::latest()->first());
 
         if (! $periodo) {
             abort(422, 'No se encontró ningún periodo.');
@@ -33,7 +33,7 @@ class CargaDocentePdfController extends Controller
 
         $cargas = CargaAcademica::with([
             'materia.carrera',
-            'grupo.carrera',
+            'grupos.carrera',
             'horarios',
             'aula',
         ])

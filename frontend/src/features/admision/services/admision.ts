@@ -138,6 +138,7 @@ export interface Alumno {
     id: string
     aspirante_id: string
     tipo_ingreso?: string
+    tipo_ingreso_registro?: string
     fecha_inscripcion?: string
     aspirante: {
       nombres: string
@@ -221,6 +222,7 @@ export interface RegistrarAspirantePayload {
   modalidad?: 'escolarizado' | 'sabatino'
   nivel?: 'licenciatura' | 'maestria'
   constancia_bachillerato: File   // archivo — se enviará como FormData
+  foto: File                       // fotografía para la credencial — se enviará como FormData
   documentos?: Record<string, boolean>
 }
 
@@ -267,7 +269,7 @@ export const admisionApi = {
 
   registrarAspirante: async (payload: RegistrarAspirantePayload): Promise<Aspirante> => {
     const fd = new FormData()
-    const { constancia_bachillerato, documentos, ...campos } = payload
+    const { constancia_bachillerato, foto, documentos, ...campos } = payload
 
     Object.entries(campos).forEach(([k, v]) => {
       if (v !== undefined && v !== null) fd.append(k, String(v))
@@ -281,6 +283,10 @@ export const admisionApi = {
 
     if (constancia_bachillerato instanceof File) {
       fd.append('constancia_bachillerato', constancia_bachillerato)
+    }
+
+    if (foto instanceof File) {
+      fd.append('foto', foto)
     }
 
     const { data } = await apiClient.post('/aspirantes', fd, {
@@ -356,4 +362,11 @@ export const admisionApi = {
 
   // S1-13 — Libro de Registro NC
   urlLibroRegistroNc: (): string => `/libro-registro-nc`,
+
+  getLibroRegistroNc: async (params: {
+    periodo_id?: string; carrera_id?: string; tipo_ingreso_registro?: string; search?: string; page?: number
+  }): Promise<{ alumnos: PaginatedResponse<Alumno>; resumen: Record<string, number>; total: number }> => {
+    const { data } = await apiClient.get('/libro-registro-nc/data', { params })
+    return data.data
+  },
 }

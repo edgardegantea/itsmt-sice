@@ -32,8 +32,10 @@ class MateriaController extends Controller
         return ApiResponse::success($materias);
     }
 
-    public function show(Materia $materia): JsonResponse
+    public function show(Request $request, Materia $materia): JsonResponse
     {
+        $this->verificarCarrera($request, $materia->carrera_id);
+
         return ApiResponse::success($materia->load('carrera'));
     }
 

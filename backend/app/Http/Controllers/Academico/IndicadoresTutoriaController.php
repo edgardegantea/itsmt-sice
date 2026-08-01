@@ -26,7 +26,7 @@ class IndicadoresTutoriaController extends Controller
         $request->validate(['periodo_id' => 'nullable|uuid|exists:periodos,id']);
 
         $periodoId = $request->query('periodo_id')
-            ?? Periodo::where('activo', true)->value('id');
+            ?? Periodo::activo()?->id;
 
         $tutoresActivos = Tutor::where('activo', true)->count();
 

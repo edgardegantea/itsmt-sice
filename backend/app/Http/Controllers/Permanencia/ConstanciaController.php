@@ -48,6 +48,9 @@ class ConstanciaController extends Controller
             abort_if($propio !== $alumno->id, 403, 'No autorizado.');
         } else {
             $this->authorize('viewAny', Constancia::class);
+
+            $carreraForzada = $request->user()->carreraRestringida();
+            abort_if($carreraForzada && $alumno->carrera_id !== $carreraForzada, 403, 'Sin acceso a las constancias de alumnos de otras carreras.');
         }
 
         $constancias = Constancia::with(['solicitadaPor', 'emitidaPor'])

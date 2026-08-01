@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import { useCargaAcademicaPdf } from '../hooks/useCargaAcademicaPdf'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import BulkActionBar, { SelectCheckbox, ToggleSelectionButton } from '../../../components/ui/BulkActionBar'
 
 type AlumnoItem = {
   id: string
@@ -33,6 +35,15 @@ export default function CargaAcademicaAdminPage() {
   const [semestre,  setSemestre]    = useState('')
   const [grupoId,   setGrupoId]     = useState('')
   const [busqueda,  setBusqueda]    = useState('')
+  const [vista, setVista] = useViewMode('carga-academica-admin')
+  const [modoSeleccion, setModoSeleccion] = useState(false)
+  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
+  const [descargandoLote, setDescargandoLote] = useState(false)
+  const toggleSel = (id: string) => setSeleccionados(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
 
   // ── Catálogos ──────────────────────────────────────────────────────────────
   const { data: periodos = [] } = useQuery({
@@ -89,6 +100,19 @@ export default function CargaAcademicaAdminPage() {
   const keyAlumno = (alumnoId: string) => `${alumnoId}-${periodoId}`
   const keyGrupo  = (gId: string)      => `grupo-${gId}-${periodoId}`
 
+  async function descargarLote() {
+    setDescargandoLote(true)
+    try {
+      for (const a of alumnos.filter(al => seleccionados.has(al.id))) {
+        await descargar(a.id, periodoId)
+      }
+    } finally {
+      setDescargandoLote(false)
+      setSeleccionados(new Set())
+      setModoSeleccion(false)
+    }
+  }
+
   const handleReset = () => {
     setCarreraId('')
     setSemestre('')
@@ -106,6 +130,10 @@ export default function CargaAcademicaAdminPage() {
           <p className="text-sm text-slate-500 mt-0.5">
             Genera el Formato de Carga Académica (TecNM-AC-PO-001) por alumno o por grupo completo.
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <ToggleSelectionButton active={modoSeleccion} onClick={() => { setModoSeleccion(v => !v); setSeleccionados(new Set()) }} />
+          <ViewToggle value={vista} onChange={setVista} />
         </div>
         {grupoSeleccionado && periodoId && (
           <button
@@ -271,61 +299,101 @@ export default function CargaAcademicaAdminPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  {['#', 'Nombre', 'N/C', 'Carrera', 'Sem.', 'Carga Académica PDF'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {alumnos.map((a, i) => {
-                  const nombre = a.user?.name
-                    ?? (a.inscripcion?.aspirante
-                        ? `${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}, ${a.inscripcion.aspirante.nombres}`.trim()
-                        : '—')
-                  const cargando = generando === keyAlumno(a.id)
+          {modoSeleccion && seleccionados.size > 0 && (
+            <BulkActionBar count={seleccionados.size} onCancel={() => { setSeleccionados(new Set()); setModoSeleccion(false) }}>
+              <button onClick={descargarLote} disabled={descargandoLote} className="px-3 py-1.5 text-xs font-medium bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                {descargandoLote ? 'Descargando…' : 'Descargar PDF'}
+              </button>
+            </BulkActionBar>
+          )}
 
-                  return (
-                    <tr key={a.id} className="hover:bg-blue-50/40 transition-colors">
-                      <td className="px-4 py-3 text-slate-400 text-xs">{i + 1}</td>
-                      <td className="px-4 py-3 font-medium text-slate-800">{nombre}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-600">{a.numero_control}</td>
-                      <td className="px-4 py-3 text-slate-600 text-xs">{a.carrera?.clave ?? '—'}</td>
-                      <td className="px-4 py-3 text-slate-600 text-center">{a.semestre_actual ?? '—'}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => descargar(a.id, periodoId)}
-                          disabled={!!generando}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors disabled:opacity-50"
-                          style={{ backgroundColor: cargando ? '#6b7280' : 'var(--color-primario)' }}
-                        >
-                          {cargando ? (
-                            <>
-                              <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                              Generando…
-                            </>
-                          ) : (
-                            <>
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                              PDF
-                            </>
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          {vista === 'lista' ? (
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    {modoSeleccion && <th className="w-8" />}
+                    {['#', 'Nombre', 'N/C', 'Carrera', 'Sem.', 'Carga Académica PDF'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {alumnos.map((a, i) => {
+                    const nombre = a.user?.name
+                      ?? (a.inscripcion?.aspirante
+                          ? `${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}, ${a.inscripcion.aspirante.nombres}`.trim()
+                          : '—')
+                    const cargando = generando === keyAlumno(a.id)
+
+                    return (
+                      <tr key={a.id} className="hover:bg-blue-50/40 transition-colors">
+                        {modoSeleccion && <td className="pl-4"><SelectCheckbox checked={seleccionados.has(a.id)} onChange={() => toggleSel(a.id)} /></td>}
+                        <td className="px-4 py-3 text-slate-400 text-xs">{i + 1}</td>
+                        <td className="px-4 py-3 font-medium text-slate-800">{nombre}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-600">{a.numero_control}</td>
+                        <td className="px-4 py-3 text-slate-600 text-xs">{a.carrera?.clave ?? '—'}</td>
+                        <td className="px-4 py-3 text-slate-600 text-center">{a.semestre_actual ?? '—'}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => descargar(a.id, periodoId)}
+                            disabled={!!generando}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors disabled:opacity-50"
+                            style={{ backgroundColor: cargando ? '#6b7280' : 'var(--color-primario)' }}
+                          >
+                            {cargando ? (
+                              <>
+                                <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                Generando…
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                PDF
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {alumnos.map(a => {
+                const nombre = a.user?.name
+                  ?? (a.inscripcion?.aspirante
+                      ? `${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}, ${a.inscripcion.aspirante.nombres}`.trim()
+                      : '—')
+                const cargando = generando === keyAlumno(a.id)
+                return (
+                  <div key={a.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      {modoSeleccion && <SelectCheckbox checked={seleccionados.has(a.id)} onChange={() => toggleSel(a.id)} />}
+                      <p className="font-medium text-slate-800 truncate">{nombre}</p>
+                    </div>
+                    <p className="text-xs text-slate-500 font-mono">{a.numero_control}</p>
+                    <p className="text-xs text-slate-500">{a.carrera?.clave ?? '—'} · {a.semestre_actual ?? '—'}° sem</p>
+                    <button
+                      onClick={() => descargar(a.id, periodoId)}
+                      disabled={!!generando}
+                      className="mt-1 self-start flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-colors disabled:opacity-50"
+                      style={{ backgroundColor: cargando ? '#6b7280' : 'var(--color-primario)' }}
+                    >
+                      {cargando ? 'Generando…' : 'PDF'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </>
       )}
     </div>

@@ -33,15 +33,58 @@ class AlumnoController extends Controller
             ->when($request->estatus,    fn($q, $v) => $q->where('estatus', $v))
             ->when($request->semestre,   fn($q, $v) => $q->where('semestre_actual', $v))
             ->when($request->grupo_id,   fn($q, $v) => $q->whereHas('grupos', fn($g) => $g->where('grupos.id', $v)))
-            ->when($request->search, fn($q, $v) => $q
+            ->when($request->search, fn($q, $v) => $q->where(fn($w) => $w
                 ->where('numero_control', 'ilike', "%{$v}%")
                 ->orWhereHas('inscripcion.aspirante', fn($q2) =>
                     $q2->whereRaw("CONCAT(nombres, ' ', apellido_paterno, ' ', COALESCE(apellido_materno, '')) ILIKE ?", ["%{$v}%"])
-                ))
+                )))
             ->orderBy('numero_control')
             ->paginate(min((int) ($request->query('per_page', 20)), 500));
 
         return ApiResponse::success($alumnos, 'Alumnos listados.');
+    }
+
+    // GET /api/libro-registro-nc/data
+    //
+    // Vista en pantalla del Libro de Registro de Números de Control
+    // (TecNM-AC-PO-001). Es un registro histórico INMUTABLE: incluye alumnos
+    // dados de baja (withTrashed) porque su número de control, una vez
+    // asignado, nunca se reutiliza ni se borra del libro.
+    public function libroRegistroNc(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Alumno::class);
+
+        $carreraForzada = $request->user()->carreraRestringida();
+
+        $query = Alumno::withTrashed()
+            ->with(['carrera', 'periodoIngreso', 'inscripcion.aspirante'])
+            ->when($carreraForzada,                             fn($q, $v) => $q->where('alumnos.carrera_id', $v))
+            ->when(! $carreraForzada && $request->carrera_id,   fn($q) => $q->where('alumnos.carrera_id', $request->carrera_id))
+            ->when($request->periodo_id, fn($q, $v) => $q->where('alumnos.periodo_ingreso_id', $v))
+            ->when($request->tipo_ingreso_registro, fn($q, $v) => $q->whereHas(
+                'inscripcion', fn($iq) => $iq->where('tipo_ingreso_registro', $v)
+            ))
+            ->when($request->search, fn($q, $v) => $q->where(fn($w) => $w
+                ->where('alumnos.numero_control', 'ilike', "%{$v}%")
+                ->orWhereHas('inscripcion.aspirante', fn($q2) =>
+                    $q2->whereRaw("CONCAT(nombres, ' ', apellido_paterno, ' ', COALESCE(apellido_materno, '')) ILIKE ?", ["%{$v}%"])
+                )));
+
+        $alumnos = (clone $query)->orderBy('alumnos.numero_control')->paginate(min((int) $request->query('per_page', 50), 500));
+
+        // Resumen por tipo de ingreso — independiente de la paginación, para
+        // que las cifras reflejen el total real del libro (o del filtro activo).
+        $resumen = (clone $query)
+            ->join('inscripciones', 'inscripciones.id', '=', 'alumnos.inscripcion_id')
+            ->selectRaw('inscripciones.tipo_ingreso_registro as tipo, count(*) as total')
+            ->groupBy('inscripciones.tipo_ingreso_registro')
+            ->pluck('total', 'tipo');
+
+        return ApiResponse::success([
+            'alumnos' => $alumnos,
+            'resumen' => $resumen,
+            'total'   => $alumnos->total(),
+        ], 'Libro de Registro NC.');
     }
 
     // GET /api/alumnos/{alumno}
@@ -115,7 +158,7 @@ class AlumnoController extends Controller
         if (! $user->hasAnyRole(['superadmin', 'admin', 'director_academico',
                                   'control_escolar', 'direccion_general',
                                   'direccion_academica', 'subdireccion_academica',
-                                  'jefe_carrera'])) {
+                                  'jefe_carrera', 'personal_administrativo'])) {
             abort(403);
         }
 
@@ -172,6 +215,11 @@ class AlumnoController extends Controller
 
         if (! $esAdmin && ! $esPropioAlumno) {
             return ApiResponse::error('No tienes permiso.', 403);
+        }
+
+        $carreraForzada = $user->carreraRestringida();
+        if ($carreraForzada && $alumno->carrera_id !== $carreraForzada) {
+            return ApiResponse::error('Sin acceso al historial académico de alumnos de otras carreras.', 403);
         }
 
         $alumno->load([

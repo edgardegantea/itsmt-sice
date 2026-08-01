@@ -31,12 +31,17 @@ class Baja extends Model
         'revisada_en',
         'numero_semestres_cursados',
         'reingreso_posible',
+        'reingreso_registrado',
+        'fecha_reingreso',
+        'reingreso_por',
     ];
 
     protected $casts = [
         'fecha_solicitud'         => 'date',
         'fecha_efectiva'          => 'date',
         'reingreso_posible'       => 'boolean',
+        'reingreso_registrado'    => 'boolean',
+        'fecha_reingreso'         => 'date',
         'numero_semestres_cursados' => 'integer',
     ];
 
@@ -53,5 +58,10 @@ class Baja extends Model
     public function registradaPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'registrada_por');
+    }
+
+    public function reingresoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reingreso_por');
     }
 }

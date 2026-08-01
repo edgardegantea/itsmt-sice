@@ -45,6 +45,7 @@
     .foto {
       width: 20mm;
       min-width: 20mm;
+      height: 25mm;
       border: 0.3mm solid #aaa;
       background: #f5f5f5;
       display: flex;
@@ -56,6 +57,12 @@
       line-height: 1.4;
       border-radius: 1mm;
       flex-shrink: 0;
+      overflow: hidden;
+    }
+    .foto img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .datos { flex: 1; display: flex; flex-direction: column; justify-content: center; }
@@ -170,7 +177,14 @@
   </div>
 
   <div class="cuerpo">
-    <div class="foto">FOTO<br>35×45<br>mm</div>
+    @php $fotoBase64 = $alumno->inscripcion?->aspirante?->fotoBase64(); @endphp
+    <div class="foto">
+      @if($fotoBase64)
+        <img src="{{ $fotoBase64 }}" alt="Foto">
+      @else
+        FOTO<br>35×45<br>mm
+      @endif
+    </div>
 
     <div class="datos">
       <div class="nombre">

@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Sprint 20 — Cierre automático de convocatorias al vencer fecha_limite
 Schedule::command('convocatorias:cerrar')->dailyAt('01:00');
+
+// Recordatorio por correo al docente ~10 minutos antes de cada clase
+Schedule::command('asistencia:enviar-recordatorios')->everyMinute();

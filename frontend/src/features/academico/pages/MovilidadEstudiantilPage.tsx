@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { academicoApi } from '../services/academico'
 import type { MovilidadEstudiantil } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const ESTATUS_COLORS: Record<string, string> = {
   activa:    'bg-blue-100 text-blue-800',
@@ -24,6 +25,7 @@ export default function MovilidadEstudiantilPage() {
   const [solicitudForm, setSolicitudForm] = useState({ ies_receptora: '', fecha_inicio: '', fecha_fin: '' })
 
   const [selectedMovilidad, setSelectedMovilidad] = useState<MovilidadEstudiantil | null>(null)
+  const [detalle, setDetalle] = useState<MovilidadEstudiantil | null>(null)
   const [materias, setMaterias] = useState<CalifForm[]>([{ nombre: '', tipo_acreditacion: 'numerica', calificacion: '' }])
 
   const load = useCallback(async () => {
@@ -226,14 +228,14 @@ export default function MovilidadEstudiantilPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Alumno', 'IES receptora', 'Fecha inicio', 'Semestres', 'Estatus', 'Materias', ''].map(h => (
+                {['Alumno', 'IES receptora', 'Fecha inicio', 'Semestres', 'Estatus', 'Materias', '', ''].map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {movilidades.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-10 text-gray-400">Sin registros de movilidad</td></tr>
+                <tr><td colSpan={8} className="text-center py-10 text-gray-400">Sin registros de movilidad</td></tr>
               ) : movilidades.map(m => (
                 <tr key={m.id} className="hover:bg-gray-50">
                   <td className="px-5 py-4 text-sm text-gray-900">{m.alumno?.name ?? '—'}</td>
@@ -261,11 +263,43 @@ export default function MovilidadEstudiantilPage() {
                       </button>
                     )}
                   </td>
+                  <td className="px-5 py-4 text-right">
+                    <button onClick={() => setDetalle(m)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.alumno?.name ?? 'Movilidad estudiantil'}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'IES receptora', value: detalle.ies_receptora },
+            { label: 'Convenio', value: detalle.convenio?.nombre_institucion },
+            { label: 'Fecha inicio', value: detalle.fecha_inicio },
+            { label: 'Fecha fin', value: detalle.fecha_fin },
+            { label: 'Semestres acumulados', value: detalle.semestres_acumulados_movilidad },
+            { label: 'Estatus', value: <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${ESTATUS_COLORS[detalle.estatus]}`}>{detalle.estatus}</span> },
+            {
+              label: 'Materias cursadas',
+              full: true,
+              value: detalle.materias_cursadas?.length ? (
+                <ul className="space-y-1">
+                  {detalle.materias_cursadas.map((mc, i) => (
+                    <li key={i} className="flex justify-between">
+                      <span>{mc.nombre}</span>
+                      <span className="text-slate-500">{mc.tipo_acreditacion === 'numerica' ? mc.calificacion : mc.tipo_acreditacion}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : undefined,
+            },
+          ]}
+        />
       )}
     </div>
   )

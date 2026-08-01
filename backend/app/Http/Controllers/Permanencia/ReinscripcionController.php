@@ -70,6 +70,11 @@ class ReinscripcionController extends Controller
     {
         $this->authorize('update', $reinscripcion);
 
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada && $reinscripcion->alumno->carrera_id !== $carreraForzada) {
+            return ApiResponse::error('Solo puedes gestionar reinscripciones de alumnos de tu carrera.', 403);
+        }
+
         $data = $request->validate([
             'estatus'       => ['required', 'in:aprobada,rechazada'],
             'observaciones' => ['nullable', 'string', 'max:500'],
@@ -89,8 +94,23 @@ class ReinscripcionController extends Controller
     {
         $this->authorize('update', $reinscripcion);
 
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada && $reinscripcion->alumno->carrera_id !== $carreraForzada) {
+            return ApiResponse::error('Solo puedes gestionar reinscripciones de alumnos de tu carrera.', 403);
+        }
+
+        $data = $request->validate([
+            'folio_fiscal'           => ['required', 'string', 'max:36', 'unique:recibos_cobro,folio_fiscal'],
+            'nombre_pagador'         => ['required', 'string', 'max:200'],
+            'rfc_pagador'            => ['nullable', 'string', 'max:13'],
+            'concepto'               => ['nullable', 'string', 'max:300'],
+            'importe'                => ['required', 'numeric', 'min:0.01'],
+            'sello_digital_cfdi'     => ['nullable', 'string'],
+            'numero_certificado_sat' => ['nullable', 'string', 'max:40'],
+        ]);
+
         try {
-            $r = $this->service->registrarResello($reinscripcion, $request->user());
+            $r = $this->service->registrarResello($reinscripcion, $request->user(), $data);
         } catch (\DomainException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
@@ -107,6 +127,9 @@ class ReinscripcionController extends Controller
             abort_if($propio !== $alumno->id, 403, 'No autorizado.');
         } else {
             $this->authorize('viewAny', Reinscripcion::class);
+
+            $carreraForzada = $request->user()->carreraRestringida();
+            abort_if($carreraForzada && $alumno->carrera_id !== $carreraForzada, 403, 'Sin acceso a los adeudos de alumnos de otras carreras.');
         }
 
         return ApiResponse::success(

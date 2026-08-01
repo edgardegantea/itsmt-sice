@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { academicoApi } from '../services/academico'
 import type { ConvenioMovilidad } from '../services/academico'
 import { useToastStore } from '../../../store/toastStore'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const TIPOS: Record<string, string> = {
   tecnm: 'TecNM',
@@ -22,6 +24,8 @@ export default function ConveniosMovilidadPage() {
     vigente_hasta: '',
     url_convenio: '',
   })
+  const [vista, setVista] = useViewMode('convenios-movilidad')
+  const [detalle, setDetalle] = useState<ConvenioMovilidad | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -66,12 +70,15 @@ export default function ConveniosMovilidadPage() {
           <h1 className="text-2xl font-bold text-gray-900">Convenios de Movilidad</h1>
           <p className="text-sm text-gray-500 mt-1">Instituciones nacionales e internacionales con convenio activo</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
-        >
-          + Nuevo convenio
-        </button>
+        <div className="flex items-center gap-2">
+          <ViewToggle value={vista} onChange={setVista} />
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          >
+            + Nuevo convenio
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -147,20 +154,20 @@ export default function ConveniosMovilidadPage() {
 
       {loading ? (
         <div className="text-center py-12 text-gray-500">Cargando...</div>
-      ) : (
+      ) : convenios.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border text-center py-10 text-gray-400">Sin convenios registrados</div>
+      ) : vista === 'lista' ? (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Institución', 'Tipo', 'Vigente desde', 'Vigente hasta', 'Estado', 'Convenio'].map(h => (
+                {['Institución', 'Tipo', 'Vigente desde', 'Vigente hasta', 'Estado', 'Convenio', ''].map(h => (
                   <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {convenios.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-10 text-gray-400">Sin convenios registrados</td></tr>
-              ) : convenios.map(c => (
+              {convenios.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{c.nombre_institucion}</td>
                   <td className="px-6 py-4">
@@ -184,11 +191,46 @@ export default function ConveniosMovilidadPage() {
                       </a>
                     ) : '—'}
                   </td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {convenios.map(c => (
+            <div key={c.id} className="bg-white border rounded-xl p-4 flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-medium text-gray-900 truncate">{c.nombre_institucion}</p>
+                <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${c.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {c.activo ? 'Activo' : 'Inactivo'}
+                </span>
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded font-medium self-start ${
+                c.tipo === 'tecnm' ? 'bg-blue-100 text-blue-800' : c.tipo === 'nacional' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
+              }`}>{TIPOS[c.tipo]}</span>
+              <p className="text-xs text-gray-500">{c.vigente_desde} — {c.vigente_hasta ?? 'sin fin'}</p>
+              <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detalle && (
+        <DetailModal
+          title={detalle.nombre_institucion}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Tipo', value: TIPOS[detalle.tipo] },
+            { label: 'Vigente desde', value: detalle.vigente_desde },
+            { label: 'Vigente hasta', value: detalle.vigente_hasta ?? 'Sin fecha de término' },
+            { label: 'Estado', value: detalle.activo ? 'Activo' : 'Inactivo' },
+            { label: 'Documento', value: detalle.url_convenio ? <a href={detalle.url_convenio} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Ver documento</a> : '—' },
+          ]}
+        />
       )}
     </div>
   )

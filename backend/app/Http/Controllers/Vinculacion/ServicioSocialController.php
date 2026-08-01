@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Vinculacion;
 
 use App\Domains\Academico\Models\Alumno;
-use App\Domains\Academico\Models\MallaCurricular;
 use App\Domains\Vinculacion\Models\ServicioSocial;
+use App\Domains\Vinculacion\Services\PrerequisitosResidenciaService;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Mail\ServicioSocialEstatusActualizadoMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ServicioSocialController extends Controller
 {
+    public function __construct(private PrerequisitosResidenciaService $prerequisitos) {}
+
     // GET /servicio-social  (admin/jefe_carrera lista; alumno ve el suyo)
     public function index(Request $request): JsonResponse
     {
@@ -56,7 +61,7 @@ class ServicioSocialController extends Controller
         }
 
         // Validar prerrequisito: ≥70% créditos (política 3.4.5 PO-004)
-        $prerequisito = $this->calcularPorcentajeCreditos($alumno);
+        $prerequisito = $this->prerequisitos->porcentajeCreditos($alumno);
         if ($prerequisito['porcentaje'] < 70) {
             return ApiResponse::error(
                 "Debes tener al menos 70% de créditos acreditados para solicitar Servicio Social. Tienes {$prerequisito['porcentaje']}% ({$prerequisito['acreditados']}/{$prerequisito['total']} créditos).",
@@ -65,10 +70,11 @@ class ServicioSocialController extends Controller
         }
 
         $data = $request->validate([
-            'empresa'     => ['required', 'string', 'max:200'],
-            'responsable' => ['nullable', 'string', 'max:150'],
-            'fecha_inicio'=> ['nullable', 'date'],
-            'documentos'  => ['nullable', 'array'],
+            'empresa'          => ['required', 'string', 'max:200'],
+            'responsable'      => ['nullable', 'string', 'max:150'],
+            'fecha_inicio'     => ['nullable', 'date'],
+            'documentos'       => ['nullable', 'array'],
+            'carta_aceptacion' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
         ]);
 
         // Un alumno solo puede tener una solicitud de SS activa
@@ -79,9 +85,13 @@ class ServicioSocialController extends Controller
             return ApiResponse::error('Ya tienes una solicitud de Servicio Social activa.', 422);
         }
 
+        $cartaAceptacionPath = $request->file('carta_aceptacion')->store('servicio-social', 'public');
+        unset($data['carta_aceptacion']);
+
         $ss = ServicioSocial::create(array_merge($data, [
-            'alumno_id' => $alumno->id,
-            'estatus'   => 'solicitado',
+            'alumno_id'             => $alumno->id,
+            'estatus'               => 'solicitado',
+            'carta_aceptacion_path' => $cartaAceptacionPath,
         ]));
 
         return ApiResponse::success($ss->load(['alumno.user', 'alumno.carrera']), 'Solicitud de Servicio Social registrada.', 201);
@@ -113,8 +123,21 @@ class ServicioSocialController extends Controller
         }
 
         $servicioSocial->update($data);
+        $servicioSocial = $servicioSocial->fresh(['alumno.user', 'alumno.carrera']);
 
-        return ApiResponse::success($servicioSocial->fresh(['alumno.user', 'alumno.carrera']), 'Estatus actualizado.');
+        $email = $servicioSocial->alumno?->user?->email;
+        if ($email) {
+            try {
+                Mail::to($email)->queue(new ServicioSocialEstatusActualizadoMail($servicioSocial));
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo notificar el cambio de estatus de Servicio Social al alumno.', [
+                    'servicio_social_id' => $servicioSocial->id,
+                    'error'              => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return ApiResponse::success($servicioSocial, 'Estatus actualizado.');
     }
 
     // GET /alumnos/{alumno}/verificar-prerequisitos-residencia  (S6-06)
@@ -128,47 +151,6 @@ class ServicioSocialController extends Controller
             }
         }
 
-        $ssAcreditado = ServicioSocial::where('alumno_id', $alumno->id)
-            ->where('estatus', 'acreditado')
-            ->exists();
-
-        $acCompletadas = \App\Domains\Calidad\Models\ActividadComplementaria::where('alumno_id', $alumno->id)
-            ->where('estatus', 'validada')
-            ->exists();
-
-        $creditos = $this->calcularPorcentajeCreditos($alumno);
-        $dentroLimite = $alumno->semestre_actual <= 12;
-
-        return ApiResponse::success([
-            'ss_acreditado'           => $ssAcreditado,
-            'ac_completadas'          => $acCompletadas,
-            'porcentaje_creditos'     => $creditos['porcentaje'],
-            'creditos_acreditados'    => $creditos['acreditados'],
-            'creditos_totales'        => $creditos['total'],
-            'dentro_limite_semestres' => $dentroLimite,
-            'semestre_actual'         => $alumno->semestre_actual,
-            'puede_solicitar_rp'      => $ssAcreditado && $acCompletadas && $creditos['porcentaje'] >= 80 && $dentroLimite,
-        ]);
-    }
-
-    private function calcularPorcentajeCreditos(Alumno $alumno): array
-    {
-        $total = MallaCurricular::where('mallas_curriculares.carrera_id', $alumno->carrera_id)
-            ->join('materias', 'mallas_curriculares.materia_id', '=', 'materias.id')
-            ->sum('materias.creditos');
-
-        if ($total === 0) {
-            return ['porcentaje' => 0, 'acreditados' => 0, 'total' => 0];
-        }
-
-        $acreditados = \App\Domains\Academico\Models\Calificacion::where('calificaciones.alumno_id', $alumno->id)
-            ->where('calificaciones.acreditado', true)
-            ->join('cargas_academicas', 'calificaciones.grupo_id', '=', 'cargas_academicas.grupo_id')
-            ->join('materias', 'cargas_academicas.materia_id', '=', 'materias.id')
-            ->sum('materias.creditos');
-
-        $porcentaje = round(($acreditados / $total) * 100, 1);
-
-        return ['porcentaje' => $porcentaje, 'acreditados' => (int) $acreditados, 'total' => (int) $total];
+        return ApiResponse::success($this->prerequisitos->verificar($alumno));
     }
 }

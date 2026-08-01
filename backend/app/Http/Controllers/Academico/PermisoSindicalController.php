@@ -89,9 +89,9 @@ class PermisoSindicalController extends Controller
         $permiso->load(['docente', 'autorizadoPor', 'periodo']);
 
         // Grupos afectados por el docente en el período del permiso
-        $grupos = CargaAcademica::with(['grupo', 'materia'])
+        $grupos = CargaAcademica::with(['grupos', 'materia'])
             ->where('docente_id', $permiso->docente_id)
-            ->when($permiso->periodo_id, fn ($q) => $q->whereHas('grupo', fn ($gq) => $gq->where('periodo_id', $permiso->periodo_id)))
+            ->when($permiso->periodo_id, fn ($q) => $q->whereHas('grupos', fn ($gq) => $gq->where('periodo_id', $permiso->periodo_id)))
             ->get();
 
         $fecha = now()->format('d/m/Y');

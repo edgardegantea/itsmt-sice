@@ -1,22 +1,26 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { academicoApi, type PlaneacionDocente, type EstatusPlaneacion } from '../../services/academico'
-import { selectCls, usePeriodos, Th, EmptyRow, mutationError } from './shared'
+import { useAuthStore } from '../../../../store/authStore'
+import { selectCls, usePeriodos, Th, EmptyRow, transicionesPlaneacion } from './shared'
 
 const ESTATUS_COLOR: Record<EstatusPlaneacion, string> = {
-  borrador:  'bg-slate-100 text-slate-600',
-  entregada: 'bg-blue-100 text-blue-700',
-  revisada:  'bg-yellow-100 text-yellow-700',
-  liberada:  'bg-green-100 text-green-700',
-  devuelta:  'bg-red-100 text-red-700',
+  borrador:     'bg-slate-100 text-slate-600',
+  enviada_da:   'bg-blue-100 text-blue-700',
+  devuelta_da:  'bg-red-100 text-red-700',
+  enviada_jc:   'bg-indigo-100 text-indigo-700',
+  devuelta_jc:  'bg-red-100 text-red-700',
+  liberada:     'bg-green-100 text-green-700',
 }
 
 const ESTATUS_LABEL: Record<EstatusPlaneacion, string> = {
-  borrador:  'Borrador',
-  entregada: 'Entregada',
-  revisada:  'Revisada',
-  liberada:  'Liberada',
-  devuelta:  'Devuelta',
+  borrador:     'Borrador',
+  enviada_da:   'Enviada a Desarrollo Académico',
+  devuelta_da:  'Devuelta por Desarrollo Académico',
+  enviada_jc:   'Enviada a Jefatura de Carrera',
+  devuelta_jc:  'Devuelta por Jefatura de Carrera',
+  liberada:     'Liberada',
 }
 
 function EstatusBadge({ estatus }: { estatus: EstatusPlaneacion }) {
@@ -27,70 +31,12 @@ function EstatusBadge({ estatus }: { estatus: EstatusPlaneacion }) {
   )
 }
 
-function RevisionModal({ planeacion, onClose }: { planeacion: PlaneacionDocente; onClose: () => void }) {
-  const qc = useQueryClient()
-  const [estatus, setEstatus] = useState<'revisada' | 'liberada' | 'devuelta'>('revisada')
-  const [obs, setObs] = useState(planeacion.observaciones_revision ?? '')
-
-  const mutCambiar = useMutation({
-    mutationFn: () => academicoApi.cambiarEstatusPlaneacion(planeacion.id, estatus, obs),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['planeaciones-admin'] }); onClose() },
-  })
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-900">Revisar planeación</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <p className="text-sm font-medium text-slate-700">{planeacion.carga_academica?.materia?.nombre}</p>
-            <p className="text-xs text-slate-500">Docente: {planeacion.docente?.name}</p>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Nuevo estatus *</label>
-            <select value={estatus} onChange={e => setEstatus(e.target.value as 'revisada' | 'liberada' | 'devuelta')} className={selectCls}>
-              <option value="revisada">Revisada — en proceso</option>
-              <option value="liberada">Liberada — aprobada</option>
-              <option value="devuelta">Devuelta — requiere correcciones</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Observaciones</label>
-            <textarea
-              rows={3}
-              value={obs}
-              onChange={e => setObs(e.target.value)}
-              placeholder="Indica al docente qué debe corregir o mejorar…"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            />
-          </div>
-          {mutCambiar.isError && (
-            <p className="text-xs text-red-600">{mutationError(mutCambiar.error)}</p>
-          )}
-        </div>
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
-          <button onClick={onClose} className="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50">Cancelar</button>
-          <button
-            onClick={() => mutCambiar.mutate()}
-            disabled={mutCambiar.isPending}
-            className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {mutCambiar.isPending ? 'Guardando…' : 'Guardar revisión'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function PlaneacionesTab() {
+  const roles = useAuthStore(s => s.user?.roles) ?? []
+  const navigate = useNavigate()
   const { data: periodos = [] } = usePeriodos()
   const [periodoId, setPeriodoId] = useState('')
   const [filtroEstatus, setFiltroEstatus] = useState('')
-  const [revisando, setRevisando] = useState<PlaneacionDocente | null>(null)
 
   const params: Record<string, string> = {}
   if (periodoId)    params.periodo_id = periodoId
@@ -131,7 +77,7 @@ export default function PlaneacionesTab() {
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <Th>Docente</Th><Th>Materia</Th><Th>Grupo</Th><Th>Periodo</Th>
-              <Th>Entregada</Th><Th>Estatus</Th><Th>Acciones</Th>
+              <Th>Entregada</Th><Th>Estatus</Th><Th />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -141,33 +87,19 @@ export default function PlaneacionesTab() {
               <EmptyRow cols={7} msg="No hay planeaciones." />
             ) : (
               planeaciones.map(p => (
-                <tr key={p.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                <tr key={p.id} onClick={() => navigate(`/admin/gestion-academica/planeaciones/${p.id}`)} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
                   <td className="px-4 py-3 font-medium text-slate-800">{p.docente?.name}</td>
                   <td className="px-4 py-3 text-slate-700">{p.carga_academica?.materia?.nombre ?? '—'}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.carga_academica?.grupo?.clave ?? '—'}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.carga_academica?.grupos?.[0]?.clave ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-500 text-xs">{p.periodo?.nombre ?? '—'}</td>
                   <td className="px-4 py-3 text-xs text-slate-400">
                     {p.fecha_entrega ? new Date(p.fecha_entrega).toLocaleDateString('es-MX') : '—'}
                   </td>
                   <td className="px-4 py-3"><EstatusBadge estatus={p.estatus} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-3">
-                      {p.archivo_url && (
-                        <a href={p.archivo_url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">
-                          Ver archivo
-                        </a>
-                      )}
-                      {p.estatus === 'entregada' && (
-                        <button onClick={() => setRevisando(p)} className="text-xs text-green-700 hover:underline">
-                          Revisar
-                        </button>
-                      )}
-                      {p.estatus === 'revisada' && (
-                        <button onClick={() => setRevisando(p)} className="text-xs text-blue-600 hover:underline">
-                          Actualizar
-                        </button>
-                      )}
-                    </div>
+                  <td className="px-4 py-3 text-right">
+                    <span className="text-xs font-medium text-blue-600 whitespace-nowrap">
+                      {transicionesPlaneacion(p.estatus, roles).length > 0 ? 'Revisar' : 'Ver detalle'}
+                    </span>
                   </td>
                 </tr>
               ))
@@ -175,8 +107,6 @@ export default function PlaneacionesTab() {
           </tbody>
         </table>
       </div>
-
-      {revisando && <RevisionModal planeacion={revisando} onClose={() => setRevisando(null)} />}
     </div>
   )
 }

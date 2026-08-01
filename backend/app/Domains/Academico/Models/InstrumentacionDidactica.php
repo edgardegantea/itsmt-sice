@@ -18,7 +18,8 @@ class InstrumentacionDidactica extends Model
         'asignacion_id', 'periodo_id',
         'objetivo_general', 'competencias', 'unidades', 'metodologia',
         'criterios_evaluacion', 'bibliografia',
-        'estatus', 'observaciones_jefe', 'liberada_por', 'visto_bueno_por',
+        'estatus', 'observaciones_jefe', 'observaciones_campos', 'liberada_por', 'visto_bueno_por',
+        'entrega_en', 'entrega_tardia',
     ];
 
     protected function casts(): array
@@ -27,6 +28,9 @@ class InstrumentacionDidactica extends Model
             'competencias'         => 'array',
             'unidades'             => 'array',
             'criterios_evaluacion' => 'array',
+            'observaciones_campos' => 'array',
+            'entrega_en'           => 'datetime',
+            'entrega_tardia'       => 'boolean',
         ];
     }
 

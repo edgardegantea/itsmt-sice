@@ -12,6 +12,7 @@ use App\Http\Responses\ApiResponse;
 use App\Mail\ConfirmacionAspirante;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class AspiranteController extends Controller
@@ -36,7 +37,7 @@ class AspiranteController extends Controller
     {
         $this->authorize('view', $aspirante);
 
-        return ApiResponse::success($aspirante->load(['carrera', 'periodo']));
+        return ApiResponse::success($aspirante->load(['carrera', 'periodo', 'estatusHistorial.cambiadoPor:id,name']));
     }
 
     // POST /api/aspirantes
@@ -51,13 +52,22 @@ class AspiranteController extends Controller
             $datos['documentos'] = array_merge($datos['documentos'] ?? [], ['certificado_bachillerato' => $path]);
         }
 
+        if ($request->hasFile('foto')) {
+            $datos['foto_path'] = $request->file('foto')->store('fotos-aspirantes', 'public');
+        }
+
         $aspirante = $this->service->crear($datos);
         $aspirante->load(['carrera', 'periodo']);
 
         try {
             Mail::to($aspirante->email)->queue(new ConfirmacionAspirante($aspirante));
-        } catch (\Throwable) {
-            // El correo falla silenciosamente para no bloquear el registro
+        } catch (\Throwable $e) {
+            // No bloquea el registro del aspirante, pero el fallo debe quedar visible en logs
+            Log::warning('No se pudo enviar el correo de confirmación al aspirante.', [
+                'aspirante_id' => $aspirante->id,
+                'email'        => $aspirante->email,
+                'error'        => $e->getMessage(),
+            ]);
         }
 
         return ApiResponse::success($aspirante, 'Solicitud registrada correctamente.', 201);
@@ -110,7 +120,8 @@ class AspiranteController extends Controller
             $aspirante,
             $request->validated('estatus'),
             $request->validated('observaciones'),
-            $request->validated('motivo_rechazo')
+            $request->validated('motivo_rechazo'),
+            $request->user()->id
         );
 
         return ApiResponse::success($aspirante, 'Estatus actualizado.');

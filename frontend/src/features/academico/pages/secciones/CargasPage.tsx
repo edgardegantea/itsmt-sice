@@ -1,13 +1,15 @@
-import { useState, useMemo, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useCallback, type ReactNode } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type CargaAcademica, type Horario } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
 import { useAuthStore } from '../../../../store/authStore'
 import { Field, SkeletonRows, icls, selectCls, inputCls, ModalWrap, usePeriodos, mutationError, extractApiErrors } from '../tabs/shared'
+import { usePeriodoActivo } from '../../../../hooks/usePeriodoActivo'
 import { useConfirm } from '../../../../components/ConfirmDialog'
 import apiClient from '../../../../config/apiClient'
 import { usePuedeEliminar } from '../../../../hooks/usePermisos'
+import DetailModal from '../../../../components/ui/DetailModal'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -65,7 +67,7 @@ function toMin(t: string) {
 
 
 // Tipos internos del accordion
-type GrupoEntry = { id: string; clave: string; turno: string; cargas: CargaAcademica[]; horarios_liberados: boolean }
+type GrupoEntry = { id: string; clave: string; turno: string; cargas: CargaAcademica[]; horarios_liberados: boolean; creditos: number }
 type SemestreEntry = { semestre: number; grupos: Map<string, GrupoEntry> }
 type CarreraEntry = { id: string; nombre: string; clave: string; semestres: Map<number, SemestreEntry> }
 
@@ -73,11 +75,13 @@ function CargasAccordion({
   cargas,
   onLiberarGrupo,
   onLiberarBulk,
+  onAgregarClase,
   esSuperadmin = false,
 }: {
   cargas: CargaAcademica[]
   onLiberarGrupo?: (grupoId: string, liberar: boolean) => void
   onLiberarBulk?: (params: { carrera_id?: string; semestre?: number; liberar: boolean }) => void
+  onAgregarClase?: (grupoId: string, carreraId: string) => void
   esSuperadmin?: boolean
 }) {
   const [openCarreras, setOpenCarreras] = useState<Set<string>>(() => new Set())
@@ -92,28 +96,35 @@ function CargasAccordion({
     const map = new Map<string, CarreraEntry>()
 
     for (const c of cargas) {
-      const carrera = c.grupo?.carrera ?? c.materia?.carrera
-      const carreraId = carrera?.id ?? '_sin_carrera'
-      const semestre = c.grupo?.semestre ?? 0
-      const grupoId = c.grupo?.id ?? '_sin_grupo'
-      const grupoClave = c.grupo?.clave ?? 'Sin grupo'
-      const grupoTurno = c.grupo?.turno ?? ''
+      // Una carga puede impartirse a varios grupos combinados — aparece bajo cada uno.
+      const gruposDeCarga = c.grupos && c.grupos.length > 0 ? c.grupos : [undefined]
 
-      if (!map.has(carreraId)) {
-        map.set(carreraId, {
-          id: carreraId,
-          nombre: carrera?.nombre ?? 'Sin carrera',
-          clave: carrera?.clave ?? '—',
-          semestres: new Map(),
-        })
+      for (const grupo of gruposDeCarga) {
+        const carrera = grupo?.carrera ?? c.materia?.carrera
+        const carreraId = carrera?.id ?? '_sin_carrera'
+        const semestre = grupo?.semestre ?? 0
+        const grupoId = grupo?.id ?? '_sin_grupo'
+        const grupoClave = grupo?.clave ?? 'Sin grupo'
+        const grupoTurno = grupo?.turno ?? ''
+
+        if (!map.has(carreraId)) {
+          map.set(carreraId, {
+            id: carreraId,
+            nombre: carrera?.nombre ?? 'Sin carrera',
+            clave: carrera?.clave ?? '—',
+            semestres: new Map(),
+          })
+        }
+        const ce = map.get(carreraId)!
+
+        if (!ce.semestres.has(semestre)) ce.semestres.set(semestre, { semestre, grupos: new Map() })
+        const se = ce.semestres.get(semestre)!
+
+        if (!se.grupos.has(grupoId)) se.grupos.set(grupoId, { id: grupoId, clave: grupoClave, turno: grupoTurno, cargas: [], horarios_liberados: grupo?.horarios_liberados ?? false, creditos: 0 })
+        const ge = se.grupos.get(grupoId)!
+        ge.cargas.push(c)
+        ge.creditos += c.materia?.creditos ?? 0
       }
-      const ce = map.get(carreraId)!
-
-      if (!ce.semestres.has(semestre)) ce.semestres.set(semestre, { semestre, grupos: new Map() })
-      const se = ce.semestres.get(semestre)!
-
-      if (!se.grupos.has(grupoId)) se.grupos.set(grupoId, { id: grupoId, clave: grupoClave, turno: grupoTurno, cargas: [], horarios_liberados: c.grupo?.horarios_liberados ?? false })
-      se.grupos.get(grupoId)!.cargas.push(c)
     }
 
     return [...map.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))
@@ -232,10 +243,24 @@ function CargasAccordion({
                                 {grupo.horarios_liberados && (
                                   <span className="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">liberado</span>
                                 )}
-                                <span className="ml-auto text-xs text-slate-400">
-                                  {grupo.cargas.length} materia{grupo.cargas.length !== 1 ? 's' : ''}
+                                <span className="ml-auto text-xs text-slate-400 whitespace-nowrap">
+                                  {grupo.cargas.length} clase{grupo.cargas.length !== 1 ? 's' : ''} asignada{grupo.cargas.length !== 1 ? 's' : ''} · {grupo.creditos} crédito{grupo.creditos !== 1 ? 's' : ''}
                                 </span>
                               </Link>
+                              <Link
+                                to={`/admin/gestion-academica/grupos/${grupo.id}`}
+                                className="text-xs text-blue-600 hover:underline shrink-0 whitespace-nowrap"
+                              >
+                                Ver horario
+                              </Link>
+                              {onAgregarClase && (
+                                <button
+                                  onClick={e => { e.preventDefault(); onAgregarClase(grupo.id, carrera.id) }}
+                                  className="text-xs text-emerald-700 hover:underline shrink-0 whitespace-nowrap"
+                                >
+                                  + Agregar clase
+                                </button>
+                              )}
                               {esSuperadmin && onLiberarGrupo && (
                                 <button
                                   onClick={e => { e.preventDefault(); onLiberarGrupo(grupo.id, !grupo.horarios_liberados) }}
@@ -325,7 +350,7 @@ function CargaDocenteView({
 
   cargas.forEach((carga, idx) => {
     const color = COLORS[idx % COLORS.length]
-    const label = `${carga.grupo?.clave ?? '?'}${carga.aula ? `-${carga.aula.nombre}` : ''}`
+    const label = `${carga.grupos?.[0]?.clave ?? '?'}${carga.aula ? `-${carga.aula.nombre}` : ''}`
     ;(carga.horarios ?? []).forEach(h => {
       const inicioMin = toMin(h.hora_inicio)
       const finMin = toMin(h.hora_fin)
@@ -461,8 +486,8 @@ function CargaDocenteView({
                 <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-sm">Sin asignaturas asignadas.</td></tr>
               ) : (
                 cargas.map((c, idx) => {
-                  const carreraClave = c.grupo?.carrera?.clave ?? c.materia?.carrera?.clave ?? 'N/A'
-                  const semestre = c.grupo?.semestre ?? '?'
+                  const carreraClave = c.grupos?.[0]?.carrera?.clave ?? c.materia?.carrera?.clave ?? 'N/A'
+                  const semestre = c.grupos?.[0]?.semestre ?? '?'
                   const isLast = idx === cargas.length - 1
                   return (
                     <tr key={c.id} className="divide-x divide-slate-100 hover:bg-blue-50/40">
@@ -471,10 +496,10 @@ function CargaDocenteView({
                       </td>
                       <td className="px-3 py-2.5">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{c.grupo?.clave ?? '—'}</span>
-                          {c.grupo?.turno && (
-                            <span className={`text-xs px-1.5 py-0.5 rounded-full ${TURNO_COLOR[c.grupo.turno] ?? ''}`}>
-                              {c.grupo.turno.charAt(0).toUpperCase()}
+                          <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{c.grupos?.[0]?.clave ?? '—'}</span>
+                          {c.grupos?.[0]?.turno && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full ${TURNO_COLOR[c.grupos?.[0]?.turno ?? ""] ?? ''}`}>
+                              {c.grupos![0].turno.charAt(0).toUpperCase()}
                             </span>
                           )}
                         </div>
@@ -652,7 +677,7 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <div>
             <h2 className="font-semibold text-slate-900">Horario semanal</h2>
-            <p className="text-xs text-slate-500 mt-0.5">{carga.materia?.nombre} · {carga.grupo?.clave}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{carga.materia?.nombre} · {carga.grupos?.[0]?.clave}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
         </div>
@@ -706,11 +731,245 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
   )
 }
 
+// ── Modal: concentrado de horarios (Excel) ────────────────────────────────────
+
+function ConcentradoModal({
+  periodos, carreras, periodoInicial, onClose,
+}: {
+  periodos: { id: string; nombre: string; activo: boolean }[]
+  carreras: { id: string; nombre: string; clave: string }[]
+  periodoInicial?: string
+  onClose: () => void
+}) {
+  const [periodoId, setPeriodoId] = useState(periodoInicial ?? '')
+  const [carreraId, setCarreraId] = useState('')
+  const [turno, setTurno] = useState('')
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h2 className="font-semibold text-slate-900">Concentrado de horarios</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+        </div>
+        <div className="p-6 space-y-4">
+          <p className="text-xs text-slate-500">Genera un Excel con una hoja por docente. Deja carrera y turno en blanco para el concentrado general.</p>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Periodo *</label>
+            <select className={selectCls} value={periodoId} onChange={e => setPeriodoId(e.target.value)}>
+              <option value="">— Selecciona —</option>
+              {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}{p.activo ? ' ●' : ''}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Carrera (opcional)</label>
+            <select className={selectCls} value={carreraId} onChange={e => setCarreraId(e.target.value)}>
+              <option value="">Todas las carreras</option>
+              {carreras.map(c => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Turno (opcional)</label>
+            <select className={selectCls} value={turno} onChange={e => setTurno(e.target.value)}>
+              <option value="">Todos los turnos</option>
+              <option value="matutino">Matutino</option>
+              <option value="vespertino">Vespertino</option>
+              <option value="sabatino">Sabatino</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cancelar</button>
+          <a
+            href={periodoId ? academicoApi.getConcentradoUrl({ periodo_id: periodoId, carrera_id: carreraId || undefined, turno: turno || undefined }) : undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => { if (!periodoId) e.preventDefault(); else onClose() }}
+            className={`px-5 py-2 rounded-lg text-white text-sm font-medium ${periodoId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-300 cursor-not-allowed'}`}
+          >
+            Descargar Excel
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Modal: buscar disponibilidad ───────────────────────────────────────────────
+
+function BuscarDisponibilidadModal({
+  docentes, periodos, aulas, periodoInicial, onClose,
+}: {
+  docentes: Docente[]
+  periodos: { id: string; nombre: string; activo: boolean }[]
+  aulas: { id: string; nombre: string }[]
+  periodoInicial?: string
+  onClose: () => void
+}) {
+  const [form, setForm] = useState({
+    docente_id: '', periodo_id: periodoInicial ?? '', dia_semana: 'lunes',
+    hora_inicio: '08:00', hora_fin: '09:00', aula_id: '',
+  })
+  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  const buscar = useMutation({
+    mutationFn: () => academicoApi.verificarDisponibilidad({
+      periodo_id: form.periodo_id,
+      docente_id: form.docente_id,
+      dia_semana: form.dia_semana,
+      hora_inicio: form.hora_inicio,
+      hora_fin: form.hora_fin,
+      aula_id: form.aula_id || undefined,
+    }),
+  })
+
+  const puedeBuscar = !!form.docente_id && !!form.periodo_id && !!form.hora_inicio && !!form.hora_fin
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h2 className="font-semibold text-slate-900">Buscar disponibilidad</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+        </div>
+        <div className="p-6 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-slate-600 mb-1">Docente *</label>
+              <select className={selectCls} value={form.docente_id} onChange={e => set('docente_id', e.target.value)}>
+                <option value="">— Seleccionar —</option>
+                {docentes.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-slate-600 mb-1">Periodo *</label>
+              <select className={selectCls} value={form.periodo_id} onChange={e => set('periodo_id', e.target.value)}>
+                <option value="">— Seleccionar —</option>
+                {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}{p.activo ? ' ●' : ''}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Día</label>
+              <select className={selectCls} value={form.dia_semana} onChange={e => set('dia_semana', e.target.value)}>
+                {DIAS.map(d => <option key={d} value={d}>{DIA_FULL[d]}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Aula (opcional)</label>
+              <select className={selectCls} value={form.aula_id} onChange={e => set('aula_id', e.target.value)}>
+                <option value="">Sin aula</option>
+                {aulas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Hora inicio</label>
+              <input type="time" className={inputCls} value={form.hora_inicio} onChange={e => set('hora_inicio', e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Hora fin</label>
+              <input type="time" className={inputCls} value={form.hora_fin} onChange={e => set('hora_fin', e.target.value)} />
+            </div>
+          </div>
+
+          {buscar.data && (
+            buscar.data.resultado.conflictos.length === 0 && buscar.data.resultado.dentro_disponibilidad ? (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-700">
+                ✓ Disponible — sin conflictos en ese horario.
+              </div>
+            ) : (
+              <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700 space-y-1">
+                {buscar.data.resultado.conflictos.map((c, i) => <p key={i}>{c.mensaje}</p>)}
+                {!buscar.data.resultado.dentro_disponibilidad && buscar.data.resultado.mensaje_disponibilidad && (
+                  <p>{buscar.data.resultado.mensaje_disponibilidad}</p>
+                )}
+              </div>
+            )
+          )}
+        </div>
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cerrar</button>
+          <button
+            onClick={() => buscar.mutate()}
+            disabled={!puedeBuscar || buscar.isPending}
+            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            {buscar.isPending ? 'Buscando…' : 'Buscar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Modal: diagnóstico de horarios ─────────────────────────────────────────────
+
+function DiagnosticoModal({
+  cargas, grupos, onClose,
+}: {
+  cargas: CargaAcademica[]
+  grupos: { id: string; clave: string }[]
+  onClose: () => void
+}) {
+  const sinHorario = cargas.filter(c => (c.horarios ?? []).length === 0)
+  const conConflicto = cargas.filter(c => c.estado === 'conflicto')
+
+  const horasPorDocente = new Map<string, { nombre: string; horas: number }>()
+  cargas.forEach(c => {
+    if (!c.docente_id) return
+    const actual = horasPorDocente.get(c.docente_id) ?? { nombre: c.docente?.name ?? '—', horas: 0 }
+    actual.horas += c.horas_semana
+    horasPorDocente.set(c.docente_id, actual)
+  })
+  const docentesExcedidos = [...horasPorDocente.values()].filter(d => d.horas > 40)
+
+  const gruposConCarga = new Set(cargas.flatMap(c => c.grupos?.map(g => g.id) ?? []))
+  const gruposSinCarga = grupos.filter(g => !gruposConCarga.has(g.id))
+
+  const Seccion = ({ title, count, color, children }: { title: string; count: number; color: string; children?: ReactNode }) => (
+    <div className="border border-slate-200 rounded-lg overflow-hidden">
+      <div className={`px-4 py-2.5 flex items-center justify-between ${color}`}>
+        <span className="text-sm font-semibold">{title}</span>
+        <span className="text-sm font-bold">{count}</span>
+      </div>
+      {count > 0 && children && <div className="px-4 py-3 space-y-1 text-xs text-slate-600 max-h-40 overflow-y-auto">{children}</div>}
+    </div>
+  )
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+          <h2 className="font-semibold text-slate-900">Diagnóstico de horarios</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+        </div>
+        <div className="p-6 space-y-3 overflow-y-auto">
+          <Seccion title="Cargas sin horario asignado" count={sinHorario.length} color={sinHorario.length ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}>
+            {sinHorario.map(c => <p key={c.id}>{c.docente?.name} — {c.materia?.nombre} ({c.grupos?.[0]?.clave})</p>)}
+          </Seccion>
+          <Seccion title="Cargas marcadas con conflicto" count={conConflicto.length} color={conConflicto.length ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-slate-500'}>
+            {conConflicto.map(c => <p key={c.id}>{c.docente?.name} — {c.materia?.nombre} ({c.grupos?.[0]?.clave})</p>)}
+          </Seccion>
+          <Seccion title="Docentes que exceden 40h/semana" count={docentesExcedidos.length} color={docentesExcedidos.length ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-slate-500'}>
+            {docentesExcedidos.map(d => <p key={d.nombre}>{d.nombre} — {d.horas}h</p>)}
+          </Seccion>
+          <Seccion title="Grupos sin ninguna carga asignada" count={gruposSinCarga.length} color={gruposSinCarga.length ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}>
+            {gruposSinCarga.map(g => <p key={g.id}>{g.clave}</p>)}
+          </Seccion>
+        </div>
+        <div className="flex justify-end px-6 py-4 border-t border-slate-100 shrink-0">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Página principal ──────────────────────────────────────────────────────────
 
 const BLANK: Partial<CargaAcademica> = { horas_semana: 3 }
 
 export default function CargasPage() {
+  const navigate = useNavigate()
   const qc = useQueryClient()
   const { toast: addToast } = useToastStore()
   const [filtroPeriodo, setFiltroPeriodo] = useState('')
@@ -719,9 +978,13 @@ export default function CargasPage() {
   const [busqueda, setBusqueda] = useState('')
   const [vistaTabla, setVistaTabla] = useState(false)
   const [vistaDocente, setVistaDocente] = useState(false)
-  const [modal, setModal] = useState<Partial<CargaAcademica> | null>(null)
+  const [modal, setModal] = useState<(Partial<CargaAcademica> & { grupo_ids?: string[] }) | null>(null)
+  const [detalle, setDetalle] = useState<CargaAcademica | null>(null)
   const [horariosModal, setHorariosModal] = useState<CargaAcademica | null>(null)
   const [horarioDocenteModal, setHorarioDocenteModal] = useState<Docente | null>(null)
+  const [showConcentrado, setShowConcentrado] = useState(false)
+  const [showDisponibilidad, setShowDisponibilidad] = useState(false)
+  const [showDiagnostico, setShowDiagnostico] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { confirm, dialog: confirmDialog } = useConfirm()
 
@@ -730,9 +993,10 @@ export default function CargasPage() {
   const puedeEliminar = usePuedeEliminar()
 
   const { data: periodos = [] } = usePeriodos()
+  const { data: periodoActivo } = usePeriodoActivo()
   const { data: aulas = [] } = useAulas()
   const { data: carreras = [] } = useCarreras()
-  const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: academicoApi.getDocentes, staleTime: 60_000 })
+  const { data: docentes = [] } = useQuery({ queryKey: ['docentes'], queryFn: () => academicoApi.getDocentes(), staleTime: 60_000 })
   const { data: materias = [] } = useQuery({ queryKey: ['materias'], queryFn: () => academicoApi.getMaterias(), staleTime: 30_000 })
   const { data: grupos = [] } = useQuery({ queryKey: ['grupos'], queryFn: () => academicoApi.getGrupos(), staleTime: 30_000 })
 
@@ -747,13 +1011,13 @@ export default function CargasPage() {
 
   const cargasFiltradas = useMemo(() => {
     let list = cargas as CargaAcademica[]
-    if (filtroCarrera) list = list.filter(c => (c.materia?.carrera?.id ?? c.grupo?.carrera?.id) === filtroCarrera)
+    if (filtroCarrera) list = list.filter(c => (c.materia?.carrera?.id ?? c.grupos?.[0]?.carrera?.id) === filtroCarrera)
     if (busqueda.trim()) {
       const q = busqueda.toLowerCase()
       list = list.filter(c =>
         c.docente?.name?.toLowerCase().includes(q) ||
         c.materia?.nombre?.toLowerCase().includes(q) ||
-        c.grupo?.clave?.toLowerCase().includes(q) ||
+        c.grupos?.[0]?.clave?.toLowerCase().includes(q) ||
         c.materia?.clave?.toLowerCase().includes(q)
       )
     }
@@ -766,8 +1030,8 @@ export default function CargasPage() {
   )
 
   const periodoSeleccionado = useMemo(
-    () => periodos.find(p => p.id === filtroPeriodo) ?? periodos.find(p => p.activo) ?? null,
-    [periodos, filtroPeriodo]
+    () => periodos.find(p => p.id === filtroPeriodo) ?? periodos.find(p => p.id === periodoActivo?.id) ?? null,
+    [periodos, filtroPeriodo, periodoActivo]
   )
 
   const save = useMutation({
@@ -822,7 +1086,12 @@ export default function CargasPage() {
     onError: () => addToast('Error al liberar horarios.', 'error'),
   })
 
-  const set = (k: keyof CargaAcademica, v: unknown) => setModal(m => ({ ...m, [k]: v }))
+  const set = (k: keyof CargaAcademica | 'grupo_ids', v: unknown) => setModal(m => ({ ...m, [k]: v }))
+  const toggleModalGrupo = (id: string) => setModal(m => {
+    const actuales = m?.grupo_ids ?? m?.grupos?.map(g => g.id) ?? []
+    const siguientes = actuales.includes(id) ? actuales.filter(x => x !== id) : [...actuales, id]
+    return { ...m, grupo_ids: siguientes }
+  })
 
   const totalHoras = cargasFiltradas.reduce((s, c) => s + c.horas_semana, 0)
   const docentesActivos = new Set(cargasFiltradas.map(c => c.docente_id)).size
@@ -883,15 +1152,36 @@ export default function CargasPage() {
                 </button>
               )}
               <Link
-                to="/admin/gestion-academica/cargas/builder"
+                to={`/admin/gestion-academica/cargas/builder${filtroPeriodo || filtroCarrera ? `?${new URLSearchParams({ ...(filtroPeriodo ? { periodo_id: filtroPeriodo } : {}), ...(filtroCarrera ? { carrera_id: filtroCarrera } : {}) }).toString()}` : ''}`}
                 className="inline-flex items-center gap-1.5 px-3 py-2 border border-violet-300 bg-violet-50 text-violet-700 text-sm rounded-lg hover:bg-violet-100"
-                title="Constructor de horarios con arrastrar y soltar"
+                title="Constructor de horarios con clic y arrastre"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 Constructor
               </Link>
+              <button
+                onClick={() => setShowConcentrado(true)}
+                className="px-3 py-2 border border-slate-200 bg-white text-slate-700 text-sm rounded-lg hover:bg-slate-50"
+                title="Exportar concentrado de horarios a Excel"
+              >
+                Concentrado
+              </button>
+              <button
+                onClick={() => setShowDisponibilidad(true)}
+                className="px-3 py-2 border border-slate-200 bg-white text-slate-700 text-sm rounded-lg hover:bg-slate-50"
+                title="Buscar si un docente/aula está libre en un horario"
+              >
+                Buscar disponibilidad
+              </button>
+              <button
+                onClick={() => setShowDiagnostico(true)}
+                className="px-3 py-2 border border-slate-200 bg-white text-slate-700 text-sm rounded-lg hover:bg-slate-50"
+                title="Resumen de cargas sin horario, conflictos y sobrecarga"
+              >
+                Diagnóstico
+              </button>
               <button
                 onClick={() => setVistaTabla(v => !v)}
                 className="px-3 py-2 border border-slate-200 bg-white rounded-lg text-slate-600 hover:bg-slate-50"
@@ -935,28 +1225,6 @@ export default function CargasPage() {
             </div>
           </div>
         </div>
-
-        {/* Stats */}
-        {cargasFiltradas.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
-              <p className="text-xs text-slate-500">Total cargas</p>
-              <p className="text-2xl font-bold text-slate-900 mt-0.5">{cargasFiltradas.length}</p>
-            </div>
-            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
-              <p className="text-xs text-slate-500">Horas / semana</p>
-              <p className="text-2xl font-bold text-blue-700 mt-0.5">{totalHoras}h</p>
-            </div>
-            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
-              <p className="text-xs text-slate-500">Docentes con carga</p>
-              <p className="text-2xl font-bold text-slate-900 mt-0.5">{docentesActivos}</p>
-            </div>
-            <div className={`border rounded-xl px-4 py-3 ${sinHorario > 0 ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'}`}>
-              <p className={`text-xs ${sinHorario > 0 ? 'text-amber-600' : 'text-slate-500'}`}>Sin horario asignado</p>
-              <p className={`text-2xl font-bold mt-0.5 ${sinHorario > 0 ? 'text-amber-700' : 'text-slate-900'}`}>{sinHorario}</p>
-            </div>
-          </div>
-        )}
 
         {/* Filtros */}
         <div className="bg-white border border-slate-200 rounded-xl px-5 py-4">
@@ -1038,10 +1306,10 @@ export default function CargasPage() {
                       <p className="text-xs text-slate-400 font-mono">{c.materia?.clave}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">{c.grupo?.clave ?? '—'}</span>
-                      {c.grupo?.semestre && <span className="ml-1.5 text-xs text-slate-500">{c.grupo.semestre}°</span>}
+                      <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">{c.grupos?.[0]?.clave ?? '—'}</span>
+                      {c.grupos?.[0]?.semestre && <span className="ml-1.5 text-xs text-slate-500">{c.grupos![0].semestre}°</span>}
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{c.grupo?.carrera?.clave ?? c.materia?.carrera?.clave ?? '—'}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{c.grupos?.[0]?.carrera?.clave ?? c.materia?.carrera?.clave ?? '—'}</td>
                     <td className="px-4 py-3 text-xs text-slate-500">{c.periodo?.nombre ?? '—'}</td>
                     <td className="px-4 py-3">
                       {(c.horarios ?? []).length === 0 ? (
@@ -1055,6 +1323,7 @@ export default function CargasPage() {
                     </td>
                     <td className="px-4 py-3 text-center font-semibold text-slate-900">{c.horas_semana}h</td>
                     <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                      <button onClick={() => setDetalle(c)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
                       {c.docente && <button onClick={() => setHorarioDocenteModal(c.docente as Docente)} className="text-xs text-violet-600 hover:underline">Ver carga</button>}
                       <button onClick={() => setHorariosModal(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
                       <button onClick={() => setModal(c)} className="text-xs text-slate-600 hover:underline">Editar</button>
@@ -1071,11 +1340,62 @@ export default function CargasPage() {
             esSuperadmin={esSuperadmin}
             onLiberarGrupo={(grupoId, liberar) => liberarGrupoMut.mutate({ grupoId, liberar })}
             onLiberarBulk={(params) => liberarBulkMut.mutate({ ...params, periodo_id: periodoSeleccionado?.id })}
+            onAgregarClase={(grupoId, carreraId) => navigate(`/admin/gestion-academica/cargas/builder?periodo_id=${periodoSeleccionado?.id ?? ''}&carrera_id=${carreraId}&grupo_id=${grupoId}`)}
           />
+        )}
+
+        {/* Stats */}
+        {cargasFiltradas.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
+              <p className="text-xs text-slate-500">Total cargas</p>
+              <p className="text-2xl font-bold text-slate-900 mt-0.5">{cargasFiltradas.length}</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
+              <p className="text-xs text-slate-500">Horas / semana</p>
+              <p className="text-2xl font-bold text-blue-700 mt-0.5">{totalHoras}h</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
+              <p className="text-xs text-slate-500">Docentes con carga</p>
+              <p className="text-2xl font-bold text-slate-900 mt-0.5">{docentesActivos}</p>
+            </div>
+            <div className={`border rounded-xl px-4 py-3 ${sinHorario > 0 ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'}`}>
+              <p className={`text-xs ${sinHorario > 0 ? 'text-amber-600' : 'text-slate-500'}`}>Sin horario asignado</p>
+              <p className={`text-2xl font-bold mt-0.5 ${sinHorario > 0 ? 'text-amber-700' : 'text-slate-900'}`}>{sinHorario}</p>
+            </div>
+          </div>
         )}
       </div>
 
       {confirmDialog}
+
+      {detalle && (
+        <DetailModal
+          title={`${detalle.docente?.name ?? 'Sin docente'} — ${detalle.materia?.nombre ?? 'Sin materia'}`}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Docente', value: detalle.docente?.name ?? '—' },
+            { label: 'Materia', value: detalle.materia ? `${detalle.materia.nombre} (${detalle.materia.clave})` : '—' },
+            { label: 'Grupo(s)', value: (detalle.grupos ?? []).map(g => g.clave).join(', ') || '—' },
+            { label: 'Carrera', value: detalle.grupos?.[0]?.carrera?.clave ?? detalle.materia?.carrera?.clave ?? '—' },
+            { label: 'Periodo', value: detalle.periodo?.nombre ?? '—' },
+            { label: 'Aula', value: detalle.aula ? `${detalle.aula.nombre} (cap. ${detalle.aula.capacidad})` : 'Sin asignar' },
+            { label: 'Horas por semana', value: `${detalle.horas_semana}h` },
+            { label: 'Estado', value: detalle.estado === 'conflicto' ? 'Conflicto' : detalle.estado === 'confirmada' ? 'Confirmada' : 'Pendiente' },
+            {
+              label: 'Horarios',
+              full: true,
+              value: (detalle.horarios ?? []).length === 0
+                ? 'Sin horario asignado'
+                : <div className="flex flex-wrap gap-1">{detalle.horarios!.map(h => <HorarioChip key={h.id} h={h} />)}</div>,
+            },
+          ]}
+          footer={<>
+            <button onClick={() => { setHorariosModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Editar horario</button>
+            <button onClick={() => { setModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg">Editar</button>
+          </>}
+        />
+      )}
 
       {horariosModal && <HorariosModal carga={horariosModal} onClose={() => setHorariosModal(null)} />}
 
@@ -1085,6 +1405,33 @@ export default function CargasPage() {
           cargas={cargasFiltradas.filter(c => c.docente_id === horarioDocenteModal.id)}
           periodo={periodoSeleccionado ?? undefined}
           onClose={() => setHorarioDocenteModal(null)}
+        />
+      )}
+
+      {showConcentrado && (
+        <ConcentradoModal
+          periodos={periodos}
+          carreras={carreras}
+          periodoInicial={periodoSeleccionado?.id}
+          onClose={() => setShowConcentrado(false)}
+        />
+      )}
+
+      {showDisponibilidad && (
+        <BuscarDisponibilidadModal
+          docentes={docentes}
+          periodos={periodos}
+          aulas={aulas}
+          periodoInicial={periodoSeleccionado?.id}
+          onClose={() => setShowDisponibilidad(false)}
+        />
+      )}
+
+      {showDiagnostico && (
+        <DiagnosticoModal
+          cargas={cargasFiltradas}
+          grupos={grupos as { id: string; clave: string }[]}
+          onClose={() => setShowDiagnostico(false)}
         />
       )}
 
@@ -1109,13 +1456,18 @@ export default function CargasPage() {
               ))}
             </select>
           </Field>
-          <Field label="Grupo" error={errors.grupo_id}>
-            <select className={icls(errors.grupo_id)} value={modal.grupo_id ?? ''} onChange={e => set('grupo_id', e.target.value)}>
-              <option value="">— Seleccionar grupo —</option>
-              {(grupos as { id: string; clave: string; semestre: number; carrera?: { clave: string } }[]).map(g => (
-                <option key={g.id} value={g.id}>{g.clave} — {g.carrera?.clave ?? ''} {g.semestre}°</option>
-              ))}
-            </select>
+          <Field label="Grupo(s)" full error={errors.grupo_ids}>
+            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
+              {(grupos as { id: string; clave: string; semestre: number; carrera?: { clave: string } }[]).map(g => {
+                const seleccionados = modal.grupo_ids ?? modal.grupos?.map(x => x.id) ?? []
+                return (
+                  <label key={g.id} className="flex items-center gap-2 text-sm px-1 py-0.5 rounded cursor-pointer hover:bg-slate-50">
+                    <input type="checkbox" checked={seleccionados.includes(g.id)} onChange={() => toggleModalGrupo(g.id)} />
+                    <span>{g.clave} — {g.carrera?.clave ?? ''} {g.semestre}°</span>
+                  </label>
+                )
+              })}
+            </div>
           </Field>
           <Field label="Periodo" error={errors.periodo_id}>
             <select className={icls(errors.periodo_id)} value={modal.periodo_id ?? ''} onChange={e => set('periodo_id', e.target.value)}>

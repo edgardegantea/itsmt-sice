@@ -53,7 +53,10 @@ class RegistrarAspiranteRequest extends FormRequest
             'telefono'              => ['nullable', 'string', 'max:15', 'regex:/^\d{10}$/'],
             // Preinscripción TecNM (opcionales — se mantienen en BD pero no se muestran en el formulario público)
             'folio_preinscripcion_tecnm' => ['nullable', 'string', 'max:50'],
-            'folio_exani'           => ['nullable', 'string', 'max:50'],
+            'folio_exani'           => [
+                'nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9-]{8,20}$/',
+                Rule::unique('aspirantes', 'folio_exani')->where(fn($q) => $q->where('periodo_id', $this->periodo_id)),
+            ],
             'puntaje_exani'         => ['nullable', 'numeric', 'min:0', 'max:1000'],
             // Relaciones
             'carrera_id'            => ['required', 'uuid', 'exists:carreras,id'],
@@ -72,6 +75,8 @@ class RegistrarAspiranteRequest extends FormRequest
             'nivel'                 => $this->reglaNivel(),
             // Archivo de constancia (multipart/form-data)
             'constancia_bachillerato' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp'],
+            // Fotografía para la credencial (S1-12)
+            'foto'                    => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png', 'dimensions:min_width=200,min_height=200'],
         ];
     }
 
@@ -116,6 +121,12 @@ class RegistrarAspiranteRequest extends FormRequest
             'constancia_bachillerato.required'     => 'La constancia de estudios es obligatoria.',
             'constancia_bachillerato.max'          => 'El archivo no puede pesar más de 10 MB.',
             'constancia_bachillerato.mimes'        => 'Solo se aceptan archivos PDF, JPG, PNG o WEBP.',
+            'folio_exani.regex'                    => 'El folio EXANI-II debe ser alfanumérico, entre 8 y 20 caracteres.',
+            'folio_exani.unique'                   => 'Este folio EXANI-II ya fue registrado por otro aspirante en este periodo.',
+            'foto.required'                        => 'La fotografía para tu credencial es obligatoria.',
+            'foto.mimes'                            => 'La foto debe ser JPG o PNG.',
+            'foto.max'                              => 'La foto no puede pesar más de 5 MB.',
+            'foto.dimensions'                       => 'La foto debe medir al menos 200×200 píxeles.',
         ];
     }
 }

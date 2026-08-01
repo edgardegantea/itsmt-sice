@@ -30,31 +30,24 @@ class PasswordResetController extends Controller
             : $this->forgotPasswordPorCurp(strtoupper($identifier));
     }
 
+    // Nota de seguridad: esta respuesta es intencionalmente idéntica exista o
+    // no la cuenta/CURP (mismo status, mismo mensaje), para no permitir que
+    // alguien sin autenticar enumere qué correos/CURPs tienen cuenta activa.
     private function forgotPasswordPorEmail(string $email): JsonResponse
     {
         $email = strtolower(trim($email));
         $user  = User::where('email', $email)->first();
 
-        if (! $user) {
-            $esAspirante = Aspirante::where('email', $email)->exists();
-            if ($esAspirante) {
-                return ApiResponse::error(
-                    'Este correo corresponde a una solicitud de admisión, no a una cuenta del sistema.',
-                    422
-                );
+        if ($user) {
+            $status = Password::sendResetLink(['email' => $email]);
+            if ($status !== Password::RESET_LINK_SENT) {
+                return ApiResponse::error('No se pudo enviar el correo. Intenta de nuevo.', 500);
             }
-            return ApiResponse::error('No existe una cuenta registrada con ese correo.', 404);
-        }
-
-        $status = Password::sendResetLink(['email' => $email]);
-
-        if ($status !== Password::RESET_LINK_SENT) {
-            return ApiResponse::error('No se pudo enviar el correo. Intenta de nuevo.', 500);
         }
 
         return ApiResponse::success(
             ['destino' => $this->enmascararEmail($email)],
-            'Enlace de recuperación enviado.'
+            'Si el correo corresponde a una cuenta registrada, se ha enviado un enlace de recuperación.'
         );
     }
 
@@ -62,30 +55,26 @@ class PasswordResetController extends Controller
     {
         $aspirante = Aspirante::where('curp', $curp)->first();
 
-        if (! $aspirante) {
-            return ApiResponse::error('No se encontró ningún alumno con esa CURP.', 404);
+        $alumno = $aspirante
+            ? Alumno::whereHas('inscripcion', fn($q) => $q->where('aspirante_id', $aspirante->id))
+                ->with('user')
+                ->first()
+            : null;
+
+        if ($alumno?->user) {
+            $token    = Password::broker()->createToken($alumno->user);
+            $frontend = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173')), '/');
+            $resetUrl = "{$frontend}/reset-password?token={$token}&email=" . urlencode($alumno->user->email);
+
+            Mail::to($aspirante->email)->send(new ResetPasswordAlumnoMail(
+                "{$aspirante->nombres} {$aspirante->apellido_paterno}",
+                $resetUrl
+            ));
         }
-
-        $alumno = Alumno::whereHas('inscripcion', fn($q) => $q->where('aspirante_id', $aspirante->id))
-            ->with('user')
-            ->first();
-
-        if (! $alumno?->user) {
-            return ApiResponse::error('Esta CURP no tiene cuenta activa. Acude a Control Escolar.', 422);
-        }
-
-        $token    = Password::broker()->createToken($alumno->user);
-        $frontend = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173')), '/');
-        $resetUrl = "{$frontend}/reset-password?token={$token}&email=" . urlencode($alumno->user->email);
-
-        Mail::to($aspirante->email)->send(new ResetPasswordAlumnoMail(
-            "{$aspirante->nombres} {$aspirante->apellido_paterno}",
-            $resetUrl
-        ));
 
         return ApiResponse::success(
-            ['destino' => $this->enmascararEmail($aspirante->email)],
-            'Enlace de recuperación enviado al correo registrado.'
+            ['destino' => 'el correo registrado en tu solicitud de admisión'],
+            'Si la CURP corresponde a una cuenta activa, se ha enviado un enlace de recuperación.'
         );
     }
 

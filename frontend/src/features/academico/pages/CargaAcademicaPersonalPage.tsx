@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { academicoApi, type CargaDocenteItem } from '../services/academico'
 import apiClient from '../../../config/apiClient'
 import { selectCls } from './tabs/shared'
+import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
+import DetailModal from '../../../components/ui/DetailModal'
 
 const CONTRATO_COLOR: Record<string, string> = {
   base:        'bg-blue-100 text-blue-700',
@@ -13,6 +15,8 @@ const CONTRATO_COLOR: Record<string, string> = {
 
 export default function CargaAcademicaPersonalPage() {
   const [periodoId, setPeriodoId] = useState('')
+  const [vista, setVista] = useViewMode('carga-academica-personal')
+  const [detalle, setDetalle] = useState<CargaDocenteItem | null>(null)
 
   const { data: periodos = [] } = useQuery({
     queryKey: ['periodos-lista'],
@@ -30,9 +34,12 @@ export default function CargaAcademicaPersonalPage() {
   return (
     <div className="min-h-full bg-slate-50 p-6">
       <div className="space-y-5">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Carga Académica del Personal</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Horas frente a grupo y grupos asignados por docente</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Carga Académica del Personal</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Horas frente a grupo y grupos asignados por docente</p>
+          </div>
+          <ViewToggle value={vista} onChange={setVista} />
         </div>
 
         {/* Filtro */}
@@ -67,34 +74,27 @@ export default function CargaAcademicaPersonalPage() {
           </div>
         )}
 
-        {/* Tabla */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Docente</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Contrato</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Grupos</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Hrs/sem</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Materias</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
-                    {Array.from({ length: 6 }).map((__, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse" /></td>
-                    ))}
-                  </tr>
-                ))
-              ) : carga.length === 0 ? (
+        {/* Listado */}
+        {isLoading ? (
+          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">Cargando…</div>
+        ) : carga.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm italic">Sin datos de carga académica.</div>
+        ) : vista === 'lista' ? (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400 text-sm italic">Sin datos de carga académica.</td>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Docente</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Contrato</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Grupos</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Hrs/sem</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Materias</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
+                  <th className="px-4 py-3 text-right" />
                 </tr>
-              ) : (
-                carga.map((d: CargaDocenteItem) => {
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {carga.map((d: CargaDocenteItem) => {
                   const sobrecarga = d.total_horas_semana > 24
                   const subcarga = d.total_grupos === 0
                   return (
@@ -141,14 +141,49 @@ export default function CargaAcademicaPersonalPage() {
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Normal</span>
                         )}
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={() => setDetalle(d)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      </td>
                     </tr>
                   )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {carga.map((d: CargaDocenteItem) => {
+              const sobrecarga = d.total_horas_semana > 24
+              const subcarga = d.total_grupos === 0
+              return (
+                <div key={d.docente_id} className={`bg-white border rounded-xl p-4 flex flex-col gap-2 ${sobrecarga ? 'border-red-200' : subcarga ? 'border-yellow-200' : 'border-slate-200'}`}>
+                  <p className="font-medium text-slate-800 truncate">{d.nombre}</p>
+                  <p className="text-xs text-slate-400">{d.email}</p>
+                  <div className="flex gap-3 text-xs">
+                    <span className="font-semibold text-slate-700">{d.total_grupos} grupos</span>
+                    <span className={`font-bold ${sobrecarga ? 'text-red-600' : subcarga ? 'text-yellow-600' : 'text-slate-800'}`}>{d.total_horas_semana} hrs/sem</span>
+                  </div>
+                  <button onClick={() => setDetalle(d)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
+
+      {detalle && (
+        <DetailModal
+          title={detalle.nombre}
+          onClose={() => setDetalle(null)}
+          fields={[
+            { label: 'Correo', value: detalle.email },
+            { label: 'Tipo de contrato', value: detalle.tipo_contrato?.replace(/_/g, ' ') ?? '—' },
+            { label: 'Total de grupos', value: detalle.total_grupos },
+            { label: 'Horas por semana', value: detalle.total_horas_semana },
+            { label: 'Materias', full: true, value: detalle.materias?.length ? detalle.materias.join(', ') : '—' },
+          ]}
+        />
+      )}
     </div>
   )
 }
