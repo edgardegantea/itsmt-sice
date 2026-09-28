@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { SkeletonRows, inputCls, selectCls, usePeriodos } from '../tabs/shared'
 import { useDocentes, useCarreras, initials, type Docente } from './docenteShared'
+import { ChevronLeft } from 'lucide-react'
 
 // ── Página principal ──────────────────────────────────────────────────────────
 
@@ -45,9 +46,7 @@ export default function DocentesPage() {
         {/* Header */}
         <div>
           <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Gestión Académica
           </Link>
           <div className="flex items-start justify-between gap-4">

@@ -4,6 +4,7 @@ import apiClient from '../../../config/apiClient'
 import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
 import { usePuedeEliminar } from '../../../hooks/usePermisos'
+import { CircleAlert, Loader2, Mail, Phone, Plus, Search, X } from 'lucide-react'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
@@ -157,9 +158,7 @@ function Modal({ title, subtitle, onClose, onSave, saving, canSave, children }: 
             {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
         <div className="px-6 py-5 overflow-y-auto flex-1">{children}</div>
@@ -475,18 +474,14 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
       {/* Barra de acciones */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
           <input type="search" placeholder="Buscar…" value={busqueda} onChange={e => setBusqueda(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
         {puedeEditar && (
           <button onClick={() => setEditando('nuevo')}
             className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700 whitespace-nowrap">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
-            </svg>
+            <Plus className="w-4 h-4" aria-hidden="true" />
             Agregar persona
           </button>
         )}
@@ -495,19 +490,14 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
       {/* Alerta de usuarios sin vincular */}
       {esAdmin && sinUsuario > 0 && (
         <div className="flex items-center gap-3 mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
+          <CircleAlert className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
           <span><strong>{sinUsuario}</strong> persona{sinUsuario !== 1 ? 's' : ''} sin usuario del sistema vinculado.</span>
         </div>
       )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16 text-gray-400">
-          <svg className="animate-spin w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-          </svg>
+          <Loader2 className="animate-spin w-5 h-5 mr-3" aria-hidden="true" />
           Cargando directorio…
         </div>
       ) : (
@@ -538,17 +528,13 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
 
                       {p.email && (
                         <a href={`mailto:${p.email}`} className="flex items-center gap-1.5 text-xs text-brand-600 hover:underline truncate mb-1">
-                          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                          </svg>
+                          <Mail className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
                           <span className="truncate">{p.email}</span>
                         </a>
                       )}
                       {(p.telefono || p.extension) && (
                         <p className="flex items-center gap-1.5 text-xs text-gray-500">
-                          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                          </svg>
+                          <Phone className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
                           {p.telefono}{p.extension && <span className="text-gray-400 ml-1">ext. {p.extension}</span>}
                         </p>
                       )}
@@ -619,7 +605,7 @@ function TabAreas({ esAdmin }: { esAdmin: boolean }) {
         <div className="flex justify-end mb-4">
           <button onClick={() => setEditando('nuevo')}
             className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+            <Plus className="w-4 h-4" aria-hidden="true" />
             Nueva área
           </button>
         </div>
@@ -698,7 +684,7 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
         <div className="flex justify-end mb-4">
           <button onClick={() => setEditando('nuevo')}
             className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+            <Plus className="w-4 h-4" aria-hidden="true" />
             Nuevo puesto
           </button>
         </div>
@@ -760,9 +746,7 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
                 <p className="text-xs text-gray-400 mt-0.5">{detalle.area?.nombre ?? 'Sin área asignada'}</p>
               </div>
               <button onClick={() => setDetalle(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
             <div className="px-6 py-5 overflow-y-auto space-y-4">

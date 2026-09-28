@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type MallaCurricular } from '../../services/academico'
 import { Field, Th, selectCls, ModalWrap, useCarreras } from '../tabs/shared'
 import DetailModal from '../../../../components/ui/DetailModal'
+import { ChevronLeft, ClipboardList } from 'lucide-react'
 
 const SEMESTRES = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
@@ -53,9 +54,7 @@ export default function MallaPage() {
         {/* Header */}
         <div>
           <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Gestión Académica
           </Link>
           <div className="flex items-start justify-between gap-4">
@@ -95,9 +94,7 @@ export default function MallaPage() {
 
         {!carreraId ? (
           <div className="bg-white rounded-xl border border-slate-200 px-5 py-16 text-center">
-            <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+            <ClipboardList className="w-12 h-12 text-slate-300 mx-auto mb-3" aria-hidden="true" />
             <p className="text-sm text-slate-400">Selecciona una carrera para ver su malla curricular.</p>
           </div>
         ) : isLoading ? (

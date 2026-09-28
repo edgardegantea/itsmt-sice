@@ -3,6 +3,7 @@ import { academicoApi } from '../../academico/services/academico'
 import type { CargaAcademica, Horario } from '../../academico/services/academico'
 import { useState } from 'react'
 import { useToastStore } from '../../../store/toastStore'
+import { Download, Info, Loader2 } from 'lucide-react'
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -318,8 +319,8 @@ export default function PrecargaAcademicaPage() {
             hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {downloading
-            ? <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-            : <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+            ? <Loader2 className="animate-spin h-4 w-4" aria-hidden="true" />
+            : <Download className="h-4 w-4" aria-hidden="true" />
           }
           Descargar PDF
         </button>
@@ -328,9 +329,7 @@ export default function PrecargaAcademicaPage() {
       {/* Aviso modo selección */}
       {modoSeleccion && (
         <div className="bg-brand-50 border border-brand-200 rounded-xl px-4 py-3 flex items-start gap-3">
-          <svg className="h-5 w-5 text-brand-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
+          <Info className="h-5 w-5 text-brand-500 mt-0.5 shrink-0" aria-hidden="true" />
           <p className="text-sm text-brand-800">
             Usa el botón <strong>+</strong> en la tabla o haz clic en un bloque del horario para agregar o quitar asignaturas.
             {tienePendientes && <> Las <strong>materias pendientes</strong> de semestres anteriores aparecen en la sección inferior.</>}

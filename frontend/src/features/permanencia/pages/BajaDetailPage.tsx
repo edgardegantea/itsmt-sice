@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { permanenciaApi, type Baja, type EstatusBaja } from '../services/permanencia'
 import { useAuthStore } from '../../../store/authStore'
+import { ChevronLeft } from 'lucide-react'
 
 const TIPO_LABEL: Record<string, string> = {
   parcial:    'Baja parcial',
@@ -87,9 +88,7 @@ export default function BajaDetailPage() {
     <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6 max-w-4xl">
       <div>
         <Link to="/admin/bajas" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-3 transition-colors">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
           Gestión de Bajas
         </Link>
         <div className="flex items-center gap-3 flex-wrap">

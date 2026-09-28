@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import { useToastStore } from '../../../store/toastStore'
+import { Plus } from 'lucide-react'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -454,9 +455,7 @@ export default function UsuariosPage() {
           onClick={() => setModalUsuario(null)}
           className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
+          <Plus className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           Nuevo usuario
         </button>
       </div>

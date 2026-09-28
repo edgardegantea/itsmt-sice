@@ -10,6 +10,7 @@ import { useConfirm } from '../../../../components/ConfirmDialog'
 import apiClient from '../../../../config/apiClient'
 import { usePuedeEliminar } from '../../../../hooks/usePermisos'
 import DetailModal from '../../../../components/ui/DetailModal'
+import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Download, FileText, LayoutGrid, List, Printer, UserRound, X } from 'lucide-react'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -139,9 +140,7 @@ function CargasAccordion({
   }, [byCarrera])
 
   const Chevron = ({ open, size = 'w-4 h-4' }: { open: boolean; size?: string }) => (
-    <svg className={`${size} text-slate-400 shrink-0 transition-transform ${open ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-    </svg>
+    <ChevronRight className={`${size} text-slate-400 shrink-0 transition-transform ${open ? 'rotate-90' : ''}`} strokeWidth={2.5} aria-hidden="true" />
   )
 
   return (
@@ -372,9 +371,7 @@ function CargaDocenteView({
           onClick={onBack}
           className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           Volver a la lista
         </button>
         <div className="flex items-center gap-2">
@@ -382,9 +379,7 @@ function CargaDocenteView({
             onClick={() => window.print()}
             className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-300 bg-white text-slate-700 text-sm rounded-lg hover:bg-slate-50"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
+            <Printer className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             Imprimir
           </button>
           <button
@@ -392,9 +387,7 @@ function CargaDocenteView({
             disabled={descargando}
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 disabled:opacity-60"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
+            <Download className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             {descargando ? 'Generando PDF…' : 'Descargar PDF'}
           </button>
         </div>
@@ -631,9 +624,7 @@ function HorarioDocenteModal({
                 onClick={() => window.print()}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 text-sm rounded-lg hover:bg-slate-50"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
+                <Printer className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                 Imprimir
               </button>
               <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
@@ -705,9 +696,7 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
                 className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-28"
               />
               <button onClick={() => setBloques(b => b.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 ml-auto">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -1104,9 +1093,7 @@ export default function CargasPage() {
         <div className="space-y-5">
           <div>
             <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
               Gestión Académica
             </Link>
             <h1 className="text-xl font-bold text-slate-900">Carga Académica · Documento</h1>
@@ -1129,9 +1116,7 @@ export default function CargasPage() {
         {/* Header */}
         <div>
           <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Gestión Académica
           </Link>
           <div className="flex items-start justify-between gap-4">
@@ -1145,9 +1130,7 @@ export default function CargasPage() {
                   onClick={() => setVistaDocente(true)}
                   className="inline-flex items-center gap-1.5 px-3 py-2 border border-brand-300 bg-brand-50 text-brand-700 text-sm rounded-lg hover:bg-brand-100"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                  <FileText className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                   Ver documento
                 </button>
               )}
@@ -1156,9 +1139,7 @@ export default function CargasPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-2 border border-violet-300 bg-violet-50 text-violet-700 text-sm rounded-lg hover:bg-violet-100"
                 title="Constructor de horarios con clic y arrastre"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+                <CalendarDays className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                 Constructor
               </Link>
               <button
@@ -1188,13 +1169,9 @@ export default function CargasPage() {
                 title={vistaTabla ? 'Vista tarjetas' : 'Vista tabla'}
               >
                 {vistaTabla ? (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
+                  <LayoutGrid className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                 ) : (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
+                  <List className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                 )}
               </button>
               {esSuperadmin && periodoSeleccionado && (
@@ -1257,9 +1234,7 @@ export default function CargasPage() {
           </div>
           {docenteSeleccionado && (
             <div className="mt-3 flex items-center gap-2 bg-brand-50 border border-brand-100 rounded-lg px-3 py-2">
-              <svg className="w-4 h-4 text-brand-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+              <UserRound className="w-4 h-4 text-brand-500 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span className="text-sm text-brand-800 font-medium">{docenteSeleccionado.name}</span>
               {docenteSeleccionado.nombramiento && <span className="text-xs text-brand-600">· {docenteSeleccionado.nombramiento}</span>}
               {docenteSeleccionado.clave_empleado && <span className="text-xs text-brand-500 font-mono">({docenteSeleccionado.clave_empleado})</span>}
@@ -1277,9 +1252,7 @@ export default function CargasPage() {
           </div>
         ) : cargasFiltradas.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-xl py-16 flex flex-col items-center gap-3 text-slate-400">
-            <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+            <ClipboardList className="w-10 h-10 text-slate-300" aria-hidden="true" />
             <p className="text-sm">No hay cargas académicas con los filtros seleccionados.</p>
           </div>
         ) : vistaTabla ? (

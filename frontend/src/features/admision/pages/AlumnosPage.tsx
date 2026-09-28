@@ -49,10 +49,7 @@ function apellidosNombre(a: Alumno) {
 
 function Spinner({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
-    <svg className={`${className} animate-spin`} fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-    </svg>
+    <Loader2 className={`${className} animate-spin`} aria-hidden="true" />
   )
 }
 
@@ -318,9 +315,7 @@ function CobroModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void }
       <Modal title="Cobro registrado" onClose={onClose}>
         <div className="text-center space-y-4 py-2">
           <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-            </svg>
+            <Check className="w-6 h-6 text-emerald-600" aria-hidden="true" />
           </div>
           <p className="text-sm text-slate-700">Recibo registrado correctamente.</p>
           <div className="flex gap-2 justify-center">
@@ -394,6 +389,7 @@ function CobroModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void }
 // ── Fila expandible ───────────────────────────────────────────────────────────
 
 import { IconClipboard, IconDocument, IconUser } from '../../../components/ui/Icons'
+import { Check, ChevronLeft, ChevronRight, CreditCard, Download, FileDown, FileText, Loader2, Pencil, Printer, TriangleAlert, UserRound } from 'lucide-react'
 
 const DOCS_INSCRIPCION: { tipo: TipoInscripcionPdf; label: string; icon: React.ReactNode }[] = [
   { tipo: 'solicitud',             label: 'Solicitud inscripción', icon: <IconClipboard className="w-3.5 h-3.5" /> },
@@ -452,12 +448,7 @@ function FilaAlumno({
 
         {/* Chevron */}
         <td className="pl-1 pr-2 py-3.5 w-8 border-l-4 border-transparent" onClick={e => { e.stopPropagation(); onToggle() }}>
-          <svg
-            className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-brand-600' : 'text-slate-400'}`}
-            fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6"/>
-          </svg>
+          <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-brand-600' : 'text-slate-400'}`} strokeWidth={2} aria-hidden="true" />
         </td>
 
         {/* N° Control */}
@@ -487,9 +478,7 @@ function FilaAlumno({
         <td className="px-3 py-3.5 hidden lg:table-cell">
           {alumno.pendiente_certificado_bachillerato
             ? <span className="inline-flex items-center gap-1 text-xs text-orange-600 font-medium">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-                </svg>
+                <TriangleAlert className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                 Pendiente
               </span>
             : <span className="text-xs text-emerald-600 font-medium">✓ OK</span>
@@ -555,9 +544,7 @@ function FilaAlumno({
                     onClick={(e) => { e.stopPropagation(); onEditar() }}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/>
-                    </svg>
+                    <Pencil className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                     Editar
                   </button>
 
@@ -565,9 +552,7 @@ function FilaAlumno({
                     onClick={(e) => { e.stopPropagation(); onCobro() }}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
-                    </svg>
+                    <CreditCard className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                     Registrar cobro
                   </button>
 
@@ -786,9 +771,7 @@ export default function AlumnosPage() {
             onClick={exportarPagina}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-            </svg>
+            <Download className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Exportar página
           </button>
           <button
@@ -797,9 +780,7 @@ export default function AlumnosPage() {
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
           >
             {exportando ? <Spinner /> : (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
-              </svg>
+              <FileDown className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             )}
             Exportar todo (CSV)
           </button>
@@ -807,9 +788,7 @@ export default function AlumnosPage() {
             onClick={imprimir}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z"/>
-            </svg>
+            <Printer className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Imprimir
           </button>
           <button
@@ -818,9 +797,7 @@ export default function AlumnosPage() {
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
           >
             {generandoLibroNc ? <Spinner /> : (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
-              </svg>
+              <FileText className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             )}
             Libro Registro NC
           </button>
@@ -836,16 +813,12 @@ export default function AlumnosPage() {
           <div className="flex flex-wrap gap-2 ml-auto items-center">
             <button onClick={exportarPagina}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-white transition-colors">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-              </svg>
+              <Download className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
               Exportar selección
             </button>
             <button onClick={imprimir}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-white transition-colors">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z"/>
-              </svg>
+              <Printer className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
               Imprimir selección
             </button>
             <div className="flex items-center gap-1.5">
@@ -945,9 +918,7 @@ export default function AlumnosPage() {
         {/* Vacío */}
         {!isLoading && alumnos.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 gap-2 text-slate-400">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
-            </svg>
+            <UserRound className="w-8 h-8" strokeWidth={1.5} aria-hidden="true" />
             <p className="text-sm">Sin alumnos registrados con los filtros seleccionados.</p>
           </div>
         )}
@@ -1014,9 +985,7 @@ export default function AlumnosPage() {
                     onClick={() => setFiltros(f => ({ ...f, page: f.page - 1 }))}
                     className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
-                    </svg>
+                    <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                     Anterior
                   </button>
                   <button
@@ -1025,9 +994,7 @@ export default function AlumnosPage() {
                     className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     Siguiente
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
-                    </svg>
+                    <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   </button>
                 </div>
               </div>

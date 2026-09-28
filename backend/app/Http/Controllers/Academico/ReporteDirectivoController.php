@@ -33,6 +33,10 @@ class ReporteDirectivoController extends Controller
         $periodoId = $request->query('periodo_id');
         $periodo   = $periodoId ? Periodo::find($periodoId) : Periodo::activo();
 
+        // Sin periodo_id se usa el activo: el reporte es "del periodo", no histórico (antes
+        // no filtraba y metía a todos los alumnos registrados, agotando la memoria de dompdf).
+        $periodoId = $periodo?->id;
+
         $inscritos = Alumno::with(['carrera', 'inscripcion'])
             ->when($periodoId, fn ($q) => $q->where('periodo_ingreso_id', $periodoId))
             ->get();
@@ -46,11 +50,9 @@ class ReporteDirectivoController extends Controller
             ->where('estatus', 'aprobada')
             ->get();
 
-        $pdf = Pdf::loadView('pdfs.reporte_matricula', compact(
+        return $this->descargarPdf('pdfs.reporte_matricula', compact(
             'periodo', 'inscritos', 'bajas', 'reinscripciones'
-        ))->setPaper('letter', 'landscape');
-
-        return $pdf->download("reporte_matricula_{$periodo?->nombre}.pdf");
+        ), "reporte_matricula_{$periodo?->nombre}.pdf", true);
     }
 
     // GET /api/reportes/calificaciones/pdf
@@ -99,13 +101,35 @@ class ReporteDirectivoController extends Controller
             'alumnos'   => Alumno::with(['user', 'carrera'])->whereIn(
                 'estatus', ['activo', 'baja_temporal']
             )->get(),
-            'docentes'  => User::role('docente')->with(['fichaDocente', 'cargas.carrera'])->get(),
+            'docentes'  => User::role('docente')->with('fichaDocente')->get(),
             'egresados' => Egresado::with(['alumno'])->get(),
         };
 
-        $pdf = Pdf::loadView("pdfs.directorio_{$tipo}", ['datos' => $datos, 'tipo' => $tipo])
-            ->setPaper('letter');
+        return $this->descargarPdf("pdfs.directorio_{$tipo}", ['datos' => $datos, 'tipo' => $tipo], "directorio_{$tipo}.pdf");
+    }
 
-        return $pdf->download("directorio_{$tipo}.pdf");
+    /**
+     * Genera el PDF con Gotenberg (Chromium) y, si no está disponible, con dompdf.
+     * Los directorios y la matrícula pueden tener miles de filas: dompdf arma todo el
+     * documento en memoria y con ~5 000 alumnos agotaba los 256 MB y tardaba minutos;
+     * Chromium los resuelve en segundos.
+     */
+    private function descargarPdf(string $vista, array $datos, string $nombre, bool $horizontal = false): Response
+    {
+        try {
+            $html = view($vista, $datos)->render();
+            $gotenberg = app(\App\Services\GotenbergService::class);
+            $contenido = $horizontal ? $gotenberg->htmlToPdfLandscape($html) : $gotenberg->htmlToPdf($html);
+            return response($contenido, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $nombre . '"',
+            ]);
+        } catch (\RuntimeException $e) {
+            report($e);
+        }
+
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+        return Pdf::loadView($vista, $datos)->setPaper('letter', $horizontal ? 'landscape' : 'portrait')->download($nombre);
     }
 }

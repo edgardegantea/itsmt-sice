@@ -5,6 +5,7 @@ import { academicoApi, type Grupo, type GrupoHorarioDia } from '../../services/a
 import { useToastStore } from '../../../../store/toastStore'
 import { Field, ModalWrap, SkeletonRows, CapacityBar, icls, useCarreras, usePeriodos, usePlanteles, mutationError, extractApiErrors, HorarioPorDiaEditor } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const TURNO_LABEL = { matutino: 'Matutino', vespertino: 'Vespertino', sabatino: 'Sabatino' }
 const TURNO_COLOR: Record<string, string> = {
@@ -224,9 +225,7 @@ export default function GruposPage() {
         {/* Header */}
         <div>
           <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Gestión Académica
           </Link>
           <div className="flex items-start justify-between gap-4">
@@ -343,9 +342,7 @@ export default function GruposPage() {
                     className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
                     onClick={() => toggle(setOpenCarreras, carrera.id)}
                   >
-                    <svg className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${isOpenC ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${isOpenC ? 'rotate-90' : ''}`} strokeWidth={2} aria-hidden="true" />
                     <span className="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">{carrera.clave}</span>
                     <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
                     <span className="ml-auto text-xs text-slate-400 shrink-0">{totalGrupos} grupo{totalGrupos !== 1 ? 's' : ''}</span>
@@ -364,9 +361,7 @@ export default function GruposPage() {
                               className="w-full flex items-center gap-3 pl-10 pr-5 py-2.5 hover:bg-slate-50/80 transition-colors text-left"
                               onClick={() => toggle(setOpenSemestres, semKey)}
                             >
-                              <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isOpenS ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                              </svg>
+                              <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isOpenS ? 'rotate-90' : ''}`} strokeWidth={2} aria-hidden="true" />
                               <span className="text-xs font-semibold text-slate-600">{semEntry.semestre}° Semestre</span>
                               <span className="ml-auto text-xs text-slate-400">{semEntry.grupos.length} grupo{semEntry.grupos.length !== 1 ? 's' : ''}</span>
                             </button>

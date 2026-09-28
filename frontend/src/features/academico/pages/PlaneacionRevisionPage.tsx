@@ -6,6 +6,7 @@ import { useAuthStore } from '../../../store/authStore'
 import { useToastStore } from '../../../store/toastStore'
 import { selectCls, mutationError, transicionesPlaneacion, PlaneacionDetalle } from './tabs/shared'
 import { EstatusBadge } from './planeacionShared'
+import { ChevronLeft, TriangleAlert } from 'lucide-react'
 
 export default function PlaneacionRevisionPage() {
   const { id = '' } = useParams()
@@ -69,9 +70,7 @@ export default function PlaneacionRevisionPage() {
     <div className="min-h-full bg-gradient-to-b from-amber-50/40 via-slate-50 to-slate-50 p-6" data-modulo-planeacion>
       <div className="space-y-5">
         <Link to="/admin/gestion-academica/planeaciones" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 transition-colors">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
           Planeaciones Didácticas
         </Link>
 
@@ -90,7 +89,7 @@ export default function PlaneacionRevisionPage() {
 
         {opciones.length > 0 && (
           <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+            <TriangleAlert className="w-3.5 h-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
             Modo revisión: pasa el cursor sobre cada sección para agregar una observación anclada exactamente ahí — el docente la verá en ese mismo punto al corregir.
           </p>
         )}

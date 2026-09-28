@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Megaphone } from 'lucide-react'
 
 interface BroadcastBannerProps {
   mensaje: string
@@ -22,9 +23,7 @@ export default function BroadcastBanner({ mensaje, tipo = 'info', activa }: Broa
   return (
     <div className={`w-full py-2 px-4 text-xs shadow-md border-b flex items-center justify-between z-40 transition-all ${TIPO_STYLES[tipo]}`}>
       <div className="flex items-center gap-2.5 mx-auto text-center font-medium">
-        <svg className="w-4 h-4 shrink-0 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.38-.09-2.072-.09-2.618 0-5.118.44-7.428 1.25.992-3.87 3.52-7.07 6.942-8.59M16.5 10.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM22.5 10.5c0 5.523-4.477 10-10 10s-10-4.477-10-10" />
-        </svg>
+        <Megaphone className="w-4 h-4 shrink-0 animate-bounce" strokeWidth={2} aria-hidden="true" />
         <span>{mensaje}</span>
       </div>
       <button

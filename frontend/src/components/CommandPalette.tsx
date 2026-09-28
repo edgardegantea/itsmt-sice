@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Search } from 'lucide-react'
 
 interface PaletteItem { to: string; label: string }
 interface PaletteGroup { id: string; label: string; items: PaletteItem[] }
@@ -75,10 +76,7 @@ export default function CommandPalette({ open, onClose, groups }: Props) {
         className="w-full max-w-lg rounded-2xl shadow-2xl bg-white overflow-hidden border border-slate-200"
       >
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-slate-100">
-          <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <circle cx="11" cy="11" r="7" />
-            <path strokeLinecap="round" d="m21 21-4.35-4.35" />
-          </svg>
+          <Search className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={2} aria-hidden="true" />
           <input
             ref={inputRef}
             value={query}

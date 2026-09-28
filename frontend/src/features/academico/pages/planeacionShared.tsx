@@ -1,4 +1,5 @@
 import type { EstatusPlaneacion, PlaneacionDocente } from '../services/academico'
+import { Check, Clock, Pencil, TriangleAlert } from 'lucide-react'
 
 export const ESTATUS_COLOR: Record<EstatusPlaneacion, string> = {
   borrador:     'bg-slate-100 text-slate-600',
@@ -26,30 +27,21 @@ export const SIN_INICIAR = 'Sin iniciar'
 function IconoEstatus({ estatus, className = 'w-3 h-3' }: { estatus: EstatusPlaneacion; className?: string }) {
   if (estatus === 'liberada') {
     return (
-      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
+      <Check className={className} strokeWidth={2.5} aria-hidden="true" />
     )
   }
   if (estatus === 'devuelta_da' || estatus === 'devuelta_jc') {
     return (
-      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008M10.29 3.86 1.82 18a1.5 1.5 0 0 0 1.3 2.25h17.76a1.5 1.5 0 0 0 1.3-2.25L13.71 3.86a1.5 1.5 0 0 0-2.42 0Z" />
-      </svg>
+      <TriangleAlert className={className} strokeWidth={2.5} aria-hidden="true" />
     )
   }
   if (estatus === 'enviada_da' || estatus === 'enviada_jc') {
     return (
-      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
-        <circle cx="12" cy="12" r="9" strokeWidth={2} />
-      </svg>
+      <Clock className={className} strokeWidth={2.5} aria-hidden="true" />
     )
   }
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
-    </svg>
+    <Pencil className={className} strokeWidth={2.5} aria-hidden="true" />
   )
 }
 

@@ -6,6 +6,7 @@ import { academicoApi, type SituacionAcademica } from '../../academico/services/
 import apiClient from '../../../config/apiClient'
 import { openPdfPreview } from '../../../utils/pdfHelpers'
 import { useToastStore } from '../../../store/toastStore'
+import { ChevronRight, IdCard } from 'lucide-react'
 
 const ESTATUS_COLOR: Record<string, string> = {
   activo:          'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
@@ -110,10 +111,7 @@ export default function DashboardAlumnoPage() {
           className="relative z-10 shrink-0 inline-flex items-center gap-2.5 px-5 py-2.5 rounded-lg text-xs font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 active:scale-95 cursor-pointer"
           style={{ backgroundColor: 'var(--color-primario, #1b396a)' }}
         >
-          <svg className="w-4 h-4 text-[#b38e5d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-              d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.306.835 2.417 2 2.83V18m-2-2.83A2.67 2.67 0 006 18" />
-          </svg>
+          <IdCard className="w-4 h-4 text-[#b38e5d]" aria-hidden="true" />
           {generandoCredencial ? 'Generando…' : 'Credencial Oficial PDF'}
         </button>
       </div>
@@ -207,9 +205,7 @@ export default function DashboardAlumnoPage() {
                   <p className="text-sm font-bold text-brand-800 group-hover:text-brand-600 transition-colors">
                     {label}
                   </p>
-                  <svg className="w-4 h-4 text-slate-400 group-hover:text-[#b38e5d] group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
-                  </svg>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#b38e5d] group-hover:translate-x-0.5 transition-all" strokeWidth={2} aria-hidden="true" />
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
               </div>

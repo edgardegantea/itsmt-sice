@@ -10,6 +10,7 @@ import { Th, mutationError, inputCls, selectCls } from '../tabs/shared'
 import apiClient from '../../../../config/apiClient'
 import ViewToggle, { useViewMode } from '../../../../components/ui/ViewToggle'
 import Modal from '../../../../components/ui/Modal'
+import { ChevronDown } from 'lucide-react'
 
 function alumnoNombre(a: {
   user?: { name: string }
@@ -1392,9 +1393,7 @@ export function CalificacionesSection({
                 className="list-none cursor-pointer select-none text-xs bg-white text-slate-600 border border-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1"
               >
                 Más acciones
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
+                <ChevronDown className="w-3 h-3" strokeWidth={2} aria-hidden="true" />
               </summary>
               <div className="absolute right-0 mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 text-xs">
                 {cargaSeleccionadaId && (

@@ -7,6 +7,7 @@ import { Field, Th, SkeletonRows, EmptyRow, icls, selectCls, usePeriodos, useAlu
 import { useConfirm } from '../../../../components/ConfirmDialog'
 import { usePuedeEliminar } from '../../../../hooks/usePermisos'
 import DetailModal from '../../../../components/ui/DetailModal'
+import { ChevronLeft, ClipboardList, LayoutGrid, List } from 'lucide-react'
 
 type Vista = 'lista' | 'por-tutor' | 'cards'
 
@@ -72,9 +73,7 @@ export default function TutoriasPage() {
         {/* Header */}
         <div>
           <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Gestión Académica
           </Link>
           <div className="flex items-start justify-between gap-4">
@@ -129,28 +128,21 @@ export default function TutoriasPage() {
               title="Vista agrupada"
               className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'por-tutor' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h8M4 18h8" />
-              </svg>
+              <List className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </button>
             <button
               onClick={() => setVista('lista')}
               title="Vista lista"
               className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'lista' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
-              </svg>
+              <ClipboardList className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </button>
             <button
               onClick={() => setVista('cards')}
               title="Vista tarjetas"
               className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'cards' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-              </svg>
+              <LayoutGrid className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         </div>

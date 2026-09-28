@@ -6,6 +6,7 @@ import { useCarrerasAdmin } from '../hooks/useCarreras'
 import { useLibroRegistroNcPdf } from '../hooks/useLibroRegistroNcPdf'
 import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
 import DetailModal from '../../../components/ui/DetailModal'
+import { Download, FileText, Loader2 } from 'lucide-react'
 
 type PeriodoItem = { id: string; nombre: string; activo: boolean }
 
@@ -43,10 +44,7 @@ function apellidosNombre(a: Alumno): string {
 
 function Spinner({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg className={`${className} animate-spin`} fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-    </svg>
+    <Loader2 className={`${className} animate-spin`} aria-hidden="true" />
   )
 }
 
@@ -104,9 +102,7 @@ export default function LibroRegistroNcPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-[#234d7a] disabled:opacity-60 transition-colors"
           >
             {generando ? <Spinner /> : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"/>
-              </svg>
+              <Download className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             )}
             {generando ? 'Generando…' : 'Descargar PDF'}
           </button>
@@ -175,9 +171,7 @@ export default function LibroRegistroNcPage() {
 
         {!isLoading && alumnos.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 gap-2 text-slate-400">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
+            <FileText className="w-8 h-8" strokeWidth={1.5} aria-hidden="true" />
             <p className="text-sm">Sin registros con los filtros seleccionados.</p>
           </div>
         )}

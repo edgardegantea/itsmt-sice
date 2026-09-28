@@ -6,19 +6,18 @@ import { academicoApi, type PlaneacionDocente, type CargaAcademica } from '../se
 import apiClient from '../../../config/apiClient'
 import { useToastStore } from '../../../store/toastStore'
 import { SIN_INICIAR, EstatusBadge, progresoPlaneacion, BarraProgreso, selectCls } from './planeacionShared'
+import { BookOpen, CircleDashed, Search } from 'lucide-react'
 
 function IconLibro() {
   return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.25C10.5 5 8.5 4.5 6 4.5c-1 0-2 .1-3 .3v13.7c1-.2 2-.3 3-.3 2.5 0 4.5.5 6 1.75M12 6.25c1.5-1.25 3.5-1.75 6-1.75 1 0 2 .1 3 .3v13.7c-1-.2-2-.3-3-.3-2.5 0-4.5.5-6 1.75M12 6.25v13.5" />
-    </svg>
+    <BookOpen className="w-5 h-5" strokeWidth={1.8} aria-hidden="true" />
   )
 }
 
 function SinIniciarBadge() {
   return (
     <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap bg-slate-100 text-slate-500">
-      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><circle cx="12" cy="12" r="9" strokeDasharray="3 3" /></svg>
+      <CircleDashed className="w-3 h-3" strokeWidth={2.5} aria-hidden="true" />
       {SIN_INICIAR}
     </span>
   )
@@ -59,9 +58,7 @@ function BuscadorPlaneaciones({ navigate }: { navigate: (to: string) => void }) 
   return (
     <div className="relative">
       <div className="relative">
-        <svg className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M18 10.5a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0Z" />
-        </svg>
+        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" strokeWidth={2} aria-hidden="true" />
         <input
           value={q}
           onChange={e => handleChange(e.target.value)}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useToastStore, type Toast } from '../../store/toastStore'
 import { IconCheckCircle, IconExclamation } from './Icons'
+import { Info, X } from 'lucide-react'
 
 const STYLES: Record<string, string> = {
   success: 'bg-emerald-50 border-emerald-300 text-emerald-800',
@@ -12,16 +13,11 @@ const STYLES: Record<string, string> = {
 const ICON_COMPONENTS: Record<string, () => React.JSX.Element> = {
   success: () => <IconCheckCircle className="w-4 h-4" />,
   error:   () => (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
+    <X className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
   ),
   warning: () => <IconExclamation className="w-4 h-4" />,
   info:    () => (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <circle cx="12" cy="12" r="9" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
-    </svg>
+    <Info className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
   ),
 }
 
@@ -63,9 +59,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
         className="shrink-0 opacity-50 hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-slate-200/50 mt-0.5"
         aria-label="Cerrar"
       >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <X className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
       </button>
     </div>
   )

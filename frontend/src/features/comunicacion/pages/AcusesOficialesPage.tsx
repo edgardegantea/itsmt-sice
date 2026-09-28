@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useAuthStore } from '../../../store/authStore'
 import { useToastStore } from '../../../store/toastStore'
-import { useConfiguracion } from '@/hooks/useConfiguracion'
+import { useConfiguracion } from '@/hooks/useConfiguracion'
+import { Check, Printer, SquarePen, X } from 'lucide-react'
 
 interface AcuseRegistro {
   folio: string
@@ -153,18 +154,14 @@ export default function AcusesOficialesPage() {
           {acuseGuardado.estatus === 'registrado' ? (
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
+                <Check className="w-4 h-4 text-emerald-600" strokeWidth={2.5} aria-hidden="true" />
                 Acuse de Conocimiento Registrado
               </span>
               <button
                 onClick={imprimirAcuseOficial}
                 className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition-colors flex items-center gap-1.5"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231a1.125 1.125 0 0 1-1.12-1.227L6.34 18m11.318-4.171a3 3 0 0 0 0-5.658H6.34a3 3 0 0 0 0 5.658m11.318 0A3.001 3.001 0 0 1 15 17.25H9a3.001 3.001 0 0 1-2.658-1.421" />
-                </svg>
+                <Printer className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                 Imprimir Acuse
               </button>
             </div>
@@ -173,9 +170,7 @@ export default function AcusesOficialesPage() {
               onClick={() => setModalAcuseOpen(true)}
               className="px-4 py-2 bg-brand-600 hover:bg-[#142a4f] text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-              </svg>
+              <SquarePen className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
               Firmar y Registrar Acuse de Conocimiento
             </button>
           )}
@@ -468,9 +463,7 @@ export default function AcusesOficialesPage() {
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="font-bold text-slate-800 text-base">Firma Digital de Acuse de Conocimiento</h3>
               <button onClick={() => setModalAcuseOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
               </button>
             </div>
 

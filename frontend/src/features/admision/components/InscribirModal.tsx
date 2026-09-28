@@ -3,6 +3,7 @@ import Modal from '../../../components/ui/Modal'
 import { useInscribir } from '../hooks/useAspirantes'
 import { useToastStore } from '../../../store/toastStore'
 import type { Aspirante } from '../services/admision'
+import { Check } from 'lucide-react'
 
 interface Props {
   aspirante: Aspirante
@@ -27,9 +28,7 @@ export default function InscribirModal({ aspirante, onClose }: Props) {
       <Modal title="Inscripción completada" onClose={onClose}>
         <div className="text-center py-4">
           <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <Check className="w-7 h-7 text-emerald-600" aria-hidden="true" />
           </div>
           <p className="text-sm text-slate-600 mb-4">
             <span className="font-medium text-slate-800">

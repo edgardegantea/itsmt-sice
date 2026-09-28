@@ -20,11 +20,14 @@ class ActividadComplementariaController extends Controller
 
         $user = $request->user();
 
-        // Alumno: solo ve las suyas
-        if ($user->hasRole('alumno')) {
-            $alumno = Alumno::where('user_id', $user->id)->firstOrFail();
+        // Alumno: solo ve las suyas. Un usuario con rol de gestión que además tenga el rol
+        // alumno (p. ej. superadmin con varios roles) ve el listado general; antes caía aquí
+        // y firstOrFail() respondía 404 al no tener expediente de alumno.
+        $esGestion = $user->hasAnyRole(['superadmin', 'admin', 'jefe_carrera', 'personal_administrativo', ...\App\Models\User::ROLES_DIRECTIVOS]);
+        if ($user->hasRole('alumno') && ! $esGestion) {
+            $alumno = Alumno::where('user_id', $user->id)->first();
             $query  = ActividadComplementaria::with('tipo')
-                ->where('alumno_id', $alumno->id);
+                ->where('alumno_id', $alumno?->id);
         } else {
             // Admin / directivos / jefe_carrera: listado general con filtros
             $carreraForzada = $user->carreraRestringida();

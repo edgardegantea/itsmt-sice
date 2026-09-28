@@ -5,6 +5,7 @@ import { useToastStore } from '../../../store/toastStore'
 import { useAuthStore } from '../../../store/authStore'
 import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
 import DetailModal from '../../../components/ui/DetailModal'
+import { CircleCheck } from 'lucide-react'
 
 const PCT_COLOR = (pct: number) =>
   pct >= 100 ? 'text-green-700 bg-green-100' : pct >= 50 ? 'text-orange-700 bg-orange-100' : 'text-red-700 bg-red-100'
@@ -74,9 +75,7 @@ export default function AlertasCorteCapturaPage() {
           </div>
         ) : alertas.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-            <svg className="w-10 h-10 text-green-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
+            <CircleCheck className="w-10 h-10 text-green-400 mx-auto mb-2" strokeWidth={1.5} aria-hidden="true" />
             <p className="text-slate-500 text-sm">
               {soloPendientes ? 'Sin pendientes. Todas las cargas están al corriente en su captura.' : 'No hay alertas registradas.'}
             </p>

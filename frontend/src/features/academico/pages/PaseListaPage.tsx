@@ -4,6 +4,7 @@ import { academicoApi, mergeCargasPorAsignatura, type CargaAcademica } from '../
 import PaseAsistenciaGrupo, { type PeriodoRango } from './PaseAsistenciaGrupo'
 import { useAuthStore } from '../../../store/authStore'
 import apiClient from '../../../config/apiClient'
+import { ChevronLeft } from 'lucide-react'
 
 interface LocationState {
   carga?: CargaAcademica
@@ -60,9 +61,7 @@ export default function PaseListaPage() {
             onClick={() => navigate('/admin/gestion-academica/asistencias')}
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Asistencias
           </button>
           <h1 className="text-lg sm:text-xl font-bold text-slate-900">

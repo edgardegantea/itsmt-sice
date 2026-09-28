@@ -6,13 +6,15 @@ import { useToastStore } from '../../../store/toastStore'
 import { FONT_OPTIONS, loadGoogleFont, DEFAULT_FONT } from '../../../config/fonts'
 import { useAuthStore } from '../../../store/authStore'
 import apiClient from '../../../config/apiClient'
+import ReglasIaTab from './ReglasIaTab'
+import { Check, ChevronRight, Image } from 'lucide-react'
 
 type FormState = Partial<ConfiguracionInstitucional>
 
 // Debe coincidir con la regla 'max:10240' de ConfiguracionController::subirLogo.
 const MAX_IMAGEN_MB = 10
 
-type TabId = 'institucion' | 'identidad' | 'login' | 'interfaz' | 'formularios' | 'firmantes' | 'sistema'
+type TabId = 'institucion' | 'identidad' | 'login' | 'interfaz' | 'formularios' | 'firmantes' | 'ia' | 'sistema'
 
 // ── Tab Firmantes (lee del Directorio) ────────────────────────────────────────
 
@@ -132,9 +134,7 @@ function FirmantesTab() {
         {sinClave.length > 0 && (
           <details className="group">
             <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-700 list-none flex items-center gap-1">
-              <svg className="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="w-3.5 h-3.5 transition-transform group-open:rotate-90" strokeWidth={2} aria-hidden="true" />
               {sinClave.length} personas del directorio sin clave de firma asignada
             </summary>
             <div className="mt-3 divide-y divide-slate-100 border border-slate-100 rounded-xl">
@@ -323,9 +323,7 @@ function ImageUploader({ label, url, tipo, onUploaded, onDeleted, accept = '.svg
               <img src={url} alt={label} className="h-20 max-w-full object-contain" />
             </div>
           : <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M2.25 12V6a2.25 2.25 0 0 1 2.25-2.25h15A2.25 2.25 0 0 1 21.75 6v12a2.25 2.25 0 0 1-2.25 2.25H4.5A2.25 2.25 0 0 1 2.25 18v-6Z" />
-              </svg>
+              <Image className="w-8 h-8" strokeWidth={1.5} aria-hidden="true" />
             </div>
         }
         <p className="text-xs text-slate-500 text-center">
@@ -439,6 +437,7 @@ const TABS: { id: TabId; label: string; superadminOnly?: boolean }[] = [
   { id: 'interfaz',     label: 'Interfaz' },
   { id: 'formularios', label: 'Formularios & Tonalidades', superadminOnly: true },
   { id: 'firmantes',    label: 'Firmantes' },
+  { id: 'ia',           label: 'Asistente IA', superadminOnly: true },
   { id: 'sistema',      label: 'Sistema', superadminOnly: true },
 ]
 
@@ -805,9 +804,7 @@ export default function ConfiguracionPage() {
                       <p className="text-[10px] text-slate-400 mt-1.5 font-sans">{font.category}</p>
                       {selected && (
                         <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-medium text-[var(--color-primario)]">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-5.121-5.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
+                          <Check className="w-3 h-3" aria-hidden="true" />
                           Activa
                         </span>
                       )}
@@ -1182,6 +1179,9 @@ export default function ConfiguracionPage() {
         {/* ── Tab: Firmantes ── */}
         {tabActiva === 'firmantes' && <FirmantesTab />}
 
+        {/* ── Tab: Asistente IA (solo superadmin) ── */}
+        {tabActiva === 'ia' && esSuperadmin && <ReglasIaTab />}
+
         {/* ── Tab: Sistema (solo superadmin) ── */}
         {tabActiva === 'sistema' && esSuperadmin && (
           <div className="space-y-6">
@@ -1280,7 +1280,7 @@ export default function ConfiguracionPage() {
         )}
 
         {/* Barra de guardado fija con estado de cambios. Los cambios de todas las pestañas se guardan juntos. */}
-        {tabActiva !== 'firmantes' && (
+        {tabActiva !== 'firmantes' && tabActiva !== 'ia' && (
           <div className={`sticky bottom-0 z-20 mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 border-t backdrop-blur flex items-center justify-between gap-3 flex-wrap transition-colors ${
             hayCambios ? 'bg-amber-50/95 border-amber-200' : 'bg-white/90 border-slate-200'
           }`}>

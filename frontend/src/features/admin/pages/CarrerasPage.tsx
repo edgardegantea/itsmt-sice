@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../config/apiClient'
 import Modal from '../../../components/ui/Modal'
 import { useToastStore } from '../../../store/toastStore'
+import { Loader2, Mail, X } from 'lucide-react'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
@@ -143,9 +144,7 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
               )}
             </div>
             <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 text-white/70">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-              </svg>
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
 
@@ -170,10 +169,7 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-16 text-gray-400">
-              <svg className="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-              </svg>
+              <Loader2 className="animate-spin w-5 h-5 mr-2" aria-hidden="true" />
               Cargando información…
             </div>
           ) : data ? (
@@ -230,9 +226,7 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
                           )}
                           {p.email && (
                             <a href={`mailto:${p.email}`} className="text-gray-400 hover:text-brand-600">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                              </svg>
+                              <Mail className="w-4 h-4" aria-hidden="true" />
                             </a>
                           )}
                         </div>

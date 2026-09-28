@@ -9,6 +9,7 @@ import {
   type ModoMenu,
 } from '../store/preferenciasStore'
 import { useAuthStore } from '../store/authStore'
+import { Monitor, Moon, Sun } from 'lucide-react'
 
 interface Props {
   open: boolean
@@ -108,13 +109,13 @@ export default function PreferenciasPanel({ open, onClose }: Props) {
               <div className="grid grid-cols-3 gap-1">
                 {([
                   { v: 'claro', label: 'Claro', icon: (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="4" /><path strokeLinecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41" /></svg>
+                    <Sun className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   ) },
                   { v: 'oscuro', label: 'Oscuro', icon: (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" /></svg>
+                    <Moon className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   ) },
                   { v: 'sistema', label: 'Sistema', icon: (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="4" width="18" height="12" rx="1.5" /><path strokeLinecap="round" d="M8 20h8M12 16v4" /></svg>
+                    <Monitor className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   ) },
                 ] as { v: Tema; label: string; icon: React.ReactNode }[]).map(({ v, label, icon }) => (
                   <button

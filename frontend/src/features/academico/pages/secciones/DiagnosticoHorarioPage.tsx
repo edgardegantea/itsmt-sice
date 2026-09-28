@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { academicoApi } from '../../services/academico'
 import { usePeriodos, selectCls } from '../tabs/shared'
+import { ChevronLeft } from 'lucide-react'
 
 const TIPO_LABEL: Record<string, string> = {
   docente: 'Docente traslapado',
@@ -26,9 +27,7 @@ export default function DiagnosticoHorarioPage() {
       <div className="space-y-5">
         <div>
           <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Gestión Académica
           </Link>
           <h1 className="text-xl font-bold text-slate-900">Diagnóstico de horarios</h1>

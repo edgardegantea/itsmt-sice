@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../../../../config/apiClient'
 import { useAuthStore } from '../../../../store/authStore'
+import { useIa } from '../../iaContext'
 import { academicoApi, type EstatusPlaneacion, type PlaneacionDocente, type ObservacionCampo, type SeccionObservacion, type FuenteInformacion, type TipoFuente } from '../../services/academico'
 import {
   citarFuente,
@@ -27,6 +28,7 @@ import {
 } from '../bibliografiaLookup'
 import { mutationError } from '@/utils/apiErrors'
 import { RichTextView, richTextAPlano } from '../../../../components/RichTextField'
+import { Inbox, Loader2, Paperclip } from 'lucide-react'
 
 /**
  * Opciones de transición de estatus disponibles para una planeación, según su
@@ -311,9 +313,7 @@ export function ArchivosAdjuntos({ planeacionId, unidad }: { planeacionId: strin
     <div className="space-y-1.5">
       {archivos.map(a => (
         <div key={a.id} className="flex items-center gap-2 border border-slate-100 rounded-lg px-2.5 py-1.5">
-          <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-          </svg>
+          <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" strokeWidth={2} aria-hidden="true" />
           <button type="button" onClick={() => academicoApi.descargarArchivoPlaneacion(planeacionId, a.id, a.nombre_original)}
             className="flex-1 min-w-0 text-left text-xs text-brand-600 hover:underline truncate">
             {a.nombre_original}
@@ -572,8 +572,10 @@ export function MejorarConIa({ texto, tipo, contexto, resaltar, onAplicar, disab
 }) {
   const [sugerencias, setSugerencias] = useState<string[]>([])
 
+  const ia = useIa()
+
   const mut = useMutation({
-    mutationFn: () => academicoApi.mejorarTextoIa(texto, tipo, contexto),
+    mutationFn: () => ia.mejorar(texto, tipo, contexto),
     onSuccess: (r) => setSugerencias(prev => [...prev, r.sugerencia]),
   })
 
@@ -592,6 +594,9 @@ export function MejorarConIa({ texto, tipo, contexto, resaltar, onAplicar, disab
       />
     )
   }
+
+  // Desactivada por el superadministrador para esta planeación.
+  if (!ia.habilitada) return null
 
   return (
     <button
@@ -622,8 +627,10 @@ export function SugerirActividadEnsenanza({ aprendizaje, contexto, onAplicar, di
   const [sugerencias, setSugerencias] = useState<string[]>([])
   const textoOrigen = richTextAPlano(aprendizaje)
 
+  const ia = useIa()
+
   const mut = useMutation({
-    mutationFn: () => academicoApi.mejorarTextoIa(textoOrigen, 'sugerir_ensenanza', contexto),
+    mutationFn: () => ia.mejorar(textoOrigen, 'sugerir_ensenanza', contexto),
     onSuccess: (r) => setSugerencias(prev => [...prev, r.sugerencia]),
   })
 
@@ -640,6 +647,9 @@ export function SugerirActividadEnsenanza({ aprendizaje, contexto, onAplicar, di
       />
     )
   }
+
+  // Desactivada por el superadministrador para esta planeación.
+  if (!ia.habilitada) return null
 
   return (
     <button
@@ -685,8 +695,10 @@ export function SelectorProductoAprendizaje({
 
   const textoOrigen = [richTextAPlano(ensenanza), richTextAPlano(aprendizaje)].filter(Boolean).join(' / ')
 
+  const ia = useIa()
+
   const mut = useMutation({
-    mutationFn: () => academicoApi.mejorarTextoIa(textoOrigen, 'sugerir_evidencia', contexto),
+    mutationFn: () => ia.mejorar(textoOrigen, 'sugerir_evidencia', contexto),
     onSuccess: (r) => {
       setSugerencias(prev => [...prev, r.sugerencia])
       setMostrandoFallback(false)
@@ -772,15 +784,17 @@ export function SelectorProductoAprendizaje({
               📦 <span className="font-medium text-slate-700">+ Definir producto de aprendizaje</span>
             </button>
             <span className="text-slate-300">·</span>
-            <button
-              type="button"
-              onClick={() => mut.mutate()}
-              disabled={!textoOrigen.trim() || mut.isPending}
-              title={textoOrigen.trim() ? 'Sugerir o crear producto de aprendizaje con IA' : 'Escribe primero la actividad'}
-              className="inline-flex items-center gap-1 text-[11px] text-violet-600 hover:text-violet-800 hover:underline disabled:opacity-40"
-            >
-              🪄 {mut.isPending ? 'Generando…' : 'Crear con IA'}
-            </button>
+            {ia.habilitada && (
+              <button
+                type="button"
+                onClick={() => mut.mutate()}
+                disabled={!textoOrigen.trim() || mut.isPending}
+                title={textoOrigen.trim() ? 'Sugerir o crear producto de aprendizaje con IA' : 'Escribe primero la actividad'}
+                className="inline-flex items-center gap-1 text-[11px] text-violet-600 hover:text-violet-800 hover:underline disabled:opacity-40"
+              >
+                🪄 {mut.isPending ? 'Generando…' : 'Crear con IA'}
+              </button>
+            )}
           </>
         )}
       </div>
@@ -796,7 +810,7 @@ export function SelectorProductoAprendizaje({
         </div>
 
         <div className="flex items-center gap-2">
-          {!disabled && (
+          {!disabled && ia.habilitada && (
             <button
               type="button"
               onClick={() => mut.mutate()}
@@ -915,8 +929,10 @@ export function SugerirEvidenciaAprendizaje({ ensenanza, aprendizaje, contexto, 
   const [mostrandoFallback, setMostrandoFallback] = useState(false)
   const textoOrigen = [richTextAPlano(ensenanza), richTextAPlano(aprendizaje)].filter(Boolean).join(' / ')
 
+  const ia = useIa()
+
   const mut = useMutation({
-    mutationFn: () => academicoApi.mejorarTextoIa(textoOrigen, 'sugerir_evidencia', contexto),
+    mutationFn: () => ia.mejorar(textoOrigen, 'sugerir_evidencia', contexto),
     onSuccess: (r) => {
       setSugerencias(prev => [...prev, r.sugerencia])
       setMostrandoFallback(false)
@@ -942,6 +958,9 @@ export function SugerirEvidenciaAprendizaje({ ensenanza, aprendizaje, contexto, 
       />
     )
   }
+
+  // Desactivada por el superadministrador para esta planeación.
+  if (!ia.habilitada) return null
 
   return (
     <button
@@ -982,8 +1001,10 @@ export function SelectorInstrumentoEvaluacion({
   const [mostrandoFallback, setMostrandoFallback] = useState(false)
   const textoOrigen = evidencia.trim()
 
+  const ia = useIa()
+
   const mut = useMutation({
-    mutationFn: () => academicoApi.mejorarTextoIa(textoOrigen, 'sugerir_instrumento', contexto),
+    mutationFn: () => ia.mejorar(textoOrigen, 'sugerir_instrumento', contexto),
     onSuccess: (r) => {
       setSugerencias(prev => [...prev, r.sugerencia])
       setMostrandoFallback(false)
@@ -1049,15 +1070,17 @@ export function SelectorInstrumentoEvaluacion({
           </select>
 
           {/* Botón Sugerir con IA */}
-          <button
-            type="button"
-            onClick={() => mut.mutate()}
-            disabled={!textoOrigen || mut.isPending}
-            title={textoOrigen ? 'Sugerir el instrumento de evaluación más adecuado y sus criterios clave con IA' : 'Escribe primero el nombre de la evidencia'}
-            className="inline-flex items-center gap-1 text-[11px] text-violet-600 hover:text-violet-700 hover:underline disabled:opacity-40 disabled:no-underline font-medium"
-          >
-            🪄 {mut.isPending ? 'Analizando…' : 'Sugerir con IA'}
-          </button>
+          {ia.habilitada && (
+            <button
+              type="button"
+              onClick={() => mut.mutate()}
+              disabled={!textoOrigen || mut.isPending}
+              title={textoOrigen ? 'Sugerir el instrumento de evaluación más adecuado y sus criterios clave con IA' : 'Escribe primero el nombre de la evidencia'}
+              className="inline-flex items-center gap-1 text-[11px] text-violet-600 hover:text-violet-700 hover:underline disabled:opacity-40 disabled:no-underline font-medium"
+            >
+              🪄 {mut.isPending ? 'Analizando…' : 'Sugerir con IA'}
+            </button>
+          )}
 
           {/* Botón Diseñar / Ver instrumento completo en modal */}
           {onAbrirModalDiseno && (
@@ -1178,8 +1201,9 @@ export function ModalInstrumentoEvaluacion({
   }
 
   // Mutación para generar con IA completamente alineado
+  const ia = useIa()
   const mutIa = useMutation({
-    mutationFn: () => academicoApi.mejorarTextoIa(
+    mutationFn: () => ia.mejorar(
       `Evidencia: ${evidencia}\n` +
       `Competencia del Tema: ${competencia ?? 'General'}\n` +
       `Actividad de aprendizaje del estudiante: ${actividadAprendizaje ?? 'Sin especificar'}\n` +
@@ -1335,14 +1359,16 @@ export function ModalInstrumentoEvaluacion({
             >
               {vista === 'tabla' ? '📝 Ver en Markdown' : '📊 Ver en Tabla'}
             </button>
-            <button
-              type="button"
-              onClick={() => mutIa.mutate()}
-              disabled={mutIa.isPending}
-              className="px-3 py-1 text-xs font-medium text-violet-700 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 flex items-center gap-1 disabled:opacity-50"
-            >
-              🪄 {mutIa.isPending ? 'Generando con IA…' : 'Regenerar con IA'}
-            </button>
+            {ia.habilitada && (
+              <button
+                type="button"
+                onClick={() => mutIa.mutate()}
+                disabled={mutIa.isPending}
+                className="px-3 py-1 text-xs font-medium text-violet-700 bg-violet-50 border border-violet-200 rounded-lg hover:bg-violet-100 flex items-center gap-1 disabled:opacity-50"
+              >
+                🪄 {mutIa.isPending ? 'Generando con IA…' : 'Regenerar con IA'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -2170,10 +2196,7 @@ export function ModalFuenteInformacion({
                   >
                     {buscando ? (
                       <>
-                        <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
+                        <Loader2 className="animate-spin h-3.5 w-3.5 text-white" aria-hidden="true" />
                         <span>Buscando…</span>
                       </>
                     ) : (
@@ -3043,9 +3066,7 @@ export function EmptyRow({ cols, msg = 'Sin registros.' }: { cols: number; msg?:
     <tr>
       <td colSpan={cols} className="px-4 py-10 text-center">
         <div className="flex flex-col items-center gap-2">
-          <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-          </svg>
+          <Inbox className="w-8 h-8 text-slate-300" aria-hidden="true" />
           <span className="text-sm text-slate-400">{msg}</span>
         </div>
       </td>

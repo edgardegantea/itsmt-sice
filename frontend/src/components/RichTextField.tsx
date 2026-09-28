@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import DOMPurify from 'dompurify'
+import { List } from 'lucide-react'
 
 const TAGS_PERMITIDOS = ['b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'br', 'p', 'div', 'span']
 const ATRIBUTOS_PERMITIDOS = ['style']
@@ -156,17 +157,10 @@ export function RichTextField({ value, onChange, placeholder, minHeight = 90, di
           </button>
           <span className="w-px h-4 bg-slate-200 mx-0.5" />
           <button type="button" title="Viñetas" aria-pressed={estado.insertUnorderedList} onMouseDown={e => e.preventDefault()} onClick={() => ejecutar('insertUnorderedList')} className={`${BOTON_CLS} ${estado.insertUnorderedList ? BOTON_ACTIVO_CLS : ''}`}>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none" />
-              <circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none" />
-              <circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none" />
-              <path strokeLinecap="round" d="M9 6h11M9 12h11M9 18h11" />
-            </svg>
+            <List className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
           </button>
           <button type="button" title="Lista numerada" aria-pressed={estado.insertOrderedList} onMouseDown={e => e.preventDefault()} onClick={() => ejecutar('insertOrderedList')} className={`${BOTON_CLS} ${estado.insertOrderedList ? BOTON_ACTIVO_CLS : ''}`}>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />
-            </svg>
+            <List className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
           </button>
           <span className="w-px h-4 bg-slate-200 mx-0.5" />
           <button type="button" title="Quitar formato" onMouseDown={e => e.preventDefault()} onClick={() => ejecutar('removeFormat')} className={`${BOTON_CLS} text-[10px] px-2`}>

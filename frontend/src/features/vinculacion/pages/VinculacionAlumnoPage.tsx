@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
 import { vinculacionApi, type ServicioSocial, type SolicitudRp, type PrerequisitosRp } from '../services/vinculacion'
+import { Check, X } from 'lucide-react'
 
 const ESTATUS_COLOR: Record<string, string> = {
   solicitado:             'bg-brand-100 text-brand-800',
@@ -42,15 +43,11 @@ function PrerequisiteRow({
           <div className="w-6 h-6 rounded-full bg-slate-100 animate-pulse" />
         ) : met ? (
           <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
+            <Check className="w-4 h-4 text-green-600" aria-hidden="true" />
           </div>
         ) : (
           <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
-            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-4 h-4 text-red-500" aria-hidden="true" />
           </div>
         )}
       </div>

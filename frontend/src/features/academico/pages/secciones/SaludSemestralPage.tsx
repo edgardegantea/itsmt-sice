@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { academicoApi, type SaludCarrera } from '../../services/academico'
 import { usePeriodoActivo } from '../../../../hooks/usePeriodoActivo'
+import { ChevronLeft } from 'lucide-react'
 
 function colorScore(score: number | null) {
   if (score === null) return { text: 'text-slate-400', bg: 'bg-slate-300' }
@@ -43,9 +44,7 @@ export default function SaludSemestralPage() {
       <div className="space-y-5">
         <div>
           <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Gestión Académica
           </Link>
           <h1 className="text-xl font-bold text-slate-900">📊 Índice de Salud del Semestre</h1>

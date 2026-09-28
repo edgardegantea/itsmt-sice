@@ -8,6 +8,7 @@ import {
 import { usePeriodos, useCarreras, selectCls, icls, Field, ModalWrap, mutationError, extractApiErrors } from './tabs/shared'
 import { useToastStore } from '../../../store/toastStore'
 import AsignarSlotModal from './builder/AsignarSlotModal'
+import { ChevronRight } from 'lucide-react'
 
 const DIAS: DiaSemana[] = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
 const DIA_LABEL: Record<DiaSemana, string> = {
@@ -646,9 +647,7 @@ function ListaGruposBuilder({
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left"
                 onClick={() => toggle(carrera.id)}
               >
-                <svg className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${isOpen ? 'rotate-90' : ''}`} strokeWidth={2} aria-hidden="true" />
                 <span className="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">{carrera.clave}</span>
                 <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
                 <span className="ml-auto text-xs text-slate-400 shrink-0 whitespace-nowrap">

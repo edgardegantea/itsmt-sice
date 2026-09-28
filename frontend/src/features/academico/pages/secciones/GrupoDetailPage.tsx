@@ -9,6 +9,7 @@ import { useAlumnos } from '../tabs/shared'
 import { mutationError } from '@/utils/apiErrors'
 import { useConfirm } from '../../../../components/ConfirmDialog'
 import { useAuthStore } from '../../../../store/authStore'
+import { ChevronLeft } from 'lucide-react'
 
 // ── Horario semanal ───────────────────────────────────────────────────────────
 
@@ -218,9 +219,7 @@ export default function GrupoDetailPage() {
               to="/admin/gestion-academica/grupos"
               className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 transition-colors shrink-0"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
               Volver a Grupos
             </Link>
           </div>

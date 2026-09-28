@@ -18,6 +18,7 @@ import {
   IconBanknotes,
   IconBook,
 } from '../components/ui/Icons'
+import { Menu, X } from 'lucide-react'
 
 interface Props {
   children: ReactNode
@@ -100,9 +101,7 @@ export default function AlumnoLayout({ children }: Props) {
               className="lg:hidden p-1.5 rounded-md text-slate-500 hover:bg-slate-100 transition-colors"
               aria-label="Menú"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="w-5 h-5" aria-hidden="true" />
             </button>
 
             {logoUrl ? (
@@ -231,9 +230,7 @@ export default function AlumnoLayout({ children }: Props) {
                   onClick={() => setSidebarOpen(false)}
                   className="p-1 rounded-md text-slate-400 hover:bg-slate-100"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
 

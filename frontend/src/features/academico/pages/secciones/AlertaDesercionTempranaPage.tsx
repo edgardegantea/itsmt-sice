@@ -6,6 +6,7 @@ import { permanenciaApi } from '../../../permanencia/services/permanencia'
 import { inputCls, usePeriodos } from '../tabs/shared'
 import { usePeriodoActivo } from '../../../../hooks/usePeriodoActivo'
 import { useAuthStore } from '../../../../store/authStore'
+import { ChevronLeft } from 'lucide-react'
 
 const ROLES_INICIAR_BAJA = ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera']
 
@@ -83,9 +84,7 @@ export default function AlertaDesercionTempranaPage() {
       <div className="space-y-5">
         <div>
           <Link to="/admin/gestion-academica" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Gestión Académica
           </Link>
           <h1 className="text-xl font-bold text-slate-900">Alerta de Deserción Temprana</h1>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LayoutGrid, Menu } from 'lucide-react'
 
 export type ViewMode = 'lista' | 'cards'
 
@@ -14,9 +15,7 @@ export default function ViewToggle({ value, onChange }: { value: ViewMode; onCha
           value === 'lista' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'
         }`}
       >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+        <Menu className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
         Lista
       </button>
       <button
@@ -27,10 +26,7 @@ export default function ViewToggle({ value, onChange }: { value: ViewMode; onCha
           value === 'cards' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'
         }`}
       >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
+        <LayoutGrid className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
         Tarjetas
       </button>
     </div>

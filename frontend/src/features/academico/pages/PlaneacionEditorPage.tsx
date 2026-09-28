@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, Fragment } from 'react'
-import { Plus, Layers, ArrowRight, CheckCircle2, Check, Trash2, ListChecks, Target, BookOpen, Presentation, FlaskConical, CircleHelp, type LucideIcon } from 'lucide-react'
+import { ArrowRight, BookOpen, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Download, Eye, FlaskConical, Layers, ListChecks, Loader2, Pencil, Plus, Presentation, Printer, Target, Trash2, type LucideIcon, X } from 'lucide-react'
 import GuiaInstrumentacionPanel from './GuiaInstrumentacionPanel'
+import { IaProvider, AvisoIaDesactivada } from '../iaContext'
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
@@ -352,9 +353,7 @@ function SelectorFilasSubtema({
         title="Asignar actividad(es) a este subtema (puede seleccionar una o más)"
       >
         <span>{label}</span>
-        <svg className="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
+        <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" strokeWidth={2} aria-hidden="true" />
       </button>
 
       {open && !disabled && (
@@ -1569,21 +1568,18 @@ export default function PlaneacionEditorPage() {
   }
 
   return (
+    <IaProvider planeacionId={planeacionActual?.id}>
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8 bg-gradient-to-b from-slate-50 via-white to-white min-h-screen -mt-8 pt-8" data-modulo-planeacion>
     <div className="space-y-6">
+      <AvisoIaDesactivada />
       <Link to={`/docente/planeacion?periodo=${periodoId}`} className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 transition-colors">
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+        <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
         Mis asignaturas
       </Link>
 
       {!form ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-10 flex items-center justify-center">
-          <svg className="w-5 h-5 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <Loader2 className="w-5 h-5 animate-spin text-brand-600" aria-hidden="true" />
           <span className="ml-3 text-sm text-slate-400">Cargando instrumentación…</span>
         </div>
       ) : (
@@ -1603,9 +1599,7 @@ export default function PlaneacionEditorPage() {
                 onClick={() => setInfoAbierta(v => !v)}
                 className="flex items-center gap-2 min-w-0 text-left"
               >
-                <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${infoAbierta ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRight className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${infoAbierta ? 'rotate-90' : ''}`} strokeWidth={2} aria-hidden="true" />
                 <span className="font-semibold text-slate-800 truncate">{cargaActual?.materia?.nombre ?? 'Instrumentación didáctica'}</span>
                 {planeacionActual && (
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap shadow-sm ${ESTATUS_COLOR[planeacionActual.estatus]}`}>
@@ -1618,19 +1612,14 @@ export default function PlaneacionEditorPage() {
                   }`}>
                     {mutSave.isPending ? (
                       <>
-                        <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
+                        <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
                         Guardando…
                       </>
                     ) : mutSave.isError ? (
                       'Error al guardar'
                     ) : mutSave.isSuccess ? (
                       <>
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <Check className="w-3 h-3" strokeWidth={3} aria-hidden="true" />
                         Guardado
                       </>
                     ) : null}
@@ -1669,10 +1658,7 @@ export default function PlaneacionEditorPage() {
                     className="px-3 py-2 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap"
                     title="Vista previa de la instrumentación didáctica"
                   >
-                    <svg className="w-3.5 h-3.5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                    <Eye className="w-3.5 h-3.5 text-brand-600" strokeWidth={2} aria-hidden="true" />
                     Vista previa
                   </button>
 
@@ -1681,18 +1667,13 @@ export default function PlaneacionEditorPage() {
                       className="list-none cursor-pointer select-none flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 whitespace-nowrap transition-all"
                     >
                       Más acciones
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <ChevronDown className="w-3 h-3" strokeWidth={2} aria-hidden="true" />
                     </summary>
                     <div className="absolute right-0 mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-xs">
                       <button type="button"
                         onClick={e => { abrirVistaPrevia(); e.currentTarget.closest('details')?.removeAttribute('open') }}
                         className="w-full text-left px-3 py-2 text-slate-600 hover:bg-slate-50 flex items-center gap-2 font-medium text-brand-600">
-                        <svg className="w-3.5 h-3.5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
+                        <Eye className="w-3.5 h-3.5 text-brand-600" strokeWidth={2} aria-hidden="true" />
                         Vista previa del documento
                       </button>
                       <div className="my-1 border-t border-slate-100" />
@@ -1803,9 +1784,7 @@ export default function PlaneacionEditorPage() {
               disabled={paso === PASOS[0].id}
               className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 bg-white border border-slate-200 shadow-sm hover:bg-slate-100 disabled:opacity-30 disabled:shadow-none disabled:hover:bg-white"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </button>
 
             <div className="flex flex-wrap gap-1.5 flex-1">
@@ -1839,9 +1818,7 @@ export default function PlaneacionEditorPage() {
               disabled={paso === PASOS[PASOS.length - 1].id}
               className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-30 disabled:hover:bg-brand-600"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
           {paso === 'calendario_horas' && (() => {
@@ -1913,9 +1890,7 @@ export default function PlaneacionEditorPage() {
                     <nav className="flex items-center gap-1.5 text-xs min-w-0">
                       <button type="button" onClick={() => setVistaCompetencia(null)}
                         className="flex items-center gap-1 font-medium text-brand-600 hover:underline shrink-0">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
+                        <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                         Competencias específicas
                       </button>
                       <span className="text-slate-300 shrink-0">/</span>
@@ -2312,9 +2287,7 @@ export default function PlaneacionEditorPage() {
                                               title="Quitar fila de actividad"
                                               className="inline-flex items-center justify-center gap-0.5 text-[10px] text-slate-400 hover:text-red-600 transition-colors pt-1 border-t border-slate-200/50 w-full"
                                             >
-                                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                              </svg>
+                                              <X className="w-3 h-3" strokeWidth={2} aria-hidden="true" />
                                               <span>Quitar</span>
                                             </button>
                                           )}
@@ -2434,9 +2407,7 @@ export default function PlaneacionEditorPage() {
                                                 title="Editar redacción"
                                                 className="text-slate-400 hover:text-brand-600 p-0.5"
                                               >
-                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                </svg>
+                                                <Pencil className="w-3 h-3" strokeWidth={2} aria-hidden="true" />
                                               </button>
                                               {esPersonalizada && (
                                                 <button
@@ -2445,9 +2416,7 @@ export default function PlaneacionEditorPage() {
                                                   title="Eliminar competencia personalizada"
                                                   className="text-slate-400 hover:text-red-600 p-0.5"
                                                 >
-                                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                  </svg>
+                                                  <Trash2 className="w-3 h-3" strokeWidth={2} aria-hidden="true" />
                                                 </button>
                                               )}
                                             </div>
@@ -2658,9 +2627,7 @@ export default function PlaneacionEditorPage() {
                                             <input value={ind.indicador} onChange={e => setIndicador(idx, rowIdx, { indicador: e.target.value })} placeholder="Indicador de alcance" className={smallInputCls + ' flex-1'} disabled={soloLectura} />
                                             {!soloLectura && (
                                               <button type="button" onClick={() => quitarIndicador(idx, rowIdx)} title="Quitar indicador" className="text-red-500 hover:text-red-700 shrink-0">
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
+                                                <X className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                                               </button>
                                             )}
                                           </div>
@@ -2882,9 +2849,7 @@ export default function PlaneacionEditorPage() {
                                             <td className="px-1 py-1.5 border-l border-slate-100 text-center">
                                               {!soloLectura && (
                                                 <button type="button" onClick={() => quitarFilaMatriz(idx, filaIdx)} title="Quitar evidencia" className="text-red-500 hover:text-red-700">
-                                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                  </svg>
+                                                  <X className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                                                 </button>
                                               )}
                                             </td>
@@ -3044,9 +3009,7 @@ export default function PlaneacionEditorPage() {
                                 {!soloLectura && (
                                   <button type="button" onClick={() => quitarPractica(idx, pIdx)} title="Quitar práctica"
                                     className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <X className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                                   </button>
                                 )}
                               </div>
@@ -3676,9 +3639,7 @@ export default function PlaneacionEditorPage() {
                                   {linkCalificacionesUnidad(ev.unidad) && (
                                     <Link to={linkCalificacionesUnidad(ev.unidad)!} title={`Capturar calificaciones del Tema ${ev.unidad} — programada para la semana ${ev.semanaEvaluacion}`}
                                       className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-brand-600 bg-brand-600/10 hover:bg-brand-600/20 transition-colors">
-                                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                      </svg>
+                                      <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                                     </Link>
                                   )}
                                 </span>
@@ -3721,9 +3682,7 @@ export default function PlaneacionEditorPage() {
                                   {linkCalificacionesUnidad(ev.unidad) && (
                                     <Link to={linkCalificacionesUnidad(ev.unidad)!} title={`Capturar calificaciones del Tema ${ev.unidad} — programada para la semana ${ev.semanaEvaluacion}`}
                                       className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-brand-600 bg-brand-600/10 hover:bg-brand-600/20 transition-colors">
-                                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                      </svg>
+                                      <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                                     </Link>
                                   )}
                                 </span>
@@ -3998,9 +3957,7 @@ export default function PlaneacionEditorPage() {
                   disabled={descargandoPdfInstrumentacion}
                   className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
+                  <Download className="w-3.5 h-3.5 text-slate-500" strokeWidth={2} aria-hidden="true" />
                   {descargandoPdfInstrumentacion ? 'Descargando…' : 'Descargar PDF'}
                 </button>
                 <button
@@ -4008,9 +3965,7 @@ export default function PlaneacionEditorPage() {
                   onClick={() => window.print()}
                   className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1.5"
                 >
-                  <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                  </svg>
+                  <Printer className="w-3.5 h-3.5 text-slate-500" strokeWidth={2} aria-hidden="true" />
                   Imprimir
                 </button>
               </div>
@@ -4026,10 +3981,7 @@ export default function PlaneacionEditorPage() {
               <div className="bg-slate-100 border border-slate-200 rounded-xl overflow-hidden h-[72vh] flex items-center justify-center">
                 {cargandoPdfPreview ? (
                   <div className="flex items-center gap-2 text-slate-500 text-sm">
-                    <svg className="w-5 h-5 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
+                    <Loader2 className="w-5 h-5 animate-spin text-brand-600" aria-hidden="true" />
                     Generando vista previa en PDF oficial TecNM…
                   </div>
                 ) : pdfBlobUrl ? (
@@ -4053,5 +4005,6 @@ export default function PlaneacionEditorPage() {
       )}
     </div>
     </div>
+    </IaProvider>
   )
 }

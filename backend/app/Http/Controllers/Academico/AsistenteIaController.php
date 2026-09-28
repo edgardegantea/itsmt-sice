@@ -101,7 +101,18 @@ class AsistenteIaController extends Controller
             // actividades parecidas ("Investigar y exponer un tema") recibían la misma
             // sugerencia sin ningún indicio de a qué asignatura pertenece.
             'contexto' => ['nullable', 'string', 'max:500'],
+            // Planeación que se está editando: permite aplicar las reglas por grupo/carrera.
+            'planeacion_id' => ['nullable', 'uuid'],
         ]);
+
+        // El superadministrador puede desactivar la IA por institución, carrera, docente o
+        // grupo (ver ReglaIaController). Se valida aquí también, no solo ocultando botones.
+        $planeacion = ! empty($data['planeacion_id']) ? \App\Domains\Academico\Models\PlaneacionDocente::find($data['planeacion_id']) : null;
+        $disponible = app(\App\Domains\Academico\Services\DisponibilidadIa::class)
+            ->evaluar($planeacion?->docente ?? $request->user(), $planeacion);
+        if (! $disponible['habilitada']) {
+            return ApiResponse::error('El asistente de IA está desactivado' . ($disponible['motivo'] ? ': ' . $disponible['motivo'] : '.'), 403);
+        }
 
         $instruccion = self::INSTRUCCION_POR_TIPO[$data['tipo']];
         [$etiquetaEntrada, $etiquetaSalida] = self::ETIQUETAS_PROMPT[$data['tipo']] ?? self::ETIQUETAS_PROMPT_DEFAULT;

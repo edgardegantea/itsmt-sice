@@ -7,6 +7,7 @@ import {
   IconMegaphone, IconPin, IconPlus, IconUser,
   IconAcademicCap, IconBriefcase, IconBuilding, IconExclamation, IconCalendar,
 } from '../../../components/ui/Icons'
+import { Check } from 'lucide-react'
 
 const CATEGORIAS = [
   { value: '', label: 'Todas las Categorías', Icon: IconMegaphone },
@@ -219,9 +220,7 @@ export default function ComunicadosPage() {
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                  <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
+                  <Check className="w-4 h-4 text-emerald-600" strokeWidth={2.5} aria-hidden="true" />
                   <span>Acuse registrado (Leído)</span>
                 </span>
               </div>

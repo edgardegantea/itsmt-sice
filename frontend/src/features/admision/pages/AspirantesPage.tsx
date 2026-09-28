@@ -13,13 +13,11 @@ import Badge from '../../../components/ui/Badge'
 import { useToastStore } from '../../../store/toastStore'
 import type { Aspirante } from '../services/admision'
 import { IconClipboard, IconDocument } from '../../../components/ui/Icons'
+import { ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, FileText, Loader2, Pencil, Plus, UserRound } from 'lucide-react'
 
 function Spinner({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
-    <svg className={`${className} animate-spin`} fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-    </svg>
+    <Loader2 className={`${className} animate-spin`} aria-hidden="true" />
   )
 }
 
@@ -56,10 +54,7 @@ function FilaAspirante({
         }`}
       >
         <td className="pl-4 pr-2 py-3.5 w-8 border-l-4 border-transparent" onClick={e => { e.stopPropagation(); onToggle() }}>
-          <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-brand-600' : 'text-slate-400'}`}
-            fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6"/>
-          </svg>
+          <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-brand-600' : 'text-slate-400'}`} strokeWidth={2} aria-hidden="true" />
         </td>
         <td className="px-3 py-3.5">
           <p className="font-medium text-sm text-slate-800 group-hover:text-brand-600">{nombreCompleto}</p>
@@ -121,26 +116,20 @@ function FilaAspirante({
 
                 <button onClick={(e) => { e.stopPropagation(); onEditar() }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-white transition-colors">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/>
-                  </svg>
+                  <Pencil className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   Editar datos
                 </button>
 
                 <button onClick={(e) => { e.stopPropagation(); onEstatus() }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-white transition-colors">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                  </svg>
+                  <CircleCheck className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   Cambiar estatus
                 </button>
 
                 {asp.estatus === 'aceptado' && !asp.inscripcion && (
                   <button onClick={(e) => { e.stopPropagation(); onInscribir() }}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                    </svg>
+                    <Plus className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                     Inscribir
                   </button>
                 )}
@@ -243,9 +232,7 @@ export default function AspirantesPage() {
         </div>
         <a href="/registro" target="_blank"
           className="self-start inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-600/90 rounded-lg transition-colors shadow-sm">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-          </svg>
+          <Plus className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
           Nueva solicitud
         </a>
       </div>
@@ -274,10 +261,7 @@ export default function AspirantesPage() {
                     <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>
                   ))}
                 </select>
-                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
-                  fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7"/>
-                </svg>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
               </div>
             </div>
 
@@ -300,10 +284,7 @@ export default function AspirantesPage() {
                     </option>
                   ))}
                 </select>
-                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
-                  fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7"/>
-                </svg>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
               </div>
             </div>
 
@@ -322,10 +303,7 @@ export default function AspirantesPage() {
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
-                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
-                  fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7"/>
-                </svg>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" strokeWidth={2} aria-hidden="true" />
               </div>
             </div>
 
@@ -356,9 +334,7 @@ export default function AspirantesPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
                 >
                   {generandoListaAceptados ? <Spinner /> : (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
-                    </svg>
+                    <FileText className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   )}
                   <span className="hidden sm:inline">Aceptados</span>
                 </button>
@@ -369,9 +345,7 @@ export default function AspirantesPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-wait"
                 >
                   {generandoPorCarrera ? <Spinner /> : (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
-                    </svg>
+                    <FileText className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   )}
                   <span className="hidden sm:inline">Por carrera</span>
                 </button>
@@ -390,9 +364,7 @@ export default function AspirantesPage() {
         {/* ── Error ── */}
         {isError && (
           <div className="flex flex-col items-center justify-center py-20 gap-2 text-red-400">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
-            </svg>
+            <CircleAlert className="w-8 h-8" strokeWidth={1.5} aria-hidden="true" />
             <p className="text-sm">Error al cargar los datos.</p>
           </div>
         )}
@@ -400,9 +372,7 @@ export default function AspirantesPage() {
         {/* ── Vacío ── */}
         {!isLoading && !isError && data && data.data.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 gap-2 text-slate-400">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
-            </svg>
+            <UserRound className="w-8 h-8" strokeWidth={1.5} aria-hidden="true" />
             <p className="text-sm">No hay aspirantes con los filtros seleccionados.</p>
           </div>
         )}
@@ -451,17 +421,13 @@ export default function AspirantesPage() {
                 <div className="flex gap-1.5 justify-center">
                   <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}
                     className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
-                    </svg>
+                    <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                     Anterior
                   </button>
                   <button disabled={page === data.last_page} onClick={() => setPage((p) => p + 1)}
                     className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                     Siguiente
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
-                    </svg>
+                    <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
                   </button>
                 </div>
               )}

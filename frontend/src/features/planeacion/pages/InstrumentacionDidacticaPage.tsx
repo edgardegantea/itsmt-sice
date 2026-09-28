@@ -4,6 +4,7 @@ import { planeacionApi, type InstrumentacionDidactica, type ObservacionCampoInst
 import { useToastStore } from '../../../store/toastStore'
 import { openPdfPreview, triggerDownload } from '../../../utils/pdfHelpers'
 import apiClient from '../../../config/apiClient'
+import { ChevronLeft } from 'lucide-react'
 
 const ESTATUS_COLOR: Record<string, string> = {
   borrador:     'bg-slate-100 text-slate-600',
@@ -342,9 +343,7 @@ export default function InstrumentacionDidacticaPage() {
         <div className="space-y-5">
           <div className="flex items-center gap-3">
             <button onClick={() => setPanel('listado')} className="text-slate-400 hover:text-slate-700 transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
             </button>
             <div>
               <h1 className="text-xl font-bold text-slate-900">
@@ -451,9 +450,7 @@ export default function InstrumentacionDidacticaPage() {
             onClick={() => setPanel('listado')}
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 transition-colors"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
             Instrumentaciones
           </button>
 
