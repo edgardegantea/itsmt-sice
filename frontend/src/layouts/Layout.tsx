@@ -13,152 +13,219 @@ import CommandPalette from '../components/CommandPalette'
 import NotificationBell from '../components/NotificationBell'
 import BroadcastBanner from '../components/BroadcastBanner'
 import { rolPrincipal, destinoDeRol } from '../utils/roles'
+import {
+  Activity,
+  AlarmClock,
+  AlertTriangle,
+  ArrowLeftRight,
+  Award,
+  BadgeCheck,
+  BarChart3,
+  BookMarked,
+  BookOpen,
+  BookOpenCheck,
+  Briefcase,
+  BriefcaseBusiness,
+  Building2,
+  CalendarCheck,
+  CalendarClock,
+  CalendarDays,
+  CalendarRange,
+  CalendarX2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  ClipboardCheck,
+  ClipboardList,
+  Clock,
+  Contact,
+  Database,
+  Equal,
+  FileBadge,
+  FileBarChart,
+  FileCheck2,
+  FileClock,
+  FileSignature,
+  FileText,
+  FlaskConical,
+  Gauge,
+  Globe2,
+  GraduationCap,
+  HandCoins,
+  HandHelping,
+  Handshake,
+  HeartHandshake,
+  History,
+  Home,
+  IdCard,
+  Inbox,
+  KeyRound,
+  Landmark,
+  Languages,
+  Layers,
+  LayoutDashboard,
+  Library,
+  LineChart,
+  ListChecks,
+  LogOut,
+  Medal,
+  Megaphone,
+  Menu,
+  MessagesSquare,
+  MonitorCheck,
+  MonitorPlay,
+  Newspaper,
+  NotebookPen,
+  PenLine,
+  PieChart,
+  Plane,
+  Plug,
+  Presentation,
+  RefreshCcw,
+  Repeat,
+  Scale,
+  School,
+  Search,
+  Settings,
+  Settings2,
+  ShieldAlert,
+  ShieldCheck,
+  SlidersHorizontal,
+  Star,
+  Sun,
+  Target,
+  Trophy,
+  UserCog,
+  UserMinus,
+  UserPlus,
+  Users,
+  Wallet,
+  Warehouse,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
 
 const ROLES_SEGUIMIENTO_INSTRUMENTACION = ['superadmin', 'admin', 'director_academico', 'jefe_carrera', 'subdireccion_academica', 'desarrollo_academico']
 const ROLES_BAJAS = ['superadmin', 'admin', 'personal_administrativo', 'jefe_carrera']
 
-// ── SVG icons ─────────────────────────────────────────────────────────────────
+// ── Íconos (lucide-react) ─────────────────────────────────────────────────────
+// Un solo set de trazo uniforme para todo el menú. Cada pantalla tiene un ícono
+// propio que describe su función; los grupos usan un ícono representativo.
 
-function IconDashboard() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <rect x="3" y="3" width="7" height="7" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
+// Envuelve un ícono de lucide con el tamaño y trazo institucional del menú,
+// conservando la firma `() => JSX` que usan NavItem y los encabezados de grupo.
+function navIcon(Icono: LucideIcon) {
+  return function NavIcon() {
+    return <Icono className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
+  }
 }
 
-function IconStar() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="m11.48 3.499 2.507 5.104 5.632.818a.75.75 0 0 1 .416 1.28l-4.076 3.973.962 5.61a.75.75 0 0 1-1.088.79L12 18.354l-5.041 2.652a.75.75 0 0 1-1.088-.79l.962-5.61-4.076-3.972a.75.75 0 0 1 .416-1.281l5.632-.818 2.507-5.104a.75.75 0 0 1 1.346 0Z" />
-    </svg>
-  )
-}
-
-function IconUsers() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" strokeLinecap="round" strokeLinejoin="round" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  )
-}
-
-function IconGraduate() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M22 10v6M2 10l10-5 10 5-10 5-10-5z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12v5c3.53 1.57 7.47 1.57 11 0v-5" />
-    </svg>
-  )
-}
-
-function IconCalendar() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16 2v4M8 2v4M3 10h18" />
-    </svg>
-  )
-}
-
-function IconBook() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  )
-}
-
-function IconTag() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-      <circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function IconShield() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-    </svg>
-  )
-}
-
-function IconSettings() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-    </svg>
-  )
-}
+const IconDashboard = navIcon(LayoutDashboard)
+const IconStar      = navIcon(Star)
+const IconTag       = navIcon(Circle)
 
 const ICONS: Record<string, () => React.JSX.Element> = {
-  '/admin':                  IconDashboard,
-  '/admin/aspirantes':       IconUsers,
-  '/admin/alumnos':          IconGraduate,
-  '/admin/periodos':         IconCalendar,
-  '/admin/carreras':         IconBook,
-  '/admin/catalogos':           IconTag,
-  '/admin/configuracion':       IconSettings,
-  '/admin/reinscripciones':              IconCalendar,
-  '/admin/constancias':                  IconBook,
-  '/admin/encuestas-socioeconomicas':    IconBook,
-  '/admin/directorio':                    IconUsers,
-  '/admin/usuarios':                     IconUsers,
-  '/admin/permisos':                     IconShield,
-  '/admin/gestion-academica':            IconGraduate,
-  '/admin/carga-academica':              IconGraduate,
-  '/admin/horarios/builder':             IconGraduate,
-  '/admin/horarios/disponibilidad':      IconGraduate,
-  '/docente/mi-horario':                 IconBook,
-  '/docente/disponibilidad':             IconBook,
-  '/docente/planeacion':                 IconBook,
-  '/docente/mi-cv':                      IconBook,
-  '/docente/calificaciones':             IconBook,
-  '/docente/asistencias':                IconBook,
-  '/admin/gestion-academica/calificaciones': IconBook,
-  '/admin/gestion-academica/asistencias':    IconBook,
-  '/admin/bajas':                        IconUsers,
-  '/admin/reportes/altas-bajas':          IconUsers,
-  '/admin/alertas-baja-definitiva':      IconShield,
-  '/gestion-academica/alertas-corte-captura': IconShield,
-  '/admin/vinculacion/servicio-social':      IconBook,
-  '/admin/vinculacion/solicitudes-rp':       IconBook,
-  '/admin/vinculacion/residencias':          IconGraduate,
-  '/admin/vinculacion/asesorias-rp':        IconBook,
-  '/admin/libro-registro-nc':               IconBook,
-  '/admin/egresados':                       IconUsers,
-  '/admin/reportes/directivos':             IconBook,
-  '/admin/indicadores/asistencia':          IconShield,
-  '/admin/indicadores/tutoria':             IconShield,
-  '/admin/pit/asignaciones':               IconUsers,
-  '/admin/traslados':                      IconUsers,
-  '/admin/convalidaciones':                IconBook,
-  '/admin/equivalencias':                  IconBook,
-  '/docente/pit/sesiones':                 IconBook,
-  '/docente/pit/pat':                      IconBook,
-  '/admin/titulacion/certificados-idioma':   IconBook,
-  '/admin/titulacion/acto-protocolario':     IconGraduate,
-  '/admin/titulacion/salida-lateral':        IconBook,
+  // General
+  '/admin':                                   IconDashboard,
+  '/jefe-carrera/dashboard':                  navIcon(Gauge),
+  '/comunicados':                             navIcon(Megaphone),
+  '/comunicados/oficio-circular':             navIcon(FileSignature),
+  '/admin/directorio':                        navIcon(Contact),
+  // Control escolar y alumnos
+  '/admin/aspirantes':                        navIcon(UserPlus),
+  '/admin/alumnos':                           navIcon(GraduationCap),
+  '/admin/reinscripciones':                   navIcon(RefreshCcw),
+  '/admin/bajas':                             navIcon(UserMinus),
+  '/admin/reportes/altas-bajas':              navIcon(ArrowLeftRight),
+  '/admin/constancias':                       navIcon(FileBadge),
+  '/admin/encuestas-socioeconomicas':         navIcon(ClipboardList),
+  '/admin/carga-academica':                   navIcon(FileText),
+  '/admin/alertas-baja-definitiva':           navIcon(AlertTriangle),
+  '/gestion-academica/alertas-corte-captura': navIcon(AlarmClock),
+  '/admin/libro-registro-nc':                 navIcon(BookMarked),
+  '/admin/egresados':                         navIcon(Award),
+  '/admin/calendario-escolar':                navIcon(CalendarDays),
+  '/admin/finanzas/estado-cuenta':            navIcon(Wallet),
+  '/admin/becas':                             navIcon(HandCoins),
+  // Gestión académica
+  '/admin/planeacion/asignaciones':           navIcon(ListChecks),
+  '/admin/planeacion/instrumentaciones':      navIcon(NotebookPen),
+  '/admin/gestion-academica/planeaciones':    navIcon(FileCheck2),
+  '/admin/gestion-academica/seguimiento-instrumentacion': navIcon(Activity),
+  '/desarrollo-academico/instrumentaciones':  navIcon(NotebookPen),
+  '/desarrollo-academico/planeaciones':       navIcon(FileCheck2),
+  '/admin/gestion-academica':                 navIcon(School),
+  '/docente/calificaciones':                  navIcon(PenLine),
+  '/docente/asistencias':                     navIcon(CalendarCheck),
+  '/admin/gestion-academica/calificaciones':  navIcon(PenLine),
+  '/admin/gestion-academica/asistencias':     navIcon(CalendarCheck),
+  '/docente/planeacion':                      navIcon(NotebookPen),
+  '/docente/mi-cv':                           navIcon(IdCard),
+  '/docente/mi-horario':                      navIcon(Clock),
+  '/docente/disponibilidad':                  navIcon(CalendarClock),
+  '/admin/calidad/actividades-complementarias': navIcon(Trophy),
+  '/admin/calidad/evaluacion-docente/resultados': navIcon(BarChart3),
+  '/admin/evaluacion-docente-ampliada':       navIcon(ClipboardCheck),
+  '/admin/calidad-iso':                       navIcon(BadgeCheck),
+  '/admin/investigacion':                     navIcon(FlaskConical),
+  '/admin/pit/asignaciones':                  navIcon(Users),
+  '/docente/pit/sesiones':                    navIcon(MessagesSquare),
+  '/docente/pit/pat':                         navIcon(Target),
+  '/admin/indicadores/tutoria':               navIcon(HeartHandshake),
+  // Vinculación y titulación
+  '/admin/vinculacion/servicio-social':       navIcon(HandHelping),
+  '/admin/vinculacion/solicitudes-rp':        navIcon(Inbox),
+  '/admin/vinculacion/residencias':           navIcon(Building2),
+  '/admin/vinculacion/asesorias-rp':          navIcon(Presentation),
+  '/admin/titulacion/certificados-idioma':    navIcon(Languages),
+  '/admin/titulacion/acto-protocolario':      navIcon(GraduationCap),
+  '/admin/titulacion/salida-lateral':         navIcon(LogOut),
+  '/bolsa-trabajo':                           navIcon(Briefcase),
+  // Personal, trámites y movilidad
+  '/admin/personal/solicitudes':              navIcon(CalendarX2),
+  '/admin/personal/comisiones':               navIcon(Plane),
+  '/admin/capacitacion/cursos':               navIcon(BookOpen),
+  '/docente/capacitacion':                    navIcon(BookOpen),
+  '/admin/traslados':                         navIcon(Repeat),
+  '/admin/convalidaciones':                   navIcon(Scale),
+  '/admin/equivalencias':                     navIcon(Equal),
+  '/admin/convenios-movilidad':               navIcon(Handshake),
+  '/admin/movilidad-estudiantil':             navIcon(Globe2),
+  '/admin/cursos-verano':                     navIcon(Sun),
+  '/admin/educacion-distancia/programas':     navIcon(MonitorPlay),
+  '/admin/educacion-distancia/seguimiento':   navIcon(MonitorCheck),
+  '/admin/plazas-sindicales':                 navIcon(Landmark),
+  '/admin/permisos-sindicales':               navIcon(FileClock),
+  '/admin/concursos-oposicion':               navIcon(Medal),
+  '/admin/convocatorias':                     navIcon(Newspaper),
+  '/biblioteca':                              navIcon(Library),
+  // Analítica y reportes
+  '/admin/analitica/indicadores':             navIcon(LineChart),
+  '/admin/indicadores/asistencia':            navIcon(PieChart),
+  '/admin/reportes/directivos':               navIcon(FileBarChart),
+  '/admin/auditoria':                         navIcon(History),
+  '/admin/incidentes-seguridad':              navIcon(ShieldAlert),
+  // Administración y sistema
+  '/admin/usuarios':                          navIcon(UserCog),
+  '/admin/permisos':                          navIcon(KeyRound),
+  '/admin/api-keys':                          navIcon(Plug),
+  '/admin/periodos':                          navIcon(CalendarRange),
+  '/admin/carreras':                          navIcon(Layers),
+  '/admin/catalogos':                         navIcon(Database),
+  '/admin/infraestructura':                   navIcon(Warehouse),
+  '/admin/configuracion':                     navIcon(Settings),
+  '/seguridad/mi-cuenta':                     navIcon(ShieldCheck),
 }
 
 const GROUP_ICONS: Record<string, () => React.JSX.Element> = {
-  general: IconDashboard,
-  alumnos: IconGraduate,
-  academica: IconBook,
-  vinculacion: IconUsers,
-  tramites_personal: IconCalendar,
-  analitica: IconShield,
-  administracion: IconSettings,
+  general:           IconDashboard,
+  alumnos:           navIcon(GraduationCap),
+  academica:         navIcon(BookOpenCheck),
+  vinculacion:       navIcon(Handshake),
+  tramites_personal: navIcon(BriefcaseBusiness),
+  analitica:         navIcon(BarChart3),
+  administracion:    navIcon(Settings2),
 }
 
 type NavItem = { to: string; label: string; roles?: string[]; permissions?: string[] }
@@ -357,9 +424,7 @@ function NavItem({ n, colapsado, onClose, badge, favorito, onToggleFavorito }: {
             favorito ? 'opacity-100 text-amber-400' : 'opacity-0 group-hover/item:opacity-100 text-slate-500 hover:text-amber-300'
           }`}
         >
-          <svg className="w-3.5 h-3.5" fill={favorito ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="m11.48 3.499 2.507 5.104 5.632.818a.75.75 0 0 1 .416 1.28l-4.076 3.973.962 5.61a.75.75 0 0 1-1.088.79L12 18.354l-5.041 2.652a.75.75 0 0 1-1.088-.79l.962-5.61-4.076-3.972a.75.75 0 0 1 .416-1.281l5.632-.818 2.507-5.104a.75.75 0 0 1 1.346 0Z" />
-          </svg>
+          <Star className="w-3.5 h-3.5" strokeWidth={1.75} fill={favorito ? 'currentColor' : 'none'} aria-hidden="true" />
         </button>
       )}
 
@@ -455,16 +520,11 @@ function Breadcrumbs({ homeUrl = '/admin' }: { homeUrl?: string }) {
   return (
     <nav aria-label="breadcrumb" className="flex items-center gap-2 px-6 py-2 border-b border-slate-200/70 bg-slate-50/70 text-xs text-slate-400">
       <Link to={homeUrl} className="text-slate-400 hover:text-[#1b396a] transition-colors flex items-center gap-1">
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
-        </svg>
+        <Home className="w-3.5 h-3.5" strokeWidth={2} aria-label="Inicio" />
       </Link>
       {crumbs.map((c, i) => (
         <span key={c.path} className="flex items-center gap-2">
-          <svg className="w-3 h-3 text-slate-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="m9 5 7 7-7 7" />
-          </svg>
+          <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" strokeWidth={2} aria-hidden="true" />
           {i === crumbs.length - 1
             ? <span className="text-[#1b396a] font-semibold tracking-tight">{c.label}</span>
             : <Link to={c.path} className="hover:text-slate-700 transition-colors font-medium text-slate-500">{c.label}</Link>
@@ -749,12 +809,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             className="hidden md:flex absolute -right-3 top-[4.5rem] z-40 w-6 h-6 items-center justify-center rounded-full bg-white border border-slate-200 shadow-md text-slate-500 hover:text-slate-800 hover:shadow-lg transition-all duration-150"
             aria-label={colapsado ? 'Expandir menú' : 'Contraer menú'}
           >
-            <svg
-              className={`w-3 h-3 transition-transform duration-200 ${colapsado ? 'rotate-180' : ''}`}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className={`w-3.5 h-3.5 transition-transform duration-200 ${colapsado ? 'rotate-180' : ''}`} strokeWidth={2.5} aria-hidden="true" />
           </button>
         )}
         {/* Pleca institucional TecNM */}
@@ -781,9 +836,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             onClick={() => setMenuAbierto(false)}
             aria-label="Cerrar menú"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
 
@@ -801,10 +854,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 placeholder="Filtrar menú..."
                 className="w-full bg-white/10 text-white placeholder-slate-400 text-[11px] rounded-lg pl-7 pr-6 py-1.5 border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/30"
               />
-              <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <circle cx="11" cy="11" r="7" />
-                <path strokeLinecap="round" d="m21 21-4.35-4.35" />
-              </svg>
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={2} aria-hidden="true" />
               {filtroMenu && (
                 <button
                   onClick={() => setFiltroMenu('')}
@@ -864,9 +914,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                             <GrupoHeaderIcon />
                             {g.label}
                           </span>
-                          <svg className={`w-3 h-3 text-slate-500 group-hover/grupo:text-slate-300 transition-transform ${contraido ? '-rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
-                          </svg>
+                          <ChevronDown className={`w-3 h-3 text-slate-500 group-hover/grupo:text-slate-300 transition-transform ${contraido ? '-rotate-90' : ''}`} strokeWidth={2.5} aria-hidden="true" />
                         </button>
                       )
                     )}
@@ -928,9 +976,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                           <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-white/10 text-slate-300 font-mono">
                             {g.items.length}
                           </span>
-                          <svg className={`w-3.5 h-3.5 text-slate-500 group-hover/grupo:text-slate-300 transition-transform ${contraido ? '-rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
-                          </svg>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 group-hover/grupo:text-slate-300 transition-transform ${contraido ? '-rotate-90' : ''}`} strokeWidth={2.5} aria-hidden="true" />
                         </div>
                       </button>
                     )
@@ -1011,9 +1057,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               onClick={handleLogout}
               className={`w-full flex items-center gap-2 text-xs text-slate-400 hover:text-slate-100 bg-white/5 hover:bg-white/10 rounded-lg py-2.5 transition-all duration-150 justify-center ${colapsadoVisual ? 'md:px-0' : 'px-3'}`}
             >
-              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />
-              </svg>
+              <LogOut className="w-3.5 h-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span className={colapsadoVisual ? 'md:hidden' : ''}>Cerrar sesión</span>
             </button>
             {colapsadoVisual && (
@@ -1033,10 +1077,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               onClick={() => setPaletteOpen(true)}
               className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsadoVisual ? 'md:justify-center' : ''}`}
             >
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <circle cx="11" cy="11" r="7" />
-                <path strokeLinecap="round" d="m21 21-4.35-4.35" />
-              </svg>
+              <Search className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span className={`flex-1 flex items-center justify-between ${colapsadoVisual ? 'md:hidden' : ''}`}>
                 Buscar
                 <kbd className="text-[9px] text-slate-600 border border-white/10 rounded px-1 py-0.5">⌘K</kbd>
@@ -1059,10 +1100,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               onClick={() => setPrefsOpen(p => !p)}
               className={`flex w-full items-center gap-2 text-xs text-slate-500 hover:text-slate-300 rounded-lg py-2 px-2 transition-colors ${colapsadoVisual ? 'md:justify-center' : ''}`}
             >
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <circle cx="12" cy="12" r="3" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
+              <SlidersHorizontal className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span className={colapsadoVisual ? 'md:hidden' : ''}>Preferencias</span>
             </button>
             {colapsadoVisual && (
@@ -1154,7 +1192,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               {navGroupsConFavoritos.map((g) => {
                 const abierto = rielGrupoAbierto === g.id
                 const activo = grupoActivoId === g.id
-                const GrupoIcon = g.id === 'favoritos' ? IconStar : (ICONS[g.items[0]?.to] ?? IconTag)
+                const GrupoIcon = g.id === 'favoritos' ? IconStar : (GROUP_ICONS[g.id] ?? (ICONS[g.items[0]?.to] ?? IconTag))
                 return (
                   <div key={g.id} className="shrink-0 h-full flex items-center">
                     <button
@@ -1171,9 +1209,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     >
                       <span className={`shrink-0 ${g.id === 'favoritos' ? 'text-amber-500' : ''}`}><GrupoIcon /></span>
                       {g.label || 'Panel'}
-                      <svg className={`w-3 h-3 text-slate-400 transition-transform ${abierto ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
-                      </svg>
+                      <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${abierto ? 'rotate-180' : ''}`} strokeWidth={2.5} aria-hidden="true" />
                     </button>
                   </div>
                 )
@@ -1229,20 +1265,14 @@ export default function Layout({ children }: { children: ReactNode }) {
                 title="Buscar (Ctrl/Cmd+K)"
                 className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <circle cx="11" cy="11" r="7" />
-                  <path strokeLinecap="round" d="m21 21-4.35-4.35" />
-                </svg>
+                <Search className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
               </button>
               <button
                 onClick={() => setPrefsOpen(p => !p)}
                 title="Preferencias"
                 className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <circle cx="12" cy="12" r="3" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
+                <SlidersHorizontal className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
               </button>
               <NotificationBell />
               {puedeElegirRol && (
@@ -1264,9 +1294,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 title="Cerrar sesión"
                 className="p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />
-                </svg>
+                <LogOut className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
               </button>
             </div>
           </header>
@@ -1281,9 +1309,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               aria-label="Abrir menú"
               className="p-1 text-slate-400 hover:text-white transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
             </button>
             <span className="text-sm font-semibold text-white tracking-wider">SICE · TecNM</span>
           </div>
@@ -1291,6 +1317,38 @@ export default function Layout({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
         </header>
+
+        {/* Encabezado institucional (escritorio, menú lateral o riel): identifica la
+            dependencia y el plantel como en los portales del TecNM, y da lugar fijo a
+            las notificaciones, que en este modo no tenían sitio en pantalla. */}
+        {modoMenu !== 'superior' && (
+          <header className="hidden md:flex items-center justify-between gap-4 h-14 px-6 bg-white border-b border-slate-200 shrink-0 relative">
+            <div className="flex items-center gap-3 min-w-0">
+              {config.url_logo_secundario && (
+                <>
+                  <img src={config.url_logo_secundario} alt={config.dependencia ?? 'TecNM'} className="h-8 w-auto object-contain shrink-0" />
+                  <span className="h-8 w-px bg-slate-200 shrink-0" aria-hidden="true" />
+                </>
+              )}
+              <div className="min-w-0 leading-tight">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gris-tecnm)] truncate">
+                  {config.dependencia || 'Tecnológico Nacional de México'}
+                </p>
+                <p className="text-sm font-semibold text-[var(--color-primario)] truncate">{config.nombre_institucion}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {periodoActivo?.nombre && (
+                <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full badge-tecnm-dorado">
+                  <CalendarRange className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
+                  {periodoActivo.nombre}
+                </span>
+              )}
+              <NotificationBell />
+            </div>
+            <div className="pleca-tecnm-delgada absolute left-0 right-0 bottom-0" aria-hidden="true" />
+          </header>
+        )}
 
         <Breadcrumbs homeUrl={homeUrl} />
 
