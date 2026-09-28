@@ -90,6 +90,31 @@ return new class extends Migration
             FOR EACH ROW EXECUTE FUNCTION sync_carga_academica_a_horarios()
         SQL);
 
+        // Limpieza de duplicados o traslapes preexistentes en datos antes de aplicar los constraints.
+        DB::statement(<<<'SQL'
+            DELETE FROM horarios h1
+            USING horarios h2
+            WHERE h1.docente_id IS NOT NULL
+              AND h1.docente_id = h2.docente_id
+              AND h1.periodo_id IS NOT DISTINCT FROM h2.periodo_id
+              AND h1.dia_semana = h2.dia_semana
+              AND h1.id > h2.id
+              AND int4range(EXTRACT(EPOCH FROM h1.hora_inicio)::integer, EXTRACT(EPOCH FROM h1.hora_fin)::integer, '[)')
+                  && int4range(EXTRACT(EPOCH FROM h2.hora_inicio)::integer, EXTRACT(EPOCH FROM h2.hora_fin)::integer, '[)')
+        SQL);
+
+        DB::statement(<<<'SQL'
+            DELETE FROM horarios h1
+            USING horarios h2
+            WHERE h1.aula_id IS NOT NULL
+              AND h1.aula_id = h2.aula_id
+              AND h1.periodo_id IS NOT DISTINCT FROM h2.periodo_id
+              AND h1.dia_semana = h2.dia_semana
+              AND h1.id > h2.id
+              AND int4range(EXTRACT(EPOCH FROM h1.hora_inicio)::integer, EXTRACT(EPOCH FROM h1.hora_fin)::integer, '[)')
+                  && int4range(EXTRACT(EPOCH FROM h2.hora_inicio)::integer, EXTRACT(EPOCH FROM h2.hora_fin)::integer, '[)')
+        SQL);
+
         // Rangos de tiempo vía EXTRACT(EPOCH ...) porque time->timestamp no es
         // IMMUTABLE (requerido por GiST), EXTRACT(EPOCH FROM time) sí lo es.
         // '[)' = medio-abierto, para que bloques consecutivos (10-11, 11-12) no colisionen.
