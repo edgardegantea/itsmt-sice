@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Roles con acceso total pero sin capacidad de eliminar
         $middleware->alias(['restringir-eliminacion' => \App\Http\Middleware\RestringirEliminacion::class]);
+        $middleware->alias(['apikey' => \App\Http\Middleware\EnsureApiKey::class]);
         $middleware->appendToGroup('api', \App\Http\Middleware\RestringirEliminacion::class);
 
         // Sprint 30 — Auditoría: registra automáticamente toda petición que modifica estado

@@ -168,7 +168,21 @@ class SesionClaseController extends Controller
     // POST /api/sesiones-clase/{id}/checkin — el alumno confirma su propia asistencia
     public function checkin(Request $request, SesionClase $sesionClase): JsonResponse
     {
-        $data = $request->validate(['codigo' => 'required|string']);
+        // "Modo día de examen": si la fecha de la sesión tiene el modo activo, la foto
+        // deja de ser opcional — se exige como verificación reforzada solo ese día.
+        $modoExamenActivo = \App\Domains\Academico\Models\ModoExamen::activoHoy($sesionClase->fecha?->toDateString());
+
+        $data = $request->validate([
+            'codigo' => 'required|string',
+            // Evidencia opcional (obligatoria en modo examen), NO biometría: solo una
+            // foto adjunta al registro, disuasoria contra que alguien pase lista por
+            // otro compañero — no hay comparación ni reconocimiento facial de ningún tipo.
+            'foto_evidencia' => [$modoExamenActivo ? 'required' : 'nullable', 'string'], // data URL base64
+            'geo_lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'geo_lng' => ['nullable', 'numeric', 'between:-180,180'],
+        ], [
+            'foto_evidencia.required' => 'Hoy es día de examen: la foto de evidencia es obligatoria para confirmar tu asistencia.',
+        ]);
 
         if (!$sesionClase->codigo_checkin || strtoupper($data['codigo']) !== $sesionClase->codigo_checkin) {
             return ApiResponse::error('Código inválido.', 422);
@@ -190,9 +204,23 @@ class SesionClaseController extends Controller
             return ApiResponse::error('No perteneces a este grupo.', 403);
         }
 
+        $fotoPath = null;
+        if (! empty($data['foto_evidencia']) && preg_match('/^data:image\/(jpe?g|png|webp);base64,/', $data['foto_evidencia'])) {
+            $contenido = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $data['foto_evidencia']));
+            if ($contenido !== false && strlen($contenido) <= 2 * 1024 * 1024) { // tope 2MB
+                $fotoPath = "checkin-evidencia/{$sesionClase->id}/{$userId}-" . now()->format('YmdHis') . '.jpg';
+                \Illuminate\Support\Facades\Storage::disk('public')->put($fotoPath, $contenido);
+            }
+        }
+
         Asistencia::updateOrCreate(
             ['sesion_id' => $sesionClase->id, 'alumno_id' => $userId],
-            ['estatus' => 'presente']
+            array_filter([
+                'estatus' => 'presente',
+                'foto_evidencia_path' => $fotoPath,
+                'geo_lat' => $data['geo_lat'] ?? null,
+                'geo_lng' => $data['geo_lng'] ?? null,
+            ], fn ($v) => $v !== null)
         );
 
         return ApiResponse::success(null, 'Asistencia registrada.');

@@ -43,7 +43,27 @@ class AspiranteService
 
     public function actualizarEstatus(Aspirante $aspirante, string $estatus, ?string $observaciones, ?string $motivo_rechazo = null, ?string $cambiadoPorId = null): Aspirante
     {
+        // Un aspirante ya inscrito tiene Inscripcion/Alumno creados a partir de
+        // su estatus 'aceptado' — regresarlo aquí a pendiente/rechazado dejaría
+        // esos registros huérfanos de la razón por la que existen, sin revertir
+        // nada de lo que ya se generó.
+        if ($aspirante->estatus === 'inscrito') {
+            throw new \DomainException('Este aspirante ya fue inscrito — su estatus ya no se puede modificar desde aquí.');
+        }
+
         $estatusAnterior = $aspirante->estatus;
+
+        // Sin cambio real: no reenviar el correo de aceptación/rechazo ni duplicar
+        // el historial solo porque alguien reenvió el mismo PATCH (doble clic,
+        // reintento de red, formulario reenviado).
+        if ($estatusAnterior === $estatus) {
+            $aspirante->update([
+                'observaciones'  => $observaciones ?? $aspirante->observaciones,
+                'motivo_rechazo' => $estatus === 'rechazado' ? ($motivo_rechazo ?? $aspirante->motivo_rechazo) : null,
+            ]);
+
+            return $aspirante->fresh(['carrera', 'periodo']);
+        }
 
         $aspirante->update([
             'estatus'        => $estatus,
@@ -51,15 +71,13 @@ class AspiranteService
             'motivo_rechazo' => $estatus === 'rechazado' ? $motivo_rechazo : null,
         ]);
 
-        if ($estatusAnterior !== $estatus) {
-            AspiranteEstatusHistorial::create([
-                'aspirante_id'     => $aspirante->id,
-                'estatus_anterior' => $estatusAnterior,
-                'estatus_nuevo'    => $estatus,
-                'motivo'           => $estatus === 'rechazado' ? $motivo_rechazo : $observaciones,
-                'cambiado_por'     => $cambiadoPorId,
-            ]);
-        }
+        AspiranteEstatusHistorial::create([
+            'aspirante_id'     => $aspirante->id,
+            'estatus_anterior' => $estatusAnterior,
+            'estatus_nuevo'    => $estatus,
+            'motivo'           => $estatus === 'rechazado' ? $motivo_rechazo : $observaciones,
+            'cambiado_por'     => $cambiadoPorId,
+        ]);
 
         if ($estatus === 'aceptado') {
             Mail::to($aspirante->email)->queue(new AceptacionAspiranteMail($aspirante));

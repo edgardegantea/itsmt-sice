@@ -66,7 +66,7 @@
   </div>
 
   <div class="footer">
-    ITSMT — SICE · Diploma generado el {{ now()->isoFormat('D/MM/YYYY') }}
+    {{ $institucion->nombre_corto }} — SICE · Diploma generado el {{ now()->isoFormat('D/MM/YYYY') }}
   </div>
 </div>
 </body>

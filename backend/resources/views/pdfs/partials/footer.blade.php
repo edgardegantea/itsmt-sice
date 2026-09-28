@@ -1,5 +1,5 @@
 <!-- <div class="footer">
-  Documento generado por SICE — ITSMT · {{ now()->format('d/m/Y H:i') }} · Folio: {{ $folio ?? 'N/A' }}
+  Documento generado por SICE — {{ $institucion->nombre_corto }} · {{ now()->format('d/m/Y H:i') }} · Folio: {{ $folio ?? 'N/A' }}
 </div> -->
 
 

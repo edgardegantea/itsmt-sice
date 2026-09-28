@@ -17,7 +17,7 @@ class PeriodoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre'                      => ['required', 'string', 'max:50'],
+            'nombre'                      => ['required', 'string', 'max:100'],
             'tipo'                        => ['required', 'in:ordinario,verano,intersemestral'],
             'fecha_inicio'                => ['required', 'date'],
             'fecha_fin'                   => ['required', 'date', 'after:fecha_inicio'],

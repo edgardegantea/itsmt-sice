@@ -35,7 +35,7 @@ class UsuarioController extends Controller
 
         $esSuperadmin = $request->user()->hasRole('superadmin');
 
-        $usuarios = User::with(['roles', 'carrera'])
+        $usuarios = User::with(['roles', 'carrera', 'carreras'])
             ->when(! $esSuperadmin, fn($q) =>
                 $q->whereDoesntHave('roles', fn($rq) => $rq->where('name', 'superadmin'))
             )
@@ -72,9 +72,9 @@ class UsuarioController extends Controller
 
     // Solo un superadmin puede otorgar el rol superadmin — de lo contrario un
     // admin común podría auto-escalarse al máximo privilegio del sistema.
-    private function denegarAsignacionSuperadmin(Request $request, string $rol): void
+    private function denegarAsignacionSuperadmin(Request $request, array $roles): void
     {
-        abort_if($rol === 'superadmin' && ! $request->user()->hasRole('superadmin'), 403, 'Solo un superadmin puede otorgar el rol superadmin.');
+        abort_if(in_array('superadmin', $roles, true) && ! $request->user()->hasRole('superadmin'), 403, 'Solo un superadmin puede otorgar el rol superadmin.');
     }
 
     // POST /api/admin/usuarios
@@ -86,14 +86,17 @@ class UsuarioController extends Controller
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'email', 'unique:users,email'],
             'password'    => ['required', Password::min(8)->letters()->numbers()],
-            'role'        => ['required', 'string', Rule::exists('roles', 'name')],
+            // Un usuario puede tener más de un rol (p. ej. personal_administrativo
+            // que también da clases como docente) — de ahí "roles" en plural.
+            'roles'       => ['required', 'array', 'min:1'],
+            'roles.*'     => ['string', Rule::exists('roles', 'name')],
             'carrera_id'  => ['nullable', 'uuid', 'exists:carreras,id'],
             'carreras'                    => ['sometimes', 'array'],
             'carreras.*.id'               => ['required', 'uuid', 'exists:carreras,id'],
             'carreras.*.horas_asignadas'  => ['nullable', 'integer', 'min:0', 'max:80'],
         ]);
 
-        $this->denegarAsignacionSuperadmin($request, $data['role']);
+        $this->denegarAsignacionSuperadmin($request, $data['roles']);
 
         $user = User::create([
             'name'       => $data['name'],
@@ -102,7 +105,7 @@ class UsuarioController extends Controller
             'carrera_id' => $data['carrera_id'] ?? null,
         ]);
 
-        $user->assignRole($data['role']);
+        $user->assignRole($data['roles']);
 
         if (isset($data['carreras'])) {
             $user->carreras()->sync($this->carrerasParaSync($data['carreras']));
@@ -121,7 +124,8 @@ class UsuarioController extends Controller
             'name'            => ['sometimes', 'string', 'max:255'],
             'email'           => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],
             'password'        => ['sometimes', 'nullable', Password::min(8)->letters()->numbers()],
-            'role'            => ['sometimes', 'string', Rule::exists('roles', 'name')],
+            'roles'           => ['sometimes', 'array', 'min:1'],
+            'roles.*'         => ['string', Rule::exists('roles', 'name')],
             'carrera_id'      => ['sometimes', 'nullable', 'uuid', 'exists:carreras,id'],
             'carreras'                    => ['sometimes', 'array'],
             'carreras.*.id'               => ['required', 'uuid', 'exists:carreras,id'],
@@ -143,8 +147,8 @@ class UsuarioController extends Controller
             'contacto_emergencia_telefono'   => ['sometimes', 'nullable', 'string', 'max:20'],
         ]);
 
-        if (isset($data['role'])) {
-            $this->denegarAsignacionSuperadmin($request, $data['role']);
+        if (isset($data['roles'])) {
+            $this->denegarAsignacionSuperadmin($request, $data['roles']);
         }
 
         if (isset($data['name']))       $usuario->name       = $data['name'];
@@ -166,8 +170,8 @@ class UsuarioController extends Controller
         if (!empty($data['password'])) $usuario->password   = Hash::make($data['password']);
         $usuario->save();
 
-        if (isset($data['role'])) {
-            $usuario->syncRoles([$data['role']]);
+        if (isset($data['roles'])) {
+            $usuario->syncRoles($data['roles']);
         }
 
         if (array_key_exists('carreras', $data)) {
@@ -215,6 +219,33 @@ class UsuarioController extends Controller
         $usuario->delete();
 
         return ApiResponse::success(null, 'Usuario eliminado.');
+    }
+
+    // PATCH /api/admin/usuarios/{usuario}/activo — activar/desactivar cuenta (bloquea
+    // el login sin borrar al usuario ni su historial).
+    public function toggleActivo(Request $request, User $usuario): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+        $this->denegarSiSuperadminOculto($request, $usuario);
+
+        if ($usuario->id === $request->user()->id) {
+            return ApiResponse::error('No puedes desactivar tu propia cuenta.', 422);
+        }
+        if ($usuario->hasRole('superadmin') && ! $request->user()->hasRole('superadmin')) {
+            return ApiResponse::error('Solo un superadmin puede desactivar a otro superadmin.', 403);
+        }
+
+        $data = $request->validate(['activo' => ['required', 'boolean']]);
+        $usuario->update(['activo' => $data['activo']]);
+
+        if (! $data['activo']) {
+            $usuario->tokens()->delete(); // cierra cualquier sesión activa de inmediato
+        }
+
+        return ApiResponse::success(
+            $usuario->fresh(),
+            $data['activo'] ? 'Usuario activado.' : 'Usuario desactivado.'
+        );
     }
 
     // PATCH /api/admin/usuarios/{usuario}/credenciales  (solo superadmin)

@@ -50,6 +50,6 @@
     </tbody>
   </table>
 
-  <p style="margin-top:10px;font-size:9pt;color:#777;">Generado el {{ now()->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }} — ITSMT Sistema Integral de Control Escolar.</p>
+  <p style="margin-top:10px;font-size:9pt;color:#777;">Generado el {{ now()->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }} — {{ $institucion->nombre_corto }} Sistema Integral de Control Escolar.</p>
 </body>
 </html>

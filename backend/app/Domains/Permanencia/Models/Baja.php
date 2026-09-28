@@ -60,6 +60,11 @@ class Baja extends Model
         return $this->belongsTo(User::class, 'registrada_por');
     }
 
+    public function revisadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revisada_por');
+    }
+
     public function reingresoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reingreso_por');

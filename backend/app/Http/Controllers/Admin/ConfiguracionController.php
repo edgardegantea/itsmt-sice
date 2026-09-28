@@ -52,6 +52,12 @@ class ConfiguracionController extends Controller
             'login_titulo'                     => ['sometimes', 'nullable', 'string', 'max:150'],
             'login_subtitulo'                  => ['sometimes', 'nullable', 'string', 'max:250'],
             'login_opacidad_fondo'             => ['sometimes', 'numeric', 'min:0', 'max:1'],
+            'form_border_radius'               => ['sometimes', 'string', 'in:sm,md,lg,xl,full'],
+            'form_density'                     => ['sometimes', 'string', 'in:compact,comfortable,spacious'],
+            'form_bg_style'                    => ['sometimes', 'string', 'in:white,slate,glass,tint'],
+            'form_focus_ring_color'            => ['sometimes', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'form_border_tone'                 => ['sometimes', 'string', 'in:slate-200,slate-300,primary-tint,dark'],
+            'form_label_weight'                => ['sometimes', 'string', 'in:normal,medium,semibold,bold'],
         ]);
 
         $config = ConfiguracionInstitucional::instancia();
@@ -67,12 +73,39 @@ class ConfiguracionController extends Controller
     // POST /api/admin/configuracion/logo
     public function subirLogo(Request $request): JsonResponse
     {
-        $this->authorize('update', ConfiguracionInstitucional::class);
+        $config = ConfiguracionInstitucional::instancia();
+        $this->authorize('update', $config);
 
-        $request->validate([
-            'logo' => ['required', 'file', 'mimes:svg,png,jpg,jpeg,webp', 'max:4096'],
-            'tipo' => ['required', 'in:principal,secundario,fondo'],
-        ]);
+        $file = $request->file('logo');
+        if (! $file || ! $file->isValid()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'El archivo seleccionado no es válido o superó el límite permitido por el servidor.',
+            ], 422);
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            array_merge($request->all(), $request->allFiles()),
+            [
+                'logo' => ['required', 'file', 'max:10240'],
+                'tipo' => ['required', 'in:principal,secundario,fondo'],
+            ],
+            [
+                'logo.required' => 'Debe seleccionar un archivo de imagen.',
+                'logo.file'     => 'El archivo seleccionado no es válido.',
+                'logo.max'      => 'La imagen no debe pesar más de 10 MB.',
+                'tipo.required' => 'El tipo de logo es obligatorio.',
+                'tipo.in'       => 'El tipo de logo no es válido.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors()->toArray(),
+            ], 422);
+        }
 
         $config = ConfiguracionInstitucional::instancia();
         $campo  = match ($request->tipo) {
@@ -138,7 +171,8 @@ class ConfiguracionController extends Controller
     // DELETE /api/admin/configuracion/logo
     public function eliminarLogo(Request $request): JsonResponse
     {
-        $this->authorize('update', ConfiguracionInstitucional::class);
+        $config = ConfiguracionInstitucional::instancia();
+        $this->authorize('update', $config);
 
         $request->validate(['tipo' => ['required', 'in:principal,secundario,fondo']]);
 

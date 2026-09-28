@@ -23,7 +23,7 @@
 <body>
 
 <div class="header">
-    <h1>INSTITUTO TECNOLÓGICO SUPERIOR DE MARTÍNEZ DE LA TORRE</h1>
+    <h1>{{ mb_strtoupper($institucion->nombre_institucion) }}</h1>
     <h2>KARDEX DE TRASLADO — CONSTANCIA DE CALIFICACIONES</h2>
     <p style="font-size:9pt; color:#888; margin:2px 0;">Fecha de emisión: {{ $fecha }}</p>
 </div>
@@ -111,7 +111,7 @@
 </div>
 
 <div class="pie">
-    Documento generado por SICE-ITSMT — {{ $fecha }} &nbsp;|&nbsp;
+    Documento generado por SICE-{{ $institucion->nombre_corto }} — {{ $fecha }} &nbsp;|&nbsp;
     Válido solo con sello institucional original.
 </div>
 

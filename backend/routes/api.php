@@ -123,10 +123,10 @@ Route::prefix('catalogo')->group(function () {
     Route::get('/municipios',                 [CatalogoPublicoController::class, 'municipios']);
     Route::get('/escuelas',                   [CatalogoPublicoController::class, 'escuelas']);
     Route::get('/turnos',                     [CatalogoPublicoController::class, 'turnos']);
-    Route::get('/verificar-curp/{curp}',      [CatalogoPublicoController::class, 'verificarCurp']);
-    Route::get('/renapo/{curp}',              [CatalogoPublicoController::class, 'consultarRenapo']);
-    Route::post('/municipios',                [CatalogoPublicoController::class, 'crearMunicipio']);
-    Route::post('/escuelas',                  [CatalogoPublicoController::class, 'crearEscuela']);
+    Route::get('/verificar-curp/{curp}',      [CatalogoPublicoController::class, 'verificarCurp'])->middleware('throttle:15,1');
+    Route::get('/renapo/{curp}',              [CatalogoPublicoController::class, 'consultarRenapo'])->middleware('throttle:10,1');
+    Route::post('/municipios',                [CatalogoPublicoController::class, 'crearMunicipio'])->middleware('throttle:10,1');
+    Route::post('/escuelas',                  [CatalogoPublicoController::class, 'crearEscuela'])->middleware('throttle:10,1');
 });
 
 // Configuración institucional (pública — la consumen Login, Layout, PDFs)
@@ -136,7 +136,7 @@ Route::get('/configuracion', [ConfiguracionController::class, 'show']);
 Route::get('/carreras',        [CarreraController::class, 'index']);
 Route::get('/periodos/activo', [PeriodoController::class, 'activo']);
 Route::post('/aspirantes',                 [AspiranteController::class, 'store']);
-Route::get('/aspirantes/consultar-estatus',[AspiranteController::class, 'consultarEstatus']);
+Route::get('/aspirantes/consultar-estatus',[AspiranteController::class, 'consultarEstatus'])->middleware('throttle:20,1');
 
 // Sprint 1 — Admisión: endpoints protegidos
 Route::middleware('auth:sanctum')->group(function () {
@@ -152,11 +152,17 @@ Route::middleware('auth:sanctum')->group(function () {
     require __DIR__.'/modules/personal.php';
     require __DIR__.'/modules/reinscripcion.php';
     require __DIR__.'/modules/seguridad.php';
+    require __DIR__.'/modules/comunicacion.php';
     require __DIR__.'/modules/titulacion.php';
     require __DIR__.'/modules/vinculacion.php';
     require __DIR__.'/modules/academico.php';
     require __DIR__.'/modules/admision.php';
     require __DIR__.'/modules/permanencia.php';
+
+    // Notificaciones internas
+    Route::get('/notificaciones',                               [App\Http\Controllers\Api\NotificacionController::class, 'index']);
+    Route::patch('/notificaciones/{notificacion}/marcar-leida', [App\Http\Controllers\Api\NotificacionController::class, 'marcarLeida']);
+    Route::post('/notificaciones/marcar-todas-leidas',          [App\Http\Controllers\Api\NotificacionController::class, 'marcarTodasLeidas']);
 
     // Aspirantes — rutas estáticas ANTES del wildcard {aspirante}
 
@@ -212,6 +218,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/admin/usuarios/{usuario}',   [UsuarioController::class, 'update']);
     Route::delete('/admin/usuarios/{usuario}',              [UsuarioController::class, 'destroy']);
     Route::patch('/admin/usuarios/{usuario}/credenciales', [UsuarioController::class, 'actualizarCredenciales']);
+    Route::patch('/admin/usuarios/{usuario}/activo',        [UsuarioController::class, 'toggleActivo']);
     Route::patch('/admin/usuarios/{usuario}/recordatorio-asistencia', [UsuarioController::class, 'actualizarRecordatorioAsistencia']);
     Route::post('/admin/usuarios/{usuario}/foto',           [UsuarioController::class, 'subirFoto']);
     Route::get('/admin/roles',                             [UsuarioController::class, 'roles']);
@@ -402,6 +409,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/indicadores/retencion',           [IndicadoresController::class, 'retencion']);
     Route::get('/indicadores/eficiencia-terminal', [IndicadoresController::class, 'eficienciaTerminal']);
     Route::get('/indicadores/promedio',            [IndicadoresController::class, 'promedio']);
+    Route::get('/indicadores/reprobacion',         [IndicadoresController::class, 'reprobacion']);
 
     // ── Sprint 12 — Asistencia y Seguimiento Académico ───────────────────────────
 
@@ -451,4 +459,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Sprint 26 — Cuerpos Académicos e Investigación ────────────────────────────
 
     // ── Sprint 27 — Infraestructura y Recursos ────────────────────────────────────
+});
+
+// Feed de exportación para Power BI / Looker Studio — autenticado por X-Api-Key en
+// vez de Sanctum, porque esas herramientas no pueden iniciar sesión en la SPA.
+Route::middleware('apikey')->prefix('bi')->group(function () {
+    Route::get('/indicadores-carrera.csv', [\App\Http\Controllers\Academico\ExportacionBiController::class, 'indicadoresCarrera']);
+    Route::get('/incidencias.csv',         [\App\Http\Controllers\Academico\ExportacionBiController::class, 'incidencias']);
+    Route::get('/asistencia.csv',          [\App\Http\Controllers\Academico\ExportacionBiController::class, 'asistencia']);
+    Route::get('/ocupacion-aulas.csv',     [\App\Http\Controllers\Academico\ExportacionBiController::class, 'ocupacionAulas']);
 });

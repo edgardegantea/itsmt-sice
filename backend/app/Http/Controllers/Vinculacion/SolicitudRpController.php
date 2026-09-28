@@ -122,6 +122,25 @@ class SolicitudRpController extends Controller
             'estatus'   => 'pendiente_dictamen',
         ]));
 
+        // Notificaciones internas en el sistema
+        \App\Services\NotificacionService::enviarAUsuario(
+            $user,
+            'Solicitud de Residencia Profesional Enviada',
+            'Tu solicitud de Residencia Profesional ha sido recibida y está en espera de dictamen de anteproyecto.',
+            'tramite',
+            '/alumno/vinculacion'
+        );
+
+        $alumnoNombre = $alumno->user?->name ?? 'Estudiante';
+        $alumnoNC = $alumno->user?->numero_control ?? '';
+        \App\Services\NotificacionService::enviarARoles(
+            ['superadmin', 'admin', 'jefe_carrera', 'control_escolar'],
+            'Nueva Solicitud de Residencia Profesional',
+            "El estudiante {$alumnoNombre} ({$alumnoNC}) envió una solicitud de Residencia Profesional.",
+            'tramite',
+            '/admin/vinculacion/solicitudes-rp'
+        );
+
         return ApiResponse::success(
             $solicitud->load(['alumno.user', 'alumno.carrera']),
             'Solicitud de Residencia Profesional enviada. En espera de dictamen de anteproyecto.',

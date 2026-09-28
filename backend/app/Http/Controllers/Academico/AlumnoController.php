@@ -120,6 +120,19 @@ class AlumnoController extends Controller
         $datos = $request->validated();
 
         if (isset($datos['estatus']) && $datos['estatus'] !== $alumno->estatus) {
+            // baja_temporal/baja_definitiva tienen su propio flujo auditado
+            // (Domains\Permanencia\BajaService: valida plazos TecNM-AC-PO-002,
+            // crea el registro Baja, notifica por correo, permite reingreso).
+            // Dejar que este endpoint genérico los fije directamente rompería
+            // esa auditoría — el alumno quedaría en baja sin ningún trámite que
+            // lo respalde, y sin poder reingresar por el flujo normal.
+            $estadosBaja = ['baja_temporal', 'baja_definitiva'];
+            if (in_array($datos['estatus'], $estadosBaja, true) || in_array($alumno->estatus, $estadosBaja, true)) {
+                return ApiResponse::error(
+                    'Los cambios hacia o desde baja temporal/definitiva deben registrarse desde el módulo de Bajas (Gestión de Bajas), no desde la edición general del alumno.',
+                    422
+                );
+            }
             $datos['fecha_cambio_estatus'] = now()->toDateString();
         }
 

@@ -22,6 +22,8 @@ class SesionClase extends Model
         'hora_inicio',
         'hora_fin',
         'tema',
+        'codigo_checkin',
+        'checkin_expira_en',
     ];
 
     protected $casts = [

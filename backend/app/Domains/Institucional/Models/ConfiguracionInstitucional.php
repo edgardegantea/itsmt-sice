@@ -40,6 +40,12 @@ class ConfiguracionInstitucional extends Model
         'radio_bordes',
         'maestria_habilitada',
         'recordatorios_asistencia_global_activo',
+        'form_border_radius',
+        'form_density',
+        'form_bg_style',
+        'form_focus_ring_color',
+        'form_border_tone',
+        'form_label_weight',
     ];
 
     protected function casts(): array
@@ -80,7 +86,14 @@ class ConfiguracionInstitucional extends Model
     {
         if ($this->logo_principal && Storage::disk('public')->exists($this->logo_principal)) {
             $mime = Storage::disk('public')->mimeType($this->logo_principal);
-            $data = base64_encode(Storage::disk('public')->get($this->logo_principal));
+            $raw  = Storage::disk('public')->get($this->logo_principal);
+            if (str_contains($mime, 'svg')) {
+                // dompdf (php-svg-lib) no resuelve el prólogo XML ni el DOCTYPE con DTD externo
+                // que agregan Illustrator/Inkscape; sin ellos el SVG sí se dibuja en el PDF.
+                $raw  = preg_replace(['/<\?xml[^>]*\?>/i', '/<!DOCTYPE[^>]*>/i', '/<!--.*?-->/s'], '', $raw);
+                $mime = 'image/svg+xml';
+            }
+            $data = base64_encode($raw);
             return "data:{$mime};base64,{$data}";
         }
         return null;

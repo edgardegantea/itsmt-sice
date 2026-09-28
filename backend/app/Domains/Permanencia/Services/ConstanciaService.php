@@ -6,6 +6,7 @@ use App\Domains\Academico\Models\Alumno;
 use App\Domains\Permanencia\Models\Constancia;
 use App\Mail\ConstanciaSolicitadaMail;
 use App\Models\User;
+use App\Services\NotificacionService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -35,6 +36,25 @@ class ConstanciaService
                     ]);
 
                     $this->notificarControlEscolar($constancia);
+
+                    // Notificaciones internas en el sistema
+                    NotificacionService::enviarAUsuario(
+                        $solicitante,
+                        'Solicitud de Constancia Registrada',
+                        "Has solicitado una constancia de tipo '{$tipo}'. Folio único: {$constancia->folio_unico}.",
+                        'constancia',
+                        '/alumno/tramites'
+                    );
+
+                    $alumnoNombre = $alumno->user?->name ?? 'Estudiante';
+                    $alumnoNC = $alumno->user?->numero_control ?? '';
+                    NotificacionService::enviarARoles(
+                        ['superadmin', 'admin', 'control_escolar', 'personal_administrativo'],
+                        'Nueva Solicitud de Constancia',
+                        "El estudiante {$alumnoNombre} ({$alumnoNC}) solicitó una constancia de tipo '{$tipo}'. Folio: {$constancia->folio_unico}.",
+                        'constancia',
+                        '/admin/constancias'
+                    );
 
                     return $constancia;
                 });
@@ -76,7 +96,19 @@ class ConstanciaService
                 'url_pdf'     => "/api/constancias/{$constancia->id}/pdf",
             ]);
 
-            return $constancia->fresh(['alumno.carrera', 'alumno.periodoIngreso', 'emitidaPor']);
+            $constanciaActualizada = $constancia->fresh(['alumno.carrera', 'alumno.periodoIngreso', 'alumno.user', 'emitidaPor']);
+
+            if ($constanciaActualizada->alumno?->user) {
+                NotificacionService::enviarAUsuario(
+                    $constanciaActualizada->alumno->user,
+                    'Constancia Emitida',
+                    "Tu constancia de tipo '{$constancia->tipo}' (Folio: {$constancia->folio_unico}) ha sido emitida y está lista para su consulta.",
+                    'constancia',
+                    '/alumno/tramites'
+                );
+            }
+
+            return $constanciaActualizada;
         });
     }
 

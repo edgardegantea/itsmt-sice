@@ -116,13 +116,17 @@ class AspiranteController extends Controller
     {
         $this->authorize('update', $aspirante);
 
-        $aspirante = $this->service->actualizarEstatus(
-            $aspirante,
-            $request->validated('estatus'),
-            $request->validated('observaciones'),
-            $request->validated('motivo_rechazo'),
-            $request->user()->id
-        );
+        try {
+            $aspirante = $this->service->actualizarEstatus(
+                $aspirante,
+                $request->validated('estatus'),
+                $request->validated('observaciones'),
+                $request->validated('motivo_rechazo'),
+                $request->user()->id
+            );
+        } catch (\DomainException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
 
         return ApiResponse::success($aspirante, 'Estatus actualizado.');
     }

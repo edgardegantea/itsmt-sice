@@ -15,7 +15,7 @@
 </head>
 <body>
   <h1>Oficio de Apertura de Especialidad</h1>
-  <h2 style="text-align:center;font-size:12pt;">Instituto Tecnológico Superior de Martínez de la Torre</h2>
+  <h2 style="text-align:center;font-size:12pt;">{{ $institucion->nombre_institucion }}</h2>
   <div class="meta">
     <p><strong>Fecha:</strong> {{ now()->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}</p>
   </div>

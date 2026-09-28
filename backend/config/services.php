@@ -43,4 +43,12 @@ return [
         'api_key' => env('ANTHROPIC_API_KEY'),
     ],
 
+    // LLM autoalojado (Ollama, en Docker — ver docker-compose.yml) usado para la asistencia
+    // de redacción del editor de Instrumentación Didáctica ("Mejorar con IA"). Sin esto no
+    // se manda ningún contenido de planeaciones a un proveedor externo.
+    'ollama' => [
+        'base_url' => env('OLLAMA_BASE_URL', 'http://localhost:11434'),
+        'model'    => env('OLLAMA_MODEL', 'llama3.2:3b'),
+    ],
+
 ];

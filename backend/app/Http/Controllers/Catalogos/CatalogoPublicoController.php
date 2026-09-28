@@ -90,7 +90,6 @@ class CatalogoPublicoController extends Controller
 
         try {
             $res = Http::timeout(10)
-                ->withoutVerifying()
                 ->withHeaders(['User-Agent' => 'Mozilla/5.0'])
                 ->get('https://curp.renapo.gob.mx/RNEC/ConsultaCURP.do', ['curp' => $curp]);
 

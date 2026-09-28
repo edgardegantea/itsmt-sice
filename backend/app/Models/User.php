@@ -21,7 +21,13 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable {
+        // Los traits se "aplanan" dentro de la clase — a diferencia de un método heredado
+        // de una clase padre, el hasAnyRole() de HasRoles NO es alcanzable con parent::.
+        // Se conserva accesible con un alias para que el override de abajo pueda llamar a
+        // la implementación original de Spatie en el caso no-superadmin.
+        HasRoles::hasAnyRole as private traitHasAnyRole;
+    }
 
     protected string $guard_name = 'web';
 
@@ -68,6 +74,7 @@ class User extends Authenticatable
         'contacto_emergencia_telefono',
         'foto_path',
         'recordatorio_asistencia_activo',
+        'activo',
     ];
 
     protected $appends = ['foto_url'];
@@ -119,6 +126,37 @@ class User extends Authenticatable
         return $this->hasRole('jefe_carrera') ? $this->carrera_id : null;
     }
 
+    /** Chequeo directo contra la relación, sin pasar por hasRole()/hasAnyRole() — evita
+     * recursión y no altera el significado de hasRole() como chequeo de identidad (varios
+     * lugares usan `hasRole('jefe_carrera')` para decidir si aplicar una restricción de
+     * carrera, y ahí sí debe responder según el rol real, no según el nivel de acceso). */
+    private function tieneRolSuperadmin(): bool
+    {
+        $this->loadMissing('roles');
+        return $this->roles->contains('name', 'superadmin');
+    }
+
+    /**
+     * El superadmin es el rol de más alto nivel y no debe toparse con ninguna restricción
+     * de autorización en el sistema. Los checks de Gate/Policy ya lo saltan vía Gate::before
+     * (ver AppServiceProvider), pero la mayoría de los endpoints de esta app autorizan con
+     * `hasAnyRole([...])` directo en el controlador (no con Policies), que Gate::before no
+     * intercepta. Sobrescribir hasAnyRole() aquí es un único punto central que garantiza
+     * acceso total del superadmin a cualquier endpoint sin auditar cada controlador uno por
+     * uno — deliberadamente NO se sobrescribe hasRole() (singular): ese método se usa en
+     * varios lugares para decidir identidad/comportamiento (p. ej. `carreraRestringida()`
+     * o ramas if/elseif por rol), no solo para permitir/denegar, y alterarlo ahí metería al
+     * superadmin en ramas de lógica que no le corresponden (como el acotamiento por carrera
+     * de jefe_carrera).
+     */
+    public function hasAnyRole(...$roles): bool
+    {
+        if ($this->tieneRolSuperadmin()) {
+            return true;
+        }
+        return $this->traitHasAnyRole(...$roles);
+    }
+
     protected $hidden = [
         'password',
         'remember_token',
@@ -131,6 +169,7 @@ class User extends Authenticatable
             'password'          => 'hashed',
             'fecha_nacimiento'  => 'date',
             'recordatorio_asistencia_activo' => 'boolean',
+            'activo'            => 'boolean',
         ];
     }
 }

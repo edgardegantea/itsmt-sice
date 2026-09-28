@@ -17,6 +17,9 @@ class Asistencia extends Model
         'alumno_id',
         'estatus',
         'observacion',
+        'foto_evidencia_path',
+        'geo_lat',
+        'geo_lng',
     ];
 
     public function sesion(): BelongsTo

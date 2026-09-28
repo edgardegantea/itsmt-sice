@@ -26,6 +26,7 @@ class BajaController extends Controller
                 $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $v))
             )
             ->when($request->query('tipo_baja'),  fn($q, $v) => $q->where('tipo_baja', $v))
+            ->when($request->query('estatus'),    fn($q, $v) => $q->where('estatus', $v))
             ->when($request->query('periodo_id'), fn($q, $v) => $q->where('periodo_id', $v))
             ->when(($cp = $request->query('carrera_id')) && preg_match('/^[0-9a-f-]{36}$/i', $cp), fn($q) =>
                 $q->whereHas('alumno', fn($aq) => $aq->where('carrera_id', $cp))
@@ -97,6 +98,37 @@ class BajaController extends Controller
         return ApiResponse::success($baja, 'Baja temporal solicitada.', 201);
     }
 
+    // POST /api/bajas/iniciar-desde-riesgo  (staff convierte una alerta de riesgo/deserción en trámite)
+    public function iniciarDesdeRiesgo(Request $request): JsonResponse
+    {
+        $this->authorize('create', Baja::class);
+
+        $data = $request->validate([
+            'alumno_id'       => ['required', 'uuid', 'exists:alumnos,id'],
+            'periodo_id'      => ['required', 'uuid', 'exists:periodos,id'],
+            'tipo_baja'       => ['nullable', 'in:temporal,definitiva'],
+            'tipo_alerta'     => ['required', 'in:riesgo_academico,desercion_temprana'],
+            'contexto_alerta' => ['nullable', 'string', 'max:500'],
+            'motivo_texto'    => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada) {
+            $alumno = Alumno::findOrFail($data['alumno_id']);
+            if ($alumno->carrera_id !== $carreraForzada) {
+                return ApiResponse::error('Solo puedes iniciar trámites de baja de alumnos de tu carrera.', 403);
+            }
+        }
+
+        try {
+            $baja = $this->service->iniciarDesdeAlerta($data, $request->user());
+        } catch (\DomainException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        return ApiResponse::success($baja, 'Trámite de baja iniciado. Queda pendiente de aprobación.', 201);
+    }
+
     // PATCH /api/bajas/{baja}/estatus  (admin/jefe aprueba o rechaza baja temporal solicitada)
     public function actualizarEstatus(Request $request, Baja $baja): JsonResponse
     {
@@ -107,28 +139,57 @@ class BajaController extends Controller
             return ApiResponse::error('Solo puedes gestionar bajas de alumnos de tu carrera.', 403);
         }
 
-        if ($baja->estatus !== 'pendiente') {
-            return ApiResponse::error('Solo se pueden aprobar o rechazar bajas en estado pendiente.', 422);
-        }
-
         $data = $request->validate([
             'estatus'        => ['required', 'in:aprobada,rechazada'],
             'motivo_rechazo' => ['required_if:estatus,rechazada', 'string', 'max:500'],
         ]);
 
-        $baja->update([
-            'estatus'        => $data['estatus'],
-            'motivo_rechazo' => $data['motivo_rechazo'] ?? null,
-            'revisada_por'   => $request->user()->id,
-            'revisada_en'    => now(),
-        ]);
-
-        if ($data['estatus'] === 'aprobada') {
-            $estatusAlumno = $baja->tipo_baja === 'definitiva' ? 'baja_definitiva' : 'baja_temporal';
-            $baja->alumno->update(['estatus' => $estatusAlumno]);
+        try {
+            $baja = $this->service->actualizarEstatus($baja, $data['estatus'], $data['motivo_rechazo'] ?? null, $request->user());
+        } catch (\DomainException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
         }
 
-        return ApiResponse::success($baja->fresh(['alumno.user', 'periodo']), 'Baja actualizada.');
+        return ApiResponse::success($baja, 'Baja actualizada.');
+    }
+
+    // GET /api/bajas/contador-pendientes  (badge del menú)
+    public function contarPendientes(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Baja::class);
+
+        $carreraForzada = $request->user()->carreraRestringida();
+
+        $total = Baja::where('estatus', 'pendiente')
+            ->when($carreraForzada, fn ($q, $v) => $q->whereHas('alumno', fn ($aq) => $aq->where('carrera_id', $v)))
+            ->count();
+
+        return ApiResponse::success(['total' => $total]);
+    }
+
+    // GET /api/bajas/{baja}  (detalle completo — para la página de detalle)
+    public function show(Request $request, Baja $baja): JsonResponse
+    {
+        $this->authorize('viewAny', Baja::class);
+
+        $carreraForzada = $request->user()->carreraRestringida();
+        if ($carreraForzada && $baja->alumno->carrera_id !== $carreraForzada) {
+            return ApiResponse::error('Sin acceso a las bajas de alumnos de otras carreras.', 403);
+        }
+
+        $baja->load(['alumno.user', 'alumno.carrera', 'periodo', 'registradaPor', 'revisadaPor', 'reingresoPor']);
+
+        // Historial de otras bajas del mismo alumno, para dar contexto en el detalle.
+        $otrasBajas = Baja::with('periodo')
+            ->where('alumno_id', $baja->alumno_id)
+            ->where('id', '!=', $baja->id)
+            ->latest()
+            ->get();
+
+        return ApiResponse::success([
+            'baja' => $baja,
+            'otras_bajas_del_alumno' => $otrasBajas,
+        ]);
     }
 
     // GET /api/alumnos/{alumno}/bajas

@@ -68,7 +68,7 @@ fundamento en la política 3.3 del Procedimiento TecNM-AC-PO-006.</p>
 </div>
 
 <div class="footer">
-  ITSMT — Sistema Integral de Control Escolar · TecNM-AC-PO-006-02 · Documento generado el {{ now()->isoFormat('D/MM/YYYY') }}
+  {{ $institucion->nombre_corto }} — Sistema Integral de Control Escolar · TecNM-AC-PO-006-02 · Documento generado el {{ now()->isoFormat('D/MM/YYYY') }}
 </div>
 </body>
 </html>

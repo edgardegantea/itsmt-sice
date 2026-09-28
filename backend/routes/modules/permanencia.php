@@ -6,6 +6,7 @@ use App\Http\Controllers\Permanencia\BajaController;
 use App\Http\Controllers\Permanencia\ConstanciaController;
 use App\Http\Controllers\Permanencia\EncuestaSocioeconomicaController;
 use App\Http\Controllers\Permanencia\ReinscripcionController;
+use App\Http\Controllers\Permanencia\ReportePermanenciaController;
 
 // Rutas del modulo Permanencia - extraidas de routes/api.php.
 // Se registran dentro del grupo auth:sanctum en routes/api.php via require.
@@ -25,9 +26,14 @@ use App\Http\Controllers\Permanencia\ReinscripcionController;
     Route::post('/bajas',                                                 [BajaController::class, 'store']);
     Route::post('/bajas/solicitar',                                       [BajaController::class, 'solicitar']);
     Route::get('/bajas/mias',                                             [BajaController::class, 'mias']);
+    Route::post('/bajas/iniciar-desde-riesgo',                            [BajaController::class, 'iniciarDesdeRiesgo']);
+    Route::get('/bajas/contador-pendientes',                              [BajaController::class, 'contarPendientes']);
+    Route::get('/bajas/{baja}',                                           [BajaController::class, 'show']);
     Route::patch('/bajas/{baja}/estatus',                                 [BajaController::class, 'actualizarEstatus']);
     Route::patch('/bajas/{baja}/reingreso',                               [BajaController::class, 'registrarReingreso']);
     Route::get('/alumnos/{alumno}/bajas',                                 [BajaController::class, 'porAlumno']);
+    Route::get('/reportes/altas-bajas',                                   [ReportePermanenciaController::class, 'altasBajas']);
+    Route::get('/reportes/altas-bajas/pdf',                               [ReportePermanenciaController::class, 'pdf']);
     Route::get('/constancias',                                            [ConstanciaController::class, 'index']);
     Route::post('/constancias',                                           [ConstanciaController::class, 'store']);
     Route::get('/alumnos/{alumno}/constancias',                           [ConstanciaController::class, 'porAlumno']);

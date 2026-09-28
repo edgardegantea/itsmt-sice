@@ -183,6 +183,44 @@ class AspiranteTest extends TestCase
             ->assertJsonPath('data.estatus', 'aceptado');
     }
 
+    public function test_no_se_puede_cambiar_estatus_de_aspirante_ya_inscrito(): void
+    {
+        $inscripcion = $this->crearInscripcion();
+        $aspirante = $inscripcion->aspirante;
+        $this->assertSame('inscrito', $aspirante->fresh()->estatus);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/aspirantes/{$aspirante->id}/estatus", ['estatus' => 'rechazado', 'motivo_rechazo' => 'x'])
+            ->assertStatus(422);
+
+        $this->assertSame('inscrito', $aspirante->fresh()->estatus);
+    }
+
+    public function test_repetir_el_mismo_estatus_no_reenvia_correo_ni_duplica_historial(): void
+    {
+        Mail::fake();
+        $aspirante = Aspirante::create(array_merge($this->extrasCamposModelo(['curp' => 'REPX000101HVZRRA02']), [
+            'nombres' => 'Rep', 'apellido_paterno' => 'Etido',
+            'email' => 'rep.etido@test.com', 'carrera_id' => $this->carrera->id,
+            'periodo_id' => $this->periodo->id,
+        ]));
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/aspirantes/{$aspirante->id}/estatus", ['estatus' => 'aceptado'])
+            ->assertStatus(200);
+
+        Mail::assertQueued(\App\Mail\AceptacionAspiranteMail::class, 1);
+        $this->assertDatabaseCount('aspirante_estatus_historial', 1);
+
+        // Reenviar el mismo estatus (doble clic / reintento) no debe repetir nada.
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/aspirantes/{$aspirante->id}/estatus", ['estatus' => 'aceptado'])
+            ->assertStatus(200);
+
+        Mail::assertQueued(\App\Mail\AceptacionAspiranteMail::class, 1);
+        $this->assertDatabaseCount('aspirante_estatus_historial', 1);
+    }
+
     // S1-04 — happy path inscripción via POST /api/inscripciones
     public function test_admin_puede_inscribir_aspirante_aceptado(): void
     {
@@ -510,5 +548,43 @@ class AspiranteTest extends TestCase
 
         $r->assertOk();
         $this->assertStringContainsString('application/pdf', $r->headers->get('Content-Type', ''));
+    }
+
+    // La edición genérica del alumno no debe poder poner ni quitar una baja —
+    // eso rompería el módulo de Bajas (sin registro Baja, sin correo, sin
+    // validación de plazo TecNM-AC-PO-002).
+    public function test_edicion_generica_no_puede_poner_al_alumno_en_baja(): void
+    {
+        $inscripcion = $this->crearInscripcion();
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/alumnos/{$inscripcion->alumno->id}", ['estatus' => 'baja_definitiva'])
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('alumnos', ['id' => $inscripcion->alumno->id, 'estatus' => 'activo']);
+        $this->assertDatabaseCount('bajas', 0);
+    }
+
+    public function test_edicion_generica_no_puede_sacar_de_baja_directamente(): void
+    {
+        $inscripcion = $this->crearInscripcion();
+        $inscripcion->alumno->update(['estatus' => 'baja_temporal']);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/alumnos/{$inscripcion->alumno->id}", ['estatus' => 'activo'])
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('alumnos', ['id' => $inscripcion->alumno->id, 'estatus' => 'baja_temporal']);
+    }
+
+    public function test_edicion_generica_si_permite_otros_cambios_de_estatus(): void
+    {
+        $inscripcion = $this->crearInscripcion();
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/alumnos/{$inscripcion->alumno->id}", ['estatus' => 'egresado'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('alumnos', ['id' => $inscripcion->alumno->id, 'estatus' => 'egresado']);
     }
 }

@@ -50,4 +50,9 @@ class PlaneacionDocente extends Model
     {
         return $this->belongsTo(User::class, 'revisado_por');
     }
+
+    public function versiones(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PlaneacionDocenteVersion::class, 'planeacion_docente_id')->latest('created_at');
+    }
 }

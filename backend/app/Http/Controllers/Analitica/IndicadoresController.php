@@ -195,6 +195,60 @@ class IndicadoresController extends Controller
         return ApiResponse::success($data);
     }
 
+    // GET /api/indicadores/reprobacion?carrera_id=&periodo_id=  — % de calificaciones
+    // finales no acreditadas, agrupado por carrera+periodo y desglosado por grupo, para
+    // alimentar los KPIs de rendimiento académico (junto con promedio() y desercion()).
+    public function reprobacion(Request $request): JsonResponse
+    {
+        $this->autorizarDirectivos($request);
+
+        $carreraId = $request->query('carrera_id');
+        $periodoId = $request->query('periodo_id');
+
+        $base = fn() => DB::table('calificaciones as c')
+            ->join('grupos as g', 'c.grupo_id', '=', 'g.id')
+            ->join('carreras as ca', 'g.carrera_id', '=', 'ca.id')
+            ->join('periodos as p', 'g.periodo_id', '=', 'p.id')
+            ->whereNull('c.deleted_at')
+            ->whereNotNull('c.calificacion_final')
+            ->when($carreraId, fn($q) => $q->where('g.carrera_id', $carreraId))
+            ->when($periodoId, fn($q) => $q->where('g.periodo_id', $periodoId));
+
+        $porCarrera = $base()
+            ->selectRaw(
+                'g.carrera_id, ca.nombre as carrera, g.periodo_id, p.nombre as periodo, ' .
+                'COUNT(c.id) as total_calificaciones, ' .
+                'SUM(CASE WHEN c.acreditado = false THEN 1 ELSE 0 END) as total_reprobados'
+            )
+            ->groupBy('g.carrera_id', 'ca.nombre', 'g.periodo_id', 'p.nombre')
+            ->orderBy('p.nombre')
+            ->get()
+            ->map(function ($row) {
+                $row->pct_reprobacion = $row->total_calificaciones > 0
+                    ? round($row->total_reprobados / $row->total_calificaciones * 100, 2)
+                    : 0.0;
+                return $row;
+            });
+
+        $porGrupo = $base()
+            ->selectRaw(
+                'g.id as grupo_id, g.clave as grupo, g.semestre, g.carrera_id, ca.nombre as carrera, ' .
+                'COUNT(c.id) as total_calificaciones, ' .
+                'SUM(CASE WHEN c.acreditado = false THEN 1 ELSE 0 END) as total_reprobados'
+            )
+            ->groupBy('g.id', 'g.clave', 'g.semestre', 'g.carrera_id', 'ca.nombre')
+            ->orderBy('ca.nombre')->orderBy('g.semestre')->orderBy('g.clave')
+            ->get()
+            ->map(function ($row) {
+                $row->pct_reprobacion = $row->total_calificaciones > 0
+                    ? round($row->total_reprobados / $row->total_calificaciones * 100, 2)
+                    : 0.0;
+                return $row;
+            });
+
+        return ApiResponse::success(['por_carrera' => $porCarrera, 'por_grupo' => $porGrupo]);
+    }
+
     private function autorizarDirectivos(Request $request): void
     {
         if (! $request->user()->hasAnyRole(['superadmin', 'admin', ...\App\Models\User::ROLES_DIRECTIVOS])) {

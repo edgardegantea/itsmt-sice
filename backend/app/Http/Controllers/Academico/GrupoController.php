@@ -19,7 +19,7 @@ class GrupoController extends Controller
         $carreraParam  = $request->query('carrera_id');
         $carreraValida = $carreraParam && preg_match('/^[0-9a-f-]{36}$/i', $carreraParam) ? $carreraParam : null;
 
-        $grupos = Grupo::with(['carrera', 'periodo', 'horariosDias', 'cargas.materia'])
+        $grupos = Grupo::with(['carrera', 'periodo', 'horariosDias', 'cargas.materia', 'cargas.docente', 'cargas.aula', 'cargas.horarios'])
             ->withCount('alumnos')
             ->when($carreraForzada,                                    fn($q, $v) => $q->where('carrera_id', $v))
             ->when(! $carreraForzada && $carreraValida,                fn($q)     => $q->where('carrera_id', $carreraValida))

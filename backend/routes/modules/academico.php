@@ -2,8 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Academico\ActaCalificacionesController;
+use App\Http\Controllers\Academico\AsistenteIaController;
 use App\Http\Controllers\Academico\AlertaBajaDefinitivaController;
 use App\Http\Controllers\Academico\AlertaCorteCapturaController;
+use App\Http\Controllers\Academico\AlertaRiesgoAcademicoController;
 use App\Http\Controllers\Academico\AlertaInasistenciaController;
 use App\Http\Controllers\Academico\AlumnoController;
 use App\Http\Controllers\Academico\AsignacionDocenteController;
@@ -37,6 +39,10 @@ use App\Http\Controllers\Academico\GrupoController;
 use App\Http\Controllers\Academico\HorarioController;
 use App\Http\Controllers\Academico\HorarioTrabajoController;
 use App\Http\Controllers\Academico\IndicadoresAsistenciaController;
+use App\Http\Controllers\Academico\GamificacionController;
+use App\Http\Controllers\Academico\IncidenciaClaseController;
+use App\Http\Controllers\Academico\PasaporteDocenteController;
+use App\Http\Controllers\Academico\TorreControlController;
 use App\Http\Controllers\Academico\IndicadoresTutoriaController;
 use App\Http\Controllers\Academico\InformeSindicalController;
 use App\Http\Controllers\Academico\InscripcionDistanciaController;
@@ -51,6 +57,7 @@ use App\Http\Controllers\Academico\PlantillaSindicalController;
 use App\Http\Controllers\Academico\PlazaController;
 use App\Http\Controllers\Academico\PrecargaController;
 use App\Http\Controllers\Academico\ProgramaDistanciaController;
+use App\Http\Controllers\Academico\ReporteAcreditacionController;
 use App\Http\Controllers\Academico\ReporteDirectivoController;
 use App\Http\Controllers\Academico\SesionClaseController;
 use App\Http\Controllers\Academico\SesionTutoriaController;
@@ -107,6 +114,18 @@ use App\Http\Controllers\Academico\TutoriaController;
     Route::delete('/mallas-curriculares/{mallaCurricular}',        [MallaCurricularController::class, 'destroy']);
     Route::get('/aulas',                                           [AulaController::class, 'index']);
     Route::get('/aulas/disponibles',                               [AulaController::class, 'disponibles']);
+    Route::get('/aulas/ocupacion',                                 [AulaController::class, 'ocupacion']);
+    Route::get('/aulas/{aula}/horario-actual',                     [AulaController::class, 'horarioActual']);
+    Route::get('/aulas/fantasma',                                  [AulaController::class, 'fantasma']);
+    Route::get('/aulas/{aula}/sugerencias-reubicacion',            [AulaController::class, 'sugerenciasReubicacion']);
+
+    // Índice de salud del semestre por carrera
+    Route::get('/salud-semestral',                                 [\App\Http\Controllers\Academico\SaludSemestralController::class, 'index']);
+
+    // Modo día de examen — verificación reforzada de check-in para una fecha puntual
+    Route::get('/modos-examen',                                    [\App\Http\Controllers\Academico\ModoExamenController::class, 'index']);
+    Route::post('/modos-examen',                                   [\App\Http\Controllers\Academico\ModoExamenController::class, 'activar']);
+    Route::delete('/modos-examen/{modoExamen}',                    [\App\Http\Controllers\Academico\ModoExamenController::class, 'desactivar']);
     Route::post('/aulas',                                          [AulaController::class, 'store']);
     Route::patch('/aulas/{aula}',                                  [AulaController::class, 'update']);
     Route::delete('/aulas/{aula}',                                 [AulaController::class, 'destroy']);
@@ -136,10 +155,31 @@ use App\Http\Controllers\Academico\TutoriaController;
     Route::get('/horarios-trabajo/{horarioTrabajo}',                              [HorarioTrabajoController::class, 'show']);
     Route::get('/planeaciones-docentes',                                          [PlaneacionDocenteController::class, 'index']);
     Route::get('/planeaciones-docentes/mias',                                     [PlaneacionDocenteController::class, 'mias']);
+    Route::get('/planeaciones-docentes/buscar',                                   [PlaneacionDocenteController::class, 'buscar']);
+    Route::get('/planeaciones-docentes/comparar-grupos',                          [PlaneacionDocenteController::class, 'compararGrupos']);
+    Route::post('/ia/mejorar-texto',                                              [AsistenteIaController::class, 'mejorarTexto']);
+    Route::get('/planeaciones-docentes/seguimiento',                              [PlaneacionDocenteController::class, 'seguimiento']);
+    Route::get('/planeaciones-docentes/seguimiento/pdf',                          [PlaneacionDocenteController::class, 'seguimientoPdf']);
+    Route::get('/planeaciones-docentes/acreditacion-por-carrera',                 [PlaneacionDocenteController::class, 'acreditacionPorCarrera']);
+    Route::get('/planeaciones-docentes/mi-comparativo',                          [PlaneacionDocenteController::class, 'miComparativo']);
     Route::post('/planeaciones-docentes',                                         [PlaneacionDocenteController::class, 'store']);
     Route::post('/planeaciones-docentes/{planeacionDocente}/enviar',              [PlaneacionDocenteController::class, 'enviar']);
     Route::patch('/planeaciones-docentes/{planeacionDocente}/estatus',            [PlaneacionDocenteController::class, 'cambiarEstatus']);
+    Route::patch('/planeaciones-docentes/{planeacionDocente}/dosificacion',       [PlaneacionDocenteController::class, 'actualizarDosificacion']);
+    Route::post('/planeaciones-docentes/{planeacionDocente}/clonar',              [PlaneacionDocenteController::class, 'clonar']);
     Route::get('/planeaciones-docentes/{planeacionDocente}/archivo',              [PlaneacionDocenteController::class, 'archivo']);
+    Route::get('/planeaciones-docentes/{planeacionDocente}/pdf-calendario',       [PlaneacionDocenteController::class, 'pdfCalendario']);
+    Route::get('/planeaciones-docentes/{planeacionDocente}/pdf-instrumentacion',  [PlaneacionDocenteController::class, 'pdfInstrumentacion']);
+    Route::get('/planeaciones-docentes/{planeacionDocente}/docx-instrumentacion', [PlaneacionDocenteController::class, 'docxInstrumentacion']);
+    Route::get('/planeaciones-docentes/{planeacionDocente}/versiones',            [PlaneacionDocenteController::class, 'versiones']);
+    Route::post('/planeaciones-docentes/{planeacionDocente}/versiones/{version}/restaurar', [PlaneacionDocenteController::class, 'restaurarVersion']);
+    Route::get('/planeaciones-docentes/{planeacionDocente}/comentarios',          [PlaneacionDocenteController::class, 'comentarios']);
+    Route::post('/planeaciones-docentes/{planeacionDocente}/comentarios',         [PlaneacionDocenteController::class, 'agregarComentario']);
+    Route::patch('/planeaciones-docentes/{planeacionDocente}/comentarios/resolver', [PlaneacionDocenteController::class, 'resolverComentarios']);
+    Route::get('/planeaciones-docentes/{planeacionDocente}/archivos',              [PlaneacionDocenteController::class, 'archivos']);
+    Route::post('/planeaciones-docentes/{planeacionDocente}/archivos',             [PlaneacionDocenteController::class, 'subirArchivo']);
+    Route::delete('/planeaciones-docentes/{planeacionDocente}/archivos/{archivo}', [PlaneacionDocenteController::class, 'eliminarArchivo']);
+    Route::get('/planeaciones-docentes/{planeacionDocente}/archivos/{archivo}/descargar', [PlaneacionDocenteController::class, 'descargarArchivo']);
     Route::get('/planeaciones-docentes/{planeacionDocente}',                     [PlaneacionDocenteController::class, 'show']);
     Route::get('/admin/periodos/{periodo}/cortes-captura',     [CorteCapturaController::class, 'index']);
     Route::post('/admin/periodos/{periodo}/cortes-captura',    [CorteCapturaController::class, 'store']);
@@ -155,6 +195,13 @@ use App\Http\Controllers\Academico\TutoriaController;
     Route::post('/configuraciones-evaluacion',                            [ConfiguracionEvaluacionController::class, 'store']);
     Route::get('/configuraciones-evaluacion/{carreraId}',                 [ConfiguracionEvaluacionController::class, 'show']);
     Route::get('/grupos/{grupo}/calificaciones',                          [CalificacionController::class, 'porGrupo']);
+    Route::get('/grupos/{grupo}/calificaciones/historial',                [CalificacionController::class, 'historial']);
+    Route::get('/grupos/{grupo}/calificaciones/exportar',                 [CalificacionController::class, 'exportarCsv']);
+    Route::get('/grupos/{grupo}/calificaciones/acta-pdf',                  [CalificacionController::class, 'actaPdf']);
+    Route::get('/grupos/{grupo}/calificaciones/acta-excel',                [CalificacionController::class, 'actaExcel']);
+    Route::get('/grupos/{grupo}/calificaciones/acta-estado',               [CalificacionController::class, 'actaEstado']);
+    Route::patch('/grupos/{grupo}/calificaciones/acta-pdf/firmar',         [CalificacionController::class, 'actaFirmar']);
+    Route::post('/grupos/{grupo}/calificaciones/importar',                [CalificacionController::class, 'importarCsv']);
     Route::get('/grupos/{grupo}/acta-calificaciones/pdf',                 [ActaCalificacionesController::class, 'pdf']);
     Route::patch('/grupos/{grupo}/acta-calificaciones/firmar',            [ActaCalificacionesController::class, 'firmar']);
     Route::post('/calificaciones',                                        [CalificacionController::class, 'store']);
@@ -162,6 +209,35 @@ use App\Http\Controllers\Academico\TutoriaController;
     Route::post('/grupos/{grupo}/cierre-de-curso/reabrir',                [CierreDeCursoController::class, 'reabrir']);
     Route::get('/alertas-baja-definitiva',                                [AlertaBajaDefinitivaController::class, 'index']);
     Route::patch('/alertas-baja-definitiva/{alerta}/revisar',             [AlertaBajaDefinitivaController::class, 'revisar']);
+
+    // Alerta temprana de riesgo académico — cruce de reprobación/inasistencia/incidencias
+    Route::get('/alertas-riesgo-academico',                              [AlertaRiesgoAcademicoController::class, 'index']);
+
+    // Alerta de deserción temprana — patrón de asistencia de las primeras semanas
+    Route::get('/alertas-desercion-temprana',                            [\App\Http\Controllers\Academico\AlertaDesercionTempranaController::class, 'index']);
+
+    // Bitácora de mantenimiento de aulas (generada desde incidencias de prefectura)
+    Route::get('/tickets-mantenimiento',                                  [\App\Http\Controllers\Academico\TicketMantenimientoController::class, 'index']);
+    Route::patch('/tickets-mantenimiento/{ticketMantenimiento}',          [\App\Http\Controllers\Academico\TicketMantenimientoController::class, 'update']);
+
+    // Torre de control — estado en vivo del campus (ocupación, incidencias, asistencia)
+    Route::get('/torre-control',                                          [TorreControlController::class, 'index']);
+
+    // Pasaporte QR de cumplimiento del docente
+    Route::get('/docentes/{docente}/pasaporte',                           [PasaporteDocenteController::class, 'resumen']);
+
+    // Gamificación — ranking de cumplimiento docente con insignias
+    Route::get('/gamificacion/ranking-docentes',                          [GamificacionController::class, 'rankingDocentes']);
+
+    // Llaves de acceso para el feed de exportación BI (Power BI / Looker Studio)
+    Route::get('/admin/api-keys',                                         [\App\Http\Controllers\Admin\ApiKeyController::class, 'index']);
+    Route::post('/admin/api-keys',                                        [\App\Http\Controllers\Admin\ApiKeyController::class, 'store']);
+    Route::patch('/admin/api-keys/{apiKey}/revocar',                      [\App\Http\Controllers\Admin\ApiKeyController::class, 'revocar']);
+
+    // Bitácora de prefectura — incidencias de ronda por aula/grupo
+    Route::get('/incidencias-clase',                                      [IncidenciaClaseController::class, 'index']);
+    Route::post('/incidencias-clase',                                     [IncidenciaClaseController::class, 'store']);
+    Route::get('/incidencias-clase/horario-esperado',                     [IncidenciaClaseController::class, 'horarioEsperado']);
     Route::get('/alumnos/{alumno}/situacion-academica',                   [CalificacionController::class, 'situacionAcademica']);
     Route::get('/alumnos/{alumno}/kardex',                                [CalificacionController::class, 'kardex']);
     Route::get('/asignaciones-docentes',                                 [AsignacionDocenteController::class, 'index']);
@@ -211,6 +287,7 @@ use App\Http\Controllers\Academico\TutoriaController;
     Route::get('/reportes/matricula/pdf',             [ReporteDirectivoController::class, 'matriculaPdf']);
     Route::get('/reportes/calificaciones/pdf',        [ReporteDirectivoController::class, 'calificacionesPdf']);
     Route::get('/reportes/directorio/{tipo}/pdf',     [ReporteDirectivoController::class, 'directorioPdf']);
+    Route::get('/reportes/acreditacion/pdf',          [ReporteAcreditacionController::class, 'pdf']);
     Route::get('/indicadores/asistencia',                     [IndicadoresAsistenciaController::class, 'dashboard']);
     Route::get('/indicadores/asistencia/carrera/{carreraId}', [IndicadoresAsistenciaController::class, 'porCarrera']);
     Route::get('/asignaciones-tutoria',                        [AsignacionTutoriaController::class, 'index']);

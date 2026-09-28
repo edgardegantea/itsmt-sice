@@ -111,7 +111,7 @@
 
   <div class="footer">
     Formato TecNM-AC-PO-005-07 — Retención: INDEFINIDA — Custodia: Subdirección Académica<br>
-    ITSMT SICE — Generado el {{ $hoy }}
+    {{ $institucion->nombre_corto }} SICE — Generado el {{ $hoy }}
   </div>
 </body>
 </html>

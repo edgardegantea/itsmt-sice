@@ -65,7 +65,7 @@
 </div>
 
 <div class="footer">
-  ITSMT · Constancia de Exención · Documento permanente — TecNM-AC-PO-006 · Generado el {{ now()->isoFormat('D/MM/YYYY') }}
+  {{ $institucion->nombre_corto }} · Constancia de Exención · Documento permanente — TecNM-AC-PO-006 · Generado el {{ now()->isoFormat('D/MM/YYYY') }}
 </div>
 </body>
 </html>

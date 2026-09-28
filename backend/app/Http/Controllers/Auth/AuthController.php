@@ -54,6 +54,13 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
+        if (! $user->activo) {
+            Auth::logout();
+            AuditLogService::record('login_bloqueado_inactivo', 'auth', $user->id);
+
+            return ApiResponse::error('Esta cuenta ha sido desactivada. Contacta al administrador.', 403);
+        }
+
         $dosFactores = TwoFactorSecret::where('user_id', $user->id)->where('enabled', true)->first();
         if ($dosFactores) {
             Auth::logout();

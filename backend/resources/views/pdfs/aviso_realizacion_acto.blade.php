@@ -78,7 +78,7 @@
 </div>
 
 <div class="footer">
-  ITSMT — Sistema Integral de Control Escolar · TecNM-AC-PO-006-03 · Generado el {{ now()->isoFormat('D/MM/YYYY HH:mm') }}
+  {{ $institucion->nombre_corto }} — Sistema Integral de Control Escolar · TecNM-AC-PO-006-03 · Generado el {{ now()->isoFormat('D/MM/YYYY HH:mm') }}
 </div>
 </body>
 </html>

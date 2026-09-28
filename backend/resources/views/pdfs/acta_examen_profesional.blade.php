@@ -70,7 +70,7 @@
 </div>
 
 <div class="footer">
-  ITSMT · Acta de Examen Profesional · Documento permanente — TecNM-AC-PO-006 · Generado el {{ now()->isoFormat('D/MM/YYYY') }}
+  {{ $institucion->nombre_corto }} · Acta de Examen Profesional · Documento permanente — TecNM-AC-PO-006 · Generado el {{ now()->isoFormat('D/MM/YYYY') }}
 </div>
 </body>
 </html>

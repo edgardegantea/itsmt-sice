@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,6 +16,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Los PDFs toman nombre, siglas y ciudad de la institución desde la configuración,
+        // no escritos a mano en cada plantilla.
+        View::composer(['pdf.*', 'pdfs.*'], function ($view) {
+            $view->with('institucion', \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia());
+        });
+
         // Superadmin bypasses every Gate / Policy check in the system.
         Gate::before(function ($user) {
             if ($user->hasRole('superadmin')) {

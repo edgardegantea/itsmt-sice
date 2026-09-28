@@ -15,7 +15,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>INSTITUTO TECNOLÓGICO SUPERIOR DE MARTÍNEZ DE LA TORRE</h1>
+        <h1>{{ mb_strtoupper($institucion->nombre_institucion) }}</h1>
         <h2>CONSTANCIA DE ESTUDIOS</h2>
     </div>
 
@@ -23,14 +23,14 @@
 
     <div class="cuerpo">
         <p>
-            La Dirección del Instituto Tecnológico Superior de Martínez de la Torre, hace constar que
+            La Dirección del {{ $institucion->nombre_institucion }}, hace constar que
             <strong>{{ $nombre }}</strong>, con número de control <strong>{{ $numero_control }}</strong>,
             se encuentra inscrito(a) en el <strong>{{ $semestre }}°</strong> semestre de la carrera de
             <strong>{{ $carrera }}</strong>, correspondiente al periodo <strong>{{ $periodo }}</strong>.
         </p>
         <p>
             La presente constancia se expide a petición del interesado para los fines que convengan,
-            en Martínez de la Torre, Veracruz, a {{ $fecha }}.
+            en {{ $institucion->ciudad }}, {{ $institucion->estado }}, a {{ $fecha }}.
         </p>
     </div>
 

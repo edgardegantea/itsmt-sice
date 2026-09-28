@@ -71,7 +71,7 @@
   </div>
 
   <div class="footer">
-    Documento generado automáticamente — ITSMT SICE &bull; {{ $hoy }}
+    Documento generado automáticamente — {{ $institucion->nombre_corto }} SICE &bull; {{ $hoy }}
   </div>
 </body>
 </html>
