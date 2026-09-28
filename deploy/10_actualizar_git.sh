@@ -56,7 +56,17 @@ chmod -R 755 "$APP_DIR/frontend/dist"
 chmod -R 775 "$APP_DIR/backend/storage"
 chmod -R 775 "$APP_DIR/backend/bootstrap/cache"
 
-# ── 6. Reiniciar PHP-FPM para descartar OPcache de código viejo ───────────
+# ── 6. Asegurar que Nginx apunte a la ruta correcta ────────────────────────
+if [ -f /etc/nginx/sites-available/sice-frontend ]; then
+  sed -i "s#root .*;#root ${APP_DIR}/frontend/dist;#" /etc/nginx/sites-available/sice-frontend
+fi
+if [ -f /etc/nginx/sites-available/sice-backend ]; then
+  sed -i "s#root .*/public;#root ${APP_DIR}/backend/public;#" /etc/nginx/sites-available/sice-backend
+  sed -i "s#alias .*/storage/app/public;#alias ${APP_DIR}/backend/storage/app/public;#" /etc/nginx/sites-available/sice-backend
+fi
+nginx -t && systemctl reload nginx
+
+# ── 7. Reiniciar PHP-FPM ───────────────────────────────────────────────────
 systemctl restart php8.3-fpm
 
 echo ""
