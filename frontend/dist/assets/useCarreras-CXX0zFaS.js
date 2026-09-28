@@ -1,1 +1,0 @@
-import{r as e}from"./vendor-query-DX7nDMGM.js";import{t}from"./apiClient-BkGEws1Z.js";import{t as n}from"./admision-CSreDtln.js";function r(){return e({queryKey:[`carreras`],queryFn:n.getCarreras,staleTime:1e3*60*10})}function i(){return e({queryKey:[`carreras-admin`],queryFn:()=>t.get(`/admin/carreras`).then(e=>e.data.data),staleTime:1e3*60*10})}export{i as n,r as t};
