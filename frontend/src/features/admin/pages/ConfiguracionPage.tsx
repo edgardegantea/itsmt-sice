@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { configuracionApi, type ConfiguracionInstitucional } from '../services/configuracion'
 import { useToastStore } from '../../../store/toastStore'
@@ -7,6 +8,9 @@ import { useAuthStore } from '../../../store/authStore'
 import apiClient from '../../../config/apiClient'
 
 type FormState = Partial<ConfiguracionInstitucional>
+
+// Debe coincidir con la regla 'max:10240' de ConfiguracionController::subirLogo.
+const MAX_IMAGEN_MB = 10
 
 type TabId = 'institucion' | 'identidad' | 'login' | 'interfaz' | 'formularios' | 'firmantes' | 'sistema'
 
@@ -100,7 +104,7 @@ function FirmantesTab() {
                         <button onClick={() => guardarClave(p.id)} disabled={saving}
                           className="text-xs px-3 py-1 rounded-lg text-white disabled:opacity-50"
                           style={{ backgroundColor: 'var(--color-primario)' }}>
-                          {saving ? '…' : 'OK'}
+                          {saving ? 'Guardando…' : 'Guardar'}
                         </button>
                         <button onClick={() => setEditandoId(null)}
                           className="text-xs px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100">
@@ -159,7 +163,7 @@ function FirmantesTab() {
                       <button onClick={() => guardarClave(p.id)} disabled={saving || !claveEdit}
                         className="text-xs px-3 py-1 rounded-lg text-white disabled:opacity-50"
                         style={{ backgroundColor: 'var(--color-primario)' }}>
-                        {saving ? '…' : 'OK'}
+                        {saving ? 'Guardando…' : 'Guardar'}
                       </button>
                       <button onClick={() => setEditandoId(null)}
                         className="text-xs px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100">✕</button>
@@ -245,10 +249,23 @@ function ImageUploader({ label, url, tipo, onUploaded, onDeleted, accept = '.svg
   onUploaded: () => void; onDeleted: () => void; accept?: string; hint?: string
 }) {
   const [loading, setLoading] = useState(false)
+  const [arrastrando, setArrastrando] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { toast: addToast } = useToastStore()
 
+  const extensiones = accept.split(',').map(e => e.trim().replace('.', '').toLowerCase())
+
   const handleFile = async (file: File) => {
+    // Validación local: evita el viaje al servidor para errores obvios.
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+    if (!extensiones.includes(ext)) {
+      addToast(`Formato no permitido. Usa: ${extensiones.join(', ').toUpperCase()}.`, 'error')
+      return
+    }
+    if (file.size > MAX_IMAGEN_MB * 1024 * 1024) {
+      addToast(`La imagen pesa ${(file.size / 1024 / 1024).toFixed(1)} MB; el máximo es ${MAX_IMAGEN_MB} MB.`, 'error')
+      return
+    }
     setLoading(true)
     try {
       await configuracionApi.subirLogo(file, tipo)
@@ -266,6 +283,7 @@ function ImageUploader({ label, url, tipo, onUploaded, onDeleted, accept = '.svg
   }
 
   const handleDelete = async () => {
+    if (!window.confirm(`¿Eliminar "${label}"? Dejará de aparecer en el sistema y en los documentos PDF.`)) return
     setLoading(true)
     try {
       await configuracionApi.eliminarLogo(tipo)
@@ -279,27 +297,55 @@ function ImageUploader({ label, url, tipo, onUploaded, onDeleted, accept = '.svg
     }
   }
 
+  const abrirSelector = () => { if (!loading) inputRef.current?.click() }
+
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-slate-600">{label}</p>
-      <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 flex flex-col items-center gap-3 bg-slate-50 cursor-pointer hover:border-slate-300 transition-colors"
-        onClick={() => !loading && inputRef.current?.click()}>
+      <div
+        role="button" tabIndex={0} aria-label={`${url ? 'Reemplazar' : 'Subir'} ${label}`} aria-busy={loading}
+        onClick={abrirSelector}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirSelector() } }}
+        onDragOver={e => { e.preventDefault(); if (!loading) setArrastrando(true) }}
+        onDragLeave={() => setArrastrando(false)}
+        onDrop={e => {
+          e.preventDefault(); setArrastrando(false)
+          const f = e.dataTransfer.files?.[0]
+          if (f && !loading) handleFile(f)
+        }}
+        className={`relative border-2 border-dashed rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primario)]/40 ${
+          arrastrando ? 'border-[var(--color-primario)] bg-[var(--color-primario)]/5' : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+        }`}>
         {url
-          ? <img src={url} alt={label} className="h-20 object-contain rounded" />
+          // Fondo de tablero: deja ver logos oscuros o con transparencia, que sobre gris se pierden.
+          ? <div className="rounded-lg p-2 border border-slate-200"
+              style={{ backgroundImage: 'repeating-conic-gradient(#f1f5f9 0% 25%, #ffffff 0% 50%)', backgroundSize: '16px 16px' }}>
+              <img src={url} alt={label} className="h-20 max-w-full object-contain" />
+            </div>
           : <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M2.25 12V6a2.25 2.25 0 0 1 2.25-2.25h15A2.25 2.25 0 0 1 21.75 6v12a2.25 2.25 0 0 1-2.25 2.25H4.5A2.25 2.25 0 0 1 2.25 18v-6Z" />
               </svg>
             </div>
         }
-        <p className="text-xs text-slate-400 text-center">{loading ? 'Subiendo…' : 'Haz clic para seleccionar'}</p>
+        <p className="text-xs text-slate-500 text-center">
+          {arrastrando ? 'Suelta la imagen aquí'
+            : url ? <>Haz clic o arrastra una imagen para <strong className="font-medium">reemplazarla</strong></>
+            : <>Haz clic o arrastra una imagen aquí</>}
+        </p>
         {hint && <p className="text-[11px] text-slate-400 text-center">{hint}</p>}
         <input ref={inputRef} type="file" accept={accept} className="hidden"
           onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }} />
+        {loading && (
+          <div className="absolute inset-0 rounded-xl bg-white/80 flex items-center justify-center gap-2 text-xs text-slate-600">
+            <span className="w-4 h-4 border-2 border-slate-300 border-t-[var(--color-primario)] rounded-full animate-spin" />
+            Procesando…
+          </div>
+        )}
       </div>
       {url && (
-        <button type="button" onClick={e => { e.stopPropagation(); handleDelete() }}
-          disabled={loading} className="text-xs text-red-500 hover:text-red-700 transition-colors">
+        <button type="button" onClick={handleDelete}
+          disabled={loading} className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors">
           Eliminar imagen
         </button>
       )}
@@ -404,8 +450,11 @@ export default function ConfiguracionPage() {
   const { user } = useAuthStore()
   const esSuperadmin = user?.roles?.includes('superadmin') ?? false
 
-  const [tabActiva, setTabActiva] = useState<TabId>('institucion')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabActiva = (TABS.some(t => t.id === searchParams.get('tab')) ? searchParams.get('tab') : 'institucion') as TabId
+  const setTabActiva = (id: TabId) => setSearchParams(p => { p.set('tab', id); return p }, { replace: true })
   const [form, setForm] = useState<FormState | null>(null)
+  const [original, setOriginal] = useState<FormState | null>(null)
   const [guardando, setGuardando] = useState(false)
 
   const { data, isLoading, isError } = useQuery({
@@ -428,17 +477,37 @@ export default function ConfiguracionPage() {
       const { id, logo_principal, logo_secundario, login_imagen_fondo,
         url_logo_principal, url_logo_secundario, url_login_imagen_fondo, logo_base64, ...rest } = data
       const toDate = (s: string | null | undefined) => s ? s.slice(0, 10) : ''
-      setForm({
+      const inicial: FormState = {
         ...rest,
         login_opacidad_fondo: rest.login_opacidad_fondo ?? 0.70,
         fecha_inicio_actualizacion_datos: toDate(rest.fecha_inicio_actualizacion_datos),
         fecha_fin_actualizacion_datos:    toDate(rest.fecha_fin_actualizacion_datos),
-      })
+      }
+      setForm(inicial)
+      setOriginal(inicial)
     }
   }, [data])
 
   const set = (field: keyof FormState, value: string | number) =>
     setForm(f => f ? { ...f, [field]: value } : f)
+
+  // Campos que difieren de lo guardado; alimenta el aviso de "cambios sin guardar".
+  const camposModificados = useMemo(() => {
+    if (!form || !original) return 0
+    return (Object.keys(form) as (keyof FormState)[])
+      .filter(k => (form[k] ?? '') !== (original[k] ?? '')).length
+  }, [form, original])
+  const hayCambios = camposModificados > 0
+
+  // Aviso del navegador al cerrar o recargar con cambios pendientes.
+  useEffect(() => {
+    if (!hayCambios) return
+    const avisar = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', avisar)
+    return () => window.removeEventListener('beforeunload', avisar)
+  }, [hayCambios])
+
+  const descartarCambios = () => setForm(original)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -446,17 +515,35 @@ export default function ConfiguracionPage() {
     setGuardando(true)
     try {
       await configuracionApi.update(form)
+      setOriginal(form)
       qc.invalidateQueries({ queryKey: ['configuracion'] })
       addToast('Configuración guardada.', 'success')
-    } catch {
-      addToast('Error al guardar la configuración.', 'error')
+    } catch (err) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      addToast(msg ? `No se guardó: ${msg}` : 'Error al guardar la configuración.', 'error')
     } finally { setGuardando(false) }
   }
 
   const invalidarConfig = () => qc.invalidateQueries({ queryKey: ['configuracion'] })
 
-  if (isLoading || !form) return <div className="p-6 text-sm text-slate-400">Cargando configuración…</div>
-  if (isError) return <div className="p-6 text-sm text-red-500">Error al cargar la configuración.</div>
+  if (isError) return (
+    <div className="p-6">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-center justify-between gap-4">
+        <span>No se pudo cargar la configuración.</span>
+        <button type="button" onClick={() => qc.invalidateQueries({ queryKey: ['configuracion'] })}
+          className="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-red-200 hover:bg-red-100">
+          Reintentar
+        </button>
+      </div>
+    </div>
+  )
+  if (isLoading || !form) return (
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-pulse" aria-busy="true" aria-label="Cargando configuración">
+      <div className="h-6 w-64 bg-slate-200 rounded" />
+      <div className="h-10 w-full bg-slate-100 rounded" />
+      <div className="h-64 w-full bg-slate-100 rounded-xl" />
+    </div>
+  )
 
   const tabsVisibles = esSuperadmin ? TABS : TABS.filter(t => !t.superadminOnly)
   const opacidad = form.login_opacidad_fondo ?? 0.70
@@ -470,9 +557,10 @@ export default function ConfiguracionPage() {
 
       {/* Tabs nav */}
       <div className="border-b border-slate-200 mb-6">
-        <nav className="-mb-px flex gap-0 overflow-x-auto">
+        <nav className="-mb-px flex gap-0 overflow-x-auto" role="tablist" aria-label="Secciones de configuración">
           {tabsVisibles.map(tab => (
             <button key={tab.id} type="button" onClick={() => setTabActiva(tab.id)}
+              role="tab" aria-selected={tabActiva === tab.id}
               className={`px-5 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                 tabActiva === tab.id
                   ? 'border-[var(--color-primario)] text-[var(--color-primario)]'
@@ -551,10 +639,10 @@ export default function ConfiguracionPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <ImageUploader label="Logo principal (institución)" url={data?.url_logo_principal ?? null}
                   tipo="principal" onUploaded={invalidarConfig} onDeleted={invalidarConfig}
-                  hint="SVG, PNG, JPG — máx 4 MB" />
+                  hint={`SVG, PNG, JPG o WebP — máx ${MAX_IMAGEN_MB} MB · Para los PDF se recomienda PNG`} />
                 <ImageUploader label="Logo secundario (ej. TecNM)" url={data?.url_logo_secundario ?? null}
                   tipo="secundario" onUploaded={invalidarConfig} onDeleted={invalidarConfig}
-                  hint="SVG, PNG, JPG — máx 4 MB" />
+                  hint={`SVG, PNG, JPG o WebP — máx ${MAX_IMAGEN_MB} MB · Para los PDF se recomienda PNG`} />
               </div>
             </section>
 
@@ -634,7 +722,7 @@ export default function ConfiguracionPage() {
               <ImageUploader label="Imagen de fondo (panel izquierdo)" url={data?.url_login_imagen_fondo ?? null}
                 tipo="fondo" onUploaded={invalidarConfig} onDeleted={invalidarConfig}
                 accept=".jpg,.jpeg,.png,.webp"
-                hint="JPG, PNG, WebP — máx 4 MB · Recomendado: 800×1200 px" />
+                hint={`JPG, PNG o WebP — máx ${MAX_IMAGEN_MB} MB · Recomendado: 800×1200 px`} />
 
               {/* Slider opacidad */}
               <div className="space-y-3">
@@ -1169,7 +1257,8 @@ export default function ConfiguracionPage() {
                   className={`shrink-0 relative w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${
                     (data?.recordatorios_asistencia_global_activo ?? true) ? 'bg-emerald-500' : 'bg-slate-300'
                   }`}
-                  aria-label="Activar o desactivar recordatorios de asistencia"
+                  role="switch" aria-checked={data?.recordatorios_asistencia_global_activo ?? true}
+                  aria-label="Recordatorios de asistencia para todos los docentes"
                 >
                   <span
                     className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
@@ -1190,13 +1279,33 @@ export default function ConfiguracionPage() {
           </div>
         )}
 
+        {/* Barra de guardado fija con estado de cambios. Los cambios de todas las pestañas se guardan juntos. */}
         {tabActiva !== 'firmantes' && (
-          <div className="flex justify-end mt-6 pb-4">
-            <button type="submit" disabled={guardando}
-              className="disabled:opacity-60 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
-              style={{ backgroundColor: 'var(--color-primario)' }}>
-              {guardando ? 'Guardando…' : 'Guardar cambios'}
-            </button>
+          <div className={`sticky bottom-0 z-20 mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 border-t backdrop-blur flex items-center justify-between gap-3 flex-wrap transition-colors ${
+            hayCambios ? 'bg-amber-50/95 border-amber-200' : 'bg-white/90 border-slate-200'
+          }`}>
+            <p className="text-xs" aria-live="polite">
+              {hayCambios
+                ? <span className="text-amber-800 font-medium">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2 align-middle" />
+                    {camposModificados === 1 ? '1 cambio sin guardar' : `${camposModificados} cambios sin guardar`}
+                  </span>
+                : <span className="text-slate-400">Todos los cambios están guardados.</span>}
+            </p>
+            <div className="flex items-center gap-2">
+              {hayCambios && (
+                <button type="button" onClick={descartarCambios} disabled={guardando}
+                  className="text-sm font-medium px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors">
+                  Descartar
+                </button>
+              )}
+              <button type="submit" disabled={guardando || !hayCambios}
+                className="disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-6 py-2 rounded-lg transition-colors inline-flex items-center gap-2"
+                style={{ backgroundColor: 'var(--color-primario)' }}>
+                {guardando && <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+                {guardando ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+            </div>
           </div>
         )}
       </form>
