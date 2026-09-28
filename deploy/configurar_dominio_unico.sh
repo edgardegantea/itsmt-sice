@@ -24,12 +24,26 @@ echo "  SICE — Configurando Dominio Único: ${DOMAIN}"
 echo "  Ruta base: ${APP_DIR}"
 echo "============================================="
 
-# 1. Permisos
+# 1. Permisos y Estructura
+mkdir -p "$APP_DIR/frontend/dist"
+mkdir -p "$APP_DIR/backend/storage" "$APP_DIR/backend/bootstrap/cache"
 chmod 755 /var/www /var/www/maewalliscorp.org /var/www/maewalliscorp.org/sice 2>/dev/null || true
 chmod -R 755 "$APP_DIR"
-chown -R www-data:www-data "$APP_DIR/frontend/dist"
+chown -R www-data:www-data "$APP_DIR/frontend/dist" 2>/dev/null || true
 chmod -R 775 "$APP_DIR/backend/storage" 2>/dev/null || true
 chmod -R 775 "$APP_DIR/backend/bootstrap/cache" 2>/dev/null || true
+
+# Compilar frontend en el servidor si dist/index.html no existe
+if [ ! -f "$APP_DIR/frontend/dist/index.html" ]; then
+  if command -v npm &> /dev/null; then
+    echo "→ Compilando Frontend React en el VPS..."
+    cd "$APP_DIR/frontend"
+    npm install --silent 2>/dev/null || npm install || true
+    npm run build || true
+    cd "$APP_DIR"
+    chown -R www-data:www-data "$APP_DIR/frontend/dist" 2>/dev/null || true
+  fi
+fi
 
 # 2. Configurar Backend (si existe .env)
 SICE_USER=$(stat -c '%U' "$APP_DIR" 2>/dev/null || echo "www-data")
