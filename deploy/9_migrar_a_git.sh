@@ -22,7 +22,7 @@ set -e
 
 REPO_URL="https://github.com/edgardegantea/itsmt-sice.git"
 REPO_BRANCH="main"
-NEW_DIR="/var/www/itsmt-sice"
+NEW_DIR="${NEW_DIR:-/var/www/maewalliscorp.org/sice/itsmt-sice}"
 OLD_BACKEND_ENV="/var/www/sice-backend/.env"
 
 echo "============================================="

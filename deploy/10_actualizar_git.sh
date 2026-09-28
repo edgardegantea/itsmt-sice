@@ -11,7 +11,7 @@
 # =============================================================================
 set -e
 
-APP_DIR="/var/www/itsmt-sice"
+APP_DIR="${APP_DIR:-/var/www/maewalliscorp.org/sice/itsmt-sice}"
 
 echo "============================================="
 echo "  SICE — Actualizando vía git pull"
