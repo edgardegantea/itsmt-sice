@@ -163,7 +163,7 @@ function CargasAccordion({
                 onClick={() => toggle(setOpenCarreras, carrera.id)}
               >
                 <Chevron open={isOpenC} />
-                <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">
+                <span className="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">
                   {carrera.clave}
                 </span>
                 <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
@@ -227,12 +227,12 @@ function CargasAccordion({
                       {isOpenS && (
                         <div className="border-t border-slate-50 divide-y divide-slate-50">
                           {sortedGrupos.map(grupo => (
-                            <div key={grupo.id} className="flex items-center gap-2 pl-16 pr-5 py-2 hover:bg-blue-50/30 transition-colors">
+                            <div key={grupo.id} className="flex items-center gap-2 pl-16 pr-5 py-2 hover:bg-brand-50/30 transition-colors">
                               <Link
                                 to={`/admin/gestion-academica/grupos/${grupo.id}`}
-                                className="flex items-center gap-3 flex-1 min-w-0 hover:text-blue-700 group"
+                                className="flex items-center gap-3 flex-1 min-w-0 hover:text-brand-700 group"
                               >
-                                <span className="font-mono text-xs font-semibold bg-slate-100 text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-700 px-2 py-0.5 rounded shrink-0 transition-colors">
+                                <span className="font-mono text-xs font-semibold bg-slate-100 text-slate-700 group-hover:bg-brand-100 group-hover:text-brand-700 px-2 py-0.5 rounded shrink-0 transition-colors">
                                   {grupo.clave}
                                 </span>
                                 {grupo.turno && (
@@ -249,7 +249,7 @@ function CargasAccordion({
                               </Link>
                               <Link
                                 to={`/admin/gestion-academica/grupos/${grupo.id}`}
-                                className="text-xs text-blue-600 hover:underline shrink-0 whitespace-nowrap"
+                                className="text-xs text-brand-600 hover:underline shrink-0 whitespace-nowrap"
                               >
                                 Ver horario
                               </Link>
@@ -293,9 +293,9 @@ function CargasAccordion({
 
 function HorarioChip({ h }: { h: Horario }) {
   return (
-    <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-700 rounded px-1.5 py-0.5 text-xs font-medium">
+    <span className="inline-flex items-center gap-1 bg-brand-50 border border-brand-100 text-brand-700 rounded px-1.5 py-0.5 text-xs font-medium">
       <span className="font-semibold">{DIA_SHORT[h.dia_semana]}</span>
-      <span className="text-blue-400">·</span>
+      <span className="text-brand-400">·</span>
       {fmt12(h.hora_inicio)}–{fmt12(h.hora_fin)}
     </span>
   )
@@ -339,7 +339,7 @@ function CargaDocenteView({
 
   // Paleta de colores por carga (índice)
   const COLORS = [
-    'bg-blue-100 text-blue-800 border-blue-200',
+    'bg-brand-100 text-brand-800 border-brand-200',
     'bg-emerald-100 text-emerald-800 border-emerald-200',
     'bg-violet-100 text-violet-800 border-violet-200',
     'bg-amber-100 text-amber-800 border-amber-200',
@@ -451,16 +451,16 @@ function CargaDocenteView({
               </div>
               <div className="px-2 py-2">
                 <p className="text-xs text-slate-400">Tipo B</p>
-                <p className="font-bold text-blue-700">{docente.tipo_horas === 'B' ? totalHorasGrupo : totalHorasGrupo}</p>
+                <p className="font-bold text-brand-700">{docente.tipo_horas === 'B' ? totalHorasGrupo : totalHorasGrupo}</p>
               </div>
             </div>
             <div className="flex justify-between items-center px-4 py-2">
               <span className="text-xs text-slate-500">Horas Frente a Grupo</span>
               <span className="font-bold text-slate-900">{totalHorasGrupo}</span>
             </div>
-            <div className="flex justify-between items-center px-4 py-2 bg-blue-50">
+            <div className="flex justify-between items-center px-4 py-2 bg-brand-50">
               <span className="text-xs font-semibold text-slate-700">Total de Horas</span>
-              <span className="font-bold text-blue-700 text-lg">{totalHorasGrupo}</span>
+              <span className="font-bold text-brand-700 text-lg">{totalHorasGrupo}</span>
             </div>
           </div>
         </div>
@@ -490,7 +490,7 @@ function CargaDocenteView({
                   const semestre = c.grupos?.[0]?.semestre ?? '?'
                   const isLast = idx === cargas.length - 1
                   return (
-                    <tr key={c.id} className="divide-x divide-slate-100 hover:bg-blue-50/40">
+                    <tr key={c.id} className="divide-x divide-slate-100 hover:bg-brand-50/40">
                       <td className="px-3 py-2.5 font-mono text-xs font-semibold text-slate-700">
                         {carreraClave}/{String(semestre).padStart(2, '0')}
                       </td>
@@ -507,7 +507,7 @@ function CargaDocenteView({
                       <td className="px-3 py-2.5 font-mono text-xs text-slate-600">{c.materia?.clave ?? '—'}</td>
                       <td className="px-3 py-2.5 text-slate-800">{c.materia?.nombre ?? '—'}</td>
                       <td className="px-3 py-2.5 text-center font-semibold text-slate-900">{c.horas_semana}</td>
-                      <td className="px-3 py-2.5 text-center font-bold text-blue-700">
+                      <td className="px-3 py-2.5 text-center font-bold text-brand-700">
                         {isLast ? totalHorasGrupo : ''}
                       </td>
                     </tr>
@@ -691,18 +691,18 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
               <select
                 value={bl.dia_semana}
                 onChange={e => setBloques(b => b.map((x, j) => j === i ? { ...x, dia_semana: e.target.value as DiaKey } : x))}
-                className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-28"
+                className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-28"
               >
                 {DIAS.map(d => <option key={d} value={d}>{DIA_FULL[d]}</option>)}
               </select>
               <input type="time" value={bl.hora_inicio}
                 onChange={e => setBloques(b => b.map((x, j) => j === i ? { ...x, hora_inicio: e.target.value } : x))}
-                className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-28"
+                className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-28"
               />
               <span className="text-slate-400">–</span>
               <input type="time" value={bl.hora_fin}
                 onChange={e => setBloques(b => b.map((x, j) => j === i ? { ...x, hora_fin: e.target.value } : x))}
-                className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-28"
+                className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-28"
               />
               <button onClick={() => setBloques(b => b.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 ml-auto">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -713,7 +713,7 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
           ))}
           <button
             onClick={() => setBloques(b => [...b, { dia_semana: 'lunes' as DiaKey, hora_inicio: '07:00', hora_fin: '08:00' }])}
-            className="w-full py-2 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg text-sm hover:border-blue-400 hover:text-blue-500 transition-colors"
+            className="w-full py-2 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg text-sm hover:border-brand-400 hover:text-brand-500 transition-colors"
           >
             + Agregar bloque de horario
           </button>
@@ -722,7 +722,7 @@ function HorariosModal({ carga, onClose }: { carga: CargaAcademica; onClose: () 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
           <button onClick={onClose} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cancelar</button>
           <button onClick={() => save.mutate()} disabled={save.isPending}
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+            className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
             {save.isPending ? 'Guardando…' : 'Guardar horarios'}
           </button>
         </div>
@@ -785,7 +785,7 @@ function ConcentradoModal({
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => { if (!periodoId) e.preventDefault(); else onClose() }}
-            className={`px-5 py-2 rounded-lg text-white text-sm font-medium ${periodoId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-300 cursor-not-allowed'}`}
+            className={`px-5 py-2 rounded-lg text-white text-sm font-medium ${periodoId ? 'bg-brand-600 hover:bg-brand-700' : 'bg-slate-300 cursor-not-allowed'}`}
           >
             Descargar Excel
           </a>
@@ -891,7 +891,7 @@ function BuscarDisponibilidadModal({
           <button
             onClick={() => buscar.mutate()}
             disabled={!puedeBuscar || buscar.isPending}
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
           >
             {buscar.isPending ? 'Buscando…' : 'Buscar'}
           </button>
@@ -1143,7 +1143,7 @@ export default function CargasPage() {
               {docenteSeleccionado && (
                 <button
                   onClick={() => setVistaDocente(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 text-sm rounded-lg hover:bg-blue-100"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 border border-brand-300 bg-brand-50 text-brand-700 text-sm rounded-lg hover:bg-brand-100"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1218,7 +1218,7 @@ export default function CargasPage() {
               )}
               <button
                 onClick={() => setModal({ ...BLANK })}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
               >
                 + Asignar carga
               </button>
@@ -1256,14 +1256,14 @@ export default function CargasPage() {
             </div>
           </div>
           {docenteSeleccionado && (
-            <div className="mt-3 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-              <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="mt-3 flex items-center gap-2 bg-brand-50 border border-brand-100 rounded-lg px-3 py-2">
+              <svg className="w-4 h-4 text-brand-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span className="text-sm text-blue-800 font-medium">{docenteSeleccionado.name}</span>
-              {docenteSeleccionado.nombramiento && <span className="text-xs text-blue-600">· {docenteSeleccionado.nombramiento}</span>}
-              {docenteSeleccionado.clave_empleado && <span className="text-xs text-blue-500 font-mono">({docenteSeleccionado.clave_empleado})</span>}
-              <button onClick={() => setVistaDocente(true)} className="ml-auto text-xs text-blue-600 hover:underline font-medium">
+              <span className="text-sm text-brand-800 font-medium">{docenteSeleccionado.name}</span>
+              {docenteSeleccionado.nombramiento && <span className="text-xs text-brand-600">· {docenteSeleccionado.nombramiento}</span>}
+              {docenteSeleccionado.clave_empleado && <span className="text-xs text-brand-500 font-mono">({docenteSeleccionado.clave_empleado})</span>}
+              <button onClick={() => setVistaDocente(true)} className="ml-auto text-xs text-brand-600 hover:underline font-medium">
                 Ver documento de carga →
               </button>
             </div>
@@ -1299,7 +1299,7 @@ export default function CargasPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {cargasFiltradas.map(c => (
-                  <tr key={c.id} className="hover:bg-blue-50/60 transition-colors">
+                  <tr key={c.id} className="hover:bg-brand-50/60 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-900 max-w-[160px] truncate">{c.docente?.name ?? '—'}</td>
                     <td className="px-4 py-3">
                       <p className="text-slate-800 truncate max-w-[180px]">{c.materia?.nombre ?? '—'}</p>
@@ -1325,7 +1325,7 @@ export default function CargasPage() {
                     <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                       <button onClick={() => setDetalle(c)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
                       {c.docente && <button onClick={() => setHorarioDocenteModal(c.docente as Docente)} className="text-xs text-violet-600 hover:underline">Ver carga</button>}
-                      <button onClick={() => setHorariosModal(c)} className="text-xs text-blue-600 hover:underline">Horario</button>
+                      <button onClick={() => setHorariosModal(c)} className="text-xs text-brand-600 hover:underline">Horario</button>
                       <button onClick={() => setModal(c)} className="text-xs text-slate-600 hover:underline">Editar</button>
                       {puedeEliminar && <button onClick={() => confirm({ title: '¿Eliminar carga?', description: `${c.docente?.name} · ${c.materia?.nombre}`, confirmLabel: 'Eliminar', onConfirm: () => del.mutateAsync(c.id) })} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                     </td>
@@ -1353,7 +1353,7 @@ export default function CargasPage() {
             </div>
             <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
               <p className="text-xs text-slate-500">Horas / semana</p>
-              <p className="text-2xl font-bold text-blue-700 mt-0.5">{totalHoras}h</p>
+              <p className="text-2xl font-bold text-brand-700 mt-0.5">{totalHoras}h</p>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
               <p className="text-xs text-slate-500">Docentes con carga</p>
@@ -1392,7 +1392,7 @@ export default function CargasPage() {
           ]}
           footer={<>
             <button onClick={() => { setHorariosModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Editar horario</button>
-            <button onClick={() => { setModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg">Editar</button>
+            <button onClick={() => { setModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-brand-700 rounded-lg">Editar</button>
           </>}
         />
       )}

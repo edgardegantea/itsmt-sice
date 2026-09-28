@@ -55,7 +55,7 @@ export default function CapturaCalificacionesPage() {
           <p className="text-slate-400 text-sm">Falta indicar el grupo y la materia a capturar.</p>
           <button
             onClick={() => navigate(volverA || (periodoId ? `${rutaListado}?periodo_id=${periodoId}` : rutaListado))}
-            className="mt-3 text-sm text-blue-600 hover:underline"
+            className="mt-3 text-sm text-brand-600 hover:underline"
           >
             ← Volver
           </button>
@@ -80,7 +80,7 @@ export default function CapturaCalificacionesPage() {
         <div>
           <button
             onClick={() => navigate(volverA || (periodoId ? `${rutaListado}?periodo_id=${periodoId}` : rutaListado))}
-            className="text-sm text-slate-500 hover:text-[#1a3a5c] mb-2 inline-flex items-center gap-1"
+            className="text-sm text-slate-500 hover:text-brand-600 mb-2 inline-flex items-center gap-1"
           >
             ← Volver
           </button>

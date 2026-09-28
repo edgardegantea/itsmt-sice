@@ -47,14 +47,14 @@ export default function AsesoriasRpPage() {
         <input
           type="text"
           placeholder="Buscar por alumno, asesor o fecha…"
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-72"
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-72"
           value={filtroInput}
           onChange={e => setFiltroInput(e.target.value)}
         />
         <input
           type="text"
           placeholder="Filtrar por ID de residencia"
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-72"
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-72"
           value={residenciaId}
           onChange={e => setResidenciaId(e.target.value)}
         />
@@ -91,7 +91,7 @@ export default function AsesoriasRpPage() {
                   <td className="px-4 py-3">{a.lugar ?? '—'}</td>
                   <td className="px-4 py-3 capitalize">{a.tipo ?? '—'}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setDetalle(a)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(a)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -108,7 +108,7 @@ export default function AsesoriasRpPage() {
               </div>
               <p className="text-sm text-slate-600">{a.asesorInterno?.name ?? '—'}</p>
               <p className="text-xs text-slate-500">{formatFecha(a.fecha)} · {a.lugar ?? '—'}</p>
-              <button onClick={() => setDetalle(a)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+              <button onClick={() => setDetalle(a)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
             </div>
           ))}
         </div>

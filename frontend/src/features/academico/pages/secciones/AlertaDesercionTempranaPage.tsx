@@ -179,7 +179,7 @@ export default function AlertaDesercionTempranaPage() {
                         <Link
                           to={`/admin/alumnos/${a.alumno_id}`}
                           onClick={e => e.stopPropagation()}
-                          className="text-sm font-medium text-slate-800 hover:text-blue-700 hover:underline"
+                          className="text-sm font-medium text-slate-800 hover:text-brand-700 hover:underline"
                         >
                           {a.nombre ?? '—'}
                         </Link>

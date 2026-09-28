@@ -5,7 +5,7 @@ import { useToastStore } from '../../../store/toastStore'
 import DetailModal from '../../../components/ui/DetailModal'
 
 const ESTATUS_COLORS: Record<string, string> = {
-  activa:    'bg-blue-100 text-blue-800',
+  activa:    'bg-brand-100 text-brand-800',
   concluida: 'bg-green-100 text-green-800',
   cancelada: 'bg-red-100 text-red-800',
 }
@@ -100,7 +100,7 @@ export default function MovilidadEstudiantilPage() {
         </div>
         <button
           onClick={() => setShowSolicitud(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          className="bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 text-sm font-medium"
         >
           + Solicitar movilidad
         </button>
@@ -119,7 +119,7 @@ export default function MovilidadEstudiantilPage() {
                   value={solicitudForm.ies_receptora}
                   onChange={e => setSolicitudForm(f => ({ ...f, ies_receptora: e.target.value }))}
                   required
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -130,7 +130,7 @@ export default function MovilidadEstudiantilPage() {
                     value={solicitudForm.fecha_inicio}
                     onChange={e => setSolicitudForm(f => ({ ...f, fecha_inicio: e.target.value }))}
                     required
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
                 <div>
@@ -139,7 +139,7 @@ export default function MovilidadEstudiantilPage() {
                     type="date"
                     value={solicitudForm.fecha_fin}
                     onChange={e => setSolicitudForm(f => ({ ...f, fecha_fin: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
               </div>
@@ -147,7 +147,7 @@ export default function MovilidadEstudiantilPage() {
                 <button type="button" onClick={() => setShowSolicitud(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Registrar'}
                 </button>
               </div>
@@ -207,7 +207,7 @@ export default function MovilidadEstudiantilPage() {
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={addMateria} className="text-sm text-blue-600 hover:underline">+ Agregar materia</button>
+              <button type="button" onClick={addMateria} className="text-sm text-brand-600 hover:underline">+ Agregar materia</button>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setSelectedMovilidad(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
                   Cancelar
@@ -257,14 +257,14 @@ export default function MovilidadEstudiantilPage() {
                           setSelectedMovilidad(m)
                           setMaterias([{ nombre: '', tipo_acreditacion: 'numerica', calificacion: '' }])
                         }}
-                        className="text-sm text-blue-600 hover:underline"
+                        className="text-sm text-brand-600 hover:underline"
                       >
                         Registrar calificaciones
                       </button>
                     )}
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button onClick={() => setDetalle(m)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(m)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}

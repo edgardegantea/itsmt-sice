@@ -314,7 +314,7 @@ export default function DocenteDetailPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-4">
             <button onClick={() => fotoInputRef.current?.click()} title="Cambiar foto"
-              className="w-14 h-14 rounded-full bg-[#1a3a5c] flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden relative group">
+              className="w-14 h-14 rounded-full bg-brand-600 flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden relative group">
               {docente.foto_url
                 ? <img src={docente.foto_url} alt={docente.name} className="w-full h-full object-cover" />
                 : initials(docente.name)}
@@ -340,7 +340,7 @@ export default function DocenteDetailPage() {
           <div className="flex border-b border-slate-100 overflow-x-auto">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${tab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+                className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${tab === t.id ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
                 {t.label}
               </button>
             ))}
@@ -416,7 +416,7 @@ export default function DocenteDetailPage() {
 
                 <div className="flex justify-end pt-2">
                   <button onClick={() => guardarPersonal.mutate()} disabled={guardarPersonal.isPending}
-                    className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                    className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
                     {guardarPersonal.isPending ? 'Guardando…' : 'Guardar cambios'}
                   </button>
                 </div>
@@ -483,7 +483,7 @@ export default function DocenteDetailPage() {
                               onChange={e => setHorasCarrera(c.id, e.target.value)}
                               placeholder="hrs"
                               title="Horas asignadas en esta carrera"
-                              className="w-16 shrink-0 border border-slate-300 rounded-lg px-2 py-1 text-xs text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-16 shrink-0 border border-slate-300 rounded-lg px-2 py-1 text-xs text-right focus:outline-none focus:ring-2 focus:ring-brand-500"
                             />
                           )}
                         </div>
@@ -497,7 +497,7 @@ export default function DocenteDetailPage() {
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Roles</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(docente.roles ?? []).map(r => (
-                      <span key={r.name} className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">{r.name}</span>
+                      <span key={r.name} className="text-xs px-2.5 py-1 bg-brand-50 text-brand-700 rounded-full font-medium">{r.name}</span>
                     ))}
                   </div>
                   <p className="text-xs text-slate-400 mt-1.5">Para cambiar roles, usa el módulo de Usuarios.</p>
@@ -505,7 +505,7 @@ export default function DocenteDetailPage() {
 
                 <div className="flex justify-end pt-2">
                   <button onClick={() => guardarLaboral.mutate()} disabled={guardarLaboral.isPending}
-                    className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                    className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
                     {guardarLaboral.isPending ? 'Guardando…' : 'Guardar cambios'}
                   </button>
                 </div>
@@ -556,7 +556,7 @@ export default function DocenteDetailPage() {
                     </div>
                     <div className="flex justify-end pt-4">
                       <button onClick={() => guardarSindical.mutate()} disabled={guardarSindical.isPending}
-                        className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                        className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
                         {guardarSindical.isPending ? 'Guardando…' : (fichaSindical ? 'Guardar ficha sindical' : 'Registrar ficha sindical')}
                       </button>
                     </div>
@@ -600,7 +600,7 @@ export default function DocenteDetailPage() {
                     </div>
                     <div className="flex justify-end pt-2">
                       <button onClick={() => guardarAcademica.mutate()} disabled={guardarAcademica.isPending}
-                        className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                        className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
                         {guardarAcademica.isPending ? 'Guardando…' : 'Guardar cambios'}
                       </button>
                     </div>
@@ -652,7 +652,7 @@ export default function DocenteDetailPage() {
                 {errorCuenta && <p className="text-xs text-red-600">{errorCuenta}</p>}
                 <div className="flex justify-end pt-2">
                   <button onClick={() => guardarCuenta.mutate()} disabled={guardarCuenta.isPending}
-                    className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                    className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
                     {guardarCuenta.isPending ? 'Guardando…' : 'Actualizar credenciales'}
                   </button>
                 </div>
@@ -679,7 +679,7 @@ export default function DocenteDetailPage() {
                           disabled={guardarRecordatorio.isPending}
                           className={`px-3 py-1.5 text-xs rounded-lg border font-medium transition-colors disabled:opacity-50 ${
                             activo
-                              ? 'bg-[#1a3a5c] text-white border-[#1a3a5c]'
+                              ? 'bg-brand-600 text-white border-brand-600'
                               : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
                           }`}
                         >

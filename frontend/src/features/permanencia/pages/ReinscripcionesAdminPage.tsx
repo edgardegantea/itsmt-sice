@@ -78,7 +78,7 @@ function AccionModal({ r, onClose }: { r: Reinscripcion; onClose: () => void }) 
             value={observaciones}
             onChange={e => setObservaciones(e.target.value)}
             rows={3}
-            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]"
+            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600"
             placeholder="Motivo de rechazo o nota…"
           />
         </div>
@@ -122,7 +122,7 @@ function TabReinscripciones() {
 
   const reinscripciones: Reinscripcion[] = data?.data ?? data ?? []
 
-  const selectCls = "px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+  const selectCls = "px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/30"
 
   return (
     <div className="space-y-5">
@@ -161,7 +161,7 @@ function TabReinscripciones() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {reinscripciones.map(r => (
-                <tr key={r.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                <tr key={r.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                   <td className="px-4 py-3 font-medium text-slate-800">{r.alumno?.user?.name ?? '—'}</td>
                   <td className="px-4 py-3 font-mono text-slate-600 text-xs">{r.alumno?.numero_control}</td>
                   <td className="px-4 py-3 text-slate-600 max-w-[160px] truncate">{r.alumno?.carrera?.nombre}</td>
@@ -177,29 +177,29 @@ function TabReinscripciones() {
                             <a
                               href={`${import.meta.env.VITE_API_URL ?? ''}/api/inscripciones/${r.alumno.inscripcion_id}/credencial/pdf`}
                               target="_blank" rel="noreferrer"
-                              className="text-xs text-[#1a3a5c] hover:underline"
+                              className="text-xs text-brand-600 hover:underline"
                             >Sticker</a>
                           )}
                           {r.recibo_cobro_id && (
                             <a
                               href={`${import.meta.env.VITE_API_URL ?? ''}/api/cobros-inscripcion/${r.recibo_cobro_id}/recibo/pdf`}
                               target="_blank" rel="noreferrer"
-                              className="text-xs text-[#1a3a5c] hover:underline"
+                              className="text-xs text-brand-600 hover:underline"
                             >Recibo</a>
                           )}
                         </span>
                       : r.estatus === 'aprobada'
                         ? <button onClick={() => setReselloTarget(r)}
-                            className="text-xs text-[#1a3a5c] hover:underline">Registrar</button>
+                            className="text-xs text-brand-600 hover:underline">Registrar</button>
                         : <span className="text-xs text-slate-300">—</span>}
                   </td>
                   <td className="px-4 py-3">
                     {r.estatus === 'pendiente' && (
-                      <button onClick={() => setSeleccionada(r)} className="text-xs font-medium text-[#1a3a5c] hover:underline">Gestionar</button>
+                      <button onClick={() => setSeleccionada(r)} className="text-xs font-medium text-brand-600 hover:underline">Gestionar</button>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setDetalle(r)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(r)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -248,7 +248,7 @@ function ReselloModal({ r, onClose }: { r: Reinscripcion; onClose: () => void })
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['reinscripciones-admin'] }); onClose() },
   })
 
-  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
   const f = (k: keyof typeof form, v: string) => setForm(prev => ({ ...prev, [k]: v }))
 
   return (
@@ -345,7 +345,7 @@ function TabOrdenReinscripcion() {
     onError: (e) => setError(mutationError(e)),
   })
 
-  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
 
   return (
     <div className="space-y-6">
@@ -401,7 +401,7 @@ function TabOrdenReinscripcion() {
         <h3 className="text-sm font-semibold text-slate-700 mb-4">Calendarios publicados</h3>
         <div className="flex gap-3 mb-4">
           <select value={periodoConsulta} onChange={e => setPeriodoConsulta(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30">
+            className="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30">
             <option value="">Seleccionar periodo…</option>
             {periodos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </select>
@@ -422,7 +422,7 @@ function TabOrdenReinscripcion() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {(ordenes as OrdenReinscripcion[]).map(o => (
-                <tr key={o.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                <tr key={o.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                   <td className="py-2.5 pr-4 text-slate-700">{o.carrera?.nombre ?? o.carrera_id}</td>
                   <td className="py-2.5 pr-4 text-slate-600">{o.semestre}°</td>
                   <td className="py-2.5 pr-4 text-slate-600">{o.fecha_inicio_reinscripcion ? new Date(o.fecha_inicio_reinscripcion + 'T12:00:00').toLocaleDateString('es-MX') : '—'}</td>
@@ -452,7 +452,7 @@ function NuevoAdeudoModal({ onClose }: { onClose: () => void }) {
     onError: (e) => setError(mutationError(e)),
   })
 
-  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -514,7 +514,7 @@ function TabAdeudos() {
 
   const adeudos: Adeudo[] = data?.data ?? data ?? []
 
-  const selectCls = "px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+  const selectCls = "px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
 
   return (
     <div className="space-y-5">
@@ -553,7 +553,7 @@ function TabAdeudos() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {adeudos.map(a => (
-                <tr key={a.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                <tr key={a.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                   <td className="px-4 py-3 font-medium text-slate-800">{a.alumno?.user?.name ?? '—'}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{a.alumno?.numero_control}</td>
                   <td className="px-4 py-3 text-slate-600 text-xs">{a.alumno?.carrera?.clave}</td>
@@ -574,7 +574,7 @@ function TabAdeudos() {
                       className="text-xs text-red-600 hover:underline disabled:opacity-50">Eliminar</button>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setDetalle(a)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(a)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -604,7 +604,7 @@ function TabAdeudos() {
 // ── Tab: Bajas ─────────────────────────────────────────────────────────────────
 
 const TIPO_BAJA_COLOR: Record<string, string> = {
-  parcial:    'bg-blue-100 text-blue-700',
+  parcial:    'bg-brand-100 text-brand-700',
   temporal:   'bg-orange-100 text-orange-700',
   definitiva: 'bg-red-100 text-red-700',
 }
@@ -642,7 +642,7 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
     onError: (e) => setError(mutationError(e)),
   })
 
-  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+  const inp = "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
   const f = (k: keyof typeof form, v: string | boolean) => setForm(prev => ({ ...prev, [k]: v }))
 
   return (
@@ -666,7 +666,7 @@ function RegistrarBajaModal({ onClose }: { onClose: () => void }) {
                 <li
                   key={a.id}
                   onClick={() => { f('alumno_id', a.id); setBusquedaNC(a.numero_control); setAlumnoNombre(a.user?.name ?? '') }}
-                  className="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 transition-colors"
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-brand-50 transition-colors"
                 >
                   <span className="font-mono text-slate-700">{a.numero_control}</span>
                   {' — '}<span className="text-slate-600">{a.user?.name}</span>
@@ -768,7 +768,7 @@ function TabBajas() {
 
   const bajas: Baja[] = data?.data ?? data ?? []
 
-  const selectCls = "px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+  const selectCls = "px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
 
   return (
     <div className="space-y-5">
@@ -812,7 +812,7 @@ function TabBajas() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {bajas.map(b => (
-                <tr key={b.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                <tr key={b.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                   <td className="px-4 py-3 font-medium text-slate-800">{b.alumno?.user?.name ?? '—'}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{b.alumno?.numero_control}</td>
                   <td className="px-4 py-3">
@@ -827,7 +827,7 @@ function TabBajas() {
                   </td>
                   <td className="px-4 py-3 text-slate-500 max-w-[200px] truncate text-xs">{b.motivo_texto ?? b.motivo_enum ?? '—'}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setDetalle(b)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(b)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -884,7 +884,7 @@ export default function ReinscripcionesAdminPage() {
             onClick={() => setTab(t.id)}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               tab === t.id
-                ? 'border-[#1a3a5c] text-[#1a3a5c]'
+                ? 'border-brand-600 text-brand-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >{t.label}</button>

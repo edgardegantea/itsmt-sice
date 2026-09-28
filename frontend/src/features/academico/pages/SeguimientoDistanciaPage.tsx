@@ -49,7 +49,7 @@ export default function SeguimientoDistanciaPage() {
       {indicadores && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl border p-4 text-center">
-            <p className="text-3xl font-bold text-blue-600">{indicadores.total_inscritos}</p>
+            <p className="text-3xl font-bold text-brand-600">{indicadores.total_inscritos}</p>
             <p className="text-sm text-gray-500 mt-1">Alumnos inscritos</p>
           </div>
           <div className="bg-white rounded-xl border p-4 text-center">
@@ -82,7 +82,7 @@ export default function SeguimientoDistanciaPage() {
               onClick={() => setFiltroRiesgo(key as 'todos' | 'riesgo' | 'pendiente')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 filtroRiesgo === key
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -128,7 +128,7 @@ export default function SeguimientoDistanciaPage() {
                         className={`h-2 rounded-full ${
                           s.semestres_cursados / s.semestres_maximos > 0.5
                             ? 'bg-red-500'
-                            : 'bg-blue-500'
+                            : 'bg-brand-500'
                         }`}
                         style={{ width: `${Math.min(100, (s.semestres_cursados / s.semestres_maximos) * 100)}%` }}
                       />
@@ -164,7 +164,7 @@ export default function SeguimientoDistanciaPage() {
                     </div>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button onClick={() => setDetalle(s)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(s)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -182,7 +182,7 @@ export default function SeguimientoDistanciaPage() {
                 {s.alerta_riesgo && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">⚠ Riesgo</span>}
                 {s.modulo_pendiente && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Módulo pendiente</span>}
               </div>
-              <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+              <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
             </div>
           ))}
         </div>

@@ -113,7 +113,7 @@ export default function EgresadosPage() {
             <ViewToggle value={vista} onChange={setVista} />
             <button
               onClick={openCreate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors"
             >
               + Registrar Egresado
             </button>
@@ -187,7 +187,7 @@ export default function EgresadosPage() {
                     <td className="py-3 px-4 text-right">
                       <button
                         onClick={() => openEdit(eg)}
-                        className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                        className="text-brand-600 hover:text-brand-800 text-xs font-medium"
                       >
                         Editar
                       </button>
@@ -212,7 +212,7 @@ export default function EgresadosPage() {
                   <p className="text-xs text-slate-500">{eg.anio_egreso} · <span className="capitalize">{eg.sector ?? '—'}</span></p>
                   <p className="text-xs text-slate-500">{eg.empresa_actual ?? '—'}</p>
                   <div className="flex gap-3 mt-1">
-                    <button onClick={() => openEdit(eg)} className="text-blue-600 hover:text-blue-800 text-xs font-medium">Editar</button>
+                    <button onClick={() => openEdit(eg)} className="text-brand-600 hover:text-brand-800 text-xs font-medium">Editar</button>
                     <button onClick={() => setDetalle(eg)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
                   </div>
                 </div>
@@ -234,7 +234,7 @@ export default function EgresadosPage() {
             { label: 'Puesto actual', value: detalle.puesto_actual ?? '—' },
             { label: 'Correo', value: detalle.correo_actualizado ?? detalle.alumno?.email ?? '—' },
           ]}
-          footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Editar</button>}
+          footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Editar</button>}
         />
       )}
 
@@ -327,7 +327,7 @@ export default function EgresadosPage() {
                 <button
                   type="submit"
                   disabled={mutCreate.isPending || mutUpdate.isPending}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
                 >
                   {editing ? 'Actualizar' : 'Registrar'}
                 </button>

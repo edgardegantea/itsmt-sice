@@ -120,7 +120,7 @@ export default function AlumnoLayout({ children }: Props) {
               <p className="text-[11px] font-medium text-slate-400 leading-none tracking-wide uppercase">
                 {config.nombre_corto ?? 'ITSMT'}
               </p>
-              <p className="text-xs font-semibold text-[#1b396a] leading-tight mt-0.5 tracking-tight">
+              <p className="text-xs font-semibold text-brand-600 leading-tight mt-0.5 tracking-tight">
                 Portal del Estudiante · TecNM
               </p>
             </div>
@@ -195,7 +195,7 @@ export default function AlumnoLayout({ children }: Props) {
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 ${
                     isActive
-                      ? 'bg-slate-100 text-[#1b396a] font-semibold border-l-3 border-[#b38e5d]'
+                      ? 'bg-slate-100 text-brand-600 font-semibold border-l-3 border-[#b38e5d]'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`
                 }
@@ -253,7 +253,7 @@ export default function AlumnoLayout({ children }: Props) {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-5 py-3 text-sm transition-colors ${
                         isActive
-                          ? 'bg-slate-50 text-[#1a3a5c] font-semibold'
+                          ? 'bg-slate-50 text-brand-600 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
                       }`
                     }

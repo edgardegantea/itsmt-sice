@@ -6,7 +6,7 @@ import { CURP_REGEX } from '../../../utils/validaciones'
 
 function PanelIzquierdo() {
   return (
-    <div className="hidden lg:flex w-1/2 bg-[#1a3a5c] flex-col justify-between p-12">
+    <div className="hidden lg:flex w-1/2 bg-brand-600 flex-col justify-between p-12">
       <div />
       <div>
         <h1 className="text-white text-4xl font-semibold leading-tight">
@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
               </div>
               <Link
                 to="/login"
-                className="block w-full text-center py-2.5 text-sm font-medium text-[#1a3a5c] border border-[#1a3a5c]/30 rounded-lg hover:bg-[#1a3a5c]/5 transition-colors"
+                className="block w-full text-center py-2.5 text-sm font-medium text-brand-600 border border-brand-600/30 rounded-lg hover:bg-brand-600/5 transition-colors"
               >
                 Volver al inicio de sesión
               </Link>
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                     required
                     autoComplete="off"
                     placeholder="usuario@itsmt.edu.mx  o  ABCD991231HVZRXX00"
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 transition"
                   />
                   {curpIncompleta && (
                     <p className="text-xs text-amber-600 mt-1.5">
@@ -130,14 +130,14 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-full bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+                  className="w-full bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
                 >
                   {isPending ? 'Verificando…' : 'Enviar enlace de recuperación'}
                 </button>
               </form>
 
               <p className="mt-6 text-center text-xs text-slate-400">
-                <Link to="/login" className="text-[#1a3a5c] hover:underline">
+                <Link to="/login" className="text-brand-600 hover:underline">
                   ← Volver al inicio de sesión
                 </Link>
               </p>

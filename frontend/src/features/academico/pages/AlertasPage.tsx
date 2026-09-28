@@ -39,7 +39,7 @@ export default function AlertasPage() {
             type="checkbox"
             checked={soloNoRevisadas}
             onChange={e => setSoloNoRevisadas(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
           />
           Mostrar solo pendientes de revisión
         </label>
@@ -66,7 +66,7 @@ export default function AlertasPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Link to={`/admin/alumnos/${alerta.alumno_id}`} className="font-semibold text-slate-800 text-sm hover:text-blue-700 hover:underline">
+                    <Link to={`/admin/alumnos/${alerta.alumno_id}`} className="font-semibold text-slate-800 text-sm hover:text-brand-700 hover:underline">
                       {alerta.alumno?.user?.name ?? alerta.alumno_id}
                     </Link>
                     <span className="text-xs text-slate-400 font-mono">

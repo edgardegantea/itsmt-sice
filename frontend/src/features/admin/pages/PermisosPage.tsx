@@ -85,7 +85,7 @@ function TablaPermisos({
                 return (
                   <td key={accion} className="text-center px-3 py-2.5">
                     {readOnly ? (
-                      <span className={`inline-block w-5 h-5 rounded ${marcado ? 'bg-blue-500' : 'bg-slate-200'}`} />
+                      <span className={`inline-block w-5 h-5 rounded ${marcado ? 'bg-brand-500' : 'bg-slate-200'}`} />
                     ) : (
                       <div className="flex flex-col items-center gap-0.5">
                         <input
@@ -93,7 +93,7 @@ function TablaPermisos({
                           checked={marcado || esHeredado}
                           disabled={esHeredado}
                           onChange={e => onChange?.(permiso, e.target.checked)}
-                          className="w-4 h-4 accent-blue-600 cursor-pointer disabled:cursor-default disabled:opacity-60"
+                          className="w-4 h-4 accent-brand-600 cursor-pointer disabled:cursor-default disabled:opacity-60"
                         />
                         {esHeredado && <span className="text-[10px] text-slate-400">rol</span>}
                       </div>
@@ -153,7 +153,7 @@ function TabRoles({ catalogo }: { catalogo: Catalogo }) {
             onClick={() => seleccionar(r.name)}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
               rolSeleccionado === r.name
-                ? 'bg-blue-600 text-white font-medium'
+                ? 'bg-brand-600 text-white font-medium'
                 : 'text-slate-700 hover:bg-slate-100'
             }`}
           >
@@ -178,7 +178,7 @@ function TabRoles({ catalogo }: { catalogo: Catalogo }) {
                 <button
                   onClick={() => guardar.mutate()}
                   disabled={guardar.isPending}
-                  className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+                  className="px-4 py-1.5 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-60"
                 >
                   {guardar.isPending ? 'Guardando…' : 'Guardar cambios'}
                 </button>
@@ -254,7 +254,7 @@ function TabUsuarios({ catalogo }: { catalogo: Catalogo }) {
           placeholder="Buscar usuario…"
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
-          className="w-full mb-2 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full mb-2 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
         <div className="space-y-1 max-h-[500px] overflow-y-auto">
           {usuarios.filter(u => !u.roles.some(r => r.name === 'superadmin') && !u.roles.some(r => r.name === 'alumno')).map(u => (
@@ -263,12 +263,12 @@ function TabUsuarios({ catalogo }: { catalogo: Catalogo }) {
               onClick={() => seleccionar(u)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                 usuarioId === u.id
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'text-slate-700 hover:bg-slate-100'
               }`}
             >
               <p className="font-medium truncate">{u.name}</p>
-              <p className={`text-xs truncate ${usuarioId === u.id ? 'text-blue-100' : 'text-slate-400'}`}>
+              <p className={`text-xs truncate ${usuarioId === u.id ? 'text-brand-100' : 'text-slate-400'}`}>
                 {ROL_LABEL[u.roles[0]?.name] ?? u.roles[0]?.name ?? 'sin rol'}
               </p>
             </button>
@@ -295,7 +295,7 @@ function TabUsuarios({ catalogo }: { catalogo: Catalogo }) {
                 <button
                   onClick={() => guardar.mutate()}
                   disabled={guardar.isPending}
-                  className="shrink-0 px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+                  className="shrink-0 px-4 py-1.5 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-60"
                 >
                   {guardar.isPending ? 'Guardando…' : 'Guardar cambios'}
                 </button>
@@ -357,7 +357,7 @@ export default function PermisosPage() {
             onClick={() => setTab(key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
               tab === key
-                ? 'border-blue-600 text-blue-600'
+                ? 'border-brand-600 text-brand-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >

@@ -75,7 +75,7 @@ export default function BecasAlumnoPage() {
 
   const estatusColors: Record<string, string> = {
     pendiente: 'bg-yellow-100 text-yellow-700',
-    validada:  'bg-blue-100 text-blue-700',
+    validada:  'bg-brand-100 text-brand-700',
     rechazada: 'bg-red-100 text-red-700',
     asignada:  'bg-green-100 text-green-700',
     cancelada: 'bg-slate-100 text-slate-500',
@@ -90,7 +90,7 @@ export default function BecasAlumnoPage() {
         </div>
         <button
           onClick={() => { setForm({ periodo_id: '', tipo_beca: '', promedio: '', ingreso_familiar: '' }); setShowModal(true) }}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
         >
           + Solicitar beca
         </button>
@@ -101,7 +101,7 @@ export default function BecasAlumnoPage() {
           <p className="text-slate-400 text-sm">No tienes solicitudes de beca aún.</p>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg"
+            className="mt-3 px-4 py-2 bg-brand-600 text-white text-sm rounded-lg"
           >
             Solicitar mi primera beca
           </button>
@@ -202,7 +202,7 @@ export default function BecasAlumnoPage() {
               <button
                 onClick={() => mutSolicitar.mutate()}
                 disabled={mutSolicitar.isPending || !form.periodo_id || !form.tipo_beca}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
               >
                 {mutSolicitar.isPending ? 'Enviando…' : 'Enviar solicitud'}
               </button>

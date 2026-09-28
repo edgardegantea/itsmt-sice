@@ -106,7 +106,7 @@ export default function CalendarioEscolarPage() {
           <p className="text-sm text-slate-500 mt-0.5">TecNM-AC-PO-002-01 — Calendario por periodo</p>
         </div>
         {periodoId && (
-          <button onClick={openModal} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+          <button onClick={openModal} className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700">
             {calendario ? 'Editar' : '+ Crear calendario'}
           </button>
         )}
@@ -130,7 +130,7 @@ export default function CalendarioEscolarPage() {
       {periodoId && !isLoading && !calendario && (
         <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
           <p className="text-slate-500 text-sm">No hay calendario para este periodo.</p>
-          <button onClick={openModal} className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg">Crear calendario</button>
+          <button onClick={openModal} className="mt-3 px-4 py-2 bg-brand-600 text-white text-sm rounded-lg">Crear calendario</button>
         </div>
       )}
 
@@ -221,7 +221,7 @@ export default function CalendarioEscolarPage() {
           <div className="col-span-2 mt-2">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-slate-700">Actividades del calendario</p>
-              <button onClick={addActividad} className="text-xs text-blue-600 hover:underline">+ Agregar</button>
+              <button onClick={addActividad} className="text-xs text-brand-600 hover:underline">+ Agregar</button>
             </div>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {actividades.map((a, i) => (

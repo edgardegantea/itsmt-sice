@@ -11,7 +11,7 @@ const GASTOS_LABELS: Record<keyof GastosMensuales, string> = {
   material_escolar: 'Material', salud: 'Salud', alimentacion: 'Alimentación', otros: 'Otros',
 }
 
-const INPUT = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+const INPUT = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30'
 const LABEL = 'block text-xs font-medium text-slate-500 mb-1'
 
 type EncuestaConRelaciones = EncuestaSocioeconomica & {
@@ -191,7 +191,7 @@ function EditEncuestaModal({ enc, onClose }: { enc: EncuestaConRelaciones; onClo
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">
               Cancelar
             </button>
-            <button type="submit" disabled={isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+            <button type="submit" disabled={isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
               {isPending ? 'Guardando…' : 'Guardar cambios'}
             </button>
           </div>
@@ -346,7 +346,7 @@ export default function EncuestasAdminPage() {
         <div className="flex gap-2">
           {(['todas', 'enviadas', 'borradores'] as const).map(f => (
             <button key={f} onClick={() => setFiltroEnviada(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize ${filtroEnviada === f ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize ${filtroEnviada === f ? 'bg-brand-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
               {f}
             </button>
           ))}
@@ -373,7 +373,7 @@ export default function EncuestasAdminPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {encuestas.map((enc) => (
-                <tr key={enc.id} className="hover:bg-blue-50/60 transition-colors">
+                <tr key={enc.id} className="hover:bg-brand-50/60 transition-colors">
                   <td className="px-4 py-3 font-medium text-slate-900">{enc.alumno?.user?.name ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600 font-mono">{enc.alumno?.numero_control ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{enc.alumno?.inscripcion?.carrera?.nombre ?? '—'}</td>
@@ -391,14 +391,14 @@ export default function EncuestasAdminPage() {
                       {esSuperadmin && (
                         <button
                           onClick={() => setEditando(enc)}
-                          className="text-[#1a3a5c] hover:underline text-xs font-medium"
+                          className="text-brand-600 hover:underline text-xs font-medium"
                         >
                           Editar
                         </button>
                       )}
                       <button
                         onClick={() => setSelected(enc)}
-                        className="text-blue-600 hover:underline text-xs font-medium"
+                        className="text-brand-600 hover:underline text-xs font-medium"
                       >
                         Ver detalle
                       </button>

@@ -44,7 +44,7 @@ chmod -R 775 "$BACKEND_DIR/storage"
 chmod -R 775 "$BACKEND_DIR/bootstrap/cache"
 
 # ── 5. Reiniciar PHP-FPM para descartar OPcache de código viejo ──────────
-systemctl restart php8.3-fpm
+systemctl restart php8.4-fpm
 
 echo ""
 echo "✅ Backend actualizado."

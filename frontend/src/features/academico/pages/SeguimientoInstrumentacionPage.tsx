@@ -2,7 +2,20 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { academicoApi } from '../services/academico'
+import { FileStack, ChevronDown, NotebookPen, Activity, UserCheck, SearchX, MonitorPlay, ClipboardCheck, Flag, type LucideIcon } from 'lucide-react'
 import { usePeriodoActivo } from '../../../hooks/usePeriodoActivo'
+
+/** Formatos del SGI G4 citados en el Oficio Circular DET/ITSMT/DA/0041/2026 y cuándo aplica
+ * cada uno. `alerta`: se genera solo ante un incumplimiento (no es de rutina). */
+const FORMATOS_SGC: { clave: string; nombre: string; cuando: string; icono: LucideIcon; alerta?: boolean }[] = [
+  { clave: 'F-03-01', nombre: 'Instrumentación didáctica', cuando: 'Al inicio del semestre', icono: NotebookPen },
+  { clave: 'F-03-02', nombre: 'Avance en línea', cuando: 'En cada corte', icono: Activity },
+  { clave: 'F-03-03', nombre: 'Evaluación del desempeño', cuando: 'Periodo de evaluación', icono: UserCheck },
+  { clave: 'F-03-04', nombre: 'Análisis de causa raíz', cuando: 'Si el rezago es ≥ 25%', icono: SearchX, alerta: true },
+  { clave: 'F-03-05', nombre: 'Guía virtual', cuando: 'Modalidad mixta', icono: MonitorPlay },
+  { clave: 'F-03-06', nombre: 'Evaluación del aprendizaje', cuando: 'Previo y al cierre', icono: ClipboardCheck },
+  { clave: 'F-03-07', nombre: 'Cumplimiento', cuando: 'Al cierre del semestre', icono: Flag },
+]
 
 function colorSemaforo(pct: number) {
   if (pct >= 90) return 'bg-emerald-100 text-emerald-700'
@@ -28,6 +41,21 @@ export default function SeguimientoInstrumentacionPage() {
 
   const filas = data?.filas ?? []
   const resumenDocentes = data?.resumen_docentes ?? []
+
+  // Indicadores calculados con los datos reales del periodo (antes eran cifras fijas).
+  const totalInstrumentaciones = acreditacion.reduce((n, c) => n + c.total, 0)
+  const totalLiberadas = acreditacion.reduce((n, c) => n + c.liberadas, 0)
+  const pctLiberadas = totalInstrumentaciones ? Math.round((totalLiberadas / totalInstrumentaciones) * 1000) / 10 : null
+  const docentesConAtraso = resumenDocentes.filter(d => d.unidades_con_atraso > 0).length
+
+  // La referencia de formatos se recuerda plegada/desplegada por usuario.
+  const [formatosAbiertos, setFormatosAbiertos] = useState(() => {
+    try { return localStorage.getItem('seguimiento-formatos') !== 'cerrado' } catch { return true }
+  })
+  const guardarFormatosAbiertos = (abierto: boolean) => {
+    setFormatosAbiertos(abierto)
+    try { localStorage.setItem('seguimiento-formatos', abierto ? 'abierto' : 'cerrado') } catch { /* sin almacenamiento */ }
+  }
   const cargaTrabajo = data?.carga_trabajo ?? []
 
   const descargarPdf = async () => {
@@ -65,68 +93,51 @@ export default function SeguimientoInstrumentacionPage() {
           <div className="text-[11px] text-slate-400">Exige informe F-03-06 de jefatura</div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-          <div className="text-2xl font-bold text-[#1b396a]">96.2%</div>
-          <div className="text-xs font-semibold text-slate-700 mt-0.5">F-03-01 Instrumentación Didáctica</div>
-          <div className="text-[11px] text-emerald-600 font-medium">Límite oficial: 17 sep 2026</div>
+          <div className="text-2xl font-bold text-brand-600">{pctLiberadas === null ? (isLoading ? '…' : '—') : `${pctLiberadas}%`}</div>
+          <div className="text-xs font-semibold text-slate-700 mt-0.5">Instrumentaciones liberadas (F-03-01)</div>
+          <div className="text-[11px] text-slate-400">{totalLiberadas} de {totalInstrumentaciones} en el periodo</div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-          <div className="text-2xl font-bold text-purple-700">14</div>
-          <div className="text-xs font-semibold text-slate-700 mt-0.5">Canalizaciones F-05-04 a Tutorías</div>
-          <div className="text-[11px] text-purple-600 font-medium">Inasistencia &ge; 50% o riesgo</div>
+          <div className="text-2xl font-bold text-slate-800">{docentesConAtraso}</div>
+          <div className="text-xs font-semibold text-slate-700 mt-0.5">Docentes con unidades atrasadas</div>
+          <div className="text-[11px] text-slate-400">de {resumenDocentes.length} con carga en el periodo</div>
         </div>
       </div>
 
-      {/* Matriz SGI G4 Formatos Oficio Circular DET/ITSMT/DA/0041/2026 */}
-      <div className="bg-slate-900 text-white rounded-xl p-5 mb-6 shadow-md">
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              Normativa TecNM · Ago-Dic 2026
-            </span>
-            <span className="text-xs text-slate-300 font-medium">Oficio Circular DET/ITSMT/DA/0041/2026</span>
-          </div>
-          <Link to="/comunicados/oficio-circular" className="text-xs text-amber-300 hover:text-amber-200 underline">
-            Ver Oficio Completo & Acuses →
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-center text-xs">
-          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-            <div className="font-bold text-amber-400">F-03-01</div>
-            <div className="text-[10px] text-slate-300 mt-0.5">Instrumentación</div>
-            <div className="text-[9px] text-emerald-400 mt-1 font-semibold">✓ Al inicio</div>
-          </div>
-          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-            <div className="font-bold text-amber-400">F-03-02</div>
-            <div className="text-[10px] text-slate-300 mt-0.5">Avance en línea</div>
-            <div className="text-[9px] text-blue-400 mt-1 font-semibold">En cada corte</div>
-          </div>
-          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-            <div className="font-bold text-amber-400">F-03-03</div>
-            <div className="text-[10px] text-slate-300 mt-0.5">Eval. Desempeño</div>
-            <div className="text-[9px] text-slate-400 mt-1">Periodo eval</div>
-          </div>
-          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-            <div className="font-bold text-red-400">F-03-04</div>
-            <div className="text-[10px] text-slate-300 mt-0.5">Causa Raíz</div>
-            <div className="text-[9px] text-red-400 mt-1 font-semibold">Si rezago &ge; 25%</div>
-          </div>
-          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-            <div className="font-bold text-amber-400">F-03-05</div>
-            <div className="text-[10px] text-slate-300 mt-0.5">Guía Virtual</div>
-            <div className="text-[9px] text-slate-400 mt-1">Mod. Mixta</div>
-          </div>
-          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-            <div className="font-bold text-amber-400">F-03-06</div>
-            <div className="text-[10px] text-slate-300 mt-0.5">Eval. Aprendizaje</div>
-            <div className="text-[9px] text-slate-400 mt-1">Previo / Cierre</div>
-          </div>
-          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-            <div className="font-bold text-emerald-400">F-03-07</div>
-            <div className="text-[10px] text-slate-300 mt-0.5">Cumplimiento</div>
-            <div className="text-[9px] text-emerald-400 mt-1 font-semibold">Al Cierre</div>
-          </div>
-        </div>
-      </div>
+      {/* Formatos del SGI G4 que marca el Oficio Circular DET/ITSMT/DA/0041/2026: referencia de
+          cuándo aplica cada uno. Plegable para no competir con los datos de la página. */}
+      <details className="group bg-white rounded-xl border border-slate-200 mb-6 shadow-sm" open={formatosAbiertos}
+        onToggle={e => guardarFormatosAbiertos((e.target as HTMLDetailsElement).open)}>
+        <summary className="list-none cursor-pointer select-none flex items-center justify-between gap-3 flex-wrap px-4 py-3">
+          <span className="flex items-center gap-2 min-w-0">
+            <FileStack className="w-4 h-4 text-brand-600 shrink-0" aria-hidden="true" />
+            <span className="text-sm font-semibold text-slate-800">Formatos del SGC para el seguimiento</span>
+            <span className="hidden sm:inline text-xs text-slate-400 truncate">· Oficio Circular DET/ITSMT/DA/0041/2026 · Ago–Dic 2026</span>
+          </span>
+          <span className="flex items-center gap-3">
+            <Link to="/comunicados/oficio-circular" onClick={e => e.stopPropagation()}
+              className="text-xs font-medium text-brand-600 hover:underline">Ver oficio y acuses</Link>
+            <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </span>
+        </summary>
+        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-px bg-slate-100 border-t border-slate-100 rounded-b-xl overflow-hidden">
+          {FORMATOS_SGC.map(f => {
+            const Icono = f.icono
+            return (
+              <li key={f.clave} className="bg-white p-3 flex lg:flex-col gap-3 lg:gap-2">
+                <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${f.alerta ? 'bg-red-50 text-red-600' : 'bg-brand-600/8 text-brand-600'}`}>
+                  <Icono className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-semibold text-slate-500 tabular-nums">{f.clave}</span>
+                  <span className="block text-xs font-medium text-slate-800 leading-snug">{f.nombre}</span>
+                  <span className={`block text-[11px] mt-0.5 ${f.alerta ? 'text-red-600 font-medium' : 'text-slate-500'}`}>{f.cuando}</span>
+                </span>
+              </li>
+            )
+          })}
+        </ol>
+      </details>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto mb-6">
         <table className="w-full text-sm">
@@ -193,7 +204,7 @@ export default function SeguimientoInstrumentacionPage() {
                   </div>
                 </td>
                 <td className="px-3 py-2">
-                  <Link to={`/admin/gestion-academica/planeaciones/${f.planeacion_id}`} className="text-blue-600 hover:underline text-xs">
+                  <Link to={`/admin/gestion-academica/planeaciones/${f.planeacion_id}`} className="text-brand-600 hover:underline text-xs">
                     Ver planeación →
                   </Link>
                 </td>

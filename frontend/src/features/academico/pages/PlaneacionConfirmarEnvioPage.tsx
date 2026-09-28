@@ -60,7 +60,7 @@ export default function PlaneacionConfirmarEnvioPage() {
     return (
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <p className="text-sm text-slate-500">No se encontró esta instrumentación didáctica.</p>
-        <Link to={`/docente/planeacion?periodo=${periodoId}`} className="text-sm text-blue-600 hover:underline">← Volver a Mis asignaturas</Link>
+        <Link to={`/docente/planeacion?periodo=${periodoId}`} className="text-sm text-brand-600 hover:underline">← Volver a Mis asignaturas</Link>
       </div>
     )
   }
@@ -76,7 +76,7 @@ export default function PlaneacionConfirmarEnvioPage() {
         </Link>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-lg shadow-slate-200/70 overflow-hidden">
-          <div className="h-1.5 bg-gradient-to-r from-[#1a3a5c] via-sky-500 to-emerald-400" />
+          <div className="h-1.5 bg-gradient-to-r from-brand-600 via-sky-500 to-emerald-400" />
           <div className="flex items-start justify-between gap-4 p-5">
             <div>
               <h1 className="text-xl font-bold text-slate-900">{planeacion.carga_academica?.materia?.nombre ?? 'Instrumentación didáctica'}</h1>
@@ -117,7 +117,7 @@ export default function PlaneacionConfirmarEnvioPage() {
           <div className="flex-1 min-w-0 bg-white rounded-xl border border-slate-200 shadow-sm shadow-slate-200/60 p-5 space-y-4">
             <PlaneacionDetalle p={planeacion} />
             {planeacion.archivo_url && (
-              <a href={planeacion.archivo_url} target="_blank" rel="noreferrer" className="inline-block text-xs text-blue-600 hover:underline">
+              <a href={planeacion.archivo_url} target="_blank" rel="noreferrer" className="inline-block text-xs text-brand-600 hover:underline">
                 Ver archivo adjunto
               </a>
             )}

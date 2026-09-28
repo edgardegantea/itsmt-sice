@@ -18,7 +18,7 @@ function colorAula(a: { ocupada: boolean; ultima_incidencia_estatus?: string }) 
   if (a.ultima_incidencia_estatus && a.ultima_incidencia_estatus !== 'sin_novedad') {
     return 'border-red-300 bg-red-50'
   }
-  if (a.ocupada) return 'border-blue-300 bg-blue-50'
+  if (a.ocupada) return 'border-brand-300 bg-brand-50'
   return 'border-slate-200 bg-white'
 }
 
@@ -63,7 +63,7 @@ export default function TorreControlPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-5">
             <p className="text-sm text-slate-500 font-medium">Aulas ocupadas ahora</p>
-            <p className="text-3xl font-bold text-blue-600 mt-1">{data ? `${data.aulas_ocupadas}/${data.aulas_total}` : '…'}</p>
+            <p className="text-3xl font-bold text-brand-600 mt-1">{data ? `${data.aulas_ocupadas}/${data.aulas_total}` : '…'}</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-200 p-5">
             <p className="text-sm text-slate-500 font-medium">% Asistencia registrada hoy</p>
@@ -109,7 +109,7 @@ export default function TorreControlPage() {
             )}
             <div className="flex gap-4 mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
               <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-white border border-slate-300" /> Libre</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-blue-50 border border-blue-300" /> Ocupada</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-brand-50 border border-brand-300" /> Ocupada</span>
               <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-50 border border-red-300" /> Con incidencia</span>
             </div>
           </div>

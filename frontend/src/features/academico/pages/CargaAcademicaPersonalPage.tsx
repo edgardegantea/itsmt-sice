@@ -7,7 +7,7 @@ import ViewToggle, { useViewMode } from '../../../components/ui/ViewToggle'
 import DetailModal from '../../../components/ui/DetailModal'
 
 const CONTRATO_COLOR: Record<string, string> = {
-  base:        'bg-blue-100 text-blue-700',
+  base:        'bg-brand-100 text-brand-700',
   interino:    'bg-purple-100 text-purple-700',
   hora_clase:  'bg-slate-100 text-slate-600',
   medio_tiempo:'bg-orange-100 text-orange-700',
@@ -65,7 +65,7 @@ export default function CargaAcademicaPersonalPage() {
             </div>
             <div className="bg-white rounded-xl border border-slate-200 p-4">
               <p className="text-xs text-slate-400">Total horas/semana</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">{totalHoras}</p>
+              <p className="text-2xl font-bold text-brand-600 mt-1">{totalHoras}</p>
             </div>
             <div className="bg-white rounded-xl border border-slate-200 p-4">
               <p className="text-xs text-slate-400">Promedio hrs/docente</p>
@@ -142,7 +142,7 @@ export default function CargaAcademicaPersonalPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button onClick={() => setDetalle(d)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                        <button onClick={() => setDetalle(d)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                       </td>
                     </tr>
                   )
@@ -163,7 +163,7 @@ export default function CargaAcademicaPersonalPage() {
                     <span className="font-semibold text-slate-700">{d.total_grupos} grupos</span>
                     <span className={`font-bold ${sobrecarga ? 'text-red-600' : subcarga ? 'text-yellow-600' : 'text-slate-800'}`}>{d.total_horas_semana} hrs/sem</span>
                   </div>
-                  <button onClick={() => setDetalle(d)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                  <button onClick={() => setDetalle(d)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
                 </div>
               )
             })}

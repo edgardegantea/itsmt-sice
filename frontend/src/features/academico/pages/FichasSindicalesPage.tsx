@@ -137,13 +137,13 @@ export default function FichasSindicalesPage() {
           <ViewToggle value={vista} onChange={setVista} />
           <button
             onClick={descargarPDF}
-            className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium"
+            className="border border-brand-600 text-brand-600 px-4 py-2 rounded-lg hover:bg-brand-50 text-sm font-medium"
           >
             Descargar PDF TecNM
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 text-sm font-medium"
           >
             + Registrar ficha sindical
           </button>
@@ -159,7 +159,7 @@ export default function FichasSindicalesPage() {
             onClick={() => setFiltroTipo(t)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filtroTipo === t
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand-600 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -179,14 +179,14 @@ export default function FichasSindicalesPage() {
                 <input type="text" value={form.docente_id}
                   onChange={e => setForm(f => ({ ...f, docente_id: e.target.value }))}
                   required placeholder="UUID del usuario docente"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Clave plaza *</label>
                   <input type="text" value={form.clave_plaza}
                     onChange={e => setForm(f => ({ ...f, clave_plaza: e.target.value }))}
-                    required className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    required className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tipo nombramiento *</label>
@@ -235,7 +235,7 @@ export default function FichasSindicalesPage() {
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
-                <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Registrar'}
                 </button>
               </div>
@@ -292,7 +292,7 @@ export default function FichasSindicalesPage() {
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowMovForm(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
-                <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Registrar'}
                 </button>
               </div>
@@ -336,7 +336,7 @@ export default function FichasSindicalesPage() {
                     {f.fecha_ingreso_sep ? new Date(f.fecha_ingreso_sep).toLocaleDateString('es-MX') : '—'}
                   </td>
                   <td className="px-5 py-4 text-center">
-                    <span className="text-lg font-bold text-blue-700">{f.anios_servicio}</span>
+                    <span className="text-lg font-bold text-brand-700">{f.anios_servicio}</span>
                     <span className="text-xs text-gray-400 block">años</span>
                   </td>
                   <td className="px-5 py-4 text-center">
@@ -345,7 +345,7 @@ export default function FichasSindicalesPage() {
                   <td className="px-5 py-4">
                     <button
                       onClick={() => setShowMovForm(f.id)}
-                      className="text-xs text-blue-600 hover:underline font-medium"
+                      className="text-xs text-brand-600 hover:underline font-medium"
                     >
                       + Movimiento
                     </button>
@@ -367,7 +367,7 @@ export default function FichasSindicalesPage() {
               <p className="text-xs text-gray-500 font-mono">{f.clave_plaza}</p>
               <p className="text-xs text-gray-500">{f.anios_servicio} años de servicio · {f.movimientos?.length ?? 0} movimiento(s)</p>
               <div className="flex gap-3 mt-1">
-                <button onClick={() => setShowMovForm(f.id)} className="text-xs text-blue-600 hover:underline font-medium">+ Movimiento</button>
+                <button onClick={() => setShowMovForm(f.id)} className="text-xs text-brand-600 hover:underline font-medium">+ Movimiento</button>
                 <button onClick={() => setDetalle(f)} className="text-xs font-medium text-gray-500 hover:underline">Ver detalle</button>
               </div>
             </div>
@@ -394,7 +394,7 @@ export default function FichasSindicalesPage() {
                 : 'Sin movimientos registrados',
             },
           ]}
-          footer={<button onClick={() => { setDetalle(null); setShowMovForm(detalle.id) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">+ Movimiento</button>}
+          footer={<button onClick={() => { setDetalle(null); setShowMovForm(detalle.id) }} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">+ Movimiento</button>}
         />
       )}
     </div>

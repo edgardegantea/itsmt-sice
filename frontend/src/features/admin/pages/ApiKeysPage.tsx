@@ -66,17 +66,17 @@ export default function ApiKeysPage() {
       </div>
 
       {/* Instrucciones */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-        <p className="text-sm font-semibold text-blue-900">Cómo conectar</p>
-        <p className="text-sm text-blue-800">
+      <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 space-y-2">
+        <p className="text-sm font-semibold text-brand-900">Cómo conectar</p>
+        <p className="text-sm text-brand-800">
           <strong>Power BI</strong>: Obtener datos → Web → pega la URL del endpoint. En "Encabezados HTTP" agrega <code className="bg-white px-1 rounded">X-Api-Key</code> con tu llave.
         </p>
-        <p className="text-sm text-blue-800">
+        <p className="text-sm text-brand-800">
           <strong>Looker Studio / Google Sheets</strong>: usa <code className="bg-white px-1 rounded">=IMPORTDATA("URL?api_key=TU_LLAVE")</code> en una hoja de Sheets y conecta Looker Studio a esa hoja.
         </p>
         <div className="pt-1 space-y-1">
           {BI_ENDPOINTS.map(e => (
-            <div key={e.path} className="text-xs font-mono bg-white border border-blue-100 rounded px-2 py-1 text-slate-600">
+            <div key={e.path} className="text-xs font-mono bg-white border border-brand-100 rounded px-2 py-1 text-slate-600">
               {baseUrl}{e.path}?periodo_id=... <span className="text-slate-400 font-sans">— {e.label}</span>
             </div>
           ))}
@@ -91,12 +91,12 @@ export default function ApiKeysPage() {
             value={nombreNueva}
             onChange={e => setNombreNueva(e.target.value)}
             placeholder="Ej. Dashboard Power BI Dirección"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
           <button
             onClick={() => mutCrear.mutate()}
             disabled={!nombreNueva.trim() || mutCrear.isPending}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50"
           >
             {mutCrear.isPending ? 'Generando…' : 'Generar llave'}
           </button>

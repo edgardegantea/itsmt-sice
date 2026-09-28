@@ -6,12 +6,12 @@ import { titulacionApi, type CertificadoIdioma, type SolicitudActoProtocolario, 
 const ESTATUS_COLOR: Record<string, string> = {
   pendiente_revision:     'bg-yellow-100 text-yellow-800',
   no_procede:             'bg-red-100 text-red-800',
-  con_no_inconveniencia:  'bg-blue-100 text-blue-800',
+  con_no_inconveniencia:  'bg-brand-100 text-brand-800',
   agendado:               'bg-indigo-100 text-indigo-800',
   aprobado:               'bg-green-100 text-green-800',
   reprobado:              'bg-red-200 text-red-900',
   exento:                 'bg-purple-100 text-purple-800',
-  solicitado:             'bg-blue-100 text-blue-800',
+  solicitado:             'bg-brand-100 text-brand-800',
   en_revision:            'bg-yellow-100 text-yellow-800',
   rechazado:              'bg-red-100 text-red-800',
 }
@@ -104,7 +104,7 @@ export default function TitulacionAlumnoPage() {
         <nav className="-mb-px flex gap-4">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${tab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+              className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${tab === t.id ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
               {t.label}
             </button>
           ))}
@@ -190,7 +190,7 @@ export default function TitulacionAlumnoPage() {
       {/* ── Acto Protocolario ── */}
       {tab === 'acto' && (
         <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 space-y-1">
+          <div className="bg-brand-50 border border-brand-200 rounded-lg p-4 text-sm text-brand-800 space-y-1">
             <p className="font-medium">Prerequisitos para solicitar Acto Protocolario (política 3.3 PO-006):</p>
             <ul className="list-disc list-inside space-y-0.5 text-xs">
               <li>Todos los créditos de la carrera acreditados (100%)</li>

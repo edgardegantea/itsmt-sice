@@ -14,7 +14,7 @@ const TIPO_LABEL: Record<TipoConstancia, string> = {
 }
 
 const ESTATUS_COLOR: Record<string, string> = {
-  solicitada: 'bg-blue-100 text-blue-800',
+  solicitada: 'bg-brand-100 text-brand-800',
   emitida:    'bg-green-100 text-green-800',
 }
 
@@ -87,7 +87,7 @@ export default function ConstanciasAdminPage() {
           <select
             value={filtroCarrera}
             onChange={e => setFiltroCarrera(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+            className="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/30"
           >
             <option value="">Todas las carreras</option>
             {carreras.map(c => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
@@ -95,7 +95,7 @@ export default function ConstanciasAdminPage() {
           <select
             value={filtroEstatus}
             onChange={e => setFiltroEstatus(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+            className="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/30"
           >
             <option value="">Todos</option>
             <option value="solicitada">Solicitadas</option>
@@ -137,7 +137,7 @@ export default function ConstanciasAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {constancias.map(c => (
-                    <tr key={c.id} className="hover:bg-blue-50/60 transition-colors">
+                    <tr key={c.id} className="hover:bg-brand-50/60 transition-colors">
                       {modoSeleccion && <td className="pl-4"><SelectCheckbox checked={seleccionados.has(c.id)} onChange={() => toggleSel(c.id)} /></td>}
                       <td className="px-4 py-3 font-medium text-slate-800">{c.alumno?.user?.name ?? '—'}</td>
                       <td className="px-4 py-3 font-mono text-xs text-slate-600">{c.alumno?.numero_control}</td>
@@ -160,13 +160,13 @@ export default function ConstanciasAdminPage() {
                             <button
                               onClick={() => descargar(c)}
                               disabled={generando === c.id}
-                              className="text-xs font-medium text-[#1a3a5c] hover:underline disabled:opacity-50"
+                              className="text-xs font-medium text-brand-600 hover:underline disabled:opacity-50"
                             >{generando === c.id ? 'Generando…' : 'PDF'}</button>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                        <button onClick={() => setDetalle(c)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                       </td>
                     </tr>
                   ))}
@@ -203,7 +203,7 @@ export default function ConstanciasAdminPage() {
                       >{generando === c.id ? 'Generando…' : 'Descargar PDF'}</button>
                     )}
                   </div>
-                  <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
+                  <button onClick={() => setDetalle(c)} className="text-xs font-medium text-brand-600 hover:underline">Ver detalle</button>
                 </div>
               ))}
             </div>
@@ -225,7 +225,7 @@ export default function ConstanciasAdminPage() {
           ]}
           footer={
             detalle.estatus === 'emitida'
-              ? <button onClick={() => descargar(detalle)} disabled={generando === detalle.id} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg disabled:opacity-50">{generando === detalle.id ? 'Generando…' : 'Descargar PDF'}</button>
+              ? <button onClick={() => descargar(detalle)} disabled={generando === detalle.id} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg disabled:opacity-50">{generando === detalle.id ? 'Generando…' : 'Descargar PDF'}</button>
               : <button onClick={() => mutEmitir.mutate(detalle.id)} disabled={mutEmitir.isPending} className="text-xs font-medium text-white bg-green-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Emitir</button>
           }
         />

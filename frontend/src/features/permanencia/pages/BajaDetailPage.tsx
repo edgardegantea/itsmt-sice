@@ -76,7 +76,7 @@ export default function BajaDetailPage() {
     return (
       <div className="px-4 sm:px-6 lg:px-8 py-12 text-center">
         <p className="text-slate-500 text-sm mb-3">No se pudo cargar esta baja (puede que no exista o no tengas acceso).</p>
-        <Link to="/admin/bajas" className="text-sm text-blue-600 hover:underline">← Volver a Bajas</Link>
+        <Link to="/admin/bajas" className="text-sm text-brand-600 hover:underline">← Volver a Bajas</Link>
       </div>
     )
   }
@@ -93,7 +93,7 @@ export default function BajaDetailPage() {
           Gestión de Bajas
         </Link>
         <div className="flex items-center gap-3 flex-wrap">
-          <Link to={`/admin/alumnos/${baja.alumno_id}`} className="text-2xl font-bold text-slate-800 hover:text-blue-700 hover:underline">
+          <Link to={`/admin/alumnos/${baja.alumno_id}`} className="text-2xl font-bold text-slate-800 hover:text-brand-700 hover:underline">
             {baja.alumno?.user?.name ?? 'Alumno'}
           </Link>
           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${ESTATUS_BADGE[baja.estatus]}`}>
@@ -107,8 +107,8 @@ export default function BajaDetailPage() {
 
       {/* Confirmación aprobar */}
       {pendienteAccion === 'aprobada' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p className="text-sm font-medium text-blue-800 mb-3">
+        <div className="bg-brand-50 border border-brand-200 rounded-xl p-4">
+          <p className="text-sm font-medium text-brand-800 mb-3">
             ¿Aprobar esta baja? El estatus del alumno cambiará automáticamente a {baja.tipo_baja === 'definitiva' ? 'baja definitiva' : 'baja temporal'}.
           </p>
           <div className="flex gap-2">
@@ -243,7 +243,7 @@ export default function BajaDetailPage() {
               <button
                 onClick={() => { if (confirm('¿Registrar el reingreso? El alumno volverá a estatus activo.')) reingresoMut.mutate() }}
                 disabled={reingresoMut.isPending}
-                className="text-sm bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+                className="text-sm bg-brand-50 text-brand-700 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors disabled:opacity-50"
               >
                 {reingresoMut.isPending ? 'Procesando…' : 'Registrar reingreso'}
               </button>

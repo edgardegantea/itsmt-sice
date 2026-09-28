@@ -23,7 +23,7 @@ type GrupoItem = {
 }
 
 const selectCls =
-  'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+  'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-600/30'
 
 const SEMESTRES = Array.from({ length: 12 }, (_, i) => i + 1)
 
@@ -293,7 +293,7 @@ export default function CargaAcademicaAdminPage() {
           <div className="flex items-center justify-between text-xs text-slate-500 px-1">
             <span>{alumnos.length} alumno{alumnos.length !== 1 ? 's' : ''}</span>
             {grupoSeleccionado && (
-              <span className="text-[#1a3a5c] font-medium">
+              <span className="text-brand-600 font-medium">
                 Grupo seleccionado: {grupoSeleccionado.clave} — {grupoSeleccionado.semestre}° semestre
               </span>
             )}
@@ -301,7 +301,7 @@ export default function CargaAcademicaAdminPage() {
 
           {modoSeleccion && seleccionados.size > 0 && (
             <BulkActionBar count={seleccionados.size} onCancel={() => { setSeleccionados(new Set()); setModoSeleccion(false) }}>
-              <button onClick={descargarLote} disabled={descargandoLote} className="px-3 py-1.5 text-xs font-medium bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              <button onClick={descargarLote} disabled={descargandoLote} className="px-3 py-1.5 text-xs font-medium bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50">
                 {descargandoLote ? 'Descargando…' : 'Descargar PDF'}
               </button>
             </BulkActionBar>
@@ -329,7 +329,7 @@ export default function CargaAcademicaAdminPage() {
                     const cargando = generando === keyAlumno(a.id)
 
                     return (
-                      <tr key={a.id} className="hover:bg-blue-50/40 transition-colors">
+                      <tr key={a.id} className="hover:bg-brand-50/40 transition-colors">
                         {modoSeleccion && <td className="pl-4"><SelectCheckbox checked={seleccionados.has(a.id)} onChange={() => toggleSel(a.id)} /></td>}
                         <td className="px-4 py-3 text-slate-400 text-xs">{i + 1}</td>
                         <td className="px-4 py-3 font-medium text-slate-800">{nombre}</td>

@@ -66,7 +66,7 @@ export default function AspiranteDetailPage() {
     return (
       <div className="p-6 text-center">
         <p className="text-slate-500">No se encontró el aspirante.</p>
-        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-blue-600 hover:underline">← Volver</button>
+        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-brand-600 hover:underline">← Volver</button>
       </div>
     )
   }

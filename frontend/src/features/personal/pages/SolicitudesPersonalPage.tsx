@@ -86,7 +86,7 @@ export default function SolicitudesPersonalPage() {
         <h1 className="text-2xl font-bold text-gray-900">Solicitudes de Permiso</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+          className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 text-sm"
         >
           + Nueva Solicitud
         </button>
@@ -156,7 +156,7 @@ export default function SolicitudesPersonalPage() {
               <button
                 type="submit"
                 disabled={crearMut.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50"
               >
                 {crearMut.isPending ? 'Enviando...' : 'Enviar Solicitud'}
               </button>
@@ -206,7 +206,7 @@ export default function SolicitudesPersonalPage() {
               <button
                 onClick={() => resolverMut.mutate({ id: resolving.id, estatus: accion, obs: observaciones })}
                 disabled={resolverMut.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50"
               >
                 Confirmar
               </button>
@@ -256,7 +256,7 @@ export default function SolicitudesPersonalPage() {
                     {isDirector && sol.estatus === 'pendiente' && (
                       <button
                         onClick={() => { setResolving(sol); setAccion('aprobada') }}
-                        className="text-blue-600 hover:underline text-xs"
+                        className="text-brand-600 hover:underline text-xs"
                       >
                         Resolver
                       </button>
@@ -271,7 +271,7 @@ export default function SolicitudesPersonalPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setDetalle(sol)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(sol)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -293,7 +293,7 @@ export default function SolicitudesPersonalPage() {
           ]}
           footer={
             isDirector && detalle.estatus === 'pendiente'
-              ? <button onClick={() => { setResolving(detalle); setAccion('aprobada'); setDetalle(null) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Resolver</button>
+              ? <button onClick={() => { setResolving(detalle); setAccion('aprobada'); setDetalle(null) }} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Resolver</button>
               : detalle.estatus === 'aprobada'
                 ? <button onClick={() => descargarPdf(detalle)} className="text-xs font-medium text-white bg-green-700 px-3 py-1.5 rounded-lg">Descargar PDF</button>
                 : undefined

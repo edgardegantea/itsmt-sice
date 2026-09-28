@@ -66,7 +66,7 @@ export default function MateriasTab() {
           </select>
         </div>
         <button onClick={() => setModal({ ...BLANK, carrera_id: filtroCarrera })}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 flex items-center gap-2">
           <span className="text-base leading-none">+</span> Nueva materia
         </button>
       </div>
@@ -80,7 +80,7 @@ export default function MateriasTab() {
             {isLoading && <EmptyRow cols={8} msg="Cargando…" />}
             {!isLoading && materias.length === 0 && <EmptyRow cols={8} />}
             {materias.map(m => (
-              <tr key={m.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={m.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-mono text-xs text-slate-600">{m.clave}</td>
                 <td className="px-4 py-3 font-medium text-slate-900">{m.nombre}</td>
                 <td className="px-4 py-3 text-slate-600">{m.carrera?.clave ?? '—'}</td>
@@ -89,7 +89,7 @@ export default function MateriasTab() {
                 <td className="px-4 py-3 text-slate-600 text-center">{m.horas_teoria} / {m.horas_practica}</td>
                 <td className="px-4 py-3"><span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">{TIPO_LABEL[m.tipo]}</span></td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => setModal(m)} className="text-xs text-blue-600 hover:underline mr-3">Editar</button>
+                  <button onClick={() => setModal(m)} className="text-xs text-brand-600 hover:underline mr-3">Editar</button>
                   <button onClick={() => window.confirm('¿Eliminar materia?') && del.mutate(m.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
                 </td>
               </tr>

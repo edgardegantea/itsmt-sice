@@ -154,7 +154,7 @@ export default function CalidadPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key as typeof tab)}
-            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             {t.label}
           </button>
@@ -167,7 +167,7 @@ export default function CalidadPage() {
           <div className="flex justify-end">
             <button
               onClick={() => { setEvidenciaForm({ proceso: '', descripcion: '', tipo_evidencia: '' }); setShowEvidenciaModal(true) }}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
             >
               + Registrar evidencia
             </button>
@@ -201,14 +201,14 @@ export default function CalidadPage() {
                     {isDirector && (
                       <td className="px-4 py-3 text-right">
                         {!ev.validada && (
-                          <button onClick={() => mutValidarEvidencia.mutate(ev.id)} className="text-xs text-blue-600 hover:underline">
+                          <button onClick={() => mutValidarEvidencia.mutate(ev.id)} className="text-xs text-brand-600 hover:underline">
                             Validar
                           </button>
                         )}
                       </td>
                     )}
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setDetalleEvidencia(ev)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalleEvidencia(ev)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -251,7 +251,7 @@ export default function CalidadPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => { setAccionModal(nc); setAccionForm({ descripcion: '', responsable: '', fecha_limite: '' }) }}
-                      className="text-xs text-blue-600 hover:underline"
+                      className="text-xs text-brand-600 hover:underline"
                     >+ Acción</button>
                     {nc.estatus !== 'cerrada' && (
                       <button onClick={() => mutCerrarNc.mutate(nc.id)} className="text-xs text-slate-500 hover:underline">Cerrar</button>
@@ -303,7 +303,7 @@ export default function CalidadPage() {
                 { label: 'NC abiertas',          value: indicadores.no_conformidades_abiertas, color: 'text-red-700' },
                 { label: 'NC cerradas',          value: indicadores.no_conformidades_cerradas, color: 'text-green-700' },
                 { label: 'Acciones pendientes',  value: indicadores.acciones_pendientes,       color: 'text-amber-700' },
-                { label: 'Acciones completadas', value: indicadores.acciones_completadas,      color: 'text-blue-700' },
+                { label: 'Acciones completadas', value: indicadores.acciones_completadas,      color: 'text-brand-700' },
               ].map(item => (
                 <div key={item.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3.5">
                   <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">{item.label}</p>
@@ -392,7 +392,7 @@ export default function CalidadPage() {
             { label: 'Fecha de registro', value: detalleEvidencia.created_at },
           ]}
           footer={isDirector && !detalleEvidencia.validada ? (
-            <button onClick={() => { mutValidarEvidencia.mutate(detalleEvidencia.id); setDetalleEvidencia(null) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Validar</button>
+            <button onClick={() => { mutValidarEvidencia.mutate(detalleEvidencia.id); setDetalleEvidencia(null) }} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Validar</button>
           ) : undefined}
         />
       )}

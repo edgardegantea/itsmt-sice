@@ -16,7 +16,7 @@ interface Props {
 }
 
 const INPUT =
-  'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition bg-white'
+  'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 transition bg-white'
 const INPUT_OK  = `${INPUT} border-slate-300`
 const INPUT_ERR = `${INPUT} border-red-400`
 const inp = (e?: string) => e ? INPUT_ERR : INPUT_OK
@@ -500,7 +500,7 @@ const handleSubmit = (e: React.FormEvent) => {
           <button
             type="submit"
             disabled={isPending}
-            className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg transition-colors"
+            className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg transition-colors"
           >
             {isPending ? 'Guardando…' : 'Guardar cambios'}
           </button>

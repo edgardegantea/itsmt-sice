@@ -29,9 +29,9 @@ export default function DashboardTutoriaPage() {
             <p className="text-sm text-slate-500 font-medium">Tutores activos</p>
             <p className="text-3xl font-bold text-slate-800 mt-1">{data?.tutores_activos ?? '—'}</p>
           </div>
-          <div className="bg-white rounded-xl border border-blue-200 p-5">
+          <div className="bg-white rounded-xl border border-brand-200 p-5">
             <p className="text-sm text-slate-500 font-medium">Tutorados asignados</p>
-            <p className="text-3xl font-bold text-blue-600 mt-1">{data?.tutorados_asignados ?? '—'}</p>
+            <p className="text-3xl font-bold text-brand-600 mt-1">{data?.tutorados_asignados ?? '—'}</p>
           </div>
           <div className="bg-white rounded-xl border border-emerald-200 p-5">
             <p className="text-sm text-slate-500 font-medium">Sesiones registradas</p>
@@ -77,7 +77,7 @@ export default function DashboardTutoriaPage() {
                     <td className="py-3 px-5 font-medium text-slate-800">{t.docente?.name ?? '—'}</td>
                     <td className="py-3 px-4 text-slate-500 text-xs">{t.docente?.email ?? '—'}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-100 text-brand-700">
                         {t.tutorados ?? 0}
                       </span>
                     </td>
@@ -89,7 +89,7 @@ export default function DashboardTutoriaPage() {
                       </span>
                     </td>
                     <td className="py-3 px-5 text-right">
-                      <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalle(t)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -102,10 +102,10 @@ export default function DashboardTutoriaPage() {
                   <p className="font-medium text-slate-800">{t.docente?.name ?? '—'}</p>
                   <p className="text-xs text-slate-500">{t.docente?.email ?? '—'}</p>
                   <div className="flex gap-4 text-xs">
-                    <span className="px-2 py-0.5 rounded-full font-semibold bg-blue-100 text-blue-700">{t.tutorados ?? 0} tutorados</span>
+                    <span className="px-2 py-0.5 rounded-full font-semibold bg-brand-100 text-brand-700">{t.tutorados ?? 0} tutorados</span>
                     <span className={`px-2 py-0.5 rounded-full font-semibold ${(t.sesiones_registradas ?? 0) > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{t.sesiones_registradas ?? 0} sesiones</span>
                   </div>
-                  <button onClick={() => setDetalle(t)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                  <button onClick={() => setDetalle(t)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
                 </div>
               ))}
             </div>

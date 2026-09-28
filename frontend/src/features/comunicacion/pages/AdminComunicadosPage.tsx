@@ -65,7 +65,7 @@ export default function AdminComunicadosPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center gap-2">
-            <Link to="/comunicados" className="text-xs font-semibold text-[#1b396a] hover:underline">← Volver al Muro</Link>
+            <Link to="/comunicados" className="text-xs font-semibold text-brand-600 hover:underline">← Volver al Muro</Link>
             <span className="text-slate-300">|</span>
             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Gestión de Comunicados Internos</h1>
           </div>
@@ -76,7 +76,7 @@ export default function AdminComunicadosPage() {
 
         <button
           onClick={() => setModalAbierto(true)}
-          className="px-4 py-2.5 bg-[#1b396a] text-white text-sm font-semibold rounded-xl hover:bg-[#152e56] transition-colors flex items-center justify-center gap-2 shadow-xs"
+          className="px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 shadow-xs"
         >
           <IconPlus className="w-4 h-4" /> Nuevo Comunicado
         </button>
@@ -98,14 +98,14 @@ export default function AdminComunicadosPage() {
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
           <p className="text-xs font-medium text-slate-400">Confirmaciones de Lectura</p>
-          <p className="text-2xl font-bold text-blue-600 mt-1">{indicadores?.lecturas_totales ?? 0}</p>
+          <p className="text-2xl font-bold text-brand-600 mt-1">{indicadores?.lecturas_totales ?? 0}</p>
         </div>
       </div>
 
       {/* ── Tabla de Gestión ─────────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-[#1b396a] uppercase tracking-wider">Historial de Publicaciones</h3>
+          <h3 className="text-sm font-bold text-brand-600 uppercase tracking-wider">Historial de Publicaciones</h3>
         </div>
 
         {isLoading ? (
@@ -144,7 +144,7 @@ export default function AdminComunicadosPage() {
                       <td className="p-3.5">
                         <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] uppercase ${
                           item.prioridad === 'urgente' ? 'bg-red-100 text-red-700' :
-                          item.prioridad === 'alta' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-700'
+                          item.prioridad === 'alta' ? 'bg-amber-100 text-amber-800' : 'bg-brand-100 text-brand-700'
                         }`}>
                           {item.prioridad}
                         </span>
@@ -184,7 +184,7 @@ export default function AdminComunicadosPage() {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <form onSubmit={handleSubmit} className="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-[#1b396a]">Publicar Nuevo Comunicado</h3>
+              <h3 className="text-lg font-bold text-brand-600">Publicar Nuevo Comunicado</h3>
               <button type="button" onClick={() => setModalAbierto(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
 
@@ -197,7 +197,7 @@ export default function AdminComunicadosPage() {
                   value={form.titulo}
                   onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
                   placeholder="Ej. Reunión de Evaluación Académica Semestral"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#1b396a] outline-none"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none"
                 />
               </div>
 
@@ -207,7 +207,7 @@ export default function AdminComunicadosPage() {
                   <select
                     value={form.categoria}
                     onChange={e => setForm(f => ({ ...f, categoria: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#1b396a] outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none"
                   >
                     <option value="general">General</option>
                     <option value="academico">Académico</option>
@@ -222,7 +222,7 @@ export default function AdminComunicadosPage() {
                   <select
                     value={form.prioridad}
                     onChange={e => setForm(f => ({ ...f, prioridad: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#1b396a] outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none"
                   >
                     <option value="baja">Baja</option>
                     <option value="normal">Normal</option>
@@ -237,7 +237,7 @@ export default function AdminComunicadosPage() {
                 <select
                   value={form.destinatario_rol ?? ''}
                   onChange={e => setForm(f => ({ ...f, destinatario_rol: e.target.value || null }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#1b396a] outline-none"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none"
                 >
                   <option value="">Todos los Empleados</option>
                   <option value="docente">Sólo Docentes</option>
@@ -254,7 +254,7 @@ export default function AdminComunicadosPage() {
                   value={form.contenido}
                   onChange={e => setForm(f => ({ ...f, contenido: e.target.value }))}
                   placeholder="Detalles del aviso o mensaje oficial..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#1b396a] outline-none"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none"
                 />
               </div>
 
@@ -264,7 +264,7 @@ export default function AdminComunicadosPage() {
                     type="checkbox"
                     checked={form.fijado}
                     onChange={e => setForm(f => ({ ...f, fijado: e.target.checked }))}
-                    className="rounded border-slate-300 text-[#1b396a]"
+                    className="rounded border-slate-300 text-brand-600"
                   />
                   <span>Fijar en portada del muro</span>
                 </label>
@@ -282,7 +282,7 @@ export default function AdminComunicadosPage() {
               <button
                 type="submit"
                 disabled={mutationCrear.isPending}
-                className="px-5 py-2 bg-[#1b396a] text-white text-xs font-semibold rounded-xl hover:bg-[#152e56] transition-colors"
+                className="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition-colors"
               >
                 {mutationCrear.isPending ? 'Publicando...' : 'Publicar Ahora'}
               </button>

@@ -56,7 +56,7 @@ export default function MallaTab() {
         {carreraId && (
           <button
             onClick={() => { setForm({ carrera_id: carreraId, semestre: 1, es_especialidad: false }); setModal(true) }}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
           >+ Añadir materia</button>
         )}
       </div>
@@ -84,7 +84,7 @@ export default function MallaTab() {
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {porSemestre[s].map(m => (
-                      <tr key={m.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                      <tr key={m.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                         <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{m.materia?.clave}</td>
                         <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{m.materia?.clave_oficial_tecnm ?? '—'}</td>
                         <td className="px-4 py-2.5 font-medium text-slate-800">{m.materia?.nombre}</td>
@@ -102,7 +102,7 @@ export default function MallaTab() {
                           >Retirar</button>
                         </td>
                         <td className="px-4 py-2.5 text-right">
-                          <button onClick={() => setDetalle(m)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                          <button onClick={() => setDetalle(m)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                         </td>
                       </tr>
                     ))}
@@ -129,7 +129,7 @@ export default function MallaTab() {
           </Field>
           <Field label="Es materia de especialidad">
             <label className="flex items-center gap-2 mt-2">
-              <input type="checkbox" checked={!!form.es_especialidad} onChange={e => set('es_especialidad', e.target.checked)} className="w-4 h-4 accent-blue-600" />
+              <input type="checkbox" checked={!!form.es_especialidad} onChange={e => set('es_especialidad', e.target.checked)} className="w-4 h-4 accent-brand-600" />
               <span className="text-sm text-slate-700">Marcar como especialidad</span>
             </label>
           </Field>

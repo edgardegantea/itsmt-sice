@@ -139,7 +139,7 @@ export default function AcusesOficialesPage() {
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
             <span>SEV · SEMSyS · DET · TecNM</span>
             <span>•</span>
-            <span className="text-[#1b396a]">{config.nombre_corto} {config.ciudad}</span>
+            <span className="text-brand-600">{config.nombre_corto} {config.ciudad}</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mt-1">
             Oficio Circular DET/ITSMT/DA/0041/2026
@@ -171,7 +171,7 @@ export default function AcusesOficialesPage() {
           ) : (
             <button
               onClick={() => setModalAcuseOpen(true)}
-              className="px-4 py-2 bg-[#1b396a] hover:bg-[#142a4f] text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-brand-600 hover:bg-[#142a4f] text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
@@ -187,7 +187,7 @@ export default function AcusesOficialesPage() {
         <button
           onClick={() => setActiveTab('oficio')}
           className={`pb-3 px-4 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
-            activeTab === 'oficio' ? 'border-[#1b396a] text-[#1b396a]' : 'border-transparent text-slate-500 hover:text-slate-700'
+            activeTab === 'oficio' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
           📜 Oficio Circular (Fechas & Directivas)
@@ -195,7 +195,7 @@ export default function AcusesOficialesPage() {
         <button
           onClick={() => setActiveTab('anexo')}
           className={`pb-3 px-4 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
-            activeTab === 'anexo' ? 'border-[#1b396a] text-[#1b396a]' : 'border-transparent text-slate-500 hover:text-slate-700'
+            activeTab === 'anexo' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
           📋 Tabla A1. Matriz de Formatos SGI G4 (F-03-01 a F-03-07)
@@ -203,7 +203,7 @@ export default function AcusesOficialesPage() {
         <button
           onClick={() => setActiveTab('evaluacion')}
           className={`pb-3 px-4 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
-            activeTab === 'evaluacion' ? 'border-[#1b396a] text-[#1b396a]' : 'border-transparent text-slate-500 hover:text-slate-700'
+            activeTab === 'evaluacion' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
           ⚖️ Tabla A2 y A3. Reglas & Responsabilidades TecNM
@@ -211,7 +211,7 @@ export default function AcusesOficialesPage() {
         <button
           onClick={() => setActiveTab('alertas')}
           className={`pb-3 px-4 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
-            activeTab === 'alertas' ? 'border-[#1b396a] text-[#1b396a]' : 'border-transparent text-slate-500 hover:text-slate-700'
+            activeTab === 'alertas' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
           🚨 Tabla A4. Alertas de Intervención Inmediata
@@ -223,7 +223,7 @@ export default function AcusesOficialesPage() {
 
         {activeTab === 'oficio' && (
           <div className="space-y-6">
-            <div className="border-l-4 border-[#1b396a] bg-slate-50 p-4 rounded-r-lg space-y-2">
+            <div className="border-l-4 border-brand-600 bg-slate-50 p-4 rounded-r-lg space-y-2">
               <div className="flex justify-between text-xs font-bold text-slate-500">
                 <span>Martínez de la Torre, Ver., a 26 de agosto de 2026</span>
                 <span>Periodo: Agosto 2026 - Diciembre 2026</span>
@@ -234,10 +234,10 @@ export default function AcusesOficialesPage() {
             </div>
 
             <div className="space-y-3 text-sm text-slate-700">
-              <h3 className="font-bold text-[#1b396a] text-base">PRIMERO: Fechas Centrales para el Personal Docente</h3>
+              <h3 className="font-bold text-brand-600 text-base">PRIMERO: Fechas Centrales para el Personal Docente</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left border-collapse border border-slate-200">
-                  <thead className="bg-[#1b396a] text-white">
+                  <thead className="bg-brand-600 text-white">
                     <tr>
                       <th className="p-2.5 border border-slate-300">Fecha</th>
                       <th className="p-2.5 border border-slate-300">Actividad</th>
@@ -315,7 +315,7 @@ export default function AcusesOficialesPage() {
 
         {activeTab === 'anexo' && (
           <div className="space-y-4">
-            <h3 className="font-bold text-[#1b396a] text-sm uppercase tracking-wide">
+            <h3 className="font-bold text-brand-600 text-sm uppercase tracking-wide">
               Tabla A1: Matriz de Documentos de Planeación y Control (Formatos SGI/G4)
             </h3>
             <div className="overflow-x-auto">
@@ -330,13 +330,13 @@ export default function AcusesOficialesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-slate-700">
                   <tr>
-                    <td className="p-2.5 font-bold text-[#1b396a]">F-03-01</td>
+                    <td className="p-2.5 font-bold text-brand-600">F-03-01</td>
                     <td className="p-2.5 font-medium">Instrumentación didáctica por competencias</td>
                     <td className="p-2.5">Por cada asignatura y grupo, antes del inicio</td>
                     <td className="p-2.5">Docente; revisión colegiada y validación de jefatura</td>
                   </tr>
                   <tr className="bg-slate-50">
-                    <td className="p-2.5 font-bold text-[#1b396a]">F-03-02</td>
+                    <td className="p-2.5 font-bold text-brand-600">F-03-02</td>
                     <td className="p-2.5 font-medium">Seguimiento del curso y avance programático en línea</td>
                     <td className="p-2.5">En cada corte y al cierre</td>
                     <td className="p-2.5">Docente; seguimiento de jefatura</td>
@@ -348,7 +348,7 @@ export default function AcusesOficialesPage() {
                     <td className="p-2.5">Docente / Jefatura</td>
                   </tr>
                   <tr className="bg-slate-50">
-                    <td className="p-2.5 font-bold text-[#1b396a]">F-03-03</td>
+                    <td className="p-2.5 font-bold text-brand-600">F-03-03</td>
                     <td className="p-2.5">Desempeño docente</td>
                     <td className="p-2.5">Conforme al periodo institucional de evaluación</td>
                     <td className="p-2.5">Área responsable / Jefatura</td>
@@ -360,13 +360,13 @@ export default function AcusesOficialesPage() {
                     <td className="p-2.5 text-amber-900">Docente y jefatura; análisis colegiado</td>
                   </tr>
                   <tr>
-                    <td className="p-2.5 font-bold text-[#1b396a]">F-03-05</td>
+                    <td className="p-2.5 font-bold text-brand-600">F-03-05</td>
                     <td className="p-2.5">Guía de actividades de aprendizaje en línea</td>
                     <td className="p-2.5">En modalidad mixta o cuando se utilice mediación virtual</td>
                     <td className="p-2.5">Docente; validación de jefatura</td>
                   </tr>
                   <tr className="bg-slate-50">
-                    <td className="p-2.5 font-bold text-[#1b396a]">F-03-06</td>
+                    <td className="p-2.5 font-bold text-brand-600">F-03-06</td>
                     <td className="p-2.5">Evaluación del aprendizaje</td>
                     <td className="p-2.5">Previo a evaluaciones y al cierre</td>
                     <td className="p-2.5">Docente; autorización o verificación de jefatura</td>
@@ -392,27 +392,27 @@ export default function AcusesOficialesPage() {
         {activeTab === 'evaluacion' && (
           <div className="space-y-6">
             <div>
-              <h3 className="font-bold text-[#1b396a] text-sm uppercase tracking-wide mb-3">
+              <h3 className="font-bold text-brand-600 text-sm uppercase tracking-wide mb-3">
                 Tabla A2: Criterios de Aplicación Obligatoria del TecNM
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 <div className="border border-slate-200 p-4 rounded-lg bg-slate-50">
-                  <span className="font-bold text-[#1b396a] block mb-1">Diagnóstico Inicial</span>
+                  <span className="font-bold text-brand-600 block mb-1">Diagnóstico Inicial</span>
                   <p className="text-slate-600">Se aplica al inicio con base en competencias previas. No integra calificación sumativa.</p>
                 </div>
                 <div className="border border-slate-200 p-4 rounded-lg bg-slate-50">
-                  <span className="font-bold text-[#1b396a] block mb-1">Plazo de Resultados</span>
+                  <span className="font-bold text-brand-600 block mb-1">Plazo de Resultados</span>
                   <p className="text-slate-600">Los resultados formativos se comunican en un máximo de <strong>5 días hábiles</strong>.</p>
                 </div>
                 <div className="border border-slate-200 p-4 rounded-lg bg-slate-50">
-                  <span className="font-bold text-[#1b396a] block mb-1">Acreditación Mínima</span>
+                  <span className="font-bold text-brand-600 block mb-1">Acreditación Mínima</span>
                   <p className="text-slate-600">Exige el 100% de competencias aprobadas, escala 0-100 y valoración mínima de <strong>70</strong>.</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="font-bold text-[#1b396a] text-sm uppercase tracking-wide mb-3">
+              <h3 className="font-bold text-brand-600 text-sm uppercase tracking-wide mb-3">
                 Tabla A3: Distribución de Responsabilidades por Rol
               </h3>
               <div className="space-y-2 text-xs">
@@ -482,7 +482,7 @@ export default function AcusesOficialesPage() {
                   required
                   value={nombreFirmante}
                   onChange={e => setNombreFirmante(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#1b396a]/20"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-brand-600/20"
                 />
               </div>
 
@@ -538,7 +538,7 @@ export default function AcusesOficialesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#1b396a] text-white rounded-lg font-bold hover:bg-[#142a4f]"
+                  className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-[#142a4f]"
                 >
                   Registrar Firma Digital
                 </button>

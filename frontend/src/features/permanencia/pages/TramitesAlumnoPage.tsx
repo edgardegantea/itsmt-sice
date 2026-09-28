@@ -21,7 +21,7 @@ const ESTATUS_COLOR: Record<string, string> = {
   pendiente: 'bg-yellow-100 text-yellow-800',
   aprobada:  'bg-green-100 text-green-800',
   rechazada: 'bg-red-100 text-red-800',
-  solicitada:'bg-blue-100 text-blue-800',
+  solicitada:'bg-brand-100 text-brand-800',
   emitida:   'bg-green-100 text-green-800',
 }
 
@@ -149,7 +149,7 @@ export default function TramitesAlumnoPage() {
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition ${
-              tab === t ? 'border-[#1a3a5c] text-[#1a3a5c]' : 'border-transparent text-slate-500 hover:text-slate-700'
+              tab === t ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
             {t === 'reinscripcion' ? 'Reinscripción' : t === 'constancias' ? 'Constancias' : 'Baja temporal'}
@@ -186,9 +186,9 @@ export default function TramitesAlumnoPage() {
           )}
 
           {ordenAlumno && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4">
-              <p className="text-sm font-semibold text-blue-800 mb-1">Ventana de reinscripción</p>
-              <p className="text-xs text-blue-700">
+            <div className="bg-brand-50 border border-brand-200 rounded-xl px-5 py-4">
+              <p className="text-sm font-semibold text-brand-800 mb-1">Ventana de reinscripción</p>
+              <p className="text-xs text-brand-700">
                 Del <span className="font-medium">{new Date(ordenAlumno.fecha_inicio_reinscripcion + 'T12:00:00').toLocaleDateString('es-MX')}</span>
                 {' '}al <span className="font-medium">{new Date(ordenAlumno.fecha_fin_reinscripcion + 'T12:00:00').toLocaleDateString('es-MX')}</span>
               </p>
@@ -208,7 +208,7 @@ export default function TramitesAlumnoPage() {
                 </div>
               )}
               {reinscripcionActual.estatus === 'aprobada' && !reinscripcionActual.resello_registrado && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-800">
+                <div className="bg-brand-50 border border-brand-200 rounded-lg px-4 py-3 text-xs text-brand-800">
                   Tu reinscripción fue aprobada. Preséntate en Control Escolar para el resello de tu credencial.
                 </div>
               )}
@@ -271,7 +271,7 @@ export default function TramitesAlumnoPage() {
               <p className="text-xs text-slate-500">Periodo: <span className="font-medium text-slate-700">{bajaActual.periodo?.nombre}</span></p>
               <p className="text-xs text-slate-500">Fecha de solicitud: <span className="font-medium text-slate-700">{new Date(bajaActual.fecha_solicitud).toLocaleDateString('es-MX')}</span></p>
               {bajaActual.reingreso_posible && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-800">
+                <div className="bg-brand-50 border border-brand-200 rounded-lg px-4 py-3 text-xs text-brand-800">
                   Tu baja tiene posibilidad de reingreso. Consulta con Control Escolar los requisitos para el periodo siguiente.
                 </div>
               )}
@@ -296,7 +296,7 @@ export default function TramitesAlumnoPage() {
                   value={bajaSemestres}
                   onChange={e => setBajaSemestres(e.target.value)}
                   placeholder="Número de semestres cursados"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
                 />
               </div>
               <div>
@@ -304,7 +304,7 @@ export default function TramitesAlumnoPage() {
                 <select
                   value={bajaMotivoEnum}
                   onChange={e => setBajaMotivoEnum(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
                 >
                   <option value="">Seleccionar motivo…</option>
                   <option value="economico">Económico</option>
@@ -323,7 +323,7 @@ export default function TramitesAlumnoPage() {
                   value={bajaMotivo}
                   onChange={e => setBajaMotivo(e.target.value)}
                   placeholder="Describe brevemente el motivo de tu baja temporal…"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 resize-none"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 resize-none"
                 />
               </div>
               {mutBaja.isSuccess && (
@@ -381,7 +381,7 @@ export default function TramitesAlumnoPage() {
                   onClick={() => setTipoConstancia(tipo)}
                   className={`rounded-xl border-2 px-4 py-3 text-left transition ${
                     tipoConstancia === tipo
-                      ? 'border-[#1a3a5c] bg-[#1a3a5c]/5'
+                      ? 'border-brand-600 bg-brand-600/5'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >

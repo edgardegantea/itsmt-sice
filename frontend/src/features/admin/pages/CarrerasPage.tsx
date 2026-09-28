@@ -43,7 +43,7 @@ const API = {
 // ── Formulario ────────────────────────────────────────────────────────────────
 
 const clsC = (e?: string) =>
-  `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 ${e ? 'border-red-400' : 'border-slate-300'}`
+  `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 ${e ? 'border-red-400' : 'border-slate-300'}`
 const FErr = ({ msg }: { msg?: string }) =>
   msg ? <p className="text-xs text-red-500 mt-1">{msg}</p> : null
 
@@ -92,13 +92,13 @@ function CarreraForm({ inicial, onGuardar, onCancelar, cargando, errors = {} }: 
         </div>
         <div className="flex items-center gap-2 pt-4">
           <input type="checkbox" id="activa" checked={!!form.activa} onChange={e => set('activa', e.target.checked)}
-            className="w-4 h-4 accent-[#1a3a5c]" />
+            className="w-4 h-4 accent-brand-600" />
           <label htmlFor="activa" className="text-sm text-slate-700">Carrera activa (visible en formularios)</label>
         </div>
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" onClick={onCancelar} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-        <button type="submit" disabled={cargando} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+        <button type="submit" disabled={cargando} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
           {cargando ? 'Guardando…' : 'Guardar'}
         </button>
       </div>
@@ -124,7 +124,7 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
       {/* Panel */}
       <div className="relative w-full max-w-xl bg-white h-full flex flex-col shadow-2xl overflow-hidden">
         {/* Encabezado */}
-        <div className="bg-[#1a3a5c] text-white px-6 py-5 flex-shrink-0">
+        <div className="bg-brand-600 text-white px-6 py-5 flex-shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div>
               {isLoading ? (
@@ -199,13 +199,13 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
               <section className="px-6 py-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Jefe de Carrera</h3>
                 {data.jefe ? (
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <div className="w-10 h-10 rounded-full bg-[#1a3a5c] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-xl border border-brand-100">
+                    <div className="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
                       {data.jefe.nombre.split(' ').slice(0, 2).map(p => p[0]).join('')}
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900 text-sm">{data.jefe.nombre}</p>
-                      <a href={`mailto:${data.jefe.email}`} className="text-xs text-blue-600 hover:underline">{data.jefe.email}</a>
+                      <a href={`mailto:${data.jefe.email}`} className="text-xs text-brand-600 hover:underline">{data.jefe.email}</a>
                     </div>
                   </div>
                 ) : (
@@ -229,7 +229,7 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
                             <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Firma</span>
                           )}
                           {p.email && (
-                            <a href={`mailto:${p.email}`} className="text-gray-400 hover:text-blue-600">
+                            <a href={`mailto:${p.email}`} className="text-gray-400 hover:text-brand-600">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                               </svg>
@@ -256,7 +256,7 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
                         <div key={r.semestre_actual} className="flex items-center gap-3">
                           <span className="text-xs text-gray-500 w-16 flex-shrink-0">{r.semestre_actual}° semestre</span>
                           <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#1a3a5c] rounded-full transition-all" style={{ width: `${pct}%` }} />
+                            <div className="h-full bg-brand-600 rounded-full transition-all" style={{ width: `${pct}%` }} />
                           </div>
                           <span className="text-xs font-medium text-gray-700 w-10 text-right">{r.total}</span>
                         </div>
@@ -295,7 +295,7 @@ function PanelDetalle({ carreraId, onClose, onEditar }: { carreraId: string; onC
         {/* Pie con acciones */}
         <div className="px-6 py-4 border-t flex gap-3 flex-shrink-0">
           <button onClick={onEditar}
-            className="flex-1 py-2 rounded-xl bg-[#1a3a5c] text-white text-sm font-medium hover:bg-[#234d7a] transition-colors">
+            className="flex-1 py-2 rounded-xl bg-brand-600 text-white text-sm font-medium hover:bg-[#234d7a] transition-colors">
             Editar carrera
           </button>
           <button onClick={onClose}
@@ -358,7 +358,7 @@ export default function CarrerasPage() {
           <p className="text-sm text-slate-500 mt-0.5">{carreras.length} carrera(s) registrada(s). Haz clic en una fila para ver su detalle.</p>
         </div>
         <button onClick={() => setModal('nueva')}
-          className="shrink-0 px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors">
+          className="shrink-0 px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors">
           + Nueva carrera
         </button>
       </div>
@@ -382,7 +382,7 @@ export default function CarrerasPage() {
             {carreras.map(c => (
               <tr key={c.id}
                 onClick={() => setDetalle(c)}
-                className={`hover:bg-blue-50/60 transition-colors cursor-pointer ${detalle?.id === c.id ? 'bg-blue-50' : ''}`}>
+                className={`hover:bg-brand-50/60 transition-colors cursor-pointer ${detalle?.id === c.id ? 'bg-brand-50' : ''}`}>
                 <td className="px-4 py-3 font-medium text-slate-800">
                   {c.nombre}
                   {c.especialidad && <span className="text-xs text-slate-400 ml-1">· {c.especialidad}</span>}
@@ -402,7 +402,7 @@ export default function CarrerasPage() {
                       {c.activa ? 'Desactivar' : 'Activar'}
                     </button>
                     <button onClick={() => { setDetalle(c); setModal(c) }}
-                      className="text-xs text-[#1a3a5c] hover:underline font-medium">
+                      className="text-xs text-brand-600 hover:underline font-medium">
                       Editar
                     </button>
                   </div>
@@ -417,7 +417,7 @@ export default function CarrerasPage() {
       <div className="md:hidden space-y-3">
         {carreras.map(c => (
           <div key={c.id} onClick={() => setDetalle(c)}
-            className="bg-white rounded-xl border border-slate-200 p-4 cursor-pointer hover:border-[#1a3a5c]/30">
+            className="bg-white rounded-xl border border-slate-200 p-4 cursor-pointer hover:border-brand-600/30">
             <div className="flex items-start justify-between gap-2 mb-2">
               <div>
                 <p className="font-medium text-slate-800 text-sm">{c.nombre}</p>
@@ -433,7 +433,7 @@ export default function CarrerasPage() {
                 {c.activa ? 'Desactivar' : 'Activar'}
               </button>
               <button onClick={() => setModal(c)}
-                className="flex-1 text-xs text-center text-[#1a3a5c] border border-[#1a3a5c]/30 rounded-lg py-1.5 hover:bg-[#1a3a5c]/5 font-medium">
+                className="flex-1 text-xs text-center text-brand-600 border border-brand-600/30 rounded-lg py-1.5 hover:bg-brand-600/5 font-medium">
                 Editar
               </button>
             </div>

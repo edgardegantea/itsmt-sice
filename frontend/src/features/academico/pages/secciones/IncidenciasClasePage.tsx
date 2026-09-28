@@ -184,7 +184,7 @@ function FormularioRonda({ periodoId, grupoIdInicial, autoConsultar, onClose }: 
                 type="button"
                 onClick={() => refetch()}
                 disabled={consultando}
-                className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+                className="text-xs text-brand-600 hover:underline disabled:opacity-50"
               >
                 {consultando ? 'Consultando…' : 'Consultar horario esperado'}
               </button>
@@ -231,7 +231,7 @@ function FormularioRonda({ periodoId, grupoIdInicial, autoConsultar, onClose }: 
           </div>
           <div className="flex items-end pb-2">
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={coincideHorario} onChange={e => setCoincideHorario(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+              <input type="checkbox" checked={coincideHorario} onChange={e => setCoincideHorario(e.target.checked)} className="w-4 h-4 accent-brand-600" />
               <span className="text-sm text-slate-700">Coincide con el horario</span>
             </label>
           </div>
@@ -247,7 +247,7 @@ function FormularioRonda({ periodoId, grupoIdInicial, autoConsultar, onClose }: 
           <button
             onClick={() => mutGuardar.mutate()}
             disabled={!grupoId || mutGuardar.isPending}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 text-sm text-white bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50"
           >
             {mutGuardar.isPending ? 'Guardando…' : 'Registrar ronda'}
           </button>
@@ -377,7 +377,7 @@ export default function IncidenciasClasePage() {
               <button
                 onClick={() => setMostrarForm(true)}
                 disabled={!periodoId}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50"
               >
                 + Registrar ronda
               </button>
@@ -438,7 +438,7 @@ export default function IncidenciasClasePage() {
           {(filtroCarreraId || filtroSemestre || filtroGrupoId || filtroEstatus) && (
             <button
               onClick={() => { setFiltroCarreraId(''); setFiltroSemestre(''); setFiltroGrupoId(''); setFiltroEstatus('') }}
-              className="text-xs text-slate-500 hover:text-[#1a3a5c] hover:underline pb-2"
+              className="text-xs text-slate-500 hover:text-brand-600 hover:underline pb-2"
             >
               Quitar filtros
             </button>

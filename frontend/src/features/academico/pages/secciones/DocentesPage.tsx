@@ -130,10 +130,10 @@ export default function DocentesPage() {
                   return (
                     <tr key={d.id}
                       onClick={() => irADetalle(d.id)}
-                      className="hover:bg-blue-50/50 cursor-pointer transition-colors group">
+                      className="hover:bg-brand-50/50 cursor-pointer transition-colors group">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#1a3a5c] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                             {initials(d.name)}
                           </div>
                           <div className="min-w-0">
@@ -163,7 +163,7 @@ export default function DocentesPage() {
                       <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={e => { e.stopPropagation(); irADetalle(d.id) }}
-                          className="text-xs text-blue-600 hover:underline font-medium"
+                          className="text-xs text-brand-600 hover:underline font-medium"
                         >
                           Editar
                         </button>

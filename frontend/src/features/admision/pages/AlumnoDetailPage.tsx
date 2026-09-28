@@ -30,7 +30,7 @@ const ESTATUS_STYLE: Record<EstatusAlumno, string> = {
   activo:           'bg-emerald-100 text-emerald-700',
   baja_temporal:    'bg-yellow-100 text-yellow-700',
   baja_definitiva:  'bg-red-100 text-red-700',
-  egresado:         'bg-blue-100 text-blue-700',
+  egresado:         'bg-brand-100 text-brand-700',
   titulado:         'bg-purple-100 text-purple-700',
 }
 
@@ -43,7 +43,7 @@ const DOCS: { tipo: TipoInscripcionPdf; label: string }[] = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const INPUT_CLS = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+const INPUT_CLS = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30'
 const LABEL_CLS = 'block text-xs font-medium text-slate-600 mb-1'
 
 function apellidosNombre(a: Alumno) {
@@ -210,7 +210,7 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
         </div>
 
         <div className="flex items-center gap-2">
-          <input id="cert" type="checkbox" checked={form.pendiente_certificado_bachillerato} onChange={e => setForm(f => ({ ...f, pendiente_certificado_bachillerato: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+          <input id="cert" type="checkbox" checked={form.pendiente_certificado_bachillerato} onChange={e => setForm(f => ({ ...f, pendiente_certificado_bachillerato: e.target.checked }))} className="w-4 h-4 accent-brand-600" />
           <label htmlFor="cert" className="text-sm text-slate-700">Pendiente certificado de bachillerato</label>
         </div>
 
@@ -239,7 +239,7 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
 
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-          <button type="submit" disabled={isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+          <button type="submit" disabled={isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
             {isPending ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
@@ -359,7 +359,7 @@ export default function AlumnoDetailPage() {
     return (
       <div className="p-6 text-center">
         <p className="text-slate-500">No se encontró el alumno.</p>
-        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-blue-600 hover:underline">← Volver</button>
+        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-brand-600 hover:underline">← Volver</button>
       </div>
     )
   }
@@ -548,7 +548,7 @@ export default function AlumnoDetailPage() {
         <div className="p-5">
           <Link
             to={`/admin/alumnos/${alumno.id}/expediente`}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-brand-700 bg-brand-50 border border-brand-200 rounded-lg hover:bg-brand-100 transition-colors"
           >
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />

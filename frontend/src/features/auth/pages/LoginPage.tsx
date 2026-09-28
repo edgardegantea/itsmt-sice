@@ -133,14 +133,14 @@ export default function LoginPage() {
                   autoFocus
                   autoComplete="username"
                   placeholder="ejemplo@itsmt.edu.mx o 200C0001"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition bg-white"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-sm font-medium text-slate-700">Contraseña</label>
-                  <Link to="/forgot-password" className="text-xs text-[#1b396a] hover:text-[#8b1d41] hover:underline font-medium">
+                  <Link to="/forgot-password" className="text-xs text-brand-600 hover:text-[#8b1d41] hover:underline font-medium">
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
@@ -151,7 +151,7 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition bg-white"
                 />
               </div>
 
@@ -186,7 +186,7 @@ export default function LoginPage() {
                   autoFocus
                   autoComplete="one-time-code"
                   placeholder="000000"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition tracking-widest text-center bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition tracking-widest text-center bg-white"
                 />
               </div>
 
@@ -215,12 +215,12 @@ export default function LoginPage() {
           <div className="mt-8 text-center text-xs text-slate-400 space-y-2 border-t border-slate-200 pt-5">
             <p>
               ¿Eres aspirante?{' '}
-              <a href="/registro" className="text-[#1b396a] font-semibold hover:text-[#8b1d41] hover:underline">
+              <a href="/registro" className="text-brand-600 font-semibold hover:text-[#8b1d41] hover:underline">
                 Registra tu solicitud
               </a>
             </p>
             <p>
-              <a href="/aspirante/consulta" className="text-slate-600 hover:text-[#1b396a] hover:underline">
+              <a href="/aspirante/consulta" className="text-slate-600 hover:text-brand-600 hover:underline">
                 Consulta el estatus de tu admisión
               </a>
             </p>

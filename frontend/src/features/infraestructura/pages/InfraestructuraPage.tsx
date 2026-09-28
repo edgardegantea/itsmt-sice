@@ -67,7 +67,7 @@ const ESTADO_BIEN_CLS: Record<string, string> = {
 
 const PRIORIDAD_CLS: Record<string, string> = {
   baja: 'bg-slate-100 text-slate-600',
-  media: 'bg-blue-100 text-blue-700',
+  media: 'bg-brand-100 text-brand-700',
   alta: 'bg-yellow-100 text-yellow-700',
   urgente: 'bg-red-100 text-red-700',
 }
@@ -195,7 +195,7 @@ export default function InfraestructuraPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key as typeof tab)}
-            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             {t.label}
           </button>
@@ -209,7 +209,7 @@ export default function InfraestructuraPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => { setInventarioForm({ clave: '', nombre: '', categoria: 'otro', descripcion: '' }); setShowInventarioModal(true) }}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
               >
                 + Registrar bien
               </button>
@@ -241,7 +241,7 @@ export default function InfraestructuraPage() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTADO_BIEN_CLS[item.estado]}`}>{item.estado}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setDetalleInventario(item)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalleInventario(item)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -278,7 +278,7 @@ export default function InfraestructuraPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -293,7 +293,7 @@ export default function InfraestructuraPage() {
           <div className="flex justify-end">
             <button
               onClick={() => { setReservaForm({ aula_id: '', fecha: '', hora_inicio: '', hora_fin: '', motivo: '' }); setShowReservaModal(true) }}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
             >
               + Solicitar reserva
             </button>
@@ -330,7 +330,7 @@ export default function InfraestructuraPage() {
           <div className="flex justify-end">
             <button
               onClick={() => { setMantenimientoForm({ inventario_id: '', descripcion: '', prioridad: 'media' }); setShowMantenimientoModal(true) }}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
             >
               + Reportar falla
             </button>
@@ -353,7 +353,7 @@ export default function InfraestructuraPage() {
                 {isGestion && m.estatus !== 'resuelta' && m.estatus !== 'cancelada' && (
                   <div className="flex gap-2 flex-shrink-0">
                     {m.estatus === 'abierta' && (
-                      <button onClick={() => mutAtenderMantenimiento.mutate({ id: m.id, estatus: 'en_proceso' })} className="text-xs text-blue-600 hover:underline">Tomar</button>
+                      <button onClick={() => mutAtenderMantenimiento.mutate({ id: m.id, estatus: 'en_proceso' })} className="text-xs text-brand-600 hover:underline">Tomar</button>
                     )}
                     <button onClick={() => mutAtenderMantenimiento.mutate({ id: m.id, estatus: 'resuelta' })} className="text-xs text-green-600 hover:underline">Resolver</button>
                   </div>
@@ -371,7 +371,7 @@ export default function InfraestructuraPage() {
             { label: 'Total de bienes',          value: indicadores.total_bienes, color: 'text-slate-700' },
             { label: 'En mantenimiento',          value: indicadores.bienes_en_mantenimiento, color: 'text-yellow-700' },
             { label: 'De baja',                   value: indicadores.bienes_baja, color: 'text-red-700' },
-            { label: 'Préstamos activos',         value: indicadores.prestamos_activos, color: 'text-blue-700' },
+            { label: 'Préstamos activos',         value: indicadores.prestamos_activos, color: 'text-brand-700' },
             { label: 'Préstamos vencidos',        value: indicadores.prestamos_vencidos, color: 'text-red-700' },
             { label: 'Mantenimiento pendiente',   value: indicadores.mantenimiento_abiertas, color: 'text-yellow-700' },
           ].map(item => (

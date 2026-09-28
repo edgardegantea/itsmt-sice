@@ -221,6 +221,8 @@ use App\Http\Controllers\Academico\TutoriaController;
     Route::patch('/tickets-mantenimiento/{ticketMantenimiento}',          [\App\Http\Controllers\Academico\TicketMantenimientoController::class, 'update']);
 
     // Torre de control — estado en vivo del campus (ocupación, incidencias, asistencia)
+    // Contadores de pendientes del índice de Gestión Académica (una sola petición, en caché)
+    Route::get('/gestion-academica/avisos',                               [\App\Http\Controllers\Academico\GestionAcademicaAvisosController::class, 'index']);
     Route::get('/torre-control',                                          [TorreControlController::class, 'index']);
 
     // Pasaporte QR de cumplimiento del docente

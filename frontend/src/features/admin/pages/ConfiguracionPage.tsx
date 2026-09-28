@@ -94,7 +94,7 @@ function FirmantesTab() {
                         <select
                           value={claveEdit}
                           onChange={e => setClaveEdit(e.target.value)}
-                          className="px-2 py-1 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20"
+                          className="px-2 py-1 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                         >
                           <option value="">— Sin clave —</option>
                           {CLAVES_SISTEMA.map(c => (
@@ -153,7 +153,7 @@ function FirmantesTab() {
                       <select
                         value={claveEdit}
                         onChange={e => setClaveEdit(e.target.value)}
-                        className="px-2 py-1 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20"
+                        className="px-2 py-1 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                       >
                         <option value="">— Selecciona —</option>
                         {CLAVES_SISTEMA.map(c => (
@@ -207,7 +207,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
             onChange={e => onChange(e.target.value)} className="sr-only" />
         </label>
         <div className="flex-1">
-          <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 focus-within:ring-2 focus-within:ring-[#1b396a]/20 focus-within:border-[#1b396a] transition bg-white">
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 focus-within:ring-2 focus-within:ring-brand-600/20 focus-within:border-brand-600 transition bg-white">
             <span className="text-slate-400 text-sm font-mono select-none">#</span>
             <input type="text" value={hexDisplay.replace(/^#/, '')}
               onChange={e => onChange(e.target.value.startsWith('#') ? e.target.value : `#${e.target.value}`)}
@@ -238,7 +238,7 @@ function Field({ label, value, type = 'text', placeholder, onChange, hint }: {
     <div>
       <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
       <input type={type} value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition" />
+        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition" />
       {hint && <p className="text-[11px] text-slate-400 mt-1">{hint}</p>}
     </div>
   )
@@ -656,7 +656,7 @@ export default function ConfiguracionPage() {
                     onClick={() => { set('color_primario', '#1B396A'); set('color_secundario', '#8B1D41') }}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shadow-2xs"
                   >
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#1B396A]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-brand-600" />
                     <span className="w-2.5 h-2.5 rounded-full bg-[#8B1D41]" />
                     <span>Azul y Vino</span>
                   </button>
@@ -665,7 +665,7 @@ export default function ConfiguracionPage() {
                     onClick={() => { set('color_primario', '#1B396A'); set('color_secundario', '#B38E5D') }}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shadow-2xs"
                   >
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#1B396A]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-brand-600" />
                     <span className="w-2.5 h-2.5 rounded-full bg-[#B38E5D]" />
                     <span>Azul y Oro</span>
                   </button>
@@ -706,7 +706,7 @@ export default function ConfiguracionPage() {
                 <textarea value={form.login_subtitulo ?? ''}
                   onChange={e => set('login_subtitulo', e.target.value)}
                   placeholder="Bienvenido al sistema de gestión escolar…" rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition resize-none" />
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition resize-none" />
                 <p className="text-[11px] text-slate-400 mt-1">Si se deja vacío se muestra el nombre de la institución.</p>
               </div>
             </section>
@@ -830,7 +830,7 @@ export default function ConfiguracionPage() {
         {tabActiva === 'formularios' && esSuperadmin && (
           <div className="space-y-6">
             {/* Header banner superadmin */}
-            <div className="bg-gradient-to-r from-[#1b396a] to-[#2563eb] text-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="bg-gradient-to-r from-brand-600 to-[#2563eb] text-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950 uppercase tracking-wider">
@@ -838,7 +838,7 @@ export default function ConfiguracionPage() {
                   </span>
                   <h2 className="text-lg font-bold tracking-tight">Personalización Visual de Formularios y Tonalidades</h2>
                 </div>
-                <p className="text-xs text-blue-100 mt-1 max-w-2xl leading-relaxed">
+                <p className="text-xs text-brand-100 mt-1 max-w-2xl leading-relaxed">
                   Controla la geometría, densidad, tonalidades y comportamiento visual de todos los formularios de la plataforma. 
                   Los cambios aplicados aquí se propagan en tiempo real a todas las vistas del sistema.
                 </p>
@@ -878,7 +878,7 @@ export default function ConfiguracionPage() {
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <p className="text-sm font-bold text-slate-800">{t.nombre}</p>
                         {esActivo && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#1b396a] text-white">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-brand-600 text-white">
                             Activo
                           </span>
                         )}
@@ -1149,7 +1149,7 @@ export default function ConfiguracionPage() {
                     <input
                       type="checkbox"
                       defaultChecked
-                      className="w-4 h-4 rounded text-[#1b396a] focus:ring-0"
+                      className="w-4 h-4 rounded text-brand-600 focus:ring-0"
                       style={{ accentColor: form.form_focus_ring_color || form.color_primario }}
                     />
                     <span className="text-xs text-slate-600 font-medium">Acepto los términos de control escolar</span>
@@ -1204,13 +1204,13 @@ export default function ConfiguracionPage() {
                   <label className="block text-xs font-medium text-slate-600 mb-1">Fecha de inicio</label>
                   <input type="date" value={form.fecha_inicio_actualizacion_datos ?? ''}
                     onChange={e => set('fecha_inicio_actualizacion_datos', e.target.value || '')}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition" />
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Fecha de cierre</label>
                   <input type="date" value={form.fecha_fin_actualizacion_datos ?? ''}
                     onChange={e => set('fecha_fin_actualizacion_datos', e.target.value || '')}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition" />
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition" />
                 </div>
               </div>
               {(() => {

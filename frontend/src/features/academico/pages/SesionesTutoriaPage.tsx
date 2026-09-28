@@ -70,7 +70,7 @@ export default function SesionesTutoriaPage() {
             <ViewToggle value={vista} onChange={setVista} />
             <button
               onClick={() => setShowForm(v => !v)}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
             >
               {showForm ? 'Cancelar' : '+ Registrar sesión'}
             </button>
@@ -87,7 +87,7 @@ export default function SesionesTutoriaPage() {
                   <select
                     value={form.tipo}
                     onChange={e => setForm(f => ({ ...f, tipo: e.target.value as 'individual' | 'grupal' }))}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   >
                     <option value="individual">Individual</option>
                     <option value="grupal">Grupal</option>
@@ -99,7 +99,7 @@ export default function SesionesTutoriaPage() {
                     type="date"
                     value={form.fecha}
                     onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                     required
                   />
                 </div>
@@ -110,7 +110,7 @@ export default function SesionesTutoriaPage() {
                     min={1}
                     value={form.duracion_minutos}
                     onChange={e => setForm(f => ({ ...f, duracion_minutos: Number(e.target.value) }))}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
               </div>
@@ -120,7 +120,7 @@ export default function SesionesTutoriaPage() {
                   value={form.temas_tratados}
                   onChange={e => setForm(f => ({ ...f, temas_tratados: e.target.value }))}
                   rows={3}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="Describe los temas abordados en la sesión..."
                   required
                 />
@@ -131,7 +131,7 @@ export default function SesionesTutoriaPage() {
                   value={form.observaciones}
                   onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))}
                   rows={2}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="Notas adicionales..."
                 />
               </div>
@@ -143,7 +143,7 @@ export default function SesionesTutoriaPage() {
                   type="text"
                   value={form.alumnos_ids}
                   onChange={e => setForm(f => ({ ...f, alumnos_ids: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="uuid1, uuid2, uuid3..."
                 />
               </div>
@@ -151,7 +151,7 @@ export default function SesionesTutoriaPage() {
                 <button
                   type="submit"
                   disabled={crearMut.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
                 >
                   {crearMut.isPending ? 'Guardando…' : 'Registrar sesión'}
                 </button>
@@ -190,7 +190,7 @@ export default function SesionesTutoriaPage() {
                     <td className="py-3 px-5 font-medium text-slate-800">{formatFecha(s.fecha)}</td>
                     <td className="py-3 px-4 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        s.tipo === 'individual' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                        s.tipo === 'individual' ? 'bg-brand-100 text-brand-700' : 'bg-purple-100 text-purple-700'
                       }`}>
                         {s.tipo}
                       </span>
@@ -203,7 +203,7 @@ export default function SesionesTutoriaPage() {
                       </span>
                     </td>
                     <td className="py-3 px-5 text-right">
-                      <button onClick={() => setDetalle(s)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalle(s)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -215,11 +215,11 @@ export default function SesionesTutoriaPage() {
                 <div key={s.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-medium text-slate-800">{formatFecha(s.fecha)}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${s.tipo === 'individual' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{s.tipo}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${s.tipo === 'individual' ? 'bg-brand-100 text-brand-700' : 'bg-purple-100 text-purple-700'}`}>{s.tipo}</span>
                   </div>
                   <p className="text-sm text-slate-700 line-clamp-2">{s.temas_tratados}</p>
                   <p className="text-xs text-slate-500">{s.duracion_minutos ? `${s.duracion_minutos} min` : '—'} · {Array.isArray(s.alumnos_atendidos_ids) ? s.alumnos_atendidos_ids.length : 0} alumno(s)</p>
-                  <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                  <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
                 </div>
               ))}
             </div>

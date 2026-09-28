@@ -46,7 +46,7 @@ function ModalQrAula({ aula, onClose }: { aula: Aula; onClose: () => void }) {
           </a>
           <button
             onClick={() => window.print()}
-            className="text-xs bg-[#1a3a5c] text-white px-3 py-1.5 rounded-lg hover:bg-[#15304c]"
+            className="text-xs bg-brand-600 text-white px-3 py-1.5 rounded-lg hover:bg-[#15304c]"
           >
             🖨 Imprimir
           </button>
@@ -101,7 +101,7 @@ function ModalReubicacion({ aula, periodoId, onClose }: { aula: Aula; periodoId:
                       key={c.id}
                       onClick={() => mutReasignar.mutate({ cargaId: s.carga_academica_id, aulaId: c.id })}
                       disabled={mutReasignar.isPending}
-                      className="text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 hover:border-blue-300 disabled:opacity-50"
+                      className="text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg hover:bg-brand-50 hover:border-brand-300 disabled:opacity-50"
                     >
                       Mover a <strong>{c.nombre}</strong> ({c.capacidad} lugares)
                     </button>
@@ -270,7 +270,7 @@ export default function AulasPage() {
               <p className="text-sm text-slate-500 mt-0.5">Salones, laboratorios y talleres disponibles</p>
             </div>
             {tab === 'catalogo' && (
-              <button onClick={openNuevo} className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+              <button onClick={openNuevo} className="shrink-0 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700">
                 + Nuevo espacio
               </button>
             )}
@@ -288,7 +288,7 @@ export default function AulasPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === t.key ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === t.key ? 'border-brand-600 text-brand-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
             >
               {t.label}
             </button>
@@ -310,7 +310,7 @@ export default function AulasPage() {
                   <button
                     key={f.key}
                     onClick={() => setFiltroTipo(f.key)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filtroTipo === f.key ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filtroTipo === f.key ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                   >
                     {f.label}
                   </button>
@@ -353,12 +353,12 @@ export default function AulasPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {aulasSorted.map(a => (
-                      <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
+                      <tr key={a.id} className="hover:bg-brand-50/60 transition-colors">
                         {modoSeleccion && <td className="pl-4"><SelectCheckbox checked={seleccionados.has(a.id)} onChange={() => toggleSel(a.id)} /></td>}
                         <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
                         <td className="px-4 py-3">
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                            a.tipo === 'salon' ? 'bg-blue-100 text-blue-700'
+                            a.tipo === 'salon' ? 'bg-brand-100 text-brand-700'
                             : a.tipo === 'laboratorio' ? 'bg-green-100 text-green-700'
                             : 'bg-orange-100 text-orange-700'
                           }`}>
@@ -374,7 +374,7 @@ export default function AulasPage() {
                         <td className="px-4 py-3 flex gap-3 justify-end">
                           <button onClick={() => setAulaQr(a)} className="text-xs text-slate-500 hover:underline">QR</button>
                           <button onClick={() => setDetalle(a)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
-                          <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                          <button onClick={() => openEdit(a)} className="text-xs text-brand-600 hover:underline">Editar</button>
                           {puedeEliminar && <button
                           onClick={() => confirm({
                             title: `¿Eliminar ${a.nombre}?`,
@@ -404,7 +404,7 @@ export default function AulasPage() {
                       </span>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium self-start ${
-                      a.tipo === 'salon' ? 'bg-blue-100 text-blue-700'
+                      a.tipo === 'salon' ? 'bg-brand-100 text-brand-700'
                       : a.tipo === 'laboratorio' ? 'bg-green-100 text-green-700'
                       : 'bg-orange-100 text-orange-700'
                     }`}>
@@ -414,7 +414,7 @@ export default function AulasPage() {
                     <div className="flex gap-3 mt-1">
                       <button onClick={() => setAulaQr(a)} className="text-xs text-slate-500 hover:underline">QR</button>
                       <button onClick={() => setDetalle(a)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
-                      <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                      <button onClick={() => openEdit(a)} className="text-xs text-brand-600 hover:underline">Editar</button>
                       {puedeEliminar && <button
                         onClick={() => confirm({
                           title: `¿Eliminar ${a.nombre}?`,
@@ -464,7 +464,7 @@ export default function AulasPage() {
               </div>
               <button
                 onClick={() => { setBuscarDisp(false); setTimeout(() => setBuscarDisp(true), 50) }}
-                className="mt-4 px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+                className="mt-4 px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
               >
                 Buscar aulas libres
               </button>
@@ -496,7 +496,7 @@ export default function AulasPage() {
                           <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
                           <td className="px-4 py-3">
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                              a.tipo === 'salon' ? 'bg-blue-100 text-blue-700'
+                              a.tipo === 'salon' ? 'bg-brand-100 text-brand-700'
                               : a.tipo === 'laboratorio' ? 'bg-green-100 text-green-700'
                               : 'bg-orange-100 text-orange-700'
                             }`}>
@@ -640,7 +640,7 @@ export default function AulasPage() {
           </Field>
           <Field label="Disponible">
             <label className="flex items-center gap-2 mt-2">
-              <input type="checkbox" checked={!!form.activa} onChange={e => set('activa', e.target.checked)} className="w-4 h-4 accent-blue-600" />
+              <input type="checkbox" checked={!!form.activa} onChange={e => set('activa', e.target.checked)} className="w-4 h-4 accent-brand-600" />
               <span className="text-sm text-slate-700">Disponible para asignar</span>
             </label>
           </Field>
@@ -656,7 +656,7 @@ export default function AulasPage() {
             { label: 'Capacidad', value: `${detalle.capacidad} lugares` },
             { label: 'Estado', value: detalle.activa ? 'Disponible' : 'No disponible' },
           ]}
-          footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Editar</button>}
+          footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Editar</button>}
         />
       )}
 

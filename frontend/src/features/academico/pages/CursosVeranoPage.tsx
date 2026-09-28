@@ -5,7 +5,7 @@ import { useToastStore } from '../../../store/toastStore'
 
 const ESTATUS_COLORS: Record<string, string> = {
   programado: 'bg-yellow-100 text-yellow-800',
-  activo:     'bg-blue-100 text-blue-800',
+  activo:     'bg-brand-100 text-brand-800',
   cerrado:    'bg-gray-100 text-gray-700',
   cancelado:  'bg-red-100 text-red-800',
 }
@@ -100,7 +100,7 @@ export default function CursosVeranoPage() {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          className="bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 text-sm font-medium"
         >
           + Programar curso
         </button>
@@ -120,7 +120,7 @@ export default function CursosVeranoPage() {
                   onChange={e => setForm(f => ({ ...f, periodo_padre_id: e.target.value }))}
                   required
                   placeholder="UUID del período"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div>
@@ -131,7 +131,7 @@ export default function CursosVeranoPage() {
                   onChange={e => setForm(f => ({ ...f, materia_id: e.target.value }))}
                   required
                   placeholder="UUID de la materia"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div>
@@ -142,7 +142,7 @@ export default function CursosVeranoPage() {
                   onChange={e => setForm(f => ({ ...f, docente_id: e.target.value }))}
                   required
                   placeholder="UUID del docente"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -153,7 +153,7 @@ export default function CursosVeranoPage() {
                     value={form.fecha_inicio}
                     onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))}
                     required
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
                 <div>
@@ -162,7 +162,7 @@ export default function CursosVeranoPage() {
                     type="date"
                     value={form.fecha_fin}
                     onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
               </div>
@@ -175,14 +175,14 @@ export default function CursosVeranoPage() {
                   value={form.max_alumnos}
                   onChange={e => setForm(f => ({ ...f, max_alumnos: e.target.value }))}
                   required
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Programar'}
                 </button>
               </div>
@@ -231,7 +231,7 @@ export default function CursosVeranoPage() {
               {/* Barra de ocupación */}
               <div className="w-full bg-gray-100 rounded-full h-1.5">
                 <div
-                  className="bg-blue-500 h-1.5 rounded-full"
+                  className="bg-brand-500 h-1.5 rounded-full"
                   style={{ width: `${Math.min(100, ((c.inscripciones_count ?? 0) / c.max_alumnos) * 100)}%` }}
                 />
               </div>
@@ -241,7 +241,7 @@ export default function CursosVeranoPage() {
                   <button
                     onClick={() => handleInscribir(c.id)}
                     disabled={inscribiendo === c.id}
-                    className="flex-1 text-center text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg py-1.5 disabled:opacity-50"
+                    className="flex-1 text-center text-sm bg-brand-50 text-brand-700 hover:bg-brand-100 rounded-lg py-1.5 disabled:opacity-50"
                   >
                     {inscribiendo === c.id ? 'Inscribiendo...' : 'Inscribirse'}
                   </button>

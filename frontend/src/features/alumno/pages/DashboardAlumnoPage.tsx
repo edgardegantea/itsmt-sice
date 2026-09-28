@@ -11,7 +11,7 @@ const ESTATUS_COLOR: Record<string, string> = {
   activo:          'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
   baja_temporal:   'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
   baja_definitiva: 'bg-red-50 text-red-700 ring-1 ring-red-200',
-  egresado:        'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+  egresado:        'bg-brand-50 text-brand-700 ring-1 ring-brand-200',
   titulado:        'bg-violet-50 text-violet-700 ring-1 ring-violet-200',
 }
 
@@ -78,12 +78,12 @@ export default function DashboardAlumnoPage() {
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <div className="card-ejecutiva p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#1b396a]/5 via-[#b38e5d]/5 to-transparent rounded-full pointer-events-none -mr-16 -mt-16" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-brand-600/5 via-[#b38e5d]/5 to-transparent rounded-full pointer-events-none -mr-16 -mt-16" />
         <div className="relative z-10 space-y-1.5">
           <p className="text-[11px] text-[#b38e5d] font-semibold uppercase tracking-widest">
             Portal del Estudiante · TecNM
           </p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#0f2142] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-brand-800 tracking-tight">
             Bienvenido/a, {user?.name}
           </h1>
           <div className="flex flex-wrap items-center gap-2.5 pt-1">
@@ -204,7 +204,7 @@ export default function DashboardAlumnoPage() {
             >
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-bold text-[#0f2142] group-hover:text-[#1b396a] transition-colors">
+                  <p className="text-sm font-bold text-brand-800 group-hover:text-brand-600 transition-colors">
                     {label}
                   </p>
                   <svg className="w-4 h-4 text-slate-400 group-hover:text-[#b38e5d] group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

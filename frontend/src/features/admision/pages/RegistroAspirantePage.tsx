@@ -24,7 +24,7 @@ const parsearCurp = (curp: string) => {
 // ── Componentes base ──────────────────────────────────────────────────────────
 const CLS = (hasErr?: string) =>
   `w-full px-3.5 py-2.5 rounded-lg border text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
-    hasErr ? 'border-red-400 focus:ring-red-200' : 'border-slate-300 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]'
+    hasErr ? 'border-red-400 focus:ring-red-200' : 'border-slate-300 focus:ring-brand-600/30 focus:border-brand-600'
   }`
 
 // ── SearchableSelect ──────────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ function SearchableSelect({
             <li key={o.value} onMouseDown={() => select(o)}
               className={`px-3 py-2 cursor-pointer transition-colors ${
                 o.value === value
-                  ? 'bg-[#1a3a5c]/10 text-[#1a3a5c] font-medium'
+                  ? 'bg-brand-600/10 text-brand-600 font-medium'
                   : 'hover:bg-slate-50 text-slate-800'
               }`}>
               {o.label}
@@ -122,7 +122,7 @@ function SearchableSelect({
           ))}
           {showAdd && (
             <li onMouseDown={add}
-              className="px-3 py-2 text-[#1a3a5c] font-medium cursor-pointer hover:bg-blue-50 border-t border-slate-100 flex items-center gap-1.5">
+              className="px-3 py-2 text-brand-600 font-medium cursor-pointer hover:bg-brand-50 border-t border-slate-100 flex items-center gap-1.5">
               <span className="text-base leading-none">+</span>
               Agregar {createLabel}: &ldquo;{search.trim()}&rdquo;
             </li>
@@ -138,7 +138,7 @@ function SearchableSelect({
 function Section({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="border-b border-slate-100 pb-1 mb-4">
-      <h2 className="text-xs font-semibold tracking-wider text-[#1a3a5c] uppercase">{title}</h2>
+      <h2 className="text-xs font-semibold tracking-wider text-brand-600 uppercase">{title}</h2>
       {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
     </div>
   )
@@ -496,7 +496,7 @@ export default function RegistroAspirantePage() {
           {aspiranteRegistrado?.numero_ficha && (
             <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 mb-4">
               <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Número de folio</p>
-              <p className="text-lg font-mono font-bold text-[#1a3a5c]">{aspiranteRegistrado.numero_ficha}</p>
+              <p className="text-lg font-mono font-bold text-brand-600">{aspiranteRegistrado.numero_ficha}</p>
               <p className="text-xs text-slate-400 mt-1">Guarda este folio para dar seguimiento a tu solicitud.</p>
             </div>
           )}
@@ -512,7 +512,7 @@ export default function RegistroAspirantePage() {
             </span>
           )}
           <button onClick={() => window.location.reload()}
-            className="mt-6 w-full bg-[#1a3a5c] hover:bg-[#234d7a] text-white text-sm font-medium py-2.5 rounded-lg transition-colors">
+            className="mt-6 w-full bg-brand-600 hover:bg-[#234d7a] text-white text-sm font-medium py-2.5 rounded-lg transition-colors">
             Registrar otro aspirante
           </button>
         </div>
@@ -536,7 +536,7 @@ export default function RegistroAspirantePage() {
       <header className="bg-white border-b border-slate-200 px-4 sm:px-8 py-4">
         <div className="max-w-screen-xl mx-auto flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold tracking-widest text-[#1a3a5c] uppercase">ITSMT</p>
+            <p className="text-xs font-bold tracking-widest text-brand-600 uppercase">ITSMT</p>
             <h1 className="text-lg font-semibold text-slate-800 leading-tight">Solicitud de admisión</h1>
           </div>
           <div className="text-right">
@@ -549,9 +549,9 @@ export default function RegistroAspirantePage() {
             )}
             <p className="text-xs text-slate-400 mt-1">
               ¿Ya tienes cuenta?{' '}
-              <a href="/login" className="text-[#1a3a5c] font-medium hover:underline">Iniciar sesión</a>
+              <a href="/login" className="text-brand-600 font-medium hover:underline">Iniciar sesión</a>
               {' · '}
-              <a href="/aspirante/consulta" className="text-[#1a3a5c] font-medium hover:underline">Consultar estatus</a>
+              <a href="/aspirante/consulta" className="text-brand-600 font-medium hover:underline">Consultar estatus</a>
             </p>
           </div>
         </div>
@@ -590,7 +590,7 @@ export default function RegistroAspirantePage() {
                   )}
                   {form.curp.length === 18 && !validarCurp(form.curp) && renapoStatus === 'loading' && (
                     <p className="mt-1 text-xs text-slate-500 flex items-center gap-1.5">
-                      <span className="inline-block w-3 h-3 border-2 border-slate-300 border-t-[#1a3a5c] rounded-full animate-spin" />
+                      <span className="inline-block w-3 h-3 border-2 border-slate-300 border-t-brand-600 rounded-full animate-spin" />
                       Consultando RENAPO…
                     </p>
                   )}
@@ -751,7 +751,7 @@ export default function RegistroAspirantePage() {
                 <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg px-4 py-6 cursor-pointer transition-colors ${
                   errores.foto && tocados.foto
                     ? 'border-red-300 bg-red-50'
-                    : fotoFile ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 hover:border-[#1a3a5c] hover:bg-slate-50'
+                    : fotoFile ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 hover:border-brand-600 hover:bg-slate-50'
                 }`}>
                   <input type="file" accept=".jpg,.jpeg,.png" className="sr-only"
                     onChange={e => {
@@ -793,7 +793,7 @@ export default function RegistroAspirantePage() {
                 <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg px-4 py-6 cursor-pointer transition-colors ${
                   errores.constancia_bachillerato && tocados.constancia_bachillerato
                     ? 'border-red-300 bg-red-50'
-                    : constanciaFile ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 hover:border-[#1a3a5c] hover:bg-slate-50'
+                    : constanciaFile ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 hover:border-brand-600 hover:bg-slate-50'
                 }`}>
                   <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="sr-only"
                     onChange={e => {
@@ -822,7 +822,7 @@ export default function RegistroAspirantePage() {
                 <p className="mt-2 text-xs text-slate-400">
                   ¿Problemas para adjuntar el archivo? Comunícate por WhatsApp al{' '}
                   <a href="https://wa.me/522321017724" target="_blank" rel="noopener noreferrer"
-                    className="text-[#1a3a5c] font-medium hover:underline">232 101 7724</a>
+                    className="text-brand-600 font-medium hover:underline">232 101 7724</a>
                 </p>
               </div>
 
@@ -839,7 +839,7 @@ export default function RegistroAspirantePage() {
                         <input type="radio" name="area_bachillerato" value={area}
                           checked={form.area_bachillerato === area}
                           onChange={() => { set('area_bachillerato', area); tocar('area_bachillerato') }}
-                          className="accent-[#1a3a5c]" />
+                          className="accent-brand-600" />
                         <span className="text-sm text-slate-700 group-hover:text-slate-900">{area}</span>
                       </label>
                     ))}
@@ -927,7 +927,7 @@ export default function RegistroAspirantePage() {
                         <input type="radio" name="plantel" value={opt.value}
                           checked={form.plantel === opt.value}
                           onChange={() => { set('plantel', opt.value); tocar('plantel') }}
-                          className="accent-[#1a3a5c]" />
+                          className="accent-brand-600" />
                         <span className="text-sm text-slate-700">{opt.label}</span>
                       </label>
                     ))}
@@ -947,7 +947,7 @@ export default function RegistroAspirantePage() {
                         <input type="radio" name="modalidad" value={opt.value}
                           checked={form.modalidad === opt.value}
                           onChange={() => { set('modalidad', opt.value); tocar('modalidad') }}
-                          className="accent-[#1a3a5c]" />
+                          className="accent-brand-600" />
                         <span className="text-sm text-slate-700">{opt.label}</span>
                       </label>
                     ))}
@@ -963,7 +963,7 @@ export default function RegistroAspirantePage() {
                       <input type="radio" name="nivel" value="licenciatura"
                         checked={form.nivel === 'licenciatura'}
                         onChange={() => set('nivel', 'licenciatura')}
-                        className="accent-[#1a3a5c]" />
+                        className="accent-brand-600" />
                       <span className="text-sm text-slate-700">Licenciatura</span>
                     </label>
                     {config.maestria_habilitada && (
@@ -971,7 +971,7 @@ export default function RegistroAspirantePage() {
                         <input type="radio" name="nivel" value="maestria"
                           checked={form.nivel === 'maestria'}
                           onChange={() => set('nivel', 'maestria')}
-                          className="accent-[#1a3a5c]" />
+                          className="accent-brand-600" />
                         <span className="text-sm text-slate-700">Maestría</span>
                       </label>
                     )}
@@ -992,7 +992,7 @@ export default function RegistroAspirantePage() {
                         <input type="radio" name="estado_civil" value={ec}
                           checked={form.estado_civil === ec}
                           onChange={() => { set('estado_civil', ec); tocar('estado_civil') }}
-                          className="accent-[#1a3a5c]" />
+                          className="accent-brand-600" />
                         <span className="text-sm text-slate-700">{ec}</span>
                       </label>
                     ))}
@@ -1009,7 +1009,7 @@ export default function RegistroAspirantePage() {
                         <input type="radio" name="medio_enterado" value={m}
                           checked={form.medio_enterado === m}
                           onChange={() => { set('medio_enterado', m); tocar('medio_enterado') }}
-                          className="accent-[#1a3a5c]" />
+                          className="accent-brand-600" />
                         <span className="text-sm text-slate-700">{m}</span>
                       </label>
                     ))}
@@ -1034,7 +1034,7 @@ export default function RegistroAspirantePage() {
                         <input type="radio" name="tiene_equipo_computo" value={v}
                           checked={form.tiene_equipo_computo === v}
                           onChange={() => { set('tiene_equipo_computo', v); tocar('tiene_equipo_computo') }}
-                          className="accent-[#1a3a5c]" />
+                          className="accent-brand-600" />
                         <span className="text-sm text-slate-700">{l}</span>
                       </label>
                     ))}
@@ -1088,7 +1088,7 @@ export default function RegistroAspirantePage() {
                     <label key={key} className="flex items-center gap-2.5 cursor-pointer select-none group">
                       <input type="checkbox" checked={!!documentos[key]}
                         onChange={() => setDocumentos(d => ({ ...d, [key]: !d[key] }))}
-                        className="w-4 h-4 accent-[#1a3a5c] shrink-0" />
+                        className="w-4 h-4 accent-brand-600 shrink-0" />
                       <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">{label}</span>
                     </label>
                   ))}
@@ -1111,7 +1111,7 @@ export default function RegistroAspirantePage() {
 
                 <div className="bg-white rounded-xl border border-slate-200 p-5">
                   <button type="submit" disabled={isPending || cargando || !periodo}
-                    className="w-full bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold py-3 rounded-lg transition-colors">
+                    className="w-full bg-brand-600 hover:bg-[#234d7a] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold py-3 rounded-lg transition-colors">
                     {isPending ? 'Enviando…' : 'Enviar solicitud de admisión'}
                   </button>
                   <p className="text-xs text-slate-400 text-center mt-2">

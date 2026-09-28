@@ -75,7 +75,7 @@ export default function ComunicadosPage() {
         {esAdminOGestion && (
           <Link
             to="/comunicados/admin"
-            className="px-4 py-2 bg-[#1b396a] text-white text-sm font-semibold rounded-xl hover:bg-[#152e56] transition-colors flex items-center justify-center gap-2 shrink-0 shadow-xs"
+            className="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 shrink-0 shadow-xs"
           >
             <IconPlus className="w-4 h-4" />
             <span>Publicar Comunicado</span>
@@ -93,7 +93,7 @@ export default function ComunicadosPage() {
               onClick={() => setCategoria(cat.value)}
               className={`px-3.5 py-2 rounded-xl text-xs font-medium shrink-0 transition-all flex items-center gap-1.5 border ${
                 categoria === cat.value
-                  ? 'bg-[#1b396a] text-white border-[#1b396a] shadow-xs font-semibold'
+                  ? 'bg-brand-600 text-white border-brand-600 shadow-xs font-semibold'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
@@ -124,7 +124,7 @@ export default function ComunicadosPage() {
               className={`bg-white rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between p-5 relative group hover:shadow-md ${
                 c.fijado
                   ? 'border-amber-300 ring-2 ring-amber-400/20 bg-gradient-to-b from-amber-50/20 to-white'
-                  : 'border-slate-200/90 hover:border-[#1b396a]/40'
+                  : 'border-slate-200/90 hover:border-brand-600/40'
               }`}
             >
               <div>
@@ -134,7 +134,7 @@ export default function ComunicadosPage() {
                     c.prioridad === 'urgente' ? 'bg-red-100 text-red-700' :
                     c.prioridad === 'alta' ? 'bg-amber-100 text-amber-800' :
                     c.prioridad === 'baja' ? 'bg-slate-100 text-slate-600' :
-                    'bg-blue-100 text-blue-700'
+                    'bg-brand-100 text-brand-700'
                   }`}>
                     {c.prioridad}
                   </span>
@@ -153,7 +153,7 @@ export default function ComunicadosPage() {
                 </div>
 
                 {/* Título & Resumen */}
-                <h3 className="text-base font-bold text-slate-800 group-hover:text-[#1b396a] transition-colors leading-snug line-clamp-2 mb-2">
+                <h3 className="text-base font-bold text-slate-800 group-hover:text-brand-600 transition-colors leading-snug line-clamp-2 mb-2">
                   {c.titulo}
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-4">
@@ -185,7 +185,7 @@ export default function ComunicadosPage() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                    comunicadoSeleccionado.prioridad === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                    comunicadoSeleccionado.prioridad === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-brand-100 text-brand-700'
                   }`}>
                     {comunicadoSeleccionado.categoria} · {comunicadoSeleccionado.prioridad}
                   </span>
@@ -227,7 +227,7 @@ export default function ComunicadosPage() {
               </div>
               <button
                 onClick={() => setComunicadoSeleccionado(null)}
-                className="px-5 py-2 bg-[#1b396a] text-white text-xs font-semibold rounded-xl hover:bg-[#152e56] transition-colors shadow-xs"
+                className="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition-colors shadow-xs"
               >
                 Cerrar Comunicado
               </button>

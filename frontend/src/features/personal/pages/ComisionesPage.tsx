@@ -79,7 +79,7 @@ export default function ComisionesPage() {
           <ViewToggle value={vista} onChange={setVista} />
           <button
             onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+            className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 text-sm"
           >
             + Nueva Comisión
           </button>
@@ -91,7 +91,7 @@ export default function ComisionesPage() {
           <button
             onClick={descargarPdfLote}
             disabled={descargandoLote}
-            className="px-3 py-1.5 text-xs font-medium bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-3 py-1.5 text-xs font-medium bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50"
           >
             {descargandoLote ? 'Descargando…' : 'Descargar PDF'}
           </button>
@@ -189,7 +189,7 @@ export default function ComisionesPage() {
               <button
                 type="submit"
                 disabled={crearMut.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50"
               >
                 {crearMut.isPending ? 'Guardando...' : 'Registrar'}
               </button>
@@ -235,7 +235,7 @@ export default function ComisionesPage() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => descargarPdf(com)}
-                      className="text-blue-600 hover:underline text-xs"
+                      className="text-brand-600 hover:underline text-xs"
                     >
                       Descargar PDF
                     </button>
@@ -264,7 +264,7 @@ export default function ComisionesPage() {
                   : <span className="text-gray-400">Sin viáticos</span>}
               </p>
               <div className="flex gap-3 mt-1">
-                <button onClick={() => descargarPdf(com)} className="text-blue-600 hover:underline text-xs">Descargar PDF</button>
+                <button onClick={() => descargarPdf(com)} className="text-brand-600 hover:underline text-xs">Descargar PDF</button>
                 <button onClick={() => setDetalle(com)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
               </div>
             </div>
@@ -283,7 +283,7 @@ export default function ComisionesPage() {
             { label: 'Propósito', value: detalle.proposito, full: true },
             { label: 'Viáticos', value: detalle.con_viaticos ? `$${detalle.monto_viaticos?.toFixed(2)}` : 'No' },
           ]}
-          footer={<button onClick={() => descargarPdf(detalle)} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Descargar PDF</button>}
+          footer={<button onClick={() => descargarPdf(detalle)} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Descargar PDF</button>}
         />
       )}
     </div>

@@ -157,7 +157,7 @@ export default function IndicadoresPage() {
               onClick={() => setTab(t)}
               className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
                 tab === t
-                  ? 'border-blue-600 text-blue-700'
+                  ? 'border-brand-600 text-brand-700'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >

@@ -2,7 +2,7 @@ import type { EstatusPlaneacion, PlaneacionDocente } from '../services/academico
 
 export const ESTATUS_COLOR: Record<EstatusPlaneacion, string> = {
   borrador:     'bg-slate-100 text-slate-600',
-  enviada_da:   'bg-blue-100 text-blue-700',
+  enviada_da:   'bg-brand-100 text-brand-700',
   devuelta_da:  'bg-red-100 text-red-700',
   enviada_jc:   'bg-indigo-100 text-indigo-700',
   devuelta_jc:  'bg-red-100 text-red-700',
@@ -64,9 +64,9 @@ export function EstatusBadge({ estatus, className = '' }: { estatus: EstatusPlan
   )
 }
 
-export const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/40 transition-colors'
+export const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/40 transition-colors'
 export const selectCls = inputCls
-export const smallInputCls = 'w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/40 transition-colors'
+export const smallInputCls = 'w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/40 transition-colors'
 
 // "dosificacion" dejó de ser un paso propio — su tabla vive ahora como una vista más
 // dentro de "Calendario de horas" (junto a Gantt y Resumen semanal), ya que se calcula
@@ -125,7 +125,7 @@ export function progresoPlaneacion(p?: PlaneacionDocente): number {
 }
 
 export function BarraProgreso({ porcentaje, tono = 'azul' }: { porcentaje: number; tono?: 'azul' | 'verde' }) {
-  const color = tono === 'verde' ? 'bg-emerald-500' : 'bg-[#1a3a5c]'
+  const color = tono === 'verde' ? 'bg-emerald-500' : 'bg-brand-600'
   return (
     <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
       <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${porcentaje}%` }} />

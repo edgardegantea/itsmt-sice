@@ -74,7 +74,7 @@ export default function ModosExamenPage() {
           <button
             onClick={() => mutActivar.mutate()}
             disabled={!periodoActivo?.id || mutActivar.isPending}
-            className="px-4 py-2 bg-[#1a3a5c] text-white text-sm font-medium rounded-lg hover:bg-[#15304c] disabled:opacity-50"
+            className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-[#15304c] disabled:opacity-50"
           >
             {mutActivar.isPending ? 'Activando…' : 'Activar modo examen esta fecha'}
           </button>

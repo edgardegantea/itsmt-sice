@@ -158,7 +158,7 @@ export default function BibliotecaPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key as typeof tab)}
-            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             {t.label}
           </button>
@@ -180,7 +180,7 @@ export default function BibliotecaPage() {
               <div
                 key={libro.id}
                 onClick={() => setAcervoSeleccionado(acervoSeleccionado?.id === libro.id ? null : libro)}
-                className={`bg-white rounded-xl border cursor-pointer transition-all ${acervoSeleccionado?.id === libro.id ? 'border-blue-500 shadow-md' : 'border-slate-200 hover:border-slate-300'}`}
+                className={`bg-white rounded-xl border cursor-pointer transition-all ${acervoSeleccionado?.id === libro.id ? 'border-brand-500 shadow-md' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-800 line-clamp-2">{libro.titulo}</h3>
@@ -209,7 +209,7 @@ export default function BibliotecaPage() {
                             {ej.estatus === 'disponible' && (
                               <button
                                 onClick={e => { e.stopPropagation(); setPrestamoModal(ej); setPrestamoForm({ fecha_devolucion_esperada: '' }) }}
-                                className="text-xs text-blue-600 hover:underline"
+                                className="text-xs text-brand-600 hover:underline"
                               >Pedir prestado</button>
                             )}
                           </div>
@@ -246,7 +246,7 @@ export default function BibliotecaPage() {
                   <td className="px-4 py-3 text-xs text-slate-500">{p.fecha_prestamo}</td>
                   <td className="px-4 py-3 text-xs text-slate-500">{p.fecha_devolucion_esperada}</td>
                   <td className="px-4 py-3 text-center">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.estatus === 'activo' ? 'bg-blue-100 text-blue-700' : p.estatus === 'devuelto' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.estatus === 'activo' ? 'bg-brand-100 text-brand-700' : p.estatus === 'devuelto' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                       {p.estatus}
                     </span>
                   </td>
@@ -255,13 +255,13 @@ export default function BibliotecaPage() {
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => mutDevolver.mutate(p.id)} className="text-xs text-slate-600 hover:underline">Devolver</button>
                         {p.renovaciones < 1 && (
-                          <button onClick={() => { setRenewModal(p); setNuevaFecha('') }} className="text-xs text-blue-600 hover:underline">Renovar</button>
+                          <button onClick={() => { setRenewModal(p); setNuevaFecha('') }} className="text-xs text-brand-600 hover:underline">Renovar</button>
                         )}
-                        <button onClick={() => setDetallePrestamo(p)} className="text-xs text-blue-600 hover:underline">Ver detalle</button>
+                        <button onClick={() => setDetallePrestamo(p)} className="text-xs text-brand-600 hover:underline">Ver detalle</button>
                       </div>
                     )}
                     {p.estatus !== 'activo' && (
-                      <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     )}
                   </td>
                 </tr>
@@ -294,7 +294,7 @@ export default function BibliotecaPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex gap-2 justify-end">
                       <button onClick={() => mutDevolver.mutate(p.id)} className="text-xs text-slate-600 hover:underline">Registrar devolución</button>
-                      <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
+                      <button onClick={() => setDetallePrestamo(p)} className="text-xs font-medium text-brand-600 hover:underline">Ver detalle</button>
                     </div>
                   </td>
                 </tr>
@@ -308,7 +308,7 @@ export default function BibliotecaPage() {
       {tab === 'stats' && stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
-            { label: 'Títulos en acervo', value: stats.total_titulos, color: 'text-blue-700' },
+            { label: 'Títulos en acervo', value: stats.total_titulos, color: 'text-brand-700' },
             { label: 'Ejemplares',         value: stats.total_ejemplares, color: 'text-indigo-700' },
             { label: 'Préstamos activos',  value: stats.prestamos_activos, color: 'text-amber-700' },
             { label: 'Préstamos vencidos', value: stats.prestamos_vencidos, color: 'text-red-700' },
@@ -343,7 +343,7 @@ export default function BibliotecaPage() {
               <button
                 onClick={() => mutPrestar.mutate(prestamoModal.id)}
                 disabled={mutPrestar.isPending || !prestamoForm.fecha_devolucion_esperada}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
               >{mutPrestar.isPending ? 'Guardando…' : 'Confirmar'}</button>
             </div>
           </div>
@@ -365,7 +365,7 @@ export default function BibliotecaPage() {
               <button
                 onClick={() => mutRenovar.mutate(renewModal.id)}
                 disabled={mutRenovar.isPending || !nuevaFecha}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
               >{mutRenovar.isPending ? 'Renovando…' : 'Renovar'}</button>
             </div>
           </div>

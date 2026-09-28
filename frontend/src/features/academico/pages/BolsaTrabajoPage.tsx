@@ -97,7 +97,7 @@ export default function BolsaTrabajoPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key as typeof tab)}
-            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             {t.label}
           </button>
@@ -111,7 +111,7 @@ export default function BolsaTrabajoPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => { setVacanteForm({ empresa: '', puesto: '', descripcion: '', modalidad: 'presencial', rango_salarial: '', contacto_email: '', fecha_publicacion: '' }); setShowVacanteModal(true) }}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
               >
                 + Publicar vacante
               </button>
@@ -131,7 +131,7 @@ export default function BolsaTrabajoPage() {
                 {isEgresado && (
                   <button
                     onClick={() => { setEgresadoId(''); setPostularVacante(v) }}
-                    className="mt-3 text-xs text-blue-600 hover:underline font-medium"
+                    className="mt-3 text-xs text-brand-600 hover:underline font-medium"
                   >
                     Postularme
                   </button>
@@ -148,9 +148,9 @@ export default function BolsaTrabajoPage() {
           {[
             { label: 'Total de egresados',      value: indicadores.total_egresados, color: 'text-slate-700' },
             { label: 'Titulados',               value: indicadores.egresados_titulados, color: 'text-green-700' },
-            { label: 'Encuestas respondidas',   value: indicadores.encuestas_respondidas, color: 'text-blue-700' },
-            { label: 'Satisfacción promedio',   value: indicadores.satisfaccion_promedio, color: 'text-blue-700' },
-            { label: 'Pertinencia promedio',    value: indicadores.pertinencia_promedio, color: 'text-blue-700' },
+            { label: 'Encuestas respondidas',   value: indicadores.encuestas_respondidas, color: 'text-brand-700' },
+            { label: 'Satisfacción promedio',   value: indicadores.satisfaccion_promedio, color: 'text-brand-700' },
+            { label: 'Pertinencia promedio',    value: indicadores.pertinencia_promedio, color: 'text-brand-700' },
             { label: 'Tasa de recomendación',   value: `${indicadores.tasa_recomendacion}%`, color: 'text-green-700' },
             { label: 'Vacantes activas',        value: indicadores.vacantes_activas, color: 'text-slate-700' },
             { label: 'Contratados vía bolsa',   value: indicadores.postulaciones_contratado, color: 'text-green-700' },

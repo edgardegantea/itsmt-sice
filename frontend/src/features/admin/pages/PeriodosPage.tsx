@@ -39,7 +39,7 @@ const fmtFecha = (s: string | null | undefined): string => {
 }
 const toDateInput = (s: string | null | undefined): string => s ? String(s).slice(0, 10) : ''
 
-const cls = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+const cls = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30'
 const clsErr = (e?: string) => `${cls} ${e ? 'border-red-400' : 'border-slate-300'}`
 const FieldErr = ({ msg }: { msg?: string }) =>
   msg ? <p className="text-xs text-red-500 mt-1">{msg}</p> : null
@@ -93,7 +93,7 @@ function PeriodoForm({
             <label className="block text-xs font-medium text-slate-600 mb-1">Activo</label>
             <label className="flex items-center gap-2 mt-2">
               <input type="checkbox" checked={!!form.activo} onChange={e => set('activo', e.target.checked)}
-                className="w-4 h-4 accent-[#1a3a5c]" />
+                className="w-4 h-4 accent-brand-600" />
               <span className="text-sm text-slate-700">Periodo actual (desactiva los demás)</span>
             </label>
           </div>
@@ -125,7 +125,7 @@ function PeriodoForm({
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" onClick={onCancelar} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-        <button type="submit" disabled={cargando} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+        <button type="submit" disabled={cargando} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
           {cargando ? 'Guardando…' : 'Guardar'}
         </button>
       </div>
@@ -214,7 +214,7 @@ function CortesCapturaEditor({ periodoId }: { periodoId: string }) {
                     if (!fecha_corte || !fecha_limite_captura) { toastError('Completa ambas fechas del corte.'); return }
                     guardarCorte.mutate({ numero, nombre, fecha_corte, fecha_limite_captura, id: corte.id })
                   }}
-                  className="px-3 py-2 text-xs text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg"
+                  className="px-3 py-2 text-xs text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg"
                 >
                   Guardar
                 </button>
@@ -223,7 +223,7 @@ function CortesCapturaEditor({ periodoId }: { periodoId: string }) {
                     type="button"
                     disabled={evaluarCorte.isPending}
                     onClick={() => evaluarCorte.mutate(corte.id!)}
-                    className="px-3 py-2 text-xs text-[#1a3a5c] border border-[#1a3a5c]/30 rounded-lg hover:bg-[#1a3a5c]/5 disabled:opacity-60"
+                    className="px-3 py-2 text-xs text-brand-600 border border-brand-600/30 rounded-lg hover:bg-brand-600/5 disabled:opacity-60"
                   >
                     Evaluar
                   </button>
@@ -344,7 +344,7 @@ export default function PeriodosPage() {
           </button>
           <button
             onClick={() => { setModal('nuevo'); setFormErrors({}) }}
-            className="shrink-0 px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors"
+            className="shrink-0 px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors"
           >
             + Nuevo periodo
           </button>
@@ -413,7 +413,7 @@ export default function PeriodosPage() {
                 </button>
                 <button
                   onClick={() => setModal(p)}
-                  className="px-3 py-1.5 text-xs text-[#1a3a5c] border border-[#1a3a5c]/30 rounded-lg hover:bg-[#1a3a5c]/5 transition-colors"
+                  className="px-3 py-1.5 text-xs text-brand-600 border border-brand-600/30 rounded-lg hover:bg-brand-600/5 transition-colors"
                 >
                   Editar
                 </button>

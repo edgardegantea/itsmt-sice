@@ -81,14 +81,14 @@ export default function TrasladosPage() {
             <ViewToggle value={vista} onChange={setVista} />
             <button
               onClick={() => setShowForm(v => !v)}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
             >
               {showForm ? 'Cancelar' : '+ Nuevo traslado'}
             </button>
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
+        <div className="bg-brand-50 border border-brand-200 rounded-xl p-3 text-sm text-brand-800">
           <strong>TecNM Cap. 6:</strong> El traslado procede independientemente de la situación académica. Al emitir documentos: NUNCA certificado incompleto, solo kardex o constancia de calificaciones.
         </div>
 
@@ -99,13 +99,13 @@ export default function TrasladosPage() {
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">ID Alumno (UUID)</label>
                 <input type="text" value={form.alumno_id} onChange={e => setForm(f => ({ ...f, alumno_id: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="UUID del alumno" required />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Tipo</label>
                 <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value as 'entrada' | 'salida' }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                   <option value="entrada">Entrada (traslado al ITSMT)</option>
                   <option value="salida">Salida (traslado fuera del ITSMT)</option>
                 </select>
@@ -113,24 +113,24 @@ export default function TrasladosPage() {
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Instituto Origen</label>
                 <input type="text" value={form.instituto_origen} onChange={e => setForm(f => ({ ...f, instituto_origen: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="Nombre del instituto de origen" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Instituto Destino</label>
                 <input type="text" value={form.instituto_destino} onChange={e => setForm(f => ({ ...f, instituto_destino: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="Nombre del instituto destino" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Fecha de solicitud</label>
                 <input type="date" value={form.fecha_solicitud} onChange={e => setForm(f => ({ ...f, fecha_solicitud: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   required />
               </div>
               <div className="flex items-end">
                 <button type="submit" disabled={crearMut.isPending}
-                  className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  className="w-full px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors">
                   {crearMut.isPending ? 'Guardando…' : 'Registrar traslado'}
                 </button>
               </div>
@@ -147,7 +147,7 @@ export default function TrasladosPage() {
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Decisión</label>
                   <select value={gestionForm.estatus} onChange={e => setGestionForm(f => ({ ...f, estatus: e.target.value as 'aceptado' | 'rechazado' }))}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                     <option value="aceptado">Aceptar traslado</option>
                     <option value="rechazado">Rechazar traslado</option>
                   </select>
@@ -156,7 +156,7 @@ export default function TrasladosPage() {
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Motivo de rechazo</label>
                     <textarea value={gestionForm.motivo_rechazo} onChange={e => setGestionForm(f => ({ ...f, motivo_rechazo: e.target.value }))}
-                      rows={3} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={3} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                       placeholder="Describe el motivo del rechazo..." />
                   </div>
                 )}
@@ -181,13 +181,13 @@ export default function TrasladosPage() {
         {/* Filtros */}
         <div className="flex gap-3 flex-wrap">
           <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
             <option value="">Todos los tipos</option>
             <option value="entrada">Entrada</option>
             <option value="salida">Salida</option>
           </select>
           <select value={filtroEstatus} onChange={e => setFiltroEstatus(e.target.value)}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
             <option value="">Todos los estatus</option>
             <option value="solicitado">Solicitado</option>
             <option value="aceptado">Aceptado</option>
@@ -226,7 +226,7 @@ export default function TrasladosPage() {
                     <td className="py-3 px-5 text-slate-800">{t.alumno?.name ?? t.alumno_id}</td>
                     <td className="py-3 px-4 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        t.tipo === 'entrada' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                        t.tipo === 'entrada' ? 'bg-brand-100 text-brand-700' : 'bg-purple-100 text-purple-700'
                       }`}>
                         {t.tipo}
                       </span>
@@ -242,7 +242,7 @@ export default function TrasladosPage() {
                       <div className="flex gap-1 justify-center">
                         {t.estatus === 'solicitado' && (
                           <button onClick={() => { setGestionId(t.id); setGestionForm({ estatus: 'aceptado', motivo_rechazo: '' }) }}
-                            className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
+                            className="text-xs px-2 py-1 bg-brand-50 text-brand-700 rounded-lg hover:bg-brand-100 transition-colors">
                             Gestionar
                           </button>
                         )}
@@ -255,7 +255,7 @@ export default function TrasladosPage() {
                       </div>
                     </td>
                     <td className="py-3 px-5 text-right">
-                      <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalle(t)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -269,18 +269,18 @@ export default function TrasladosPage() {
                     <p className="font-medium text-slate-800 truncate">{t.alumno?.name ?? t.alumno_id}</p>
                     <EstatusChip estatus={t.estatus} />
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold self-start ${t.tipo === 'entrada' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{t.tipo}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold self-start ${t.tipo === 'entrada' ? 'bg-brand-100 text-brand-700' : 'bg-purple-100 text-purple-700'}`}>{t.tipo}</span>
                   <p className="text-xs text-slate-500">{t.tipo === 'entrada' ? t.instituto_origen : t.instituto_destino} · {t.fecha_solicitud}</p>
                   <div className="flex gap-2 mt-1">
                     {t.estatus === 'solicitado' && (
                       <button onClick={() => { setGestionId(t.id); setGestionForm({ estatus: 'aceptado', motivo_rechazo: '' }) }}
-                        className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">Gestionar</button>
+                        className="text-xs px-2 py-1 bg-brand-50 text-brand-700 rounded-lg hover:bg-brand-100 transition-colors">Gestionar</button>
                     )}
                     {t.tipo === 'salida' && t.estatus === 'aceptado' && (
                       <a href={academicoApi.kardexTrasladoPdfUrl(t.id)} target="_blank" rel="noreferrer"
                         className="text-xs px-2 py-1 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">Kardex PDF</a>
                     )}
-                    <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
+                    <button onClick={() => setDetalle(t)} className="text-xs font-medium text-brand-600 hover:underline">Ver detalle</button>
                   </div>
                 </div>
               ))}
@@ -302,7 +302,7 @@ export default function TrasladosPage() {
           ]}
           footer={
             detalle.estatus === 'solicitado'
-              ? <button onClick={() => { setGestionId(detalle.id); setGestionForm({ estatus: 'aceptado', motivo_rechazo: '' }); setDetalle(null) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Gestionar</button>
+              ? <button onClick={() => { setGestionId(detalle.id); setGestionForm({ estatus: 'aceptado', motivo_rechazo: '' }); setDetalle(null) }} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Gestionar</button>
               : detalle.tipo === 'salida' && detalle.estatus === 'aceptado'
                 ? <a href={academicoApi.kardexTrasladoPdfUrl(detalle.id)} target="_blank" rel="noreferrer" className="text-xs font-medium text-white bg-slate-700 px-3 py-1.5 rounded-lg">Kardex PDF</a>
                 : undefined

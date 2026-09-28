@@ -68,7 +68,7 @@ export default function MallaPage() {
             {carreraId && (
               <button
                 onClick={() => { setForm({ carrera_id: carreraId, semestre: 1, es_especialidad: false }); setModal(true) }}
-                className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+                className="shrink-0 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
               >
                 + Añadir materia
               </button>
@@ -109,7 +109,7 @@ export default function MallaPage() {
                 <div key={s} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                   <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">{s}</span>
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-100 text-brand-700 text-xs font-bold">{s}</span>
                       <span className="text-sm font-semibold text-slate-700">Semestre {s}</span>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-slate-400">
@@ -125,13 +125,13 @@ export default function MallaPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {porSemestre[s].map(m => (
-                        <tr key={m.id} className="hover:bg-blue-50/40 transition-colors">
+                        <tr key={m.id} className="hover:bg-brand-50/40 transition-colors">
                           <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{m.materia?.clave}</td>
                           <td className="px-4 py-2.5 font-mono text-xs text-slate-400">{m.materia?.clave_oficial_tecnm ?? '—'}</td>
                           <td className="px-4 py-2.5 font-medium text-slate-800">{m.materia?.nombre}</td>
                           <td className="px-4 py-2.5 text-center text-slate-600">{m.materia?.creditos}</td>
                           <td className="px-4 py-2.5">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${m.materia?.tipo === 'obligatoria' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${m.materia?.tipo === 'obligatoria' ? 'bg-brand-100 text-brand-700' : 'bg-amber-100 text-amber-700'}`}>
                               {m.materia?.tipo === 'obligatoria' ? 'Obligatoria' : 'Optativa'}
                             </span>
                           </td>
@@ -149,7 +149,7 @@ export default function MallaPage() {
                             </button>
                           </td>
                           <td className="px-4 py-2.5 text-right">
-                            <button onClick={() => setDetalle(m)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                            <button onClick={() => setDetalle(m)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                           </td>
                         </tr>
                       ))}
@@ -189,7 +189,7 @@ export default function MallaPage() {
           </Field>
           <Field label="Es materia de especialidad" full>
             <label className="flex items-center gap-2 mt-2">
-              <input type="checkbox" checked={!!form.es_especialidad} onChange={e => set('es_especialidad', e.target.checked)} className="w-4 h-4 accent-blue-600" />
+              <input type="checkbox" checked={!!form.es_especialidad} onChange={e => set('es_especialidad', e.target.checked)} className="w-4 h-4 accent-brand-600" />
               <span className="text-sm text-slate-700">Marcar como especialidad</span>
             </label>
           </Field>

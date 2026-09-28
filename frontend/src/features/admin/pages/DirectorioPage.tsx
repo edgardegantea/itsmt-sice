@@ -65,7 +65,7 @@ const api = {
 // ── Colores por tipo de área ──────────────────────────────────────────────────
 
 const TIPO_STYLE = {
-  administracion: { badge: 'bg-blue-100 text-blue-800',   dot: 'bg-blue-500',   label: 'Administración' },
+  administracion: { badge: 'bg-brand-100 text-brand-800',   dot: 'bg-brand-500',   label: 'Administración' },
   academico:      { badge: 'bg-indigo-100 text-indigo-800', dot: 'bg-indigo-500', label: 'Académico' },
   departamento:   { badge: 'bg-gray-100 text-gray-700',   dot: 'bg-gray-400',   label: 'Departamento' },
 }
@@ -98,7 +98,7 @@ function Input({ value, onChange, type = 'text', ...rest }: React.InputHTMLAttri
       type={type}
       value={value}
       onChange={onChange}
-      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
       {...rest}
     />
   )
@@ -111,7 +111,7 @@ function Textarea({ value, onChange, rows = 3, placeholder }: { value: string; o
       onChange={e => onChange(e.target.value)}
       rows={rows}
       placeholder={placeholder}
-      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
     />
   )
 }
@@ -121,7 +121,7 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
     >
       {children}
     </select>
@@ -133,7 +133,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
     <label className="flex items-center gap-2.5 cursor-pointer">
       <div
         onClick={() => onChange(!checked)}
-        className={`relative w-9 h-5 rounded-full transition-colors ${checked ? 'bg-blue-600' : 'bg-gray-300'}`}
+        className={`relative w-9 h-5 rounded-full transition-colors ${checked ? 'bg-brand-600' : 'bg-gray-300'}`}
       >
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : ''}`} />
       </div>
@@ -166,7 +166,7 @@ function Modal({ title, subtitle, onClose, onSave, saving, canSave, children }: 
         <div className="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3 flex-shrink-0">
           <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-100">Cancelar</button>
           <button onClick={onSave} disabled={saving || !canSave}
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50 hover:bg-blue-700 transition-colors">
+            className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium disabled:opacity-50 hover:bg-brand-700 transition-colors">
             {saving ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
@@ -309,7 +309,7 @@ function PersonaModal({ persona, areas, puestos, usuarios, onClose }: {
                   placeholder="ej. subdirector_academico"
                 />
                 <select
-                  className="px-2 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/20 focus:border-[#1a3a5c] transition"
+                  className="px-2 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition"
                   value=""
                   onChange={e => { if (e.target.value) set('clave_firma', e.target.value) }}
                 >
@@ -479,11 +479,11 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
           <input type="search" placeholder="Buscar…" value={busqueda} onChange={e => setBusqueda(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
         {puedeEditar && (
           <button onClick={() => setEditando('nuevo')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 whitespace-nowrap">
+            className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700 whitespace-nowrap">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
             </svg>
@@ -516,9 +516,9 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
           const style = TIPO_STYLE[tipoArea as keyof typeof TIPO_STYLE] ?? TIPO_STYLE.departamento
           return (
             <div key={areaName} className="mb-6">
-              <div className={`flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-opacity-50 border ${tipoArea === 'administracion' ? 'bg-blue-50 border-blue-200' : tipoArea === 'academico' ? 'bg-indigo-50 border-indigo-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className={`flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-opacity-50 border ${tipoArea === 'administracion' ? 'bg-brand-50 border-brand-200' : tipoArea === 'academico' ? 'bg-indigo-50 border-indigo-200' : 'bg-gray-50 border-gray-200'}`}>
                 <span className={`w-2 h-2 rounded-full ${style.dot}`}/>
-                <span className={`text-sm font-semibold ${tipoArea === 'administracion' ? 'text-blue-800' : tipoArea === 'academico' ? 'text-indigo-800' : 'text-gray-700'}`}>{areaName}</span>
+                <span className={`text-sm font-semibold ${tipoArea === 'administracion' ? 'text-brand-800' : tipoArea === 'academico' ? 'text-indigo-800' : 'text-gray-700'}`}>{areaName}</span>
                 <span className="ml-auto text-xs text-gray-400">{personas.length} persona{personas.length !== 1 ? 's' : ''}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -527,7 +527,7 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
                     <div className={`h-1 ${style.dot}`}/>
                     <div className="p-4">
                       <div className="flex gap-3 mb-3">
-                        <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold border ${tipoArea === 'administracion' ? 'bg-blue-50 text-blue-800 border-blue-200' : tipoArea === 'academico' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                        <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold border ${tipoArea === 'administracion' ? 'bg-brand-50 text-brand-800 border-brand-200' : tipoArea === 'academico' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
                           {initials(p.nombre)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -537,7 +537,7 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
                       </div>
 
                       {p.email && (
-                        <a href={`mailto:${p.email}`} className="flex items-center gap-1.5 text-xs text-blue-600 hover:underline truncate mb-1">
+                        <a href={`mailto:${p.email}`} className="flex items-center gap-1.5 text-xs text-brand-600 hover:underline truncate mb-1">
                           <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                           </svg>
@@ -558,7 +558,7 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
                           <span className="px-1.5 py-0.5 rounded text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Firma docs.</span>
                         )}
                         {p.user_id ? (
-                          <span className="px-1.5 py-0.5 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200">
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-brand-50 text-brand-700 border border-brand-200">
                             Vinculado
                           </span>
                         ) : (
@@ -568,7 +568,7 @@ function TabPersonas({ esAdmin, areas, puestos, usuarios }: { esAdmin: boolean; 
                     </div>
                     {puedeEditar && (
                       <div className="px-4 pb-3 flex gap-2 border-t border-gray-100 pt-2">
-                        <button onClick={() => setEditando(p)} className="flex-1 text-xs py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">Editar</button>
+                        <button onClick={() => setEditando(p)} className="flex-1 text-xs py-1 rounded-md bg-brand-50 text-brand-700 hover:bg-brand-100 font-medium">Editar</button>
                         {puedeEliminar && <button onClick={() => { if (confirm(`¿Eliminar a ${p.nombre}?`)) deleteMutation.mutate(p.id) }}
                           className="flex-1 text-xs py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 font-medium">Eliminar</button>}
                       </div>
@@ -618,7 +618,7 @@ function TabAreas({ esAdmin }: { esAdmin: boolean }) {
       {puedeEditar && (
         <div className="flex justify-end mb-4">
           <button onClick={() => setEditando('nuevo')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700">
+            className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
             Nueva área
           </button>
@@ -651,7 +651,7 @@ function TabAreas({ esAdmin }: { esAdmin: boolean }) {
                       {puedeEditar && (
                         <td className="px-4 py-3">
                           <div className="flex gap-2 justify-end">
-                            <button onClick={() => setEditando(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                            <button onClick={() => setEditando(a)} className="text-xs text-brand-600 hover:underline">Editar</button>
                             {puedeEliminar && <button onClick={() => { if (confirm(`¿Eliminar "${a.nombre}"?`)) deleteMutation.mutate(a.id) }}
                               className="text-xs text-red-500 hover:underline">Eliminar</button>}
                           </div>
@@ -697,7 +697,7 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
       {puedeEditar && (
         <div className="flex justify-end mb-4">
           <button onClick={() => setEditando('nuevo')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700">
+            className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
             Nuevo puesto
           </button>
@@ -720,7 +720,7 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
               {puestos.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <button onClick={() => setDetalle(p)} className="font-medium text-gray-900 hover:text-blue-600 text-left">{p.nombre}</button>
+                    <button onClick={() => setDetalle(p)} className="font-medium text-gray-900 hover:text-brand-600 text-left">{p.nombre}</button>
                     {p.descripcion && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{p.descripcion}</p>}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600">{p.area?.nombre ?? '—'}</td>
@@ -733,7 +733,7 @@ function TabPuestos({ esAdmin, areas }: { esAdmin: boolean; areas: Area[] }) {
                   {puedeEditar && (
                     <td className="px-4 py-3">
                       <div className="flex gap-2 justify-end">
-                        <button onClick={() => setEditando(p)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                        <button onClick={() => setEditando(p)} className="text-xs text-brand-600 hover:underline">Editar</button>
                         {puedeEliminar && <button onClick={() => { if (confirm(`¿Eliminar "${p.nombre}"?`)) deleteMutation.mutate(p.id) }}
                           className="text-xs text-red-500 hover:underline">Eliminar</button>}
                       </div>

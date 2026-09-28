@@ -326,7 +326,7 @@ function SelectorGrupo({
           <button
             type="button"
             onClick={() => { setCarreraFiltro(''); setSemestreFiltro(''); onChange(null) }}
-            className="text-xs text-slate-500 hover:text-[#1a3a5c] hover:underline pb-2"
+            className="text-xs text-slate-500 hover:text-brand-600 hover:underline pb-2"
           >
             Quitar filtros
           </button>
@@ -424,14 +424,14 @@ function SelectorGrupo({
                       <Fragment key={filaId}>
                         <tr
                           onClick={() => carga && setFilaExpandida(expandida ? null : filaId)}
-                          className={`${carga ? 'cursor-pointer' : ''} ${activo ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}
+                          className={`${carga ? 'cursor-pointer' : ''} ${activo ? 'bg-brand-50/50' : 'hover:bg-slate-50'}`}
                         >
                           <td className="px-4 py-2.5 text-slate-600">{semestre}°</td>
                           <td className="px-4 py-2.5">
                             <button
                               type="button"
                               onClick={e => { e.stopPropagation(); onChange({ grupoId: g.id, cargaId: null }) }}
-                              className="font-medium text-slate-800 hover:text-[#1a3a5c] hover:underline"
+                              className="font-medium text-slate-800 hover:text-brand-600 hover:underline"
                             >
                               {g.clave}
                             </button>
@@ -443,7 +443,7 @@ function SelectorGrupo({
                                 <button
                                   type="button"
                                   onClick={e => { e.stopPropagation(); onAbrirCaptura({ grupoId: g.id, cargaId: carga.id }) }}
-                                  className="text-[13px] font-medium text-[#1a3a5c] hover:underline text-left"
+                                  className="text-[13px] font-medium text-brand-600 hover:underline text-left"
                                 >
                                   {carga.materia?.nombre ?? 'Materia'}
                                 </button>
@@ -492,7 +492,7 @@ function SelectorGrupo({
                                 <button
                                   type="button"
                                   onClick={e => { e.stopPropagation(); onAbrirCaptura({ grupoId: g.id, cargaId: carga.id }) }}
-                                  className="ml-auto text-xs bg-[#1a3a5c] text-white px-3 py-1.5 rounded-lg hover:bg-[#15304c]"
+                                  className="ml-auto text-xs bg-brand-600 text-white px-3 py-1.5 rounded-lg hover:bg-[#15304c]"
                                 >
                                   Revisar calificaciones →
                                 </button>
@@ -528,7 +528,7 @@ function SelectorGrupo({
                         return (
                           <div
                             key={g.id}
-                            className={`rounded-lg border p-2.5 ${activo ? 'border-[#1a3a5c] ring-1 ring-[#1a3a5c]/30' : 'border-slate-200'}`}
+                            className={`rounded-lg border p-2.5 ${activo ? 'border-brand-600 ring-1 ring-brand-600/30' : 'border-slate-200'}`}
                           >
                             <button
                               type="button"
@@ -551,7 +551,7 @@ function SelectorGrupo({
                                     onClick={() => onAbrirCaptura({ grupoId: g.id, cargaId: c.id })}
                                     className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
                                       activo && cargaId === c.id
-                                        ? 'bg-[#1a3a5c] text-white border-[#1a3a5c]'
+                                        ? 'bg-brand-600 text-white border-brand-600'
                                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                                     }`}
                                   >
@@ -633,7 +633,7 @@ export default function CalificacionesPage() {
             <button
               type="button"
               onClick={() => navigate(periodoId ? `/admin/gestion-academica/calificaciones/estadisticas?periodo_id=${periodoId}` : '/admin/gestion-academica/calificaciones/estadisticas')}
-              className="text-sm bg-[#1a3a5c] text-white px-3 py-2 rounded-lg hover:bg-[#15304c] inline-flex items-center gap-1.5 flex-shrink-0"
+              className="text-sm bg-brand-600 text-white px-3 py-2 rounded-lg hover:bg-[#15304c] inline-flex items-center gap-1.5 flex-shrink-0"
             >
               📊 Estadísticas y KPIs
             </button>
@@ -666,7 +666,7 @@ export default function CalificacionesPage() {
             <button
               type="button"
               onClick={() => setEditandoPeriodo(true)}
-              className="text-xs text-slate-400 hover:text-[#1a3a5c] hover:underline ml-1"
+              className="text-xs text-slate-400 hover:text-brand-600 hover:underline ml-1"
             >
               Cambiar
             </button>
@@ -763,7 +763,7 @@ function DetalleAlumnoModal({ alumnoId, nombre, promedioGrupo, onClose }: {
       ) : (
         <div className="space-y-5">
           <div className="flex justify-end">
-            <Link to={`/admin/alumnos/${alumnoId}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+            <Link to={`/admin/alumnos/${alumnoId}`} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-600 hover:underline">
               Ver expediente completo →
             </Link>
           </div>
@@ -813,9 +813,9 @@ function DetalleAlumnoModal({ alumnoId, nombre, promedioGrupo, onClose }: {
                   <p className="text-lg font-bold text-amber-700">{asistencia.retardos}</p>
                   <p className="text-[10px] text-amber-500 uppercase">Retardos</p>
                 </div>
-                <div className="bg-blue-50 rounded-lg px-3 py-2 text-center">
-                  <p className="text-lg font-bold text-blue-700">{asistencia.justificados}</p>
-                  <p className="text-[10px] text-blue-500 uppercase">Justificados</p>
+                <div className="bg-brand-50 rounded-lg px-3 py-2 text-center">
+                  <p className="text-lg font-bold text-brand-700">{asistencia.justificados}</p>
+                  <p className="text-[10px] text-brand-500 uppercase">Justificados</p>
                 </div>
               </div>
             </div>
@@ -935,7 +935,7 @@ function ImportarCsvModal({ grupoId, cargaAcademicaId, onClose, onImportado }: {
           <button
             onClick={importar}
             disabled={!archivo || importando}
-            className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40"
+            className="text-xs px-3 py-1.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-40"
           >
             {importando ? 'Importando…' : 'Importar'}
           </button>
@@ -1012,10 +1012,10 @@ function HistorialCalificacionesModal({ grupoId, cargaAcademicaId, onClose }: {
                   <p className="text-slate-600">{fmtParciales(h.parciales_anteriores)}</p>
                   {h.calificacion_final_anterior != null && <p className="text-slate-600">Final: {h.calificacion_final_anterior}</p>}
                 </div>
-                <div className="bg-blue-50 rounded-lg px-2.5 py-2">
-                  <p className="text-blue-400 uppercase tracking-wide text-[10px] mb-0.5">Después</p>
-                  <p className="text-blue-700">{fmtParciales(h.parciales_nuevos)}</p>
-                  {h.calificacion_final_nueva != null && <p className="text-blue-700">Final: {h.calificacion_final_nueva}</p>}
+                <div className="bg-brand-50 rounded-lg px-2.5 py-2">
+                  <p className="text-brand-400 uppercase tracking-wide text-[10px] mb-0.5">Después</p>
+                  <p className="text-brand-700">{fmtParciales(h.parciales_nuevos)}</p>
+                  {h.calificacion_final_nueva != null && <p className="text-brand-700">Final: {h.calificacion_final_nueva}</p>}
                 </div>
               </div>
             </div>
@@ -1540,7 +1540,7 @@ export function CalificacionesSection({
               onClick={guardarTodo}
               disabled={guardandoTodo || alumnosModificados.length === 0}
               title={alumnosModificados.length === 0 ? 'No hay cambios sin guardar' : `Guardar ${alumnosModificados.length} registro(s) modificado(s)`}
-              className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+              className="text-xs bg-brand-600 text-white px-3 py-1.5 rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
             >
               {guardandoTodo ? 'Guardando…' : `Guardar${alumnosModificados.length > 0 ? ` (${alumnosModificados.length})` : ''}`}
             </button>
@@ -1697,7 +1697,7 @@ export function CalificacionesSection({
                           <button
                             type="button"
                             onClick={() => setColumnaEditable(null)}
-                            className="shrink-0 normal-case font-normal text-[10px] text-blue-600 hover:underline"
+                            className="shrink-0 normal-case font-normal text-[10px] text-brand-600 hover:underline"
                           >
                             Listo
                           </button>
@@ -1706,7 +1706,7 @@ export function CalificacionesSection({
                             type="button"
                             onClick={() => setColumnaEditable(n)}
                             title={`Habilitar edición de P${n}`}
-                            className="shrink-0 normal-case font-normal text-[10px] text-blue-600 hover:underline"
+                            className="shrink-0 normal-case font-normal text-[10px] text-brand-600 hover:underline"
                           >
                             Editar
                           </button>
@@ -1728,7 +1728,7 @@ export function CalificacionesSection({
               const modificada = filaModificada(a.id)
 
               return (
-                <tr key={a.id} className={`hover:bg-slate-50 transition-colors ${modificada ? 'bg-blue-50/40' : ''}`}>
+                <tr key={a.id} className={`hover:bg-slate-50 transition-colors ${modificada ? 'bg-brand-50/40' : ''}`}>
                   <td className="px-2 py-2.5 text-center text-slate-400 text-xs">{i + 1}</td>
                   <td className="px-2 py-2.5 text-xs text-slate-500 font-mono truncate">{a.numero_control}</td>
                   <td className="px-4 py-2.5 font-medium text-slate-800 truncate">{alumnoNombre(a)}</td>
@@ -1800,12 +1800,12 @@ export function CalificacionesSection({
                             ) : !periodoActivo ? (
                               <span className="text-xs text-slate-400">Periodo inactivo</span>
                             ) : modificada ? (
-                              <span className="text-xs text-blue-600 font-medium">Sin guardar</span>
+                              <span className="text-xs text-brand-600 font-medium">Sin guardar</span>
                             ) : (
                               <span className="text-xs text-slate-300">—</span>
                             )}
                             {puedeVerHistorial && (
-                              <button onClick={() => setDetalleAlumnoId(a.id)} className="text-xs text-blue-600 hover:underline">
+                              <button onClick={() => setDetalleAlumnoId(a.id)} className="text-xs text-brand-600 hover:underline">
                                 Ver detalle
                               </button>
                             )}
@@ -1861,10 +1861,10 @@ export function CalificacionesSection({
                           <div className="flex items-center justify-end gap-2">
                             {puedeEditarFinal && (
                               filaModificada(a.id)
-                                ? <span className="text-xs text-blue-600 font-medium">Sin guardar</span>
+                                ? <span className="text-xs text-brand-600 font-medium">Sin guardar</span>
                                 : <span className="text-xs text-slate-300">—</span>
                             )}
-                            <button onClick={() => setDetalleAlumnoId(a.id)} className="text-xs text-blue-600 hover:underline">
+                            <button onClick={() => setDetalleAlumnoId(a.id)} className="text-xs text-brand-600 hover:underline">
                               Ver detalle
                             </button>
                           </div>

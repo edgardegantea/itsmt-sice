@@ -105,7 +105,7 @@ export default function EstadisticasCalificacionesPage() {
         <div>
           <button
             onClick={() => navigate(periodoId ? `/admin/gestion-academica/calificaciones?periodo_id=${periodoId}` : '/admin/gestion-academica/calificaciones')}
-            className="text-sm text-slate-500 hover:text-[#1a3a5c] mb-2 inline-flex items-center gap-1"
+            className="text-sm text-slate-500 hover:text-brand-600 mb-2 inline-flex items-center gap-1"
           >
             ← Volver a Captura de Calificaciones
           </button>

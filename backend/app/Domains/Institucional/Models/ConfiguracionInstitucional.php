@@ -84,18 +84,38 @@ class ConfiguracionInstitucional extends Model
 
     public function logoBase64(): ?string
     {
-        if ($this->logo_principal && Storage::disk('public')->exists($this->logo_principal)) {
-            $mime = Storage::disk('public')->mimeType($this->logo_principal);
-            $raw  = Storage::disk('public')->get($this->logo_principal);
-            if (str_contains($mime, 'svg')) {
-                // dompdf (php-svg-lib) no resuelve el prólogo XML ni el DOCTYPE con DTD externo
-                // que agregan Illustrator/Inkscape; sin ellos el SVG sí se dibuja en el PDF.
-                $raw  = preg_replace(['/<\?xml[^>]*\?>/i', '/<!DOCTYPE[^>]*>/i', '/<!--.*?-->/s'], '', $raw);
-                $mime = 'image/svg+xml';
-            }
-            $data = base64_encode($raw);
-            return "data:{$mime};base64,{$data}";
+        return $this->imagenBase64($this->logo_principal);
+    }
+
+    /** Logo secundario (normalmente el del TecNM) como data URI, para los PDF. */
+    public function logoSecundarioBase64(): ?string
+    {
+        return $this->imagenBase64($this->logo_secundario);
+    }
+
+    /**
+     * Ruta absoluta de un logo raster (PNG/JPG) para PhpWord, que no acepta SVG ni data URI.
+     * Devuelve null si el archivo no existe o es SVG.
+     */
+    public function rutaLogoRaster(string $tipo = 'principal'): ?string
+    {
+        $path = $tipo === 'secundario' ? $this->logo_secundario : $this->logo_principal;
+        if (! $path || ! Storage::disk('public')->exists($path)) return null;
+        if (str_contains(Storage::disk('public')->mimeType($path) ?? '', 'svg')) return null;
+        return Storage::disk('public')->path($path);
+    }
+
+    private function imagenBase64(?string $path): ?string
+    {
+        if (! $path || ! Storage::disk('public')->exists($path)) return null;
+        $mime = Storage::disk('public')->mimeType($path);
+        $raw  = Storage::disk('public')->get($path);
+        if (str_contains($mime, 'svg')) {
+            // dompdf (php-svg-lib) no resuelve el prólogo XML ni el DOCTYPE con DTD externo
+            // que agregan Illustrator/Inkscape; sin ellos el SVG sí se dibuja en el PDF.
+            $raw  = preg_replace(['/<\?xml[^>]*\?>/i', '/<!DOCTYPE[^>]*>/i', '/<!--.*?-->/s'], '', $raw);
+            $mime = 'image/svg+xml';
         }
-        return null;
+        return "data:{$mime};base64," . base64_encode($raw);
     }
 }

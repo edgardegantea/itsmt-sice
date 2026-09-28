@@ -21,7 +21,7 @@ const HORA_FIN    = 20
 const SLOT_PX     = 52
 
 const COLORES = [
-  { bg: 'bg-blue-100',    border: 'border-blue-400',    text: 'text-blue-900'    },
+  { bg: 'bg-brand-100',    border: 'border-brand-400',    text: 'text-brand-900'    },
   { bg: 'bg-emerald-100', border: 'border-emerald-400', text: 'text-emerald-900' },
   { bg: 'bg-violet-100',  border: 'border-violet-400',  text: 'text-violet-900'  },
   { bg: 'bg-amber-100',   border: 'border-amber-400',   text: 'text-amber-900'   },
@@ -253,7 +253,7 @@ export default function GrupoDetailPage() {
             <h2 className="font-semibold text-slate-900 text-sm">Alumnos del grupo</h2>
             <button
               onClick={() => setAsignarOpen(o => !o)}
-              className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-3 py-1.5 text-xs bg-brand-600 text-white rounded-lg hover:bg-brand-700"
             >
               {asignarOpen ? 'Cancelar' : '+ Asignar alumnos'}
             </button>
@@ -263,7 +263,7 @@ export default function GrupoDetailPage() {
           {asignarOpen && (
             <div className="border-b border-slate-100 bg-slate-50 p-5 space-y-3">
               {/* Info contextual */}
-              <div className="text-xs text-slate-500 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              <div className="text-xs text-slate-500 bg-brand-50 border border-brand-100 rounded-lg px-3 py-2">
                 Mostrando alumnos de <strong>{grupo.carrera?.clave}</strong> en <strong>{grupo.semestre}° semestre</strong>
                 {grupo.semestre > 1 && (
                   <> — avanzan automáticamente según su progreso académico</>
@@ -291,7 +291,7 @@ export default function GrupoDetailPage() {
                             : alumnosDisponibles.map(a => a.id)
                         )
                       }
-                      className="text-blue-600 hover:underline font-medium"
+                      className="text-brand-600 hover:underline font-medium"
                     >
                       {selAlumnos.length === alumnosDisponibles.length ? 'Deseleccionar todos' : 'Seleccionar todos'}
                     </button>
@@ -315,7 +315,7 @@ export default function GrupoDetailPage() {
                     return (
                       <label
                         key={a.id}
-                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${seleccionado ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${seleccionado ? 'bg-brand-50' : 'hover:bg-slate-50'}`}
                       >
                         <input
                           type="checkbox"
@@ -323,7 +323,7 @@ export default function GrupoDetailPage() {
                           onChange={e => setSelAlumnos(prev =>
                             e.target.checked ? [...prev, a.id] : prev.filter(x => x !== a.id)
                           )}
-                          className="w-4 h-4 accent-blue-600 shrink-0"
+                          className="w-4 h-4 accent-brand-600 shrink-0"
                         />
                         <span className="font-mono text-xs text-slate-500 w-24 shrink-0">{a.numero_control}</span>
                         <span className="flex-1 font-medium text-slate-800 text-sm">{nombre}</span>
@@ -348,7 +348,7 @@ export default function GrupoDetailPage() {
                   {grupo.semestre > 1 && alumnosElegibles.length > 0 && selAlumnos.length === 0 && (
                     <button
                       onClick={() => setSelAlumnos(alumnosElegibles.map(a => a.id))}
-                      className="px-3 py-1.5 text-xs border border-blue-300 text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 font-medium"
+                      className="px-3 py-1.5 text-xs border border-brand-300 text-brand-700 bg-brand-50 rounded-lg hover:bg-brand-100 font-medium"
                     >
                       Auto-asignar todos ({alumnosElegibles.length})
                     </button>
@@ -362,7 +362,7 @@ export default function GrupoDetailPage() {
                   <button
                     onClick={() => asignar.mutate()}
                     disabled={selAlumnos.length === 0 || asignar.isPending}
-                    className="px-4 py-1.5 text-xs bg-blue-600 text-white rounded-lg disabled:opacity-50 font-medium"
+                    className="px-4 py-1.5 text-xs bg-brand-600 text-white rounded-lg disabled:opacity-50 font-medium"
                   >
                     {asignar.isPending ? 'Asignando…' : `Asignar${selAlumnos.length > 0 ? ` (${selAlumnos.length})` : ''}`}
                   </button>
@@ -384,7 +384,7 @@ export default function GrupoDetailPage() {
             <tbody className="divide-y divide-slate-100">
               {(grupo.alumnos ?? []).length === 0 && <EmptyRow cols={5} msg="Sin alumnos asignados." />}
               {(grupo.alumnos ?? []).map(a => (
-                <tr key={a.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer" onClick={() => navigate(`/admin/alumnos/${a.id}`)}>
+                <tr key={a.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer" onClick={() => navigate(`/admin/alumnos/${a.id}`)}>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{a.numero_control}</td>
                   <td className="px-4 py-3 font-medium text-slate-900">{alumnoNombre(a)}</td>
                   <td className="px-4 py-3 text-center text-slate-600">{a.semestre_actual}°</td>
@@ -466,7 +466,7 @@ export default function GrupoDetailPage() {
             </div>
             <Link
               to={`/admin/gestion-academica/calificaciones?grupo_id=${id}`}
-              className="shrink-0 px-3 py-1.5 text-xs text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors"
+              className="shrink-0 px-3 py-1.5 text-xs text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors"
             >
               Ir a Captura de Calificaciones
             </Link>

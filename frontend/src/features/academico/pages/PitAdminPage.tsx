@@ -82,7 +82,7 @@ export default function PitAdminPage() {
             <ViewToggle value={vista} onChange={setVista} />
             <button
               onClick={() => setShowForm(v => !v)}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
             >
               {showForm ? 'Cancelar' : '+ Nueva asignación'}
             </button>
@@ -106,7 +106,7 @@ export default function PitAdminPage() {
                   type="text"
                   value={form.tutor_id}
                   onChange={e => setForm(f => ({ ...f, tutor_id: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="UUID del tutor"
                   required
                 />
@@ -117,7 +117,7 @@ export default function PitAdminPage() {
                   type="text"
                   value={form.alumno_id}
                   onChange={e => setForm(f => ({ ...f, alumno_id: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="UUID del alumno"
                   required
                 />
@@ -128,7 +128,7 @@ export default function PitAdminPage() {
                   type="text"
                   value={form.periodo_id}
                   onChange={e => setForm(f => ({ ...f, periodo_id: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="UUID del periodo"
                   required
                 />
@@ -137,7 +137,7 @@ export default function PitAdminPage() {
                 <button
                   type="submit"
                   disabled={crearMut.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
                 >
                   {crearMut.isPending ? 'Guardando…' : 'Guardar asignación'}
                 </button>

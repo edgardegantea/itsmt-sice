@@ -67,7 +67,7 @@ export default function TutoriasTab() {
           </select>
         </div>
         <button onClick={() => setModal({ tutor_id: '', periodo_id: '', alumno_ids: [] })}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 flex items-center gap-2">
           <span className="text-base leading-none">+</span> Asignar tutorías
         </button>
       </div>
@@ -81,7 +81,7 @@ export default function TutoriasTab() {
             {isLoading && <EmptyRow cols={5} msg="Cargando…" />}
             {!isLoading && tutorias.length === 0 && <EmptyRow cols={5} />}
             {tutorias.map(t => (
-              <tr key={t.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={t.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-900">{t.tutor?.name ?? '—'}</td>
                 <td className="px-4 py-3">
                   <p className="font-medium text-slate-800">{t.alumno?.user?.name ?? '—'}</p>
@@ -136,7 +136,7 @@ export default function TutoriasTab() {
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
               <button onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cancelar</button>
               <button onClick={() => saveMasivo.mutate()} disabled={!modal.tutor_id || !modal.periodo_id || modal.alumno_ids.length === 0 || saveMasivo.isPending}
-                className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
                 {saveMasivo.isPending ? 'Asignando…' : `Asignar ${modal.alumno_ids.length > 0 ? `(${modal.alumno_ids.length})` : ''}`}
               </button>
             </div>

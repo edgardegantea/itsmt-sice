@@ -11,7 +11,7 @@ const TIPO_LABEL: Record<string, string> = {
   licencia_sin_goce:   'Licencia sin goce',
 }
 const TIPO_BADGE: Record<string, string> = {
-  comision_sindical:   'bg-blue-100 text-blue-800',
+  comision_sindical:   'bg-brand-100 text-brand-800',
   licencia_con_goce:   'bg-green-100 text-green-800',
   licencia_sin_goce:   'bg-red-100 text-red-800',
 }
@@ -95,7 +95,7 @@ export default function PermisosSindicalesPage() {
           <ViewToggle value={vista} onChange={setVista} />
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 text-sm font-medium"
           >
             + Registrar permiso
           </button>
@@ -109,7 +109,7 @@ export default function PermisosSindicalesPage() {
             key={key || 'todos'}
             onClick={() => setFiltroTipo(key)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filtroTipo === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              filtroTipo === key ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             {label}
@@ -128,7 +128,7 @@ export default function PermisosSindicalesPage() {
                 <input type="text" value={form.docente_id}
                   onChange={e => setForm(f => ({ ...f, docente_id: e.target.value }))}
                   required placeholder="UUID del docente"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de permiso *</label>
@@ -153,7 +153,7 @@ export default function PermisosSindicalesPage() {
                 </div>
               </div>
               {form.fecha_inicio && form.fecha_fin && (
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-brand-600">
                   Días totales: <strong>{diasDesde(form.fecha_inicio, form.fecha_fin)}</strong>
                   {form.tipo_permiso === 'licencia_sin_goce' && <span className="ml-2 text-red-600">⚠ Sin goce de sueldo</span>}
                 </p>
@@ -164,7 +164,7 @@ export default function PermisosSindicalesPage() {
                   onChange={e => setForm(f => ({ ...f, motivo: e.target.value }))}
                   required rows={3}
                   placeholder="Describe la actividad sindical..."
-                  className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">ID Período (opcional)</label>
@@ -175,7 +175,7 @@ export default function PermisosSindicalesPage() {
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
-                <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Registrar'}
                 </button>
               </div>
@@ -215,7 +215,7 @@ export default function PermisosSindicalesPage() {
                     <p className="text-xs text-gray-400">al {new Date(p.fecha_fin).toLocaleDateString('es-MX')}</p>
                   </td>
                   <td className="px-5 py-4 text-center">
-                    <span className="text-lg font-bold text-blue-700">{p.dias_totales}</span>
+                    <span className="text-lg font-bold text-brand-700">{p.dias_totales}</span>
                   </td>
                   <td className="px-5 py-4">
                     <span className={`text-xs font-medium ${p.con_goce_sueldo ? 'text-green-600' : 'text-red-600'}`}>
@@ -230,7 +230,7 @@ export default function PermisosSindicalesPage() {
                   <td className="px-5 py-4">
                     <button
                       onClick={() => descargarOficio(p.id)}
-                      className="text-xs text-blue-600 hover:underline font-medium"
+                      className="text-xs text-brand-600 hover:underline font-medium"
                     >
                       Oficio PDF
                     </button>
@@ -253,7 +253,7 @@ export default function PermisosSindicalesPage() {
               </span>
               <p className="text-xs text-gray-500">{new Date(p.fecha_inicio).toLocaleDateString('es-MX')} al {new Date(p.fecha_fin).toLocaleDateString('es-MX')} · {p.dias_totales} días</p>
               <div className="flex gap-3 mt-1">
-                <button onClick={() => descargarOficio(p.id)} className="text-xs text-blue-600 hover:underline font-medium">Oficio PDF</button>
+                <button onClick={() => descargarOficio(p.id)} className="text-xs text-brand-600 hover:underline font-medium">Oficio PDF</button>
                 <button onClick={() => setDetalle(p)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function PermisosSindicalesPage() {
             { label: 'Goce de sueldo', value: detalle.con_goce_sueldo ? 'Con goce' : 'Sin goce' },
             { label: 'Oficio', value: detalle.oficio_generado ? 'Generado' : 'Pendiente' },
           ]}
-          footer={<button onClick={() => descargarOficio(detalle.id)} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Oficio PDF</button>}
+          footer={<button onClick={() => descargarOficio(detalle.id)} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Oficio PDF</button>}
         />
       )}
     </div>

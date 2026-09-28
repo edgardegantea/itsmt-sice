@@ -6,7 +6,7 @@ const ESTATUS_LABEL: Record<string, { label: string; cls: string }> = {
   activo:           { label: 'Activo',          cls: 'bg-green-100 text-green-700' },
   baja_temporal:    { label: 'Baja temporal',    cls: 'bg-yellow-100 text-yellow-700' },
   baja_definitiva:  { label: 'Baja definitiva',  cls: 'bg-red-100 text-red-700' },
-  egresado:         { label: 'Egresado',         cls: 'bg-blue-100 text-blue-700' },
+  egresado:         { label: 'Egresado',         cls: 'bg-brand-100 text-brand-700' },
 }
 
 export default function ExpedienteAlumnoPage() {
@@ -110,7 +110,7 @@ export default function ExpedienteAlumnoPage() {
               </div>
               <div>
                 <p className="text-xs text-slate-400">Promedio general</p>
-                <p className="font-semibold text-2xl text-blue-600 mt-0.5">{ext.promedio_general?.toFixed(2) ?? '—'}</p>
+                <p className="font-semibold text-2xl text-brand-600 mt-0.5">{ext.promedio_general?.toFixed(2) ?? '—'}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-400">Créditos acumulados</p>

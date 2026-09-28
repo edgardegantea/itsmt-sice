@@ -121,7 +121,7 @@ export default function DashboardAsistenciaPage() {
                         )}
                       </td>
                       <td className="py-3 px-5 text-right">
-                        <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                        <button onClick={() => setDetalle(c)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                       </td>
                     </tr>
                   )
@@ -139,7 +139,7 @@ export default function DashboardAsistenciaPage() {
                       {c.pct_asistencia_promedio.toFixed(1)}% asistencia
                     </span>
                   )}
-                  <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                  <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
                 </div>
               ))}
             </div>

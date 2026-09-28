@@ -74,7 +74,7 @@ export default function ConveniosMovilidadPage() {
           <ViewToggle value={vista} onChange={setVista} />
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 text-sm font-medium"
           >
             + Nuevo convenio
           </button>
@@ -93,7 +93,7 @@ export default function ConveniosMovilidadPage() {
                   value={form.nombre_institucion}
                   onChange={e => setForm(f => ({ ...f, nombre_institucion: e.target.value }))}
                   required
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div>
@@ -101,7 +101,7 @@ export default function ConveniosMovilidadPage() {
                 <select
                   value={form.tipo}
                   onChange={e => setForm(f => ({ ...f, tipo: e.target.value as 'tecnm' | 'nacional' | 'extranjera' }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="tecnm">TecNM</option>
                   <option value="nacional">Nacional</option>
@@ -116,7 +116,7 @@ export default function ConveniosMovilidadPage() {
                     value={form.vigente_desde}
                     onChange={e => setForm(f => ({ ...f, vigente_desde: e.target.value }))}
                     required
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
                 <div>
@@ -125,7 +125,7 @@ export default function ConveniosMovilidadPage() {
                     type="date"
                     value={form.vigente_hasta}
                     onChange={e => setForm(f => ({ ...f, vigente_hasta: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
               </div>
@@ -136,14 +136,14 @@ export default function ConveniosMovilidadPage() {
                   value={form.url_convenio}
                   onChange={e => setForm(f => ({ ...f, url_convenio: e.target.value }))}
                   placeholder="https://..."
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Registrar'}
                 </button>
               </div>
@@ -172,7 +172,7 @@ export default function ConveniosMovilidadPage() {
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{c.nombre_institucion}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      c.tipo === 'tecnm' ? 'bg-blue-100 text-blue-800' :
+                      c.tipo === 'tecnm' ? 'bg-brand-100 text-brand-800' :
                       c.tipo === 'nacional' ? 'bg-green-100 text-green-800' :
                       'bg-purple-100 text-purple-800'
                     }`}>{TIPOS[c.tipo]}</span>
@@ -186,13 +186,13 @@ export default function ConveniosMovilidadPage() {
                   </td>
                   <td className="px-6 py-4 text-sm">
                     {c.url_convenio ? (
-                      <a href={c.url_convenio} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      <a href={c.url_convenio} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">
                         Ver documento
                       </a>
                     ) : '—'}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(c)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -210,10 +210,10 @@ export default function ConveniosMovilidadPage() {
                 </span>
               </div>
               <span className={`text-xs px-2 py-0.5 rounded font-medium self-start ${
-                c.tipo === 'tecnm' ? 'bg-blue-100 text-blue-800' : c.tipo === 'nacional' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
+                c.tipo === 'tecnm' ? 'bg-brand-100 text-brand-800' : c.tipo === 'nacional' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
               }`}>{TIPOS[c.tipo]}</span>
               <p className="text-xs text-gray-500">{c.vigente_desde} — {c.vigente_hasta ?? 'sin fin'}</p>
-              <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+              <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
             </div>
           ))}
         </div>
@@ -228,7 +228,7 @@ export default function ConveniosMovilidadPage() {
             { label: 'Vigente desde', value: detalle.vigente_desde },
             { label: 'Vigente hasta', value: detalle.vigente_hasta ?? 'Sin fecha de término' },
             { label: 'Estado', value: detalle.activo ? 'Activo' : 'Inactivo' },
-            { label: 'Documento', value: detalle.url_convenio ? <a href={detalle.url_convenio} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Ver documento</a> : '—' },
+            { label: 'Documento', value: detalle.url_convenio ? <a href={detalle.url_convenio} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">Ver documento</a> : '—' },
           ]}
         />
       )}

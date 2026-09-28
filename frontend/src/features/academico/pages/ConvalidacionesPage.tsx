@@ -64,7 +64,7 @@ export default function ConvalidacionesPage() {
           <div className="flex items-center gap-2">
             <ViewToggle value={vista} onChange={setVista} />
             <button onClick={() => setShowForm(v => !v)}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">
               {showForm ? 'Cancelar' : '+ Registrar convalidación'}
             </button>
           </div>
@@ -81,43 +81,43 @@ export default function ConvalidacionesPage() {
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">ID Alumno (UUID)</label>
                 <input type="text" value={form.alumno_id} onChange={e => setForm(f => ({ ...f, alumno_id: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="UUID del alumno" required />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Institución de origen</label>
                 <input type="text" value={form.institucion_origen} onChange={e => setForm(f => ({ ...f, institucion_origen: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="TecNM Campus Veracruz" required />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Nombre materia origen</label>
                 <input type="text" value={form.materia_origen_nombre} onChange={e => setForm(f => ({ ...f, materia_origen_nombre: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="Cálculo Diferencial" required />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Clave materia origen</label>
                 <input type="text" value={form.materia_origen_clave} onChange={e => setForm(f => ({ ...f, materia_origen_clave: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="ACA-0407" required />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Calificación obtenida</label>
                 <input type="number" min={0} max={100} step={0.1} value={form.calificacion_obtenida}
                   onChange={e => setForm(f => ({ ...f, calificacion_obtenida: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="85" required />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">URL dictamen (opcional)</label>
                 <input type="text" value={form.dictamen_url} onChange={e => setForm(f => ({ ...f, dictamen_url: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="https://..." />
               </div>
               <div className="sm:col-span-2 flex justify-end">
                 <button type="submit" disabled={crearMut.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors">
                   {crearMut.isPending ? 'Guardando…' : 'Registrar convalidación'}
                 </button>
               </div>
@@ -127,7 +127,7 @@ export default function ConvalidacionesPage() {
 
         <div className="flex gap-3">
           <input type="text" value={filtroAlumno} onChange={e => setFiltroAlumno(e.target.value)}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-80"
+            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 w-80"
             placeholder="Filtrar por UUID de alumno..." />
         </div>
 
@@ -174,7 +174,7 @@ export default function ConvalidacionesPage() {
                       {c.materia_equivalente?.nombre ?? <span className="text-slate-300">—</span>}
                     </td>
                     <td className="py-3 px-5 text-right">
-                      <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalle(c)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -190,7 +190,7 @@ export default function ConvalidacionesPage() {
                   <span className={`text-xs px-2 py-0.5 rounded-full font-semibold self-start ${
                     Number(c.calificacion_obtenida) >= 70 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
                   }`}>{c.calificacion_obtenida}</span>
-                  <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                  <button onClick={() => setDetalle(c)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
                 </div>
               ))}
             </div>

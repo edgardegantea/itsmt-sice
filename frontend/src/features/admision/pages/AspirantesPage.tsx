@@ -52,17 +52,17 @@ function FilaAspirante({
       <tr
         onClick={onDetail}
         className={`cursor-pointer select-none transition-colors ${
-          expanded ? 'bg-[#1a3a5c]/10' : 'hover:bg-blue-50/60'
+          expanded ? 'bg-brand-600/10' : 'hover:bg-brand-50/60'
         }`}
       >
         <td className="pl-4 pr-2 py-3.5 w-8 border-l-4 border-transparent" onClick={e => { e.stopPropagation(); onToggle() }}>
-          <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-[#1a3a5c]' : 'text-slate-400'}`}
+          <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-brand-600' : 'text-slate-400'}`}
             fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6"/>
           </svg>
         </td>
         <td className="px-3 py-3.5">
-          <p className="font-medium text-sm text-slate-800 group-hover:text-[#1a3a5c]">{nombreCompleto}</p>
+          <p className="font-medium text-sm text-slate-800 group-hover:text-brand-600">{nombreCompleto}</p>
           <p className="text-xs text-slate-400 mt-0.5">{asp.email}</p>
         </td>
         <td className="px-3 py-3.5 hidden lg:table-cell">
@@ -82,8 +82,8 @@ function FilaAspirante({
       </tr>
 
       {expanded && (
-        <tr className="bg-[#1a3a5c]/[0.07]">
-          <td colSpan={6} className="px-0 pb-0 border-l-4 border-[#1a3a5c]">
+        <tr className="bg-brand-600/[0.07]">
+          <td colSpan={6} className="px-0 pb-0 border-l-4 border-brand-600">
             <div className="mx-4 mb-4 mt-2 bg-white rounded-xl ring-1 ring-slate-200 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100">
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Datos del aspirante</h4>
@@ -242,7 +242,7 @@ export default function AspirantesPage() {
           <p className="text-sm text-slate-500 mt-0.5">Gestión de solicitudes de admisión</p>
         </div>
         <a href="/registro" target="_blank"
-          className="self-start inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-[#1a3a5c] hover:bg-[#1a3a5c]/90 rounded-lg transition-colors shadow-sm">
+          className="self-start inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-600/90 rounded-lg transition-colors shadow-sm">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
           </svg>
@@ -267,7 +267,7 @@ export default function AspirantesPage() {
                   value={carreraId}
                   onChange={(e) => handleCarrera(e.target.value)}
                   disabled={cargandoCarreras}
-                  className="w-full appearance-none bg-white border border-slate-200 rounded-lg px-3 py-2 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/60 disabled:opacity-50 disabled:cursor-wait transition"
+                  className="w-full appearance-none bg-white border border-slate-200 rounded-lg px-3 py-2 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/60 disabled:opacity-50 disabled:cursor-wait transition"
                 >
                   <option value="">Todas las carreras</option>
                   {carreras.filter((c) => c.activa).map((c) => (
@@ -291,7 +291,7 @@ export default function AspirantesPage() {
                   value={periodoId}
                   onChange={(e) => handlePeriodo(e.target.value)}
                   disabled={cargandoPeriodos}
-                  className="w-full appearance-none bg-white border border-slate-200 rounded-lg px-3 py-2 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/60 disabled:opacity-50 disabled:cursor-wait transition"
+                  className="w-full appearance-none bg-white border border-slate-200 rounded-lg px-3 py-2 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/60 disabled:opacity-50 disabled:cursor-wait transition"
                 >
                   <option value="">Todos los periodos</option>
                   {periodos.map((p) => (
@@ -316,7 +316,7 @@ export default function AspirantesPage() {
                 <select
                   value={estatus}
                   onChange={(e) => handleEstatus(e.target.value)}
-                  className="w-full appearance-none bg-white border border-slate-200 rounded-lg px-3 py-2 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/60 transition"
+                  className="w-full appearance-none bg-white border border-slate-200 rounded-lg px-3 py-2 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/60 transition"
                 >
                   {ESTATUSES.map(({ value, label }) => (
                     <option key={value} value={value}>{label}</option>
@@ -342,7 +342,7 @@ export default function AspirantesPage() {
                 value={puntajeMin}
                 onChange={(e) => handlePuntajeMin(e.target.value)}
                 placeholder="0 – 1000"
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/60 transition"
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/60 transition"
               />
             </div>
 

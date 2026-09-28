@@ -81,6 +81,43 @@ class DashboardController extends Controller
             ->groupBy('estatus')
             ->pluck('total', 'estatus');
 
+        // Bandeja de pendientes: solo trámites que realmente esperan una acción.
+        $pendientes = [
+            'bajas'              => \App\Domains\Permanencia\Models\Baja::where('estatus', 'pendiente')
+                ->when($carreraForzada, fn($q, $v) => $q->whereHas('alumno', fn($a) => $a->where('carrera_id', $v)))
+                ->count(),
+            'permisos_personal'  => $carreraForzada ? null
+                : \App\Domains\Personal\Models\SolicitudPersonal::where('estatus', 'pendiente')->count(),
+            'planeaciones'       => \App\Domains\Academico\Models\PlaneacionDocente::whereIn('estatus', ['enviada_da', 'enviada_jc'])
+                ->when($periodoActivo, fn($q) => $q->where('periodo_id', $periodoActivo->id))
+                ->when($carreraForzada, fn($q, $v) => $q->whereHas('cargaAcademica.grupos', fn($g) => $g->where('carrera_id', $v)))
+                ->count(),
+            'servicio_social'    => \App\Domains\Vinculacion\Models\ServicioSocial::where('estatus', 'solicitado')
+                ->when($carreraForzada, fn($q, $v) => $q->whereHas('alumno', fn($a) => $a->where('carrera_id', $v)))
+                ->count(),
+        ];
+
+        // Actividad reciente (cambios, no consultas) — solo para administración del sistema,
+        // ya que la bitácora incluye acciones de todos los usuarios.
+        $actividad = [];
+        if ($request->user()->hasAnyRole(['superadmin', 'admin'])) {
+            $logs = \App\Domains\Seguridad\Models\AuditLog::query()
+                ->whereIn('metodo', ['POST', 'PUT', 'PATCH', 'DELETE'])
+                ->where('status_code', '<', 400)
+                ->latest('created_at')
+                ->limit(6)
+                ->get(['id', 'user_id', 'metodo', 'ruta', 'entidad', 'created_at']);
+            $nombres = User::whereIn('id', $logs->pluck('user_id')->filter()->unique())->pluck('name', 'id');
+            $actividad = $logs->map(fn ($l) => [
+                    'id'      => $l->id,
+                    'usuario' => $nombres[$l->user_id] ?? 'Sistema',
+                    'metodo'  => $l->metodo,
+                    'ruta'    => '/' . ltrim($l->ruta, '/'),
+                    'entidad' => $l->entidad,
+                    'fecha'   => $l->created_at,
+                ]);
+        }
+
         return ApiResponse::success([
             'periodo_activo' => $periodoActivo ? [
                 'id'     => $periodoActivo->id,
@@ -93,7 +130,7 @@ class DashboardController extends Controller
                 'aceptados_por_carrera' => $porCarrera,
             ],
             'alumnos' => [
-                'total'               => (clone $alumnosQ)->count(),
+                'total'               => array_sum($alumnosPorEstatus->toArray()),
                 'activos'             => $alumnosPorEstatus['activo'] ?? 0,
                 'por_estatus'         => $alumnosPorEstatus,
                 'activos_por_carrera' => $alumnosPorCarrera,
@@ -103,6 +140,8 @@ class DashboardController extends Controller
             'grupos_total'                  => $gruposTotal,
             'instrumentaciones_por_estatus' => $instrumentacionesPorEstatus,
             'carreras_activas' => $carreraForzada ? 1 : Carrera::where('activa', true)->count(),
+            'pendientes'       => $pendientes,
+            'actividad'        => $actividad,
         ]);
     }
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useMemo, Fragment } from 'react'
+import { Plus, Layers, ArrowRight, CheckCircle2, Check, Trash2, ListChecks, Target, BookOpen, Presentation, FlaskConical, CircleHelp, type LucideIcon } from 'lucide-react'
+import GuiaInstrumentacionPanel from './GuiaInstrumentacionPanel'
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../../../store/authStore'
@@ -83,19 +85,22 @@ function limiteEvidencia(porcentajeUnidad: number | null): number {
   return Math.round((porcentajeUnidad ?? 0) * 0.4 * 100) / 100
 }
 
-function FolderIcon({ completo, conObservacion }: { completo: boolean; conObservacion?: boolean }) {
-  return (
-    <span className="relative inline-flex items-center justify-center w-11 h-11 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors">
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
-      </svg>
-      {conObservacion ? (
-        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] ring-2 ring-white flex items-center justify-center">!</span>
-      ) : completo && (
-        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-500 text-white text-[9px] ring-2 ring-white flex items-center justify-center">✓</span>
-      )}
-    </span>
-  )
+/** Indicación de la guía del SGC que corresponde a cada sección del análisis por competencia. */
+const SECCION_GUIA_POR_CATEGORIA: Record<CategoriaId, string> = {
+  analisis: '4.3',
+  indicadores: '4.8',
+  fuentes: '5.1',
+  apoyo: '5.2',
+  practicas: '4.4',
+}
+
+/** Ícono de cada sección del análisis por competencia (vista principal del paso 4). */
+const ICONO_CATEGORIA: Record<CategoriaId, LucideIcon> = {
+  analisis: ListChecks,
+  indicadores: Target,
+  fuentes: BookOpen,
+  apoyo: Presentation,
+  practicas: FlaskConical,
 }
 
 /** Observación(es) de Desarrollo Académico/Jefatura de Carrera ancladas exactamente a la
@@ -200,7 +205,7 @@ function ResumenHoras({ competencias, materia, onIrAUnidad }: {
                   {diff > 0 ? `faltan ${diff}h por agregar` : `sobran ${-diff}h por quitar`}
                 </span>
               </span>
-              <button type="button" onClick={() => onIrAUnidad?.(i)} className="shrink-0 text-blue-600 hover:underline font-medium">
+              <button type="button" onClick={() => onIrAUnidad?.(i)} className="shrink-0 text-brand-600 hover:underline font-medium">
                 Ir a ajustar →
               </button>
             </div>
@@ -231,7 +236,7 @@ function BadgesHoras({ comp, materia }: { comp: CompetenciaEspecifica; materia?:
   }
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {badge('T', 'bg-blue-500', usado.teoria, disponible.teoria)}
+      {badge('T', 'bg-brand-500', usado.teoria, disponible.teoria)}
       {badge('P', 'bg-emerald-400', usado.practica, disponible.practica)}
       {!comp.porcentaje && (
         <span className="text-[11px] text-slate-400">Asigna el % de aportación de la unidad para calcular su cuota de horas.</span>
@@ -251,7 +256,7 @@ function GanttCelda({ teoria, practica }: { teoria: number; practica: number }) 
   return (
     <td className="border-l border-slate-100 p-0" title={`Teoría: ${teoria}h · Práctica: ${practica}h`}>
       <div className="flex flex-col h-8 w-full">
-        <div className="flex-1 bg-blue-500" style={{ opacity: teoria ? opacidad(teoria) : 0 }} />
+        <div className="flex-1 bg-brand-500" style={{ opacity: teoria ? opacidad(teoria) : 0 }} />
         <div className="flex-1 bg-emerald-400" style={{ opacity: practica ? opacidad(practica) : 0 }} />
       </div>
     </td>
@@ -277,7 +282,7 @@ const ESTADO_DOSIFICACION_LABEL: Record<EstadoDosificacion, string> = {
 const ESTADO_DOSIFICACION_COLOR: Record<EstadoDosificacion, string> = {
   pendiente:  'bg-slate-100 text-slate-500',
   a_tiempo:   'bg-green-100 text-green-700',
-  adelantado: 'bg-blue-100 text-blue-700',
+  adelantado: 'bg-brand-100 text-brand-700',
   atraso:     'bg-red-100 text-red-700',
 }
 
@@ -341,7 +346,7 @@ function SelectorFilasSubtema({
         onClick={() => setOpen(!open)}
         className={`px-2 py-1 text-xs font-semibold rounded border transition-colors flex items-center gap-1 min-w-[3rem] justify-between ${
           filasSeleccionadas.length > 0
-            ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 font-mono'
+            ? 'bg-brand-50 text-brand-700 border-brand-200 hover:bg-brand-100 font-mono'
             : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 font-mono'
         }`}
         title="Asignar actividad(es) a este subtema (puede seleccionar una o más)"
@@ -370,7 +375,7 @@ function SelectorFilasSubtema({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleFila(a.numero)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                     />
                     <span className="font-medium text-slate-700">Actividad {a.numero}</span>
                   </label>
@@ -524,6 +529,7 @@ export default function PlaneacionEditorPage() {
     PASOS.some(p => p.id === pasoInicial) ? (pasoInicial as Paso) : 'generales'
   )
   const [vistaCompetencia, setVistaCompetencia] = useState<{ idx: number; cat: CategoriaId } | null>(null)
+  const [guiaAbierta, setGuiaAbierta] = useState(false)
   // El ancho de la columna "Tema / Subtema" del Gantt y la vista activa de "Calendario de
   // horas" se recuerdan por materia (localStorage) — así no hay que reajustarlos cada vez
   // que se reabre la instrumentación.
@@ -1533,7 +1539,7 @@ export default function PlaneacionEditorPage() {
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div>
           <p className="text-sm text-slate-500">Falta información para abrir esta instrumentación didáctica.</p>
-          <Link to={periodoId ? `/docente/planeacion?periodo=${periodoId}` : '/docente/planeacion'} className="text-sm text-blue-600 hover:underline">← Volver a Mis asignaturas</Link>
+          <Link to={periodoId ? `/docente/planeacion?periodo=${periodoId}` : '/docente/planeacion'} className="text-sm text-brand-600 hover:underline">← Volver a Mis asignaturas</Link>
         </div>
       </div>
     )
@@ -1574,7 +1580,7 @@ export default function PlaneacionEditorPage() {
 
       {!form ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-10 flex items-center justify-center">
-          <svg className="w-5 h-5 animate-spin text-[#1a3a5c]" fill="none" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
@@ -1585,7 +1591,7 @@ export default function PlaneacionEditorPage() {
           {/* rounded-t-2xl en vez de overflow-hidden en el contenedor: así el menú
               desplegable "Más acciones" (más abajo, position absolute) no se corta contra
               el borde de la tarjeta. */}
-          <div className="h-1.5 rounded-t-2xl bg-gradient-to-r from-[#1a3a5c] via-sky-500 to-emerald-400" />
+          <div className="h-1.5 rounded-t-2xl bg-gradient-to-r from-brand-600 via-sky-500 to-emerald-400" />
           <div className="p-5 space-y-6">
 
           {/* Barra informativa — colapsable para aprovechar el espacio vertical; las
@@ -1632,6 +1638,29 @@ export default function PlaneacionEditorPage() {
                 )}
               </button>
 
+              <button
+                type="button"
+                onClick={() => setGuiaAbierta(true)}
+                className="px-3 py-2 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap"
+                title="Indicaciones oficiales para desarrollar la instrumentación didáctica"
+              >
+                <CircleHelp className="w-3.5 h-3.5 text-brand-600" aria-hidden="true" />
+                Guía de llenado
+              </button>
+
+              {/* Guía del formato del SGC: se abre en la indicación de lo que se está llenando. */}
+              <GuiaInstrumentacionPanel
+                abierto={guiaAbierta}
+                onCerrar={() => setGuiaAbierta(false)}
+                seccionInicial={
+                  paso === 'generales' ? '1'
+                    : paso === 'calendario_horas' ? '4.7'
+                    : paso === 'calendarizacion_evaluacion' ? '6'
+                    : vistaCompetencia ? SECCION_GUIA_POR_CATEGORIA[vistaCompetencia.cat]
+                    : '4'
+                }
+              />
+
               {planeacionActual && (
                 <>
                   <button
@@ -1640,7 +1669,7 @@ export default function PlaneacionEditorPage() {
                     className="px-3 py-2 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap"
                     title="Vista previa de la instrumentación didáctica"
                   >
-                    <svg className="w-3.5 h-3.5 text-[#1a3a5c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-3.5 h-3.5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
@@ -1659,8 +1688,8 @@ export default function PlaneacionEditorPage() {
                     <div className="absolute right-0 mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-xs">
                       <button type="button"
                         onClick={e => { abrirVistaPrevia(); e.currentTarget.closest('details')?.removeAttribute('open') }}
-                        className="w-full text-left px-3 py-2 text-slate-600 hover:bg-slate-50 flex items-center gap-2 font-medium text-[#1a3a5c]">
-                        <svg className="w-3.5 h-3.5 text-[#1a3a5c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        className="w-full text-left px-3 py-2 text-slate-600 hover:bg-slate-50 flex items-center gap-2 font-medium text-brand-600">
+                        <svg className="w-3.5 h-3.5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
@@ -1694,7 +1723,7 @@ export default function PlaneacionEditorPage() {
                           type="date"
                           value={fechaEmisionPdf || (planeacionActual?.entregada_en ? planeacionActual.entregada_en.substring(0, 10) : new Date().toISOString().substring(0, 10))}
                           onChange={(e) => setFechaEmisionPdf(e.target.value)}
-                          className="w-full text-xs px-2 py-1 border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-full text-xs px-2 py-1 border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
                     )}
@@ -1759,7 +1788,7 @@ export default function PlaneacionEditorPage() {
           <div className="flex items-center gap-2 mb-1.5 px-1">
             <div className="flex-1 h-1 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${porcentajeCompleto === 100 ? 'bg-emerald-500' : 'bg-[#1a3a5c]'}`}
+                className={`h-full rounded-full transition-all ${porcentajeCompleto === 100 ? 'bg-emerald-500' : 'bg-brand-600'}`}
                 style={{ width: `${porcentajeCompleto}%` }}
               />
             </div>
@@ -1786,7 +1815,7 @@ export default function PlaneacionEditorPage() {
                   type="button"
                   onClick={() => { cambiarPaso(p.id); setVistaCompetencia(null) }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    paso === p.id ? 'bg-[#1a3a5c] text-white shadow-md shadow-[#1a3a5c]/25' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                    paso === p.id ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:shadow-sm'
                   }`}
                 >
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
@@ -1808,7 +1837,7 @@ export default function PlaneacionEditorPage() {
               title={PASOS[Math.min(PASOS.length - 1, PASOS.findIndex(p => p.id === paso) + 1)].label}
               onClick={() => { cambiarPaso(PASOS[Math.min(PASOS.length - 1, PASOS.findIndex(p => p.id === paso) + 1)].id); setVistaCompetencia(null) }}
               disabled={paso === PASOS[PASOS.length - 1].id}
-              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-30 disabled:hover:bg-[#1a3a5c]"
+              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-30 disabled:hover:bg-brand-600"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -1836,7 +1865,7 @@ export default function PlaneacionEditorPage() {
           <div className="space-y-4">
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm shadow-slate-200/50 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-[#1a3a5c] text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">1</span>
+                <span className="shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">1</span>
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Caracterización de la asignatura</label>
               </div>
               <NotaRevisor items={obsPara('caracterizacion')} />
@@ -1847,7 +1876,7 @@ export default function PlaneacionEditorPage() {
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm shadow-slate-200/50 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-[#1a3a5c] text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">2</span>
+                <span className="shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">2</span>
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Intención didáctica</label>
               </div>
               <NotaRevisor items={obsPara('intencion_didactica')} />
@@ -1858,7 +1887,7 @@ export default function PlaneacionEditorPage() {
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm shadow-slate-200/50 hover:shadow-md transition-all">
               <div className="flex items-center gap-2 mb-2">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-[#1a3a5c] text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">3</span>
+                <span className="shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">3</span>
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Competencia de la asignatura</label>
               </div>
               <NotaRevisor items={obsPara('competencia_asignatura')} />
@@ -1883,7 +1912,7 @@ export default function PlaneacionEditorPage() {
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <nav className="flex items-center gap-1.5 text-xs min-w-0">
                       <button type="button" onClick={() => setVistaCompetencia(null)}
-                        className="flex items-center gap-1 font-medium text-blue-600 hover:underline shrink-0">
+                        className="flex items-center gap-1 font-medium text-brand-600 hover:underline shrink-0">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
@@ -1924,7 +1953,7 @@ export default function PlaneacionEditorPage() {
                               <button key={i} type="button" onClick={() => setVistaCompetencia({ idx: i, cat: vc.cat })}
                                 title={c.nombre_unidad ? `Tema ${c.numero} — ${c.nombre_unidad}` : `Tema ${c.numero}`}
                                 className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all max-w-[110px] ${
-                                  i === idx ? 'bg-[#1a3a5c] text-white shadow-sm shadow-[#1a3a5c]/25' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                                  i === idx ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/25' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:shadow-sm'
                                 }`}>
                                 <span className="truncate">Tema {c.numero}</span>
                                 {completa && (
@@ -1948,7 +1977,7 @@ export default function PlaneacionEditorPage() {
                         {CATEGORIAS.map(cat => (
                           <button key={cat.id} type="button" onClick={() => setVistaCompetencia({ idx, cat: cat.id })}
                             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                              cat.id === vc.cat ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                              cat.id === vc.cat ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200 shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:shadow-sm'
                             }`}>
                             {categoriaCompleta(comp, cat.id) && <span className="w-3.5 h-3.5 rounded-full bg-green-500 text-white text-[9px] flex items-center justify-center shrink-0">✓</span>}
                             {cat.label}
@@ -1994,7 +2023,7 @@ export default function PlaneacionEditorPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <p className="text-xs font-medium text-slate-600">Temas y subtemas</p>
                           {!soloLectura && (
-                            <button type="button" onClick={() => agregarSubtemaTema(idx)} className="text-xs text-blue-600 hover:underline">+ Agregar subtema</button>
+                            <button type="button" onClick={() => agregarSubtemaTema(idx)} className="text-xs text-brand-600 hover:underline">+ Agregar subtema</button>
                           )}
                         </div>
                         <div className="space-y-1.5">
@@ -2055,7 +2084,7 @@ export default function PlaneacionEditorPage() {
                               ))}
                             </div>
                             {!soloLectura && (
-                              <button type="button" onClick={() => agregarActividad(idx)} className="text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1 hover:bg-blue-100 transition-colors">+ Agregar fila</button>
+                              <button type="button" onClick={() => agregarActividad(idx)} className="text-xs font-medium text-brand-600 bg-brand-50 border border-brand-100 rounded-lg px-2.5 py-1 hover:bg-brand-100 transition-colors">+ Agregar fila</button>
                             )}
                           </div>
                         </div>
@@ -2118,7 +2147,7 @@ export default function PlaneacionEditorPage() {
                                     <div className="flex items-center justify-between gap-2 p-2 bg-slate-50/80 rounded-md border border-slate-100">
                                       <div className="flex items-center gap-3">
                                         <div className="flex items-center gap-1" title="Horas teóricas">
-                                          <span className="shrink-0 w-4 h-4 rounded bg-blue-100 text-blue-700 text-[9px] font-bold flex items-center justify-center">T</span>
+                                          <span className="shrink-0 w-4 h-4 rounded bg-brand-100 text-brand-700 text-[9px] font-bold flex items-center justify-center">T</span>
                                           <input type="number" min="0" placeholder="0" value={a.horas_teoricas ?? ''}
                                             onChange={e => setActividad(idx, aIdx, { horas_teoricas: e.target.value === '' ? null : Number(e.target.value) })}
                                             className={smallInputCls + ' !w-12 !px-1 text-center'} disabled={soloLectura} />
@@ -2234,14 +2263,14 @@ export default function PlaneacionEditorPage() {
                                         <div className="flex flex-col items-center gap-1.5 w-full">
                                           {/* T (Horas teóricas) */}
                                           <div className="flex items-center justify-between w-full gap-1" title="Horas teóricas">
-                                            <span className="shrink-0 w-4 h-4 rounded bg-blue-100 text-blue-700 text-[9px] font-bold flex items-center justify-center">T</span>
+                                            <span className="shrink-0 w-4 h-4 rounded bg-brand-100 text-brand-700 text-[9px] font-bold flex items-center justify-center">T</span>
                                             <input
                                               type="number"
                                               min="0"
                                               placeholder="0"
                                               value={a.horas_teoricas ?? ''}
                                               onChange={e => setActividad(idx, aIdx, { horas_teoricas: e.target.value === '' ? null : Number(e.target.value) })}
-                                              className="w-8 h-5 px-0.5 text-center text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                              className="w-8 h-5 px-0.5 text-center text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded focus:border-brand-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                               disabled={soloLectura}
                                             />
                                           </div>
@@ -2351,7 +2380,7 @@ export default function PlaneacionEditorPage() {
 
                                       if (enEdicion) {
                                         return (
-                                          <div key={nombre} className="p-1.5 bg-white border border-blue-300 rounded-lg shadow-sm space-y-1.5">
+                                          <div key={nombre} className="p-1.5 bg-white border border-brand-300 rounded-lg shadow-sm space-y-1.5">
                                             <input
                                               type="text"
                                               autoFocus
@@ -2361,7 +2390,7 @@ export default function PlaneacionEditorPage() {
                                                 if (e.key === 'Enter') guardarEdicionCompetenciaGenerica(idx, nombre, genericaEnEdicion.nuevoNombre)
                                                 if (e.key === 'Escape') setGenericaEnEdicion(null)
                                               }}
-                                              className="w-full text-xs border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                              className="w-full text-xs border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500"
                                             />
                                             <div className="flex items-center justify-end gap-1.5">
                                               <button
@@ -2374,7 +2403,7 @@ export default function PlaneacionEditorPage() {
                                               <button
                                                 type="button"
                                                 onClick={() => guardarEdicionCompetenciaGenerica(idx, nombre, genericaEnEdicion.nuevoNombre)}
-                                                className="text-[10px] px-2 py-0.5 rounded bg-blue-600 text-white font-medium hover:bg-blue-700"
+                                                className="text-[10px] px-2 py-0.5 rounded bg-brand-600 text-white font-medium hover:bg-brand-700"
                                               >
                                                 Guardar
                                               </button>
@@ -2403,7 +2432,7 @@ export default function PlaneacionEditorPage() {
                                                 type="button"
                                                 onClick={() => setGenericaEnEdicion({ unidadIdx: idx, nombreOriginal: nombre, nuevoNombre: nombre })}
                                                 title="Editar redacción"
-                                                className="text-slate-400 hover:text-blue-600 p-0.5"
+                                                className="text-slate-400 hover:text-brand-600 p-0.5"
                                               >
                                                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -2536,11 +2565,11 @@ export default function PlaneacionEditorPage() {
                                 type="button"
                                 onClick={() => actualizarIndicadoresYNivelesUnidad(idx, true)}
                                 title="Sincroniza los indicadores de alcance, las evidencias y actualiza la redacción de los 5 niveles de desempeño con las evidencias actuales"
-                                className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-md transition-colors"
+                                className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2.5 py-1 rounded-md transition-colors"
                               >
                                 <span>🔄</span> Actualizar niveles e indicadores
                               </button>
-                              <button type="button" onClick={() => agregarIndicador(idx)} className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">+ Agregar indicador</button>
+                              <button type="button" onClick={() => agregarIndicador(idx)} className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline">+ Agregar indicador</button>
                             </div>
                           )}
                         </div>
@@ -2693,7 +2722,7 @@ export default function PlaneacionEditorPage() {
                             Evidencias de aprendizaje y evaluación formativa
                           </p>
                           {!soloLectura && (
-                            <button type="button" onClick={() => agregarFilaMatriz(idx)} className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">+ Agregar evidencia</button>
+                            <button type="button" onClick={() => agregarFilaMatriz(idx)} className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline">+ Agregar evidencia</button>
                           )}
                         </div>
 
@@ -2905,7 +2934,7 @@ export default function PlaneacionEditorPage() {
                             <button
                               type="button"
                               onClick={() => abrirModalFuente(idx, null, 'individual')}
-                              className="text-xs text-blue-700 hover:text-blue-900 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-semibold transition-all hover:bg-blue-100 shadow-sm"
+                              className="text-xs text-brand-700 hover:text-brand-900 bg-brand-50 border border-brand-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-semibold transition-all hover:bg-brand-100 shadow-sm"
                             >
                               <span>+</span>
                               <span>Nueva fuente</span>
@@ -2921,7 +2950,7 @@ export default function PlaneacionEditorPage() {
                           <div key={fIdx} className="flex items-start gap-2 border border-slate-100 rounded-lg px-3 py-2">
                             <div className="flex-1 min-w-0">
                               {f.tipo && (
-                                <span className="inline-block text-[10px] font-medium text-blue-700 bg-blue-50 rounded-full px-2 py-0.5 mb-1">
+                                <span className="inline-block text-[10px] font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5 mb-1">
                                   {TIPO_FUENTE_LABEL[f.tipo]}
                                 </span>
                               )}
@@ -2929,7 +2958,7 @@ export default function PlaneacionEditorPage() {
                             </div>
                             {!soloLectura && (
                               <div className="flex items-center gap-2 shrink-0">
-                                <button type="button" onClick={() => abrirModalFuente(idx, fIdx)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                                <button type="button" onClick={() => abrirModalFuente(idx, fIdx)} className="text-xs text-brand-600 hover:underline">Editar</button>
                                 <button type="button" onClick={() => quitarFuente(idx, fIdx)} className="text-xs text-red-600 hover:underline">Quitar</button>
                               </div>
                             )}
@@ -2969,7 +2998,7 @@ export default function PlaneacionEditorPage() {
                           />
                           <button type="button"
                             onClick={() => { agregarApoyoPersonalizado(idx, nuevoApoyo[idx] ?? ''); setNuevoApoyo(prev => ({ ...prev, [idx]: '' })) }}
-                            className="text-xs text-blue-600 hover:underline shrink-0">+ Agregar</button>
+                            className="text-xs text-brand-600 hover:underline shrink-0">+ Agregar</button>
                         </div>
                       )}
                       {planeacionActual && (
@@ -2987,7 +3016,7 @@ export default function PlaneacionEditorPage() {
                         <p className="text-xs font-medium text-slate-600">Prácticas</p>
                         {!soloLectura && (
                           <button type="button" onClick={() => agregarPractica(idx)}
-                            className="text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1 hover:bg-blue-100 transition-colors">
+                            className="text-xs font-medium text-brand-600 bg-brand-50 border border-brand-100 rounded-lg px-2.5 py-1 hover:bg-brand-100 transition-colors">
                             + Agregar práctica
                           </button>
                         )}
@@ -3006,7 +3035,7 @@ export default function PlaneacionEditorPage() {
                           return (
                             <div key={pIdx} className="border border-slate-200 rounded-xl shadow-sm shadow-slate-200/50 hover:shadow-md transition-all overflow-hidden">
                               <div className="flex items-center gap-2.5 bg-slate-50 border-b border-slate-100 px-4 py-2.5">
-                                <span className="shrink-0 w-6 h-6 rounded-full bg-[#1a3a5c] text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">{pIdx + 1}</span>
+                                <span className="shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">{pIdx + 1}</span>
                                 <input value={p.nombre} onChange={e => setPractica(idx, pIdx, { nombre: e.target.value })}
                                   placeholder="Nombre de la práctica"
                                   title={p.nombre || undefined}
@@ -3028,7 +3057,7 @@ export default function PlaneacionEditorPage() {
                                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Competencia</p>
                                     {!soloLectura && p.competencia_especifica !== comp.descripcion && (
                                       <button type="button" onClick={() => setPractica(idx, pIdx, { competencia_especifica: comp.descripcion })}
-                                        className="text-[11px] text-blue-600 hover:underline">Usar la del tema</button>
+                                        className="text-[11px] text-brand-600 hover:underline">Usar la del tema</button>
                                     )}
                                   </div>
                                   <RichTextField value={p.competencia_especifica}
@@ -3046,7 +3075,7 @@ export default function PlaneacionEditorPage() {
                                         <button key={nombre} type="button" disabled={soloLectura}
                                           onClick={() => toggleRequisitoPractica(idx, pIdx, nombre)}
                                           className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                                            activo ? 'bg-blue-50 text-blue-700 border-blue-200 font-medium' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                            activo ? 'bg-brand-50 text-brand-700 border-brand-200 font-medium' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
                                           }`}>
                                           {nombre}
                                         </button>
@@ -3070,7 +3099,7 @@ export default function PlaneacionEditorPage() {
                                       />
                                       <button type="button"
                                         onClick={() => { agregarRequisitoPersonalizado(idx, pIdx, nuevoRequisito[claveRequisito] ?? ''); setNuevoRequisito(prev => ({ ...prev, [claveRequisito]: '' })) }}
-                                        className="text-xs text-blue-600 hover:underline shrink-0">+ Agregar</button>
+                                        className="text-xs text-brand-600 hover:underline shrink-0">+ Agregar</button>
                                     </div>
                                   )}
                                 </div>
@@ -3122,79 +3151,172 @@ export default function PlaneacionEditorPage() {
               )
             }
 
-            // ── Vista principal: cuadrícula de unidades × categorías ────────
+            // ── Vista principal: temas × secciones ──────────────────────────
             const sumaPorcentajes = form.competencias.reduce((acc, c) => acc + (c.porcentaje ?? 0), 0)
+            const totalSecciones = form.competencias.length * CATEGORIAS.length
+            const seccionesCompletas = form.competencias.reduce(
+              (acc, c) => acc + CATEGORIAS.filter(cat => categoriaCompleta(c, cat.id)).length, 0)
+            // Primera sección sin terminar (en orden de tema y de sección): el botón
+            // "Continuar" lleva directo ahí, sin tener que buscar la palomita que falta.
+            const siguientePendiente = (() => {
+              for (let i = 0; i < form.competencias.length; i++) {
+                const cat = CATEGORIAS.find(ct => !categoriaCompleta(form.competencias[i], ct.id))
+                if (cat) return { idx: i, cat: cat.id }
+              }
+              return null
+            })()
+            const pctAvance = totalSecciones ? Math.round((seccionesCompletas / totalSecciones) * 100) : 0
+            const sumaOk = sumaPorcentajes === 100
+
             return (
               <div className="pt-0">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">4. Análisis por competencias específicas</label>
                   {!soloLectura && (
-                    <button type="button" onClick={agregarCompetencia} className="text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1 hover:bg-blue-100 transition-colors">
-                      + Agregar unidad / competencia específica
+                    <button type="button" onClick={agregarCompetencia}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 hover:border-slate-300 transition-colors">
+                      <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                      Agregar tema
                     </button>
                   )}
                 </div>
 
-                {form.competencias.length === 0 && (
-                  <p className="text-xs text-slate-400 py-3">Sin competencias específicas registradas.</p>
+                {form.competencias.length === 0 ? (
+                  <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-xl">
+                    <Layers className="w-8 h-8 text-slate-300 mx-auto mb-2" aria-hidden="true" />
+                    <p className="text-sm text-slate-600">Aún no hay temas registrados.</p>
+                    <p className="text-xs text-slate-400 mt-1">Agrega un tema por cada competencia específica de la asignatura.</p>
+                  </div>
+                ) : (
+                  /* Resumen: avance general, suma de % y atajo a lo pendiente */
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-slate-600">Avance de secciones</span>
+                        <span className="font-semibold text-slate-800 tabular-nums">{seccionesCompletas}/{totalSecciones}</span>
+                      </div>
+                      <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div className={`h-full rounded-full transition-all ${pctAvance === 100 ? 'bg-emerald-500' : 'bg-brand-600'}`} style={{ width: `${pctAvance}%` }} />
+                      </div>
+                    </div>
+                    <div className={`rounded-xl border p-3 ${sumaOk ? 'border-slate-200 bg-white' : 'border-amber-200 bg-amber-50/60'}`}>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-slate-600">Suma de % por tema</span>
+                        <span className={`font-semibold tabular-nums ${sumaOk ? 'text-emerald-700' : 'text-amber-700'}`}>{sumaPorcentajes}% de 100%</span>
+                      </div>
+                      <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div className={`h-full rounded-full transition-all ${sumaOk ? 'bg-emerald-500' : sumaPorcentajes > 100 ? 'bg-red-500' : 'bg-amber-500'}`}
+                          style={{ width: `${Math.min(100, sumaPorcentajes)}%` }} />
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-3">
+                      {siguientePendiente ? (
+                        <>
+                          <div className="min-w-0 text-xs">
+                            <p className="font-medium text-slate-600">Siguiente pendiente</p>
+                            <p className="text-slate-500 truncate">
+                              Tema {form.competencias[siguientePendiente.idx].numero} · {CATEGORIAS.find(c => c.id === siguientePendiente.cat)?.label}
+                            </p>
+                          </div>
+                          <button type="button" onClick={() => setVistaCompetencia(siguientePendiente)}
+                            className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-white bg-brand-600 rounded-lg px-3 py-1.5 hover:bg-brand-700 transition-colors">
+                            Continuar <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                          </button>
+                        </>
+                      ) : (
+                        <p className="text-xs font-medium text-emerald-700 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Todas las secciones están completas
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 )}
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {form.competencias.map((c, idx) => {
                     const incompleta = !c.nombre_unidad.trim() || c.porcentaje == null
                     const completas = CATEGORIAS.filter(cat => categoriaCompleta(c, cat.id)).length
+                    const todo = completas === CATEGORIAS.length
                     return (
-                    <div key={idx} className={`border rounded-xl overflow-hidden shadow-sm shadow-slate-200/50 hover:shadow-md transition-all border-l-4 ${
-                      incompleta ? 'border-slate-200 border-l-amber-300' : 'border-slate-200 border-l-[#1a3a5c] hover:border-slate-300'
+                    <div key={idx} className={`rounded-xl border bg-white transition-shadow hover:shadow-sm ${
+                      incompleta ? 'border-amber-200' : 'border-slate-200'
                     }`}>
-                      <div className={`flex items-center gap-3 px-4 py-3 ${incompleta ? 'bg-amber-50/40' : 'bg-slate-50'}`}>
-                        <span className="shrink-0 w-6 h-6 rounded-full bg-[#1a3a5c] text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">
-                          {c.numero}
+                      <div className="flex items-center gap-3 px-4 pt-3">
+                        <span className={`shrink-0 w-7 h-7 rounded-full text-white text-xs font-semibold flex items-center justify-center ${todo ? 'bg-emerald-600' : 'bg-brand-600'}`}>
+                          {todo ? <Check className="w-3.5 h-3.5" strokeWidth={3} aria-label="Tema completo" /> : c.numero}
                         </span>
-                        <input value={c.nombre_unidad} onChange={e => setCompetencia(idx, { nombre_unidad: e.target.value })}
-                          placeholder="Nombre de la unidad"
-                          className="flex-1 min-w-0 text-sm font-semibold text-slate-700 border-0 border-b border-transparent hover:border-slate-300 focus:border-slate-400 focus:outline-none px-0 py-0.5 bg-transparent disabled:bg-transparent placeholder:font-normal placeholder:italic placeholder:text-amber-500"
-                          disabled={soloLectura} />
-                        <span className={`shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                          completas === CATEGORIAS.length ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'
-                        }`}>
-                          {completas}/{CATEGORIAS.length}
-                        </span>
-                        <div className={`flex items-center gap-1 shrink-0 rounded-lg border px-1.5 py-0.5 ${
-                          c.porcentaje == null ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'
-                        }`}>
+                        <div className="flex-1 min-w-0">
+                          <input value={c.nombre_unidad} onChange={e => setCompetencia(idx, { nombre_unidad: e.target.value })}
+                            placeholder="Nombre del tema (obligatorio)"
+                            aria-label={`Nombre del tema ${c.numero}`}
+                            className="w-full text-sm font-semibold text-slate-800 border-0 border-b border-transparent hover:border-slate-300 focus:border-brand-600 focus:outline-none px-0 py-0.5 bg-transparent disabled:bg-transparent placeholder:font-normal placeholder:italic placeholder:text-amber-600"
+                            disabled={soloLectura} />
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="h-1 w-24 rounded-full bg-slate-100 overflow-hidden">
+                              <div className={`h-full rounded-full ${todo ? 'bg-emerald-500' : 'bg-brand-600'}`} style={{ width: `${(completas / CATEGORIAS.length) * 100}%` }} />
+                            </div>
+                            <span className="text-[11px] text-slate-500 tabular-nums">{completas} de {CATEGORIAS.length} secciones</span>
+                          </div>
+                        </div>
+                        <label className={`flex items-center gap-1 shrink-0 rounded-lg border px-2 py-1 ${
+                          c.porcentaje == null ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'
+                        }`} title="Aportación del tema a la calificación final">
                           <input type="number" min="0" max="100" value={c.porcentaje ?? ''}
                             onChange={e => setCompetencia(idx, { porcentaje: e.target.value === '' ? null : Number(e.target.value) })}
-                            placeholder="%" className="w-10 text-right text-xs bg-transparent focus:outline-none" disabled={soloLectura} />
+                            placeholder="—" aria-label={`Porcentaje del tema ${c.numero}`}
+                            className="w-10 text-right text-sm font-medium bg-transparent focus:outline-none" disabled={soloLectura} />
                           <span className="text-xs text-slate-400">%</span>
-                        </div>
+                        </label>
                         {!soloLectura && (
-                          <button type="button" onClick={() => quitarCompetencia(idx)} title="Quitar unidad"
-                            className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                          <button type="button"
+                            onClick={() => {
+                              const nombre = c.nombre_unidad.trim() ? `"${c.nombre_unidad.trim()}"` : `el tema ${c.numero}`
+                              if (window.confirm(`¿Quitar ${nombre}? Se perderá todo lo capturado en sus secciones.`)) quitarCompetencia(idx)
+                            }}
+                            title="Quitar tema" aria-label={`Quitar tema ${c.numero}`}
+                            className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                            <Trash2 className="w-4 h-4" aria-hidden="true" />
                           </button>
                         )}
                       </div>
 
-                      <div className="px-4 pt-3 pb-3.5">
+                      <div className="px-4 pb-3 pt-2.5">
                         {incompleta && (
-                          <p className="text-[11px] text-amber-600 mb-2">Falta el nombre y/o el % de aportación de la unidad.</p>
+                          <p className="text-[11px] text-amber-700 mb-2">Falta el nombre y/o el % de aportación del tema.</p>
                         )}
                         {c.porcentaje != null && c.porcentaje > LIMITE_PORCENTAJE_UNIDAD && (
-                          <p className="text-[11px] text-red-600 mb-2">Ninguna unidad puede superar el {LIMITE_PORCENTAJE_UNIDAD}% de la calificación final.</p>
+                          <p className="text-[11px] text-red-600 mb-2">Ningún tema puede superar el {LIMITE_PORCENTAJE_UNIDAD}% de la calificación final.</p>
                         )}
                         <NotaRevisor items={obsPara('especifica', { unidad: c.numero }).filter(o => !o.categoria)} />
                         {planeacionActual && <HiloComentarios planeacionId={planeacionActual.id} seccion="especifica" unidad={c.numero} />}
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 -mx-2">
-                          {CATEGORIAS.map(cat => (
-                            <button key={cat.id} type="button" onClick={() => setVistaCompetencia({ idx, cat: cat.id })}
-                              className="group flex flex-col items-center gap-1.5 px-1 py-2.5 rounded-lg border border-transparent hover:bg-slate-50 hover:border-slate-100 hover:shadow-sm transition-all">
-                              <FolderIcon completo={categoriaCompleta(c, cat.id)} conObservacion={obsPara('especifica', { unidad: c.numero, categoria: cat.id }).length > 0} />
-                              <span className="text-[11px] text-slate-500 text-center leading-tight">{cat.label}</span>
-                            </button>
-                          ))}
+
+                        {/* Secciones del tema: estado a simple vista y acceso directo */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mt-1">
+                          {CATEGORIAS.map(cat => {
+                            const lista = categoriaCompleta(c, cat.id)
+                            const conObs = obsPara('especifica', { unidad: c.numero, categoria: cat.id }).length > 0
+                            const Icono = ICONO_CATEGORIA[cat.id]
+                            return (
+                              <button key={cat.id} type="button" onClick={() => setVistaCompetencia({ idx, cat: cat.id })}
+                                className={`group relative flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-all hover:shadow-sm ${
+                                  conObs ? 'border-red-200 bg-red-50/50 hover:border-red-300'
+                                    : lista ? 'border-emerald-200 bg-emerald-50/40 hover:border-emerald-300'
+                                    : 'border-slate-200 bg-white hover:border-brand-600/40'
+                                }`}>
+                                <span className={`shrink-0 w-7 h-7 rounded-md flex items-center justify-center ${
+                                  conObs ? 'bg-red-100 text-red-600' : lista ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 group-hover:text-brand-600'
+                                }`}>
+                                  <Icono className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-xs font-medium text-slate-700 leading-tight">{cat.label}</span>
+                                  <span className={`block text-[10px] leading-tight mt-0.5 ${conObs ? 'text-red-600' : lista ? 'text-emerald-700' : 'text-amber-600'}`}>
+                                    {conObs ? 'Con observaciones' : lista ? 'Completa' : 'Pendiente'}
+                                  </span>
+                                </span>
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     </div>
@@ -3202,17 +3324,20 @@ export default function PlaneacionEditorPage() {
                   })}
                 </div>
 
-                {form.competencias.length > 0 && (
-                  <p className={`text-xs mt-3 mb-4 ${sumaPorcentajes === 100 ? 'text-green-700' : 'text-amber-600'}`}>
-                    Suma de porcentajes por unidad: {sumaPorcentajes}%. En sumatoria debe cubrir el 100%.
+                {form.competencias.length > 0 && !sumaOk && (
+                  <p className="text-xs mt-3 mb-4 text-amber-700">
+                    La suma de porcentajes por tema es {sumaPorcentajes}%; debe cubrir exactamente el 100%.
                   </p>
                 )}
 
                 {form.competencias.length > 0 && (
-                  <ResumenHoras competencias={form.competencias} materia={cargaActual?.materia} />
+                  <div className="mt-4">
+                    <ResumenHoras competencias={form.competencias} materia={cargaActual?.materia} />
+                  </div>
                 )}
               </div>
             )
+
           })()}
 
           {/* La dosificación (avance real vs. planeado, por subtema) ya no es un paso aparte
@@ -3298,7 +3423,7 @@ export default function PlaneacionEditorPage() {
                             <div
                               onMouseDown={iniciarResizeColumnaTema}
                               title="Arrastrar para redimensionar"
-                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-[#1a3a5c]/20 active:bg-[#1a3a5c]/30"
+                              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-brand-600/20 active:bg-brand-600/30"
                             />
                           </th>
                           {semanas.map(s => (
@@ -3384,7 +3509,7 @@ export default function PlaneacionEditorPage() {
                             )}
                             {total > 0 && (
                               <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100">
-                                <div className="bg-blue-500" style={{ width: `${(s.teoria / maxHoras) * 100}%` }} title={`Teoría: ${s.teoria}h`} />
+                                <div className="bg-brand-500" style={{ width: `${(s.teoria / maxHoras) * 100}%` }} title={`Teoría: ${s.teoria}h`} />
                                 <div className="bg-emerald-400" style={{ width: `${(s.practica / maxHoras) * 100}%` }} title={`Práctica: ${s.practica}h`} />
                               </div>
                             )}
@@ -3427,7 +3552,7 @@ export default function PlaneacionEditorPage() {
                                 <td className="px-2 py-1.5 align-top">
                                   {total > 0 ? (
                                     <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100" style={{ maxWidth: 200 }}>
-                                      <div className="bg-blue-500" style={{ width: `${(s.teoria / maxHoras) * 100}%` }} title={`Teoría: ${s.teoria}h`} />
+                                      <div className="bg-brand-500" style={{ width: `${(s.teoria / maxHoras) * 100}%` }} title={`Teoría: ${s.teoria}h`} />
                                       <div className="bg-emerald-400" style={{ width: `${(s.practica / maxHoras) * 100}%` }} title={`Práctica: ${s.practica}h`} />
                                     </div>
                                   ) : (
@@ -3448,7 +3573,7 @@ export default function PlaneacionEditorPage() {
 
                 {vistaHoras !== 'dosificacion' && (
                   <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-500">
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Teoría</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-brand-500 inline-block" /> Teoría</span>
                     <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" /> Práctica</span>
                     <span className="text-slate-400">· {TOTAL_SEMANAS} semanas del periodo{!fechaInicioPeriodo ? ' (sin fecha de inicio para mostrar fechas por semana)' : ''}</span>
                   </div>
@@ -3482,7 +3607,7 @@ export default function PlaneacionEditorPage() {
                   {/* Acceso directo siempre visible a capturar calificaciones — no solo cuando
                       hay una unidad vencida (los avisos ámbar de abajo son solo para eso). */}
                   {linkCalificaciones && (
-                    <Link to={linkCalificaciones} className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors">
+                    <Link to={linkCalificaciones} className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors">
                       Capturar calificaciones →
                     </Link>
                   )}
@@ -3530,7 +3655,7 @@ export default function PlaneacionEditorPage() {
                               <p className="text-xs font-medium text-slate-700 flex-1 min-w-0">
                                 Tema {ev.unidad}{ev.nombreUnidad ? ` — ${ev.nombreUnidad}` : ''}
                               </p>
-                              <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${ev.tipo === 'ES' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>
+                              <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${ev.tipo === 'ES' ? 'bg-indigo-100 text-indigo-700' : 'bg-brand-100 text-brand-700'}`}>
                                 {ev.tipo}
                               </span>
                             </div>
@@ -3550,7 +3675,7 @@ export default function PlaneacionEditorPage() {
                                   </span>
                                   {linkCalificacionesUnidad(ev.unidad) && (
                                     <Link to={linkCalificacionesUnidad(ev.unidad)!} title={`Capturar calificaciones del Tema ${ev.unidad} — programada para la semana ${ev.semanaEvaluacion}`}
-                                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-[#1a3a5c] bg-[#1a3a5c]/10 hover:bg-[#1a3a5c]/20 transition-colors">
+                                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-brand-600 bg-brand-600/10 hover:bg-brand-600/20 transition-colors">
                                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                       </svg>
@@ -3595,7 +3720,7 @@ export default function PlaneacionEditorPage() {
                                   </span>
                                   {linkCalificacionesUnidad(ev.unidad) && (
                                     <Link to={linkCalificacionesUnidad(ev.unidad)!} title={`Capturar calificaciones del Tema ${ev.unidad} — programada para la semana ${ev.semanaEvaluacion}`}
-                                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-[#1a3a5c] bg-[#1a3a5c]/10 hover:bg-[#1a3a5c]/20 transition-colors">
+                                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-brand-600 bg-brand-600/10 hover:bg-brand-600/20 transition-colors">
                                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                       </svg>
@@ -3607,7 +3732,7 @@ export default function PlaneacionEditorPage() {
                               )}
                             </td>
                             <td className="px-2 py-1.5 text-center">
-                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ev.tipo === 'ES' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ev.tipo === 'ES' ? 'bg-indigo-100 text-indigo-700' : 'bg-brand-100 text-brand-700'}`}>
                                 {ev.tipo}
                               </span>
                             </td>
@@ -3713,7 +3838,7 @@ export default function PlaneacionEditorPage() {
                     onClick={() => { if (confirm('¿Restaurar esta versión? El contenido actual se archivará antes de sobrescribirlo.')) mutRestaurar.mutate(v.id) }}
                     disabled={mutRestaurar.isPending || v.campos_cambiados.length === 0}
                     title={v.campos_cambiados.length === 0 ? 'Esta versión es idéntica al contenido actual' : 'Restaurar esta versión'}
-                    className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline disabled:opacity-30 disabled:no-underline"
+                    className="shrink-0 text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline disabled:opacity-30 disabled:no-underline"
                   >
                     Restaurar
                   </button>
@@ -3741,16 +3866,16 @@ export default function PlaneacionEditorPage() {
                 {comparativa.grupos.map(g => {
                   const enEsteEditor = g.carga_academica_id === cargaId
                   return (
-                    <div key={g.carga_academica_id} className={`border rounded-lg p-3 ${enEsteEditor ? 'border-[#1a3a5c]/30 bg-[#1a3a5c]/5' : 'border-slate-100'}`}>
+                    <div key={g.carga_academica_id} className={`border rounded-lg p-3 ${enEsteEditor ? 'border-brand-600/30 bg-brand-600/5' : 'border-slate-100'}`}>
                       <div className="flex items-center justify-between gap-2 mb-1.5">
                         <p className="text-xs font-semibold text-slate-700">
-                          {g.grupos}{enEsteEditor && <span className="ml-1.5 text-[10px] font-normal text-[#1a3a5c]">(este grupo)</span>}
+                          {g.grupos}{enEsteEditor && <span className="ml-1.5 text-[10px] font-normal text-brand-600">(este grupo)</span>}
                         </p>
                         <span className="text-[10px] text-slate-400">{g.estatus ?? 'sin planeación'}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-                          <div className="h-full bg-[#1a3a5c]" style={{ width: `${g.porcentaje_dosificado}%` }} />
+                          <div className="h-full bg-brand-600" style={{ width: `${g.porcentaje_dosificado}%` }} />
                         </div>
                         <span className="text-[11px] text-slate-500 tabular-nums shrink-0">{g.porcentaje_dosificado}%</span>
                       </div>
@@ -3792,7 +3917,7 @@ export default function PlaneacionEditorPage() {
                   <button
                     type="button"
                     onClick={() => restaurarDePapelera(entry.id)}
-                    className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                    className="shrink-0 text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline"
                   >
                     Restaurar
                   </button>
@@ -3863,7 +3988,7 @@ export default function PlaneacionEditorPage() {
                           cargarPdfPreview(val)
                         }
                       }}
-                      className="px-1.5 py-0.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-[#1a3a5c] focus:outline-none"
+                      className="px-1.5 py-0.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-brand-600 focus:outline-none"
                     />
                   </div>
                 )}
@@ -3901,7 +4026,7 @@ export default function PlaneacionEditorPage() {
               <div className="bg-slate-100 border border-slate-200 rounded-xl overflow-hidden h-[72vh] flex items-center justify-center">
                 {cargandoPdfPreview ? (
                   <div className="flex items-center gap-2 text-slate-500 text-sm">
-                    <svg className="w-5 h-5 animate-spin text-[#1a3a5c]" fill="none" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
@@ -3915,7 +4040,7 @@ export default function PlaneacionEditorPage() {
                     <button
                       type="button"
                       onClick={() => cargarPdfPreview()}
-                      className="px-4 py-2 text-xs font-semibold text-white bg-[#1a3a5c] rounded-lg hover:bg-[#234d7a]"
+                      className="px-4 py-2 text-xs font-semibold text-white bg-brand-600 rounded-lg hover:bg-[#234d7a]"
                     >
                       Reintentar cargar PDF
                     </button>

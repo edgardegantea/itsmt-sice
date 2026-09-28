@@ -103,7 +103,7 @@ export default function ActividadesComplementariasPage() {
         {esAlumno && (
           <button
             onClick={() => setShowForm(true)}
-            className="bg-[#1a3a5c] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#15304e] transition-colors"
+            className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#15304e] transition-colors"
           >
             + Nueva actividad
           </button>
@@ -120,7 +120,7 @@ export default function ActividadesComplementariasPage() {
               <select
                 value={tipoId}
                 onChange={e => setTipoId(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="">Selecciona un tipo…</option>
                 {tipos.map(t => (
@@ -136,7 +136,7 @@ export default function ActividadesComplementariasPage() {
                 step="0.5"
                 value={horas}
                 onChange={e => setHoras(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 placeholder="20"
               />
             </div>
@@ -146,7 +146,7 @@ export default function ActividadesComplementariasPage() {
                 type="url"
                 value={evidenciaUrl}
                 onChange={e => setEvidenciaUrl(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 placeholder="https://drive.google.com/…"
               />
             </div>
@@ -160,7 +160,7 @@ export default function ActividadesComplementariasPage() {
             <button
               onClick={() => registrarMut.mutate({ tipo_id: tipoId, horas: Number(horas), evidencia_url: evidenciaUrl || undefined })}
               disabled={!tipoId || !horas || registrarMut.isPending}
-              className="bg-[#1a3a5c] text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-[#15304e] transition-colors"
+              className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-[#15304e] transition-colors"
             >
               {registrarMut.isPending ? 'Guardando…' : 'Registrar'}
             </button>
@@ -183,7 +183,7 @@ export default function ActividadesComplementariasPage() {
               onClick={() => setFiltroEstatus(e)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                 filtroEstatus === e
-                  ? 'bg-[#1a3a5c] text-white border-[#1a3a5c]'
+                  ? 'bg-brand-600 text-white border-brand-600'
                   : 'bg-white text-slate-600 border-slate-300 hover:border-slate-400'
               }`}
             >
@@ -212,7 +212,7 @@ export default function ActividadesComplementariasPage() {
                       {ac.estatus}
                     </span>
                     {ac.nivel_desempeno && (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-100 text-brand-700">
                         {NIVEL_LABEL[ac.nivel_desempeno]}
                       </span>
                     )}
@@ -228,7 +228,7 @@ export default function ActividadesComplementariasPage() {
                       <>
                         {' · '}
                         <a href={ac.evidencia_url} target="_blank" rel="noopener noreferrer"
-                           className="text-blue-600 hover:underline">
+                           className="text-brand-600 hover:underline">
                           Ver evidencia
                         </a>
                       </>

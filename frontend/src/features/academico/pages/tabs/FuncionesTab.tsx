@@ -70,13 +70,13 @@ export default function FuncionesTab() {
         <div className="flex gap-1">
           {(['todas', 'activas', 'inactivas'] as const).map(f => (
             <button key={f} onClick={() => setFiltroActiva(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize ${filtroActiva === f ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize ${filtroActiva === f ? 'bg-brand-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
               {f}
             </button>
           ))}
         </div>
         <button onClick={() => setModal({ ...BLANK })}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 flex items-center gap-2">
           <span className="text-base leading-none">+</span> Asignar función
         </button>
       </div>
@@ -90,7 +90,7 @@ export default function FuncionesTab() {
             {isLoading && <EmptyRow cols={7} msg="Cargando…" />}
             {!isLoading && funciones.length === 0 && <EmptyRow cols={7} />}
             {funciones.map(f => (
-              <tr key={f.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={f.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3">
                   <p className="font-medium text-slate-900">{f.user?.name ?? '—'}</p>
                   <p className="text-xs text-slate-500">{f.user?.email}</p>
@@ -108,11 +108,11 @@ export default function FuncionesTab() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right space-x-2">
-                  <button onClick={() => setModal({ ...f, fecha_inicio: f.fecha_inicio?.slice(0, 10) ?? '', fecha_fin: f.fecha_fin?.slice(0, 10) ?? '' })} className="text-xs text-blue-600 hover:underline">Editar</button>
+                  <button onClick={() => setModal({ ...f, fecha_inicio: f.fecha_inicio?.slice(0, 10) ?? '', fecha_fin: f.fecha_fin?.slice(0, 10) ?? '' })} className="text-xs text-brand-600 hover:underline">Editar</button>
                   <button onClick={() => window.confirm('¿Eliminar función?') && del.mutate(f.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => setDetalle(f)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  <button onClick={() => setDetalle(f)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                 </td>
               </tr>
             ))}

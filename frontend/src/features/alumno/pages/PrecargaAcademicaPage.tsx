@@ -15,7 +15,7 @@ const HORA_FIN = 20
 const SLOT_PX = 52
 
 const COLORES = [
-  { bg: 'bg-blue-100',    border: 'border-blue-400',    text: 'text-blue-900',    dimBg: 'bg-blue-50',    dimBorder: 'border-blue-200' },
+  { bg: 'bg-brand-100',    border: 'border-brand-400',    text: 'text-brand-900',    dimBg: 'bg-brand-50',    dimBorder: 'border-brand-200' },
   { bg: 'bg-emerald-100', border: 'border-emerald-400', text: 'text-emerald-900', dimBg: 'bg-emerald-50', dimBorder: 'border-emerald-200' },
   { bg: 'bg-violet-100',  border: 'border-violet-400',  text: 'text-violet-900',  dimBg: 'bg-violet-50',  dimBorder: 'border-violet-200' },
   { bg: 'bg-amber-100',   border: 'border-amber-400',   text: 'text-amber-900',   dimBg: 'bg-amber-50',   dimBorder: 'border-amber-200' },
@@ -150,7 +150,7 @@ function TablaAsignaturas({
             const col = colorMap[c.id] ?? COLORES[0]
             const selected = seleccionIds.has(c.id)
             return (
-              <tr key={c.id} className={`hover:bg-slate-50 transition-colors ${!readonly && selected ? 'bg-blue-50/40' : ''}`}>
+              <tr key={c.id} className={`hover:bg-slate-50 transition-colors ${!readonly && selected ? 'bg-brand-50/40' : ''}`}>
                 {!readonly && (
                   <td className="px-4 py-3">
                     <button
@@ -300,7 +300,7 @@ export default function PrecargaAcademicaPage() {
             Periodo: <span className="font-medium text-slate-700">{data.periodo.nombre}</span>
             {' · '}Semestre {data.alumno?.semestre}
             {modoSeleccion && (
-              <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+              <span className="ml-2 text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full font-medium">
                 Selección libre
               </span>
             )}
@@ -314,8 +314,8 @@ export default function PrecargaAcademicaPage() {
         <button
           onClick={handleDownload}
           disabled={pdfDisabled}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium
-            hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium
+            hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {downloading
             ? <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
@@ -327,11 +327,11 @@ export default function PrecargaAcademicaPage() {
 
       {/* Aviso modo selección */}
       {modoSeleccion && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-3">
-          <svg className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-brand-50 border border-brand-200 rounded-xl px-4 py-3 flex items-start gap-3">
+          <svg className="h-5 w-5 text-brand-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <p className="text-sm text-blue-800">
+          <p className="text-sm text-brand-800">
             Usa el botón <strong>+</strong> en la tabla o haz clic en un bloque del horario para agregar o quitar asignaturas.
             {tienePendientes && <> Las <strong>materias pendientes</strong> de semestres anteriores aparecen en la sección inferior.</>}
             {' '}El sistema bloquea automáticamente los conflictos de horario.
@@ -408,7 +408,7 @@ export default function PrecargaAcademicaPage() {
                 {modoSeleccion ? 'Vista de horario — haz clic para seleccionar' : 'Horario Semanal'}
               </h2>
               {modoSeleccion && seleccionIds.size > 0 && (
-                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                <span className="text-xs font-medium text-brand-600 bg-brand-50 px-2 py-1 rounded-full">
                   {seleccionIds.size} asignatura{seleccionIds.size !== 1 ? 's' : ''} en tu precarga
                 </span>
               )}

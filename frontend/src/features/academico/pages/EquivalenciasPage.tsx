@@ -64,7 +64,7 @@ export default function EquivalenciasPage() {
             <p className="text-sm text-slate-500 mt-1">Dictámenes de equivalencia para alumnos provenientes de IES externas al TecNM — Cap. 9</p>
           </div>
           <button onClick={() => setShowForm(v => !v)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+            className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">
             {showForm ? 'Cancelar' : '+ Registrar equivalencia'}
           </button>
         </div>
@@ -81,19 +81,19 @@ export default function EquivalenciasPage() {
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">ID Alumno (UUID)</label>
                   <input type="text" value={form.alumno_id} onChange={e => setForm(f => ({ ...f, alumno_id: e.target.value }))}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                     placeholder="UUID del alumno" required />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Institución de origen</label>
                   <input type="text" value={form.institucion_origen} onChange={e => setForm(f => ({ ...f, institucion_origen: e.target.value }))}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                     placeholder="Universidad Veracruzana" required />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">URL dictamen (opcional)</label>
                   <input type="text" value={form.dictamen_url} onChange={e => setForm(f => ({ ...f, dictamen_url: e.target.value }))}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                     placeholder="https://..." />
                 </div>
               </div>
@@ -110,19 +110,19 @@ export default function EquivalenciasPage() {
                   {materiasRaw.map((m, idx) => (
                     <div key={idx} className="grid grid-cols-5 gap-2 items-center">
                       <input type="text" value={m.clave} onChange={e => updateMateria(idx, 'clave', e.target.value)}
-                        className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                         placeholder="Clave" required />
                       <input type="text" value={m.nombre} onChange={e => updateMateria(idx, 'nombre', e.target.value)}
-                        className="col-span-2 border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="col-span-2 border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                         placeholder="Nombre de la materia" required />
                       <input type="number" min={0} max={100} step={0.1} value={m.calificacion}
                         onChange={e => updateMateria(idx, 'calificacion', Number(e.target.value))}
-                        className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                         placeholder="Cal." required />
                       <div className="flex gap-1">
                         <input type="number" min={1} value={m.creditos}
                           onChange={e => updateMateria(idx, 'creditos', Number(e.target.value))}
-                          className="flex-1 border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                           placeholder="Créd." required />
                         {materiasRaw.length > 1 && (
                           <button type="button" onClick={() => removeMateria(idx)}
@@ -136,7 +136,7 @@ export default function EquivalenciasPage() {
 
               <div className="flex justify-end">
                 <button type="submit" disabled={crearMut.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors">
                   {crearMut.isPending ? 'Guardando…' : 'Registrar equivalencia'}
                 </button>
               </div>

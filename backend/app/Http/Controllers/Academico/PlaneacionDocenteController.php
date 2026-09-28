@@ -1247,67 +1247,37 @@ class PlaneacionDocenteController extends Controller
             );
         }
 
-        $planeacionDocente->loadMissing(['docente', 'periodo', 'cargaAcademica.materia', 'cargaAcademica.grupos.carrera', 'revisadoPor']);
+        $datos = $this->datosInstrumentacion($request, $planeacionDocente);
 
-        $competencias = $planeacionDocente->competencias ?? [];
-        $evaluaciones = $this->calcularEvaluaciones($competencias, $planeacionDocente->periodo?->fecha_inicio);
+        $nombre = 'instrumentacion_didactica_' . ($datos['asignatura'] ?: 'planeacion') . '.pdf';
 
-        $fechaParam = $request->query('fecha_elaboracion') ?? $request->query('fecha_emision') ?? $request->query('fecha');
-        if ($fechaParam) {
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaParam)) {
-                $fechaElaboracion = Carbon::parse($fechaParam)->format('d/m/Y');
-            } else {
-                $fechaElaboracion = $fechaParam;
-            }
-        } else {
-            $fechaElaboracion = $planeacionDocente->entregada_en?->format('d/m/Y') ?? now()->format('d/m/Y');
+        // Chromium (Gotenberg) reproduce el formato del SGC como Word: parte las filas largas
+        // entre páginas y repite el encabezado de la tabla. dompdf no puede partir una fila de
+        // tabla y deja páginas a medio llenar, así que solo se usa si Gotenberg no responde.
+        try {
+            $contenido = app(\App\Services\GotenbergService::class)->htmlToPdf(
+                view('pdfs.planeacion_instrumentacion', ['d' => $datos, 'motor' => 'chromium'])->render(),
+                [
+                    // Carta horizontal; márgenes del formato (2.5 cm izq., 2 cm der./inf.) y
+                    // espacio superior para el encabezado.
+                    'paperWidth' => '11in', 'paperHeight' => '8.5in',
+                    'marginTop' => '1.47in', 'marginBottom' => '0.79in',
+                    'marginLeft' => '0.98in', 'marginRight' => '0.79in',
+                ],
+                view('pdfs.partials.instrumentacion_encabezado_pagina', ['d' => $datos])->render()
+            );
+            return response($contenido, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $nombre . '"',
+            ]);
+        } catch (\RuntimeException $e) {
+            report($e);
         }
 
-        $docenteNombre = $request->query('docente_nombre')
-            ?? $planeacionDocente->docente?->name
-            ?? '';
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdfs.planeacion_instrumentacion', ['d' => $datos, 'motor' => 'dompdf'])
+            ->setPaper('letter', 'landscape');
 
-        $jefeNombre = $request->query('jefe_nombre');
-        if (! $jefeNombre) {
-            $directorioJefe = \App\Domains\Institucional\Models\DirectorioPersonal::where('cargo', 'like', '%Desarrollo Académico%')
-                ->orWhere('cargo', 'like', '%Desarrollo%')
-                ->first();
-            if ($directorioJefe) {
-                $jefeNombre = $directorioJefe->nombre;
-            }
-        }
-        if (! $jefeNombre) {
-            $daUser = User::whereHas('roles', fn ($q) => $q->where('name', 'desarrollo_academico'))->first();
-            if ($daUser) {
-                $jefeNombre = $daUser->name;
-            }
-        }
-        if (! $jefeNombre) {
-            $carreraId = $planeacionDocente->cargaAcademica?->grupos?->first()?->carrera_id;
-            if ($carreraId) {
-                $jefeUser = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['jefe_carrera', 'jefe_departamento', 'jefe_de_departamento']))
-                    ->where('carrera_id', $carreraId)
-                    ->first();
-                if ($jefeUser) {
-                    $jefeNombre = $jefeUser->name;
-                }
-            }
-        }
-        if (! $jefeNombre && $planeacionDocente->revisadoPor) {
-            $jefeNombre = $planeacionDocente->revisadoPor->name;
-        }
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdfs.planeacion_instrumentacion', [
-            'planeacion'        => $planeacionDocente,
-            'competencias'      => $competencias,
-            'evaluaciones'      => $evaluaciones,
-            'fecha_elaboracion' => $fechaElaboracion,
-            'docente_nombre'    => $docenteNombre,
-            'jefe_nombre'       => $jefeNombre,
-        ])->setPaper('letter', 'portrait');
-
-        $materia = $planeacionDocente->cargaAcademica?->materia?->nombre ?? 'planeacion';
-        return $pdf->download("instrumentacion_didactica_{$materia}.pdf");
+        return $pdf->download($nombre);
     }
 
     // GET /api/planeaciones-docentes/{planeacion}/docx-instrumentacion  (mismo contenido que
@@ -1332,165 +1302,265 @@ class PlaneacionDocenteController extends Controller
             );
         }
 
-        $planeacionDocente->loadMissing(['docente', 'periodo', 'cargaAcademica.materia']);
-        $competencias = $planeacionDocente->competencias ?? [];
+        $d = $this->datosInstrumentacion($request, $planeacionDocente);
+        $cfg = \App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia();
 
-        $rangoValoracion = ['Excelente' => '95-100', 'Notable' => '85-94', 'Bueno' => '75-84', 'Suficiente' => '70-74', 'Insuficiente' => '<70'];
-        $listar = fn ($v) => is_array($v) && count($v) ? implode(', ', $v) : '—';
         // PhpWord::addText() no escapa entidades XML por su cuenta — un valor con "<", ">" o
-        // "&" (p. ej. el rango "<70", o texto libre del docente con esos caracteres) rompe el
-        // XML interno del .docx y Word lo reporta como archivo dañado. Se escapa a mano todo
-        // el contenido dinámico antes de pasarlo a addText().
+        // "&" rompe el XML interno del .docx y Word lo reporta como archivo dañado.
         $esc = fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES | ENT_XML1, 'UTF-8');
-        // addText() de PhpWord no interpreta HTML — sin esto, un campo con el HTML del editor
-        // enriquecido del frontend (RichTextField) mostraría las etiquetas literales
-        // ("<b>texto</b>") en el .docx. Se reduce a texto plano preservando viñetas y saltos
-        // de línea (mismo helper que usan las plantillas Blade de los PDFs); el
-        // negrita/cursiva/alineación no se traslada al Word (limitación aceptada por ahora).
-        $plano = [RichText::class, 'aPlano'];
+        // addText() no interpreta HTML: el texto del editor enriquecido se reduce a texto
+        // plano conservando viñetas y saltos de línea.
+        $plano = fn ($v) => RichText::aPlano($v);
 
         $phpWord = new \PhpOffice\PhpWord\PhpWord();
-        $phpWord->setDefaultFontName('Calibri');
-        $phpWord->setDefaultFontSize(10);
+        $phpWord->setDefaultFontName('Arial');
+        $phpWord->setDefaultFontSize(12);
 
-        $tituloEstilo = ['bold' => true, 'size' => 13, 'color' => '1a3a5c'];
-        $seccionEstilo = ['bold' => true, 'size' => 11, 'color' => '1a3a5c', 'spaceBefore' => 240, 'spaceAfter' => 100];
-        $unidadEstilo = ['bold' => true, 'size' => 12, 'color' => 'ffffff'];
-        $unidadFondo = ['bgColor' => '1a3a5c'];
-        $tablaEstilo = ['borderSize' => 4, 'borderColor' => 'cccccc', 'cellMargin' => 60];
-        $celdaEncabezado = ['bgColor' => 'e8edf3'];
-        $textoEncabezado = ['bold' => true, 'size' => 9];
-        $textoCelda = ['size' => 9];
+        // Formato oficial: carta horizontal, márgenes 2.5 / 2 cm.
+        $ANCHO = 13290; // ancho útil en twips (15842 - 1418 - 1134)
+        $section = $phpWord->addSection([
+            'orientation' => 'landscape',
+            'pageSizeW' => 15842, 'pageSizeH' => 12242,
+            'marginLeft' => 1418, 'marginRight' => 1134, 'marginTop' => 1418, 'marginBottom' => 1134,
+            'headerHeight' => 568,
+        ]);
 
-        $section = $phpWord->addSection(['marginLeft' => 800, 'marginRight' => 800]);
+        $borde = ['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 70];
+        $b = ['bold' => true];
+        $centro = ['alignment' => 'center', 'spaceAfter' => 0];
+        $parr = ['spaceAfter' => 0];
+        $encab = ['valign' => 'center']; // el formato oficial no sombrea encabezados
 
-        $section->addText($esc('Instrumentación Didáctica para la Formación y Desarrollo de Competencias Profesionales'), $tituloEstilo);
-        $section->addText($esc('TecNM-AC-PO-003-02'), ['size' => 9, 'color' => '666666']);
-        $section->addTextBreak();
-
-        $materia = $planeacionDocente->cargaAcademica?->materia;
-        $section->addText($esc('Materia: ' . ($materia?->nombre ?? '—') . '  ·  Clave: ' . ($materia?->clave ?? '—')), ['size' => 9]);
-        $section->addText($esc('Docente: ' . ($planeacionDocente->docente?->name ?? '—') . '  ·  Periodo: ' . ($planeacionDocente->periodo?->nombre ?? '—')), ['size' => 9]);
-        $section->addTextBreak();
-
-        $section->addText($esc('1. Caracterización de la asignatura'), $seccionEstilo);
-        $section->addText($esc($plano($planeacionDocente->caracterizacion) ?: '—'), $textoCelda);
-
-        $section->addText($esc('2. Intención didáctica'), $seccionEstilo);
-        $section->addText($esc($plano($planeacionDocente->intencion_didactica) ?: '—'), $textoCelda);
-
-        $section->addText($esc('3. Competencia de la asignatura'), $seccionEstilo);
-        $section->addText($esc($plano($planeacionDocente->competencia_asignatura) ?: '—'), $textoCelda);
-
-        foreach ($competencias as $i => $comp) {
-            $section->addPageBreak();
-            $tituloUnidad = ($comp['nombre_unidad'] ?? '') !== '' ? $comp['nombre_unidad'] : ('Tema ' . ($comp['numero'] ?? $i + 1));
-            $pctTexto = ($comp['porcentaje'] ?? null) !== null ? " ({$comp['porcentaje']}% de la calificación)" : '';
-            $cellUnidad = $section->addTable(array_merge($tablaEstilo, ['cellMarginTop' => 100, 'cellMarginBottom' => 100]));
-            $cellUnidad->addRow();
-            $cellUnidad->addCell(9000, $unidadFondo)->addText($esc($tituloUnidad . $pctTexto), $unidadEstilo);
-
-            $section->addText($esc('Análisis por competencias específicas'), $seccionEstilo);
-            $section->addText($esc('Descripción: ' . ($plano($comp['descripcion'] ?? null) ?: '—')), $textoCelda);
-
-            $tabla = $section->addTable($tablaEstilo);
-            $tabla->addRow();
-            foreach (['Temas y subtemas', 'Act. de aprendizaje', 'Act. de enseñanza', 'Comp. genéricas', 'Horas T/P'] as $h) {
-                $tabla->addCell(1800, $celdaEncabezado)->addText($esc($h), $textoEncabezado);
+        // Texto de varias líneas en una celda (PhpWord no respeta "\n" dentro de addText).
+        $lineas = function ($celda, ?string $texto, array $fuente = [], array $p = []) use ($esc, $parr) {
+            $renglones = preg_split('/\r?\n/', (string) $texto);
+            foreach ($renglones as $r) {
+                $celda->addText($esc($r), $fuente, $p ?: $parr);
             }
-            $subtemasPorFila = collect($comp['subtemas'] ?? [])->groupBy('fila');
-            $actividades = $comp['actividades'] ?? [];
-            if (count($actividades) === 0) {
-                $tabla->addRow();
-                $tabla->addCell(9000, ['gridSpan' => 5])->addText($esc('Sin temas registrados.'), $textoCelda);
-            }
-            foreach ($actividades as $act) {
-                $tabla->addRow();
-                $subs = $subtemasPorFila->get($act['numero'] ?? null, collect())->pluck('texto')->implode(', ') ?: '—';
-                $tabla->addCell(1800)->addText($esc($subs), $textoCelda);
-                $tabla->addCell(1800)->addText($esc($plano($act['actividad_aprendizaje'] ?? null) ?: '—'), $textoCelda);
-                $tabla->addCell(1800)->addText($esc($plano($act['actividad_ensenanza'] ?? null) ?: '—'), $textoCelda);
-                $tabla->addCell(1800)->addText($esc($listar($comp['competencias_genericas'] ?? null)), $textoCelda);
-                $tabla->addCell(1800)->addText($esc('T: ' . ($act['horas_teoricas'] ?? 0) . ' / P: ' . ($act['horas_practicas'] ?? 0)), $textoCelda);
-            }
+        };
 
-            $section->addTextBreak();
-            $section->addText($esc('Indicadores de alcance'), ['bold' => true, 'size' => 10]);
-            $tablaInd = $section->addTable($tablaEstilo);
-            $tablaInd->addRow();
-            $tablaInd->addCell(6750, $celdaEncabezado)->addText($esc('Indicador'), $textoEncabezado);
-            $tablaInd->addCell(2250, $celdaEncabezado)->addText($esc('Valor'), $textoEncabezado);
-            $indicadores = $comp['indicadores_alcance'] ?? [];
-            if (count($indicadores) === 0) {
-                $tablaInd->addRow();
-                $tablaInd->addCell(9000, ['gridSpan' => 2])->addText($esc('Sin indicadores registrados.'), $textoCelda);
-            }
-            foreach ($indicadores as $ind) {
-                $tablaInd->addRow();
-                $tablaInd->addCell(6750)->addText($esc(($ind['letra'] ?? '') . '. ' . ($ind['indicador'] ?? '')), $textoCelda);
-                $tablaInd->addCell(2250)->addText($esc((string) ($ind['valor'] ?? '—')), $textoCelda);
-            }
+        // Encabezado en todas las páginas: logo TecNM | título | logo del instituto.
+        $header = $section->addHeader();
+        $th = $header->addTable(['borderSize' => 0, 'cellMargin' => 40]);
+        $th->addRow();
+        $logoTec = resource_path('images/logo-tecnm.png'); // fijo del formato del SGC
+        $logoInst = $cfg->rutaLogoRaster('principal');
+        $c = $th->addCell(3000, ['valign' => 'center']);
+        if ($logoTec) $c->addImage($logoTec, ['height' => 40, 'alignment' => 'left']);
+        $th->addCell($ANCHO - 4500, ['valign' => 'center'])
+            ->addText($esc('Instrumentación Didáctica para la formación y desarrollo de competencias profesionales-Ingreso Agosto 2015 del SGI del G4'), ['bold' => true, 'size' => 12], $centro);
+        $c = $th->addCell(1500, ['valign' => 'center']);
+        if ($logoInst) $c->addImage($logoInst, ['height' => 48, 'alignment' => 'right']);
 
-            $section->addTextBreak();
-            $section->addText($esc('Niveles de desempeño'), ['bold' => true, 'size' => 10]);
-            $tablaNiv = $section->addTable($tablaEstilo);
-            $tablaNiv->addRow();
-            foreach (['Nivel', 'Indicadores', 'Valoración'] as $h) {
-                $tablaNiv->addCell(3000, $celdaEncabezado)->addText($esc($h), $textoEncabezado);
-            }
-            foreach (($comp['niveles_desempeno'] ?? []) as $niv) {
-                $tablaNiv->addRow();
-                $tablaNiv->addCell(3000)->addText($esc($niv['nivel'] ?? '—'), $textoCelda);
-                $tablaNiv->addCell(3000)->addText($esc($niv['indicadores'] ?: '—'), $textoCelda);
-                $tablaNiv->addCell(3000)->addText($esc($rangoValoracion[$niv['nivel'] ?? ''] ?? '—'), $textoCelda);
-            }
+        // Título y periodo
+        $t = $section->addTable($borde);
+        $t->addRow();
+        $t->addCell($ANCHO, ['gridSpan' => 2, 'bgColor' => 'D9D9D9'])
+            ->addText($esc('Instrumentación didáctica para la formación y desarrollo de competencias profesionales'), ['bold' => true, 'size' => 12], $centro);
+        $t->addRow();
+        $t->addCell(2000)->addText('Periodo', $b, $parr);
+        $t->addCell($ANCHO - 2000)->addText($esc($d['periodo']), [], $parr);
+        $section->addTextBreak(1, ['size' => 6]);
 
-            $section->addTextBreak();
-            $section->addText($esc('Evidencias de aprendizaje y evaluación formativa'), ['bold' => true, 'size' => 10]);
-            $tablaEvid = $section->addTable($tablaEstilo);
-            $tablaEvid->addRow();
-            foreach (['Evidencia', '%', 'Indicadores', 'Evaluación formativa'] as $h) {
-                $tablaEvid->addCell(2250, $celdaEncabezado)->addText($esc($h), $textoEncabezado);
-            }
-            $matriz = $comp['matriz_evaluacion'] ?? [];
-            if (count($matriz) === 0) {
-                $tablaEvid->addRow();
-                $tablaEvid->addCell(9000, ['gridSpan' => 4])->addText($esc('Sin evidencias registradas.'), $textoCelda);
-            }
-            foreach ($matriz as $fila) {
-                $tablaEvid->addRow();
-                $tablaEvid->addCell(2250)->addText($esc($fila['evidencia'] ?: '—'), $textoCelda);
-                $tablaEvid->addCell(2250)->addText($esc((string) ($fila['porcentaje'] ?? '—')), $textoCelda);
-                $tablaEvid->addCell(2250)->addText($esc($listar($fila['indicadores'] ?? null)), $textoCelda);
-                $tablaEvid->addCell(2250)->addText($esc($fila['evaluacion_formativa'] ?: '—'), $textoCelda);
-            }
-
-            $section->addTextBreak();
-            $fuentes = collect(is_array($comp['fuentes_informacion'] ?? null) ? $comp['fuentes_informacion'] : [])
-                ->map(fn ($f) => trim(($f['autor'] ?? '') . ' ' . (!empty($f['anio']) ? '(' . $f['anio'] . ')' : '') . ' ' . ($f['titulo'] ?? '')))
-                ->implode("\n") ?: '—';
-            $section->addText($esc('Fuentes de información: ' . $fuentes), $textoCelda);
-            $section->addText($esc('Apoyos didácticos: ' . $listar($comp['apoyos_didacticos'] ?? null)), $textoCelda);
-
-            if (!empty($comp['practicas']) && is_array($comp['practicas'])) {
-                $section->addTextBreak();
-                $section->addText($esc('Prácticas'), ['bold' => true, 'size' => 10]);
-                $tablaPrac = $section->addTable($tablaEstilo);
-                $tablaPrac->addRow();
-                foreach (['Nombre', 'Requisitos', 'Semana', 'Lugar'] as $h) {
-                    $tablaPrac->addCell(2250, $celdaEncabezado)->addText($esc($h), $textoEncabezado);
-                }
-                foreach ($comp['practicas'] as $prac) {
-                    $tablaPrac->addRow();
-                    $tablaPrac->addCell(2250)->addText($esc($prac['nombre'] ?: '—'), $textoCelda);
-                    $tablaPrac->addCell(2250)->addText($esc($listar($prac['requisitos'] ?? null)), $textoCelda);
-                    $tablaPrac->addCell(2250)->addText($esc((string) ($prac['semana'] ?? '—')), $textoCelda);
-                    $tablaPrac->addCell(2250)->addText($esc($prac['lugar'] ?: '—'), $textoCelda);
-                }
-            }
+        // Datos de la asignatura
+        $t = $section->addTable($borde);
+        foreach ([
+            ['Nombre de la asignatura:', $d['asignatura']],
+            ['Plan de estudios:', $d['plan']],
+            ['Clave de la asignatura:', $d['clave']],
+            ['Horas teoría-Horas práctica-Créditos:', $d['horas']],
+        ] as [$etq, $val]) {
+            $t->addRow();
+            $t->addCell(4200)->addText($esc($etq), $b, $parr);
+            $t->addCell($ANCHO - 4200)->addText($esc($val), [], $parr);
         }
 
-        $nombreArchivo = 'instrumentacion_didactica_' . ($materia?->nombre ?? 'planeacion') . '.docx';
+        $seccion = function (string $titulo, $contenido) use ($section, $esc, $plano, $borde, $ANCHO, $lineas) {
+            $section->addTextBreak(1, ['size' => 6]);
+            $section->addText($esc($titulo), ['bold' => true, 'size' => 11], ['spaceAfter' => 60]);
+            $t = $section->addTable($borde);
+            $t->addRow();
+            $lineas($t->addCell($ANCHO), $plano($contenido) ?: '');
+        };
+        $seccion('1. Caracterización de la asignatura  (1)', $d['caracterizacion']);
+        $seccion('2. Intención didáctica  (2)', $d['intencion']);
+        $seccion('3. Competencia de la asignatura  (3)', $d['competencia']);
+
+        // 4. Análisis por competencias específicas (se repite por cada tema)
+        foreach ($d['competencias'] as $comp) {
+            $section->addPageBreak();
+            $section->addText($esc('4. Análisis por competencias especificas'), ['bold' => true, 'size' => 11], ['spaceAfter' => 60]);
+
+            $t = $section->addTable($borde);
+            $t->addRow();
+            $t->addCell(2200, $encab)->addText('Competencia No. (4.1)', [], $parr);
+            $t->addCell(900)->addText($esc($comp['numero']), [], $centro);
+            $t->addCell(1600, $encab)->addText($esc('Descripción: (4.2)'), [], $parr);
+            $celda = $t->addCell($ANCHO - 4700);
+            if ($comp['nombre'] !== '') $celda->addText($esc($comp['nombre']), $b, $parr);
+            $lineas($celda, $plano($comp['descripcion']) ?: '');
+            $section->addTextBreak(1, ['size' => 6]);
+
+            $anchos = [3000, 2900, 2900, 2690, 1800];
+            $t = $section->addTable($borde);
+            $t->addRow(null, ['tblHeader' => true]);
+            foreach ([
+                'Temas y Subtemas para desarrollar la competencia especifica (4.3)',
+                'Actividades de aprendizaje (4.4)', 'Actividades de enseñanza (4.5)',
+                'Desarrollo de competencias genéricas (4.6)', 'Horas teórico-prácticas (4.7)',
+            ] as $k => $h) {
+                $t->addCell($anchos[$k], $encab)->addText($esc($h), ['bold' => true, 'size' => 9], $centro);
+            }
+            $filas = $comp['filas'] ?: [['subtemas' => [], 'aprendizaje' => '', 'ensenanza' => '', 'horas' => '']];
+            foreach ($filas as $k => $f) {
+                $t->addRow();
+                $lineas($t->addCell($anchos[0]), implode("\n", $f['subtemas']), ['size' => 9]);
+                $lineas($t->addCell($anchos[1]), $plano($f['aprendizaje']), ['size' => 9]);
+                $lineas($t->addCell($anchos[2]), $plano($f['ensenanza']), ['size' => 9]);
+                // Las genéricas son de toda la competencia: se muestran en una celda combinada.
+                if ($k === 0) {
+                    $lineas($t->addCell($anchos[3], count($filas) > 1 ? ['vMerge' => 'restart'] : []), implode("\n", $comp['genericas']), ['size' => 9]);
+                } else {
+                    $t->addCell($anchos[3], ['vMerge' => 'continue']);
+                }
+                $t->addCell($anchos[4])->addText($esc($f['horas']), ['size' => 9], $centro);
+            }
+            $section->addTextBreak(1, ['size' => 6]);
+
+            $t = $section->addTable($borde);
+            $t->addRow();
+            $t->addCell($ANCHO - 2500, $encab)->addText('Indicadores de alcance  (4.8)', [], $parr);
+            $t->addCell(2500, $encab)->addText('Valor del indicador  (4.9)', [], $parr);
+            foreach ($comp['indicadores'] ?: [['letra' => '', 'indicador' => '', 'valor' => '']] as $ind) {
+                $t->addRow();
+                $t->addCell($ANCHO - 2500)->addText($esc(trim($ind['letra'] . '. ' . $ind['indicador'], '. ')), ['size' => 9], $parr);
+                $t->addCell(2500)->addText($esc($ind['valor'] ?? ''), ['size' => 9], $centro);
+            }
+            $section->addTextBreak(1, ['size' => 6]);
+
+            $section->addText($esc('Niveles de desempeño  (4.10)'), [], ['spaceAfter' => 60]);
+            $t = $section->addTable($borde);
+            $t->addRow();
+            foreach (['Desempeño' => 2600, 'Nivel de desempeño' => 2200, 'Indicadores de alcance' => $ANCHO - 7200, 'Valoración numérica' => 2400] as $h => $w) {
+                $t->addCell($w, $encab)->addText($esc($h), $b, $centro);
+            }
+            foreach ($comp['niveles'] as $k => $niv) {
+                $t->addRow();
+                if ($k === 0) {
+                    $t->addCell(2600, ['vMerge' => 'restart', 'valign' => 'center'])->addText('Competencia alcanzada', ['size' => 9], $centro);
+                } elseif ($niv['nivel'] !== 'Insuficiente') {
+                    $t->addCell(2600, ['vMerge' => 'continue']);
+                } else {
+                    $t->addCell(2600, ['valign' => 'center'])->addText('Competencia no alcanzada', ['size' => 9], $centro);
+                }
+                $t->addCell(2200)->addText($esc($niv['nivel']), ['size' => 9], $centro);
+                $lineas($t->addCell($ANCHO - 7200), $niv['indicadores'], ['size' => 9]);
+                $t->addCell(2400)->addText($esc($niv['valoracion']), ['size' => 9], $centro);
+            }
+            $section->addTextBreak(1, ['size' => 6]);
+
+            $section->addText($esc('Matriz de evaluación  (4.11)'), [], ['spaceAfter' => 60]);
+            $letras = $comp['letras'] ?: ['A', 'B', 'C', 'N'];
+            $wLetra = 700;
+            $wFormativa = 3200;
+            $wEvid = $ANCHO - 900 - $wFormativa - $wLetra * count($letras);
+            $t = $section->addTable($borde);
+            $t->addRow();
+            $t->addCell($wEvid, $encab + ['vMerge' => 'restart'])->addText('Evidencia de aprendizaje', $b, $centro);
+            $t->addCell(900, $encab + ['vMerge' => 'restart'])->addText('%', $b, $centro);
+            $t->addCell($wLetra * count($letras), $encab + ['gridSpan' => count($letras)])->addText('Indicador de alcance', $b, $centro);
+            $t->addCell($wFormativa, $encab + ['vMerge' => 'restart'])->addText('Evaluación formativa de la competencia', $b, $centro);
+            $t->addRow();
+            $t->addCell($wEvid, ['vMerge' => 'continue']);
+            $t->addCell(900, ['vMerge' => 'continue']);
+            foreach ($letras as $l) $t->addCell($wLetra, $encab)->addText($esc($l), $b, $centro);
+            $t->addCell($wFormativa, ['vMerge' => 'continue']);
+            foreach ($comp['matriz'] as $f) {
+                $t->addRow();
+                $t->addCell($wEvid)->addText($esc($f['evidencia']), ['size' => 9], $parr);
+                $t->addCell(900)->addText($esc($f['porcentaje'] ?? ''), ['size' => 9], $centro);
+                foreach ($letras as $k => $l) {
+                    $t->addCell($wLetra)->addText(!empty($f['marcas'][$k]) ? 'X' : '', ['size' => 9], $centro);
+                }
+                $lineas($t->addCell($wFormativa), $f['formativa'], ['size' => 9]);
+            }
+            $t->addRow();
+            $t->addCell($wEvid)->addText('Total', $b, ['alignment' => 'right', 'spaceAfter' => 0]);
+            $t->addCell(900)->addText($esc($comp['matriz'] ? rtrim(rtrim(number_format($comp['total_pct'], 2, '.', ''), '0'), '.') : ''), $b, $centro);
+            foreach ($comp['indicadores'] ?: array_fill(0, count($letras), ['valor' => '']) as $ind) {
+                $t->addCell($wLetra)->addText($esc($ind['valor'] ?? ''), ['size' => 9], $centro);
+            }
+            $t->addCell($wFormativa);
+
+            $section->addText(
+                $esc('Nota: este apartado número 4 de la instrumentación didáctica para la formación y desarrollo de competencias profesionales se repite, de acuerdo al número de competencias específicas de los temas de asignatura.'),
+                ['size' => 8, 'italic' => true], ['spaceBefore' => 60]
+            );
+        }
+
+        // 5. Fuentes de información y apoyos didácticos
+        $section->addPageBreak();
+        $section->addText($esc('5. Fuentes de información y apoyos didácticos'), ['bold' => true, 'size' => 11], ['spaceAfter' => 60]);
+        $t = $section->addTable($borde);
+        $t->addRow();
+        $t->addCell($ANCHO / 2, $encab)->addText($esc('Fuentes de información: (5.1)'), [], $parr);
+        $t->addCell($ANCHO / 2, $encab)->addText($esc('Apoyos didácticos: (5.2)'), [], $parr);
+        $t->addRow();
+        $c = $t->addCell($ANCHO / 2);
+        foreach ($d['fuentes'] ?: [''] as $k => $f) $c->addText($esc($f === '' ? '' : ($k + 1) . '. ' . $f), ['size' => 9], $parr);
+        $c = $t->addCell($ANCHO / 2);
+        foreach ($d['apoyos'] ?: [''] as $a) $c->addText($esc($a === '' ? '' : '• ' . $a), ['size' => 9], $parr);
+        $section->addTextBreak(1, ['size' => 6]);
+
+        // 6. Calendarización de evaluación en semanas
+        $section->addText($esc('6. Calendarización de evaluación en semanas: (6)'), ['bold' => true, 'size' => 11], ['spaceAfter' => 60]);
+        $semanas = count($d['tp']);
+        $wEtq = 900;
+        $wSem = intdiv($ANCHO - $wEtq, $semanas);
+        $t = $section->addTable($borde);
+        $t->addRow();
+        $t->addCell($wEtq, $encab)->addText('Semana', ['bold' => true, 'size' => 8], $centro);
+        foreach (array_keys($d['tp']) as $s) {
+            $etq = $s === $semanas ? $s . "\nSegunda oportunidad" : (string) $s;
+            $lineas($t->addCell($wSem, $encab), $etq, ['bold' => true, 'size' => 7], $centro);
+        }
+        foreach (['TP' => $d['tp'], 'TR' => [], 'SD' => []] as $fila => $valores) {
+            $t->addRow(400);
+            $t->addCell($wEtq, $encab)->addText($fila, ['bold' => true, 'size' => 8], $centro);
+            foreach (array_keys($d['tp']) as $s) {
+                $t->addCell($wSem)->addText($esc($valores[$s] ?? ''), ['size' => 8], $centro);
+            }
+        }
+        $section->addTextBreak(1, ['size' => 4]);
+        $t = $section->addTable(['borderSize' => 0, 'cellMargin' => 30]);
+        foreach ([
+            ['TP= tiempo planeado', 'TR = tiempo real', 'SD = seguimiento departamental'],
+            ['ED = Evaluación Diagnóstica', 'EFn = Evaluación Formativa (competencia especifica n)', 'ES = Evaluación Sumativa'],
+        ] as $r) {
+            $t->addRow();
+            foreach ($r as $txt) $t->addCell(intdiv($ANCHO, 3))->addText($esc($txt), ['size' => 8], $parr);
+        }
+        $section->addTextBreak(1, ['size' => 6]);
+
+        $t = $section->addTable($borde);
+        $t->addRow();
+        $t->addCell(3000)->addText($esc('Fecha de elaboración:'), $b, $parr);
+        $t->addCell(4000)->addText($esc($d['fecha']), [], $parr);
+        $section->addTextBreak(2);
+
+        // Firmas
+        $t = $section->addTable(['cellMargin' => 40]);
+        $wFirma = intdiv($ANCHO - 2000, 2);
+        $t->addRow(700);
+        $t->addCell($wFirma, ['valign' => 'bottom'])->addText($esc($d['docente']), $b, $centro);
+        $t->addCell(2000);
+        $t->addCell($wFirma, ['valign' => 'bottom'])->addText($esc($d['jefe']), $b, $centro);
+        $t->addRow();
+        $t->addCell($wFirma, ['borderTopSize' => 6, 'borderTopColor' => '000000'])->addText($esc('Nombre y firma del(de la) profesor(a)'), [], $centro);
+        $t->addCell(2000);
+        $t->addCell($wFirma, ['borderTopSize' => 6, 'borderTopColor' => '000000'])->addText($esc('Nombre y firma del(de la) Jefe(a) de Departamento Académico'), [], $centro);
+
+        $nombreArchivo = 'instrumentacion_didactica_' . ($d['asignatura'] ?: 'planeacion') . '.docx';
         // Carpeta temporal propia: bajo `php artisan serve` en Windows no llegan TEMP/TMP y
         // sys_get_temp_dir() apunta a una carpeta sin permisos de escritura.
         $tmpDir = storage_path('app/tmp');
@@ -1504,6 +1574,184 @@ class PlaneacionDocenteController extends Controller
         return response()->download($tmpPath, $nombreArchivo, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ])->deleteFileAfterSend(true);
+    }
+
+    /** Valoración numérica de cada nivel de desempeño, según los lineamientos del TecNM. */
+    private const RANGO_VALORACION = [
+        'Excelente'    => '95-100',
+        'Notable'      => '85-94',
+        'Bueno'        => '75-84',
+        'Suficiente'   => '70-74',
+        'Insuficiente' => 'NA (no alcanzada)',
+    ];
+
+    /**
+     * Datos de la instrumentación didáctica ya ordenados según el formato oficial
+     * (Instrumentación Didáctica — Ingreso Agosto 2015, SGI G4). Lo usan tanto el PDF
+     * como el DOCX para que ambos salgan con el mismo contenido y estructura.
+     */
+    private function datosInstrumentacion(Request $request, PlaneacionDocente $planeacion): array
+    {
+        $planeacion->loadMissing(['docente', 'periodo', 'cargaAcademica.materia', 'cargaAcademica.grupos.carrera', 'revisadoPor']);
+        $competencias = $planeacion->competencias ?? [];
+        $materia = $planeacion->cargaAcademica?->materia;
+
+        $lista = fn ($v) => array_values(array_filter(is_array($v) ? $v : (empty($v) ? [] : [$v]), fn ($x) => $x !== null && $x !== ''));
+
+        $comps = [];
+        foreach ($competencias as $i => $comp) {
+            $subtemasPorFila = collect($comp['subtemas'] ?? [])->groupBy('fila');
+            $filas = [];
+            foreach (($comp['actividades'] ?? []) as $act) {
+                $filas[] = [
+                    'subtemas'   => ($subtemasPorFila->get($act['numero'] ?? null) ?? collect())->pluck('texto')->filter()->values()->all(),
+                    'aprendizaje' => $act['actividad_aprendizaje'] ?? null,
+                    'ensenanza'   => $act['actividad_ensenanza'] ?? null,
+                    'horas'       => ($act['horas_teoricas'] ?? 0) . '-' . ($act['horas_practicas'] ?? 0),
+                ];
+            }
+
+            $indicadores = collect($comp['indicadores_alcance'] ?? [])
+                ->filter(fn ($ind) => !empty($ind['letra']))
+                ->map(fn ($ind) => ['letra' => $ind['letra'], 'indicador' => $ind['indicador'] ?? '', 'valor' => $ind['valor'] ?? null])
+                ->values()->all();
+            $letras = array_column($indicadores, 'letra');
+
+            $nivelesPorNombre = collect($comp['niveles_desempeno'] ?? [])->keyBy('nivel');
+            $niveles = [];
+            foreach (self::RANGO_VALORACION as $nivel => $rango) {
+                $niveles[] = [
+                    'nivel'       => $nivel,
+                    'indicadores' => $nivelesPorNombre->get($nivel)['indicadores'] ?? '',
+                    'valoracion'  => $rango,
+                ];
+            }
+
+            $matriz = [];
+            foreach (($comp['matriz_evaluacion'] ?? []) as $fila) {
+                $marcadas = $lista($fila['indicadores'] ?? null);
+                $matriz[] = [
+                    'evidencia'  => $fila['evidencia'] ?? '',
+                    'porcentaje' => $fila['porcentaje'] ?? null,
+                    'marcas'     => array_map(fn ($l) => in_array($l, $marcadas, true), $letras),
+                    'formativa'  => $fila['evaluacion_formativa'] ?? '',
+                ];
+            }
+
+            $comps[] = [
+                'numero'       => $comp['numero'] ?? ($i + 1),
+                'nombre'       => $comp['nombre_unidad'] ?? '',
+                'descripcion'  => $comp['descripcion'] ?? null,
+                'filas'        => $filas,
+                'genericas'    => $lista($comp['competencias_genericas'] ?? null),
+                'indicadores'  => $indicadores,
+                'letras'       => $letras,
+                'niveles'      => $niveles,
+                'matriz'       => $matriz,
+                'total_pct'    => collect($matriz)->sum(fn ($f) => (float) ($f['porcentaje'] ?? 0)),
+            ];
+        }
+
+        // En el formato oficial, fuentes y apoyos son una sola sección (5) para toda la
+        // asignatura; el editor los captura por tema, así que se juntan sin repetir.
+        $fuentes = collect($competencias)
+            ->flatMap(fn ($c) => is_array($c['fuentes_informacion'] ?? null) ? $c['fuentes_informacion'] : [])
+            ->map(fn ($f) => is_array($f)
+                ? trim(($f['autor'] ?? '') . (!empty($f['anio']) ? ' (' . $f['anio'] . ')' : '') . (!empty($f['titulo']) ? '. ' . $f['titulo'] : ''), ' .')
+                : (string) $f)
+            ->filter()->unique()->values()->all();
+        $apoyos = collect($competencias)
+            ->flatMap(fn ($c) => $lista($c['apoyos_didacticos'] ?? null))
+            ->filter()->unique()->values()->all();
+
+        // (6) Calendarización: semanas 1–16 más la 17 de segunda oportunidad. El sistema
+        // conoce el tiempo planeado (TP); TR y SD se llenan durante el semestre.
+        $tp = array_fill(1, self::TOTAL_SEMANAS + 1, []);
+        foreach ($this->calcularEvaluaciones($competencias, $planeacion->periodo?->fecha_inicio) as $ev) {
+            if ($ev['semana_evaluacion'] !== null) {
+                $tp[$ev['semana_evaluacion']][] = $ev['tipo'] === 'ES' ? 'ES' : 'EF' . $ev['unidad'];
+            }
+        }
+        $tp = array_map(fn ($marcas) => implode(', ', $marcas), $tp);
+
+        $fechaParam = $request->query('fecha_elaboracion') ?? $request->query('fecha_emision') ?? $request->query('fecha');
+        if ($fechaParam) {
+            $fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaParam) ? Carbon::parse($fechaParam)->format('d/m/Y') : $fechaParam;
+        } else {
+            $fecha = $planeacion->entregada_en?->format('d/m/Y') ?? now()->format('d/m/Y');
+        }
+
+        $carrera = $planeacion->cargaAcademica?->grupos?->first()?->carrera;
+
+        return [
+            'periodo'      => $planeacion->periodo?->nombre ?? '',
+            'asignatura'   => $materia?->nombre ?? '',
+            'plan'         => $carrera?->nombre ?? '',
+            'clave'        => $materia?->clave ?? '',
+            'horas'        => ($materia?->horas_teoria ?? '') . '-' . ($materia?->horas_practica ?? '') . '-' . ($materia?->creditos ?? ''),
+            'caracterizacion' => $planeacion->caracterizacion,
+            'intencion'    => $planeacion->intencion_didactica,
+            'competencia'  => $planeacion->competencia_asignatura,
+            'competencias' => $comps,
+            'fuentes'      => $fuentes,
+            'apoyos'       => $apoyos,
+            'tp'           => $tp,
+            'fecha'        => $fecha,
+            'docente'      => mb_strtoupper($request->query('docente_nombre') ?? $planeacion->docente?->name ?? ''),
+            'jefe'         => mb_strtoupper($this->resolverJefeFirmante($request, $planeacion) ?? ''),
+            // Logos como data URI para el PDF. El del TecNM es fijo del formato del SGC.
+            'logo_tec'     => $this->logoReducido('data:image/png;base64,' . base64_encode(file_get_contents(resource_path('images/logo-tecnm.png')))),
+            'logo_inst'    => $this->logoReducido(\App\Domains\Institucional\Models\ConfiguracionInstitucional::instancia()->logoBase64()),
+        ];
+    }
+
+    /**
+     * Reduce un logo PNG/JPG (data URI) a 240 px de ancho. En el PDF de Chromium el
+     * encabezado se repite en cada página con su propia copia de la imagen; con logos a
+     * resolución completa una instrumentación de ~50 páginas pesaba 9 MB. SVG se deja igual.
+     */
+    private function logoReducido(?string $dataUri): ?string
+    {
+        if (! $dataUri || ! preg_match('#^data:image/(png|jpe?g);base64,(.+)$#', $dataUri, $m)) {
+            return $dataUri;
+        }
+        $img = @imagecreatefromstring(base64_decode($m[2]));
+        if (! $img || imagesx($img) <= 240) {
+            return $dataUri;
+        }
+        $ancho = 240;
+        $alto = (int) round(imagesy($img) * $ancho / imagesx($img));
+        $chica = imagecreatetruecolor($ancho, $alto);
+        imagealphablending($chica, false);
+        imagesavealpha($chica, true);
+        imagecopyresampled($chica, $img, 0, 0, 0, 0, $ancho, $alto, imagesx($img), imagesy($img));
+        ob_start();
+        imagepng($chica, null, 9);
+        return 'data:image/png;base64,' . base64_encode(ob_get_clean());
+    }
+
+    /** Nombre del jefe(a) que firma la instrumentación, del más específico al más general. */
+    private function resolverJefeFirmante(Request $request, PlaneacionDocente $planeacion): ?string
+    {
+        if ($nombre = $request->query('jefe_nombre')) return $nombre;
+
+        $directorio = \App\Domains\Institucional\Models\DirectorioPersonal::where('cargo', 'like', '%Desarrollo Académico%')
+            ->orWhere('cargo', 'like', '%Desarrollo%')
+            ->first();
+        if ($directorio) return $directorio->nombre;
+
+        $da = User::whereHas('roles', fn ($q) => $q->where('name', 'desarrollo_academico'))->first();
+        if ($da) return $da->name;
+
+        $carreraId = $planeacion->cargaAcademica?->grupos?->first()?->carrera_id;
+        if ($carreraId) {
+            $jefe = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['jefe_carrera', 'jefe_departamento', 'jefe_de_departamento']))
+                ->where('carrera_id', $carreraId)
+                ->first();
+            if ($jefe) return $jefe->name;
+        }
+
+        return $planeacion->revisadoPor?->name;
     }
 
     /** Misma fórmula que el editor usa para derivar "Calendarización de evaluación" a partir

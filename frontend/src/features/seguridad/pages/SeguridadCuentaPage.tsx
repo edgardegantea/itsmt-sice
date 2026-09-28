@@ -15,7 +15,7 @@ interface Estatus2FA {
  * le da a cada tarjeta un punto focal en vez de depender solo del borde/sombra. */
 function IconoSeccion({ tono, path }: { tono: 'sky' | 'emerald' | 'amber'; path: string }) {
   const degradado = {
-    sky: 'from-[#1a3a5c] to-sky-600 shadow-[#1a3a5c]/30',
+    sky: 'from-brand-600 to-sky-600 shadow-brand-600/30',
     emerald: 'from-emerald-500 to-teal-500 shadow-emerald-500/30',
     amber: 'from-amber-500 to-orange-500 shadow-amber-500/30',
   }[tono]
@@ -45,7 +45,7 @@ function CampoPassword({ value, onChange, placeholder }: { value: string; onChan
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full border border-slate-300 rounded-lg pl-9 pr-9 py-2 text-sm bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/40 transition-colors"
+        className="w-full border border-slate-300 rounded-lg pl-9 pr-9 py-2 text-sm bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/40 transition-colors"
       />
       <button
         type="button"
@@ -161,7 +161,7 @@ export default function SeguridadCuentaPage() {
       <div className="pointer-events-none absolute top-40 -left-24 w-72 h-72 rounded-full bg-emerald-200/20 blur-3xl" />
 
       <div className="relative flex items-start gap-3">
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#1a3a5c] to-sky-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-[#1a3a5c]/30">
+        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-600 to-sky-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-600/30">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d={PATH_ESCUDO} />
           </svg>
@@ -174,7 +174,7 @@ export default function SeguridadCuentaPage() {
 
       {/* 2FA */}
       <div className="relative bg-white rounded-2xl border border-slate-200 shadow-lg shadow-slate-200/70 overflow-hidden">
-        <div className={`h-1.5 bg-gradient-to-r ${estatus?.habilitado ? 'from-emerald-500 via-emerald-400 to-teal-400' : 'from-[#1a3a5c] via-sky-500 to-emerald-400'}`} />
+        <div className={`h-1.5 bg-gradient-to-r ${estatus?.habilitado ? 'from-emerald-500 via-emerald-400 to-teal-400' : 'from-brand-600 via-sky-500 to-emerald-400'}`} />
         <div className="p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -193,7 +193,7 @@ export default function SeguridadCuentaPage() {
               </div>
             </div>
             {!estatus?.habilitado && !setupData && (
-              <button onClick={() => mutConfigurar.mutate()} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm shadow-blue-600/30 hover:bg-blue-700 hover:shadow-md transition-all shrink-0">
+              <button onClick={() => mutConfigurar.mutate()} className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg shadow-sm shadow-brand-600/30 hover:bg-brand-700 hover:shadow-md transition-all shrink-0">
                 Activar
               </button>
             )}
@@ -228,7 +228,7 @@ export default function SeguridadCuentaPage() {
                       placeholder="Código de 6 dígitos"
                       className={`${inputCls} max-w-[180px] text-center tracking-widest`}
                     />
-                    <button onClick={() => mutConfirmar.mutate()} disabled={mutConfirmar.isPending} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm shadow-blue-600/30 hover:bg-blue-700 hover:shadow-md transition-all disabled:opacity-50">
+                    <button onClick={() => mutConfirmar.mutate()} disabled={mutConfirmar.isPending} className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg shadow-sm shadow-brand-600/30 hover:bg-brand-700 hover:shadow-md transition-all disabled:opacity-50">
                       Confirmar
                     </button>
                   </div>
@@ -308,7 +308,7 @@ export default function SeguridadCuentaPage() {
             </div>
           </div>
 
-          <button onClick={() => mutCambiarPassword.mutate()} disabled={mutCambiarPassword.isPending} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm shadow-blue-600/30 hover:bg-blue-700 hover:shadow-md transition-all disabled:opacity-50">
+          <button onClick={() => mutCambiarPassword.mutate()} disabled={mutCambiarPassword.isPending} className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg shadow-sm shadow-brand-600/30 hover:bg-brand-700 hover:shadow-md transition-all disabled:opacity-50">
             Actualizar contraseña
           </button>
         </div>

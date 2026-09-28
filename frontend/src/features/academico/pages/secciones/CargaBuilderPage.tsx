@@ -24,7 +24,7 @@ const DIA_LABEL_FULL: Record<DiaSemana, string> = {
 
 /** Paleta de colores saturados, suficientemente distinguibles entre sí. */
 const MATERIA_PALETTE: { bg: string; border: string }[] = [
-  { bg: 'bg-blue-600',    border: 'border-blue-600' },
+  { bg: 'bg-brand-600',    border: 'border-brand-600' },
   { bg: 'bg-emerald-600', border: 'border-emerald-600' },
   { bg: 'bg-purple-600',  border: 'border-purple-600' },
   { bg: 'bg-rose-600',    border: 'border-rose-600' },
@@ -86,8 +86,8 @@ function SlotCell({
         onMouseEnter={onMouseEnter}
         className={`${base} cursor-pointer ${
           highlighted
-            ? 'bg-blue-500 border-blue-600 text-white'
-            : 'bg-white border-slate-200 text-slate-400 hover:bg-blue-50 hover:border-blue-200'
+            ? 'bg-brand-500 border-brand-600 text-white'
+            : 'bg-white border-slate-200 text-slate-400 hover:bg-brand-50 hover:border-brand-200'
         }`}
         title="Disponible — clic para asignar 1h, o arrastra para varias horas consecutivas"
       >
@@ -228,7 +228,7 @@ function NuevaClaseModal({
       </div>
 
       {plantillaInicial && (
-        <div className="col-span-2 rounded-md bg-blue-50 border border-blue-200 p-2 text-xs text-blue-700">
+        <div className="col-span-2 rounded-md bg-brand-50 border border-brand-200 p-2 text-xs text-brand-700">
           Continuando con la misma materia y grupo(s) — quedan horas por asignar.
         </div>
       )}
@@ -344,7 +344,7 @@ function EditarGruposBloque({
   }
 
   if (!editando) {
-    return <button onClick={() => setEditando(true)} className="text-xs font-medium text-blue-600 hover:underline">Editar grupos</button>
+    return <button onClick={() => setEditando(true)} className="text-xs font-medium text-brand-600 hover:underline">Editar grupos</button>
   }
 
   return (
@@ -362,7 +362,7 @@ function EditarGruposBloque({
         ))}
       </div>
       <div className="flex gap-2">
-        <button onClick={handleSave} disabled={saving || grupoIds.length === 0} className="text-xs font-medium text-white bg-blue-600 px-3 py-1 rounded disabled:opacity-50">
+        <button onClick={handleSave} disabled={saving || grupoIds.length === 0} className="text-xs font-medium text-white bg-brand-600 px-3 py-1 rounded disabled:opacity-50">
           {saving ? 'Guardando…' : 'Guardar grupos'}
         </button>
         <button onClick={() => setEditando(false)} className="text-xs text-slate-500 hover:underline">Cancelar</button>
@@ -406,7 +406,7 @@ function SeleccionContextoModal({ onContinuar }: { onContinuar: (periodoId: stri
         <button
           onClick={() => periodoId && carreraId && onContinuar(periodoId, carreraId)}
           disabled={!periodoId || !carreraId}
-          className="w-full py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="w-full py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50"
         >
           Continuar
         </button>
@@ -579,7 +579,7 @@ export default function CargaBuilderPage() {
       {docenteId && (
         <>
           {/* Banner instructivo */}
-          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 text-sm text-blue-800">
+          <div className="bg-brand-50 border border-brand-100 rounded-lg px-4 py-2.5 text-sm text-brand-800">
             Haz clic en una hora disponible o arrastra para seleccionar un rango contiguo. Se abrirá una ventana para elegir asignatura, grupo(s) y aula.
           </div>
 
@@ -587,8 +587,8 @@ export default function CargaBuilderPage() {
           <div className="flex flex-wrap gap-3 text-[11px] text-slate-500">
             {[
               { color: 'bg-white border-slate-300', label: 'Disponible' },
-              { color: 'bg-blue-600 border-blue-600', label: 'Ocupado — color por asignatura' },
-              { color: 'bg-blue-600 ring-2 ring-amber-400 ring-offset-1 border-transparent', label: 'Ocupado (otra carrera)' },
+              { color: 'bg-brand-600 border-brand-600', label: 'Ocupado — color por asignatura' },
+              { color: 'bg-brand-600 ring-2 ring-amber-400 ring-offset-1 border-transparent', label: 'Ocupado (otra carrera)' },
               { color: 'bg-slate-100 border-slate-200', label: 'Fuera de disponibilidad' },
             ].map(item => (
               <span key={item.label} className="flex items-center gap-1">
@@ -685,7 +685,7 @@ export default function CargaBuilderPage() {
                       })
                       setSelectedSlot(null)
                     }}
-                    className="text-xs font-medium text-blue-600 hover:underline"
+                    className="text-xs font-medium text-brand-600 hover:underline"
                   >
                     Duplicar…
                   </button>
@@ -697,9 +697,9 @@ export default function CargaBuilderPage() {
       )}
 
       {plantilla && !nuevaClaseSeleccion && (
-        <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 text-sm text-blue-800 flex items-center justify-between">
+        <div className="bg-brand-50 border border-brand-100 rounded-lg px-4 py-2.5 text-sm text-brand-800 flex items-center justify-between">
           <span>Plantilla lista para duplicar — selecciona una hora libre en el grid para colocarla.</span>
-          <button onClick={() => setPlantilla(null)} className="text-xs font-medium text-blue-600 hover:underline">Cancelar</button>
+          <button onClick={() => setPlantilla(null)} className="text-xs font-medium text-brand-600 hover:underline">Cancelar</button>
         </div>
       )}
 

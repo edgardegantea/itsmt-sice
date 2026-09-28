@@ -60,7 +60,7 @@ export default function PlaneacionRevisionPage() {
     return (
       <div className="min-h-full bg-slate-50 p-6">
         <p className="text-sm text-slate-500">No se encontró la planeación.</p>
-        <Link to="/admin/gestion-academica/planeaciones" className="text-sm text-blue-600 hover:underline">← Volver al listado</Link>
+        <Link to="/admin/gestion-academica/planeaciones" className="text-sm text-brand-600 hover:underline">← Volver al listado</Link>
       </div>
     )
   }
@@ -107,7 +107,7 @@ export default function PlaneacionRevisionPage() {
             variante="amber"
           />
           {planeacion.archivo_url && (
-            <a href={planeacion.archivo_url} target="_blank" rel="noreferrer" className="inline-block text-xs text-blue-600 hover:underline">
+            <a href={planeacion.archivo_url} target="_blank" rel="noreferrer" className="inline-block text-xs text-brand-600 hover:underline">
               Ver archivo adjunto
             </a>
           )}
@@ -139,7 +139,7 @@ export default function PlaneacionRevisionPage() {
                 value={obs}
                 onChange={e => setObs(e.target.value)}
                 placeholder="Resumen general de la revisión — para observaciones puntuales, agrégalas directamente en la sección correspondiente arriba…"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
               />
               {requiereObs && (
                 <p className="text-[11px] text-slate-400 mt-1">
@@ -152,7 +152,7 @@ export default function PlaneacionRevisionPage() {
             <button
               onClick={() => mutCambiar.mutate()}
               disabled={mutCambiar.isPending || (requiereObs && !tieneObservaciones)}
-              className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-5 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50"
             >
               {mutCambiar.isPending ? 'Guardando…' : 'Guardar revisión'}
             </button>

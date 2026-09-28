@@ -9,7 +9,7 @@ interface Props {
   onClose: () => void
 }
 
-const SELECT = 'w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition'
+const SELECT = 'w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 transition'
 
 const ESTATUS_LABEL: Record<string, string> = {
   pendiente: 'Pendiente',
@@ -64,7 +64,7 @@ export default function EstatusModal({ aspirante, onClose }: Props) {
             onChange={(e) => setObservaciones(e.target.value)}
             rows={3}
             placeholder="Motivo de aceptación, rechazo o notas adicionales…"
-            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition"
+            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 transition"
           />
         </div>
 
@@ -78,7 +78,7 @@ export default function EstatusModal({ aspirante, onClose }: Props) {
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 border border-slate-300 rounded-lg transition-colors">
             Cancelar
           </button>
-          <button type="submit" disabled={isPending} className="px-4 py-2 text-sm font-medium text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg transition-colors">
+          <button type="submit" disabled={isPending} className="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg transition-colors">
             {isPending ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>

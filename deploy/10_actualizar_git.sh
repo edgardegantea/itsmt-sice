@@ -81,7 +81,7 @@ fi
 nginx -t && systemctl reload nginx
 
 # ── 7. Reiniciar PHP-FPM ───────────────────────────────────────────────────
-systemctl restart php8.3-fpm
+systemctl restart php8.4-fpm
 
 echo ""
 echo "✅ Despliegue actualizado."

@@ -12,7 +12,7 @@ const ESTATUS_LABELS: Record<PostulacionEstatus, string> = {
 
 const ESTATUS_COLORS: Record<PostulacionEstatus, string> = {
   pendiente: 'bg-yellow-100 text-yellow-700',
-  en_revision: 'bg-blue-100 text-blue-700',
+  en_revision: 'bg-brand-100 text-brand-700',
   admitido: 'bg-green-100 text-green-700',
   no_admitido: 'bg-red-100 text-red-700',
 }

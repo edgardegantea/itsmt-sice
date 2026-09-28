@@ -5,7 +5,7 @@ import { titulacionApi, type SolicitudActoProtocolario } from '../services/titul
 const ESTATUS_COLOR: Record<string, string> = {
   pendiente_revision:     'bg-yellow-100 text-yellow-800',
   no_procede:             'bg-red-100 text-red-800',
-  con_no_inconveniencia:  'bg-blue-100 text-blue-800',
+  con_no_inconveniencia:  'bg-brand-100 text-brand-800',
   agendado:               'bg-indigo-100 text-indigo-800',
   aprobado:               'bg-green-100 text-green-800',
   reprobado:              'bg-red-200 text-red-900',
@@ -118,13 +118,13 @@ export default function SolicitudesActoAdminPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               {s.estatus === 'pendiente_revision' && (
                 <button onClick={() => setShowModal({ tipo: 'cni', solicitudId: s.id })}
-                  className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  className="text-xs px-3 py-1.5 bg-brand-600 text-white rounded hover:bg-brand-700">
                   Revisar expediente (CNI)
                 </button>
               )}
               {s.constanciaNoInconveniencia && (
                 <a href={titulacionApi.getNoInconvenienciaPdfUrl(s.id)} target="_blank" rel="noopener noreferrer"
-                  className="text-xs px-3 py-1.5 border border-blue-300 text-blue-700 rounded hover:bg-blue-50">
+                  className="text-xs px-3 py-1.5 border border-brand-300 text-brand-700 rounded hover:bg-brand-50">
                   CNI PDF (PO-006-02)
                 </a>
               )}
@@ -186,7 +186,7 @@ export default function SolicitudesActoAdminPage() {
               <button
                 onClick={() => mutCNI.mutate({ id: showModal.solicitudId!, data: { procede: cniForm.procede, motivo_improcedencia: cniForm.motivo_improcedencia || undefined } })}
                 disabled={mutCNI.isPending || (!cniForm.procede && !cniForm.motivo_improcedencia)}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm bg-brand-600 text-white rounded hover:bg-brand-700 disabled:opacity-50"
               >
                 {cniForm.procede ? 'Emitir CNI' : 'Marcar no procedente'}
               </button>

@@ -83,7 +83,7 @@ export default function NotificationBell() {
           setOpen(!open)
           if (!open) refetch()
         }}
-        className="relative p-2 rounded-lg text-slate-500 hover:text-[#1b396a] hover:bg-slate-100 transition-colors focus:outline-none"
+        className="relative p-2 rounded-lg text-slate-500 hover:text-brand-600 hover:bg-slate-100 transition-colors focus:outline-none"
         title="Notificaciones del sistema"
         aria-label="Notificaciones"
       >
@@ -102,11 +102,11 @@ export default function NotificationBell() {
         <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 rounded-xl bg-white border border-slate-200/80 shadow-2xl z-50 overflow-hidden animate-in fade-in duration-150">
           <div className="px-4 py-3 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#1b396a]">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-brand-600">
                 Notificaciones
               </h3>
               {noLeidas > 0 && (
-                <span className="px-2 py-0.5 text-[10px] font-semibold bg-[#1b396a] text-white rounded-full">
+                <span className="px-2 py-0.5 text-[10px] font-semibold bg-brand-600 text-white rounded-full">
                   {noLeidas} nuevas
                 </span>
               )}
@@ -140,7 +140,7 @@ export default function NotificationBell() {
                 >
                   <div className="mt-0.5 shrink-0">
                     <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${
-                      item.tipo === 'constancia' ? 'bg-blue-100 text-blue-700' :
+                      item.tipo === 'constancia' ? 'bg-brand-100 text-brand-700' :
                       item.tipo === 'baja' ? 'bg-amber-100 text-amber-800' :
                       item.tipo === 'tramite' ? 'bg-purple-100 text-purple-700' :
                       'bg-slate-100 text-slate-700'
@@ -151,7 +151,7 @@ export default function NotificationBell() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <p className={`text-xs font-semibold truncate ${!item.leida ? 'text-[#1b396a]' : 'text-slate-700'}`}>
+                      <p className={`text-xs font-semibold truncate ${!item.leida ? 'text-brand-600' : 'text-slate-700'}`}>
                         {item.titulo}
                       </p>
                       <span className="text-[10px] text-slate-400 shrink-0 font-medium">

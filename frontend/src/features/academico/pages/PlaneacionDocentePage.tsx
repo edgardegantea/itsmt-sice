@@ -68,7 +68,7 @@ function BuscadorPlaneaciones({ navigate }: { navigate: (to: string) => void }) 
           onFocus={() => setAbierto(true)}
           onBlur={() => setTimeout(() => setAbierto(false), 150)}
           placeholder="Buscar en todas tus planeaciones…"
-          className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/40"
+          className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600/40"
         />
       </div>
 
@@ -90,7 +90,7 @@ function BuscadorPlaneaciones({ navigate }: { navigate: (to: string) => void }) 
                     onMouseDown={() => navigate(`/docente/planeacion/${r.carga_academica_id}?periodo=${r.periodo_id}`)}
                     className="text-left w-full"
                   >
-                    <p className="text-xs font-semibold text-[#1a3a5c] hover:underline">{r.materia ?? 'Materia'} <span className="font-normal text-slate-400">· {r.periodo}</span></p>
+                    <p className="text-xs font-semibold text-brand-600 hover:underline">{r.materia ?? 'Materia'} <span className="font-normal text-slate-400">· {r.periodo}</span></p>
                   </button>
                   <div className="mt-1 space-y-1">
                     {r.coincidencias.map((c, i) => (
@@ -224,7 +224,7 @@ export default function PlaneacionDocentePage() {
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8 bg-gradient-to-b from-slate-50 via-white to-white min-h-screen -mt-8 pt-8" data-modulo-planeacion>
     <div className="space-y-6">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a3a5c] to-sky-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-[#1a3a5c]/30">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-sky-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-brand-600/30">
           <IconLibro />
         </div>
         <div>
@@ -286,7 +286,7 @@ export default function PlaneacionDocentePage() {
                           <p className="font-medium text-slate-800 truncate">{c.materia?.nombre ?? '—'}</p>
                           <p className="text-xs text-slate-400">{c.grupos?.[0]?.clave ?? '—'}</p>
                         </div>
-                        <span className="text-xs text-blue-600 font-medium shrink-0">{p ? 'Abrir →' : 'Iniciar →'}</span>
+                        <span className="text-xs text-brand-600 font-medium shrink-0">{p ? 'Abrir →' : 'Iniciar →'}</span>
                       </div>
                       <div className="mt-2">
                         {p ? <EstatusBadge estatus={p.estatus} /> : <SinIniciarBadge />}
@@ -347,7 +347,7 @@ export default function PlaneacionDocentePage() {
                                 {clonando === c.id ? 'Clonando…' : 'Clonar de periodo anterior'}
                               </button>
                             ) : (
-                              <span className="text-xs text-[#1a3a5c] font-medium group-hover:underline">{p ? 'Abrir →' : 'Iniciar →'}</span>
+                              <span className="text-xs text-brand-600 font-medium group-hover:underline">{p ? 'Abrir →' : 'Iniciar →'}</span>
                             )}
                           </td>
                         </tr>

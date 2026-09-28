@@ -135,7 +135,7 @@ export function RichTextField({ value, onChange, placeholder, minHeight = 90, di
   }
 
   return (
-    <div className={`border border-slate-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-500 transition-shadow ${disabled ? 'opacity-60' : ''}`}>
+    <div className={`border border-slate-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-brand-500 transition-shadow ${disabled ? 'opacity-60' : ''}`}>
       {!disabled && (
         <div className="flex items-center gap-0.5 border-b border-slate-200 bg-slate-50 px-1.5 py-1 flex-wrap">
           <button type="button" title="Negrita" aria-pressed={estado.bold} onMouseDown={e => e.preventDefault()} onClick={() => ejecutar('bold')} className={`${BOTON_CLS} font-bold text-xs w-6 ${estado.bold ? BOTON_ACTIVO_CLS : ''}`}>B</button>

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { titulacionApi, type SalidaLateral } from '../services/titulacion'
 
 const ESTATUS_COLOR: Record<string, string> = {
-  solicitado:  'bg-blue-100 text-blue-800',
+  solicitado:  'bg-brand-100 text-brand-800',
   en_revision: 'bg-yellow-100 text-yellow-800',
   aprobado:    'bg-green-100 text-green-800',
   rechazado:   'bg-red-100 text-red-800',

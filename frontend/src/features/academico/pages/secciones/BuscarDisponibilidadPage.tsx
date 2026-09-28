@@ -107,7 +107,7 @@ export default function BuscarDisponibilidadPage() {
             <button
               onClick={() => buscar.mutate()}
               disabled={!puedeBuscar || buscar.isPending}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50"
             >
               {buscar.isPending ? 'Buscando…' : 'Buscar huecos libres'}
             </button>
@@ -134,7 +134,7 @@ export default function BuscarDisponibilidadPage() {
                     </div>
                     <button
                       onClick={() => navigate(`/admin/gestion-academica/cargas/builder?periodo_id=${periodoId}&carrera_id=${carreraId}&docente_id=${p.docente_id}&grupo_id=${grupoIds[0]}`)}
-                      className="text-xs font-medium text-blue-600 hover:underline"
+                      className="text-xs font-medium text-brand-600 hover:underline"
                     >
                       Ir al constructor →
                     </button>

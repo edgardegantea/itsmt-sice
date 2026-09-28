@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
           <p className="text-sm text-slate-500 mb-6">
             El enlace de recuperación no es válido o ya fue utilizado. Solicita uno nuevo.
           </p>
-          <Link to="/forgot-password" className="text-sm text-[#1a3a5c] hover:underline font-medium">
+          <Link to="/forgot-password" className="text-sm text-brand-600 hover:underline font-medium">
             Solicitar nuevo enlace →
           </Link>
         </div>
@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen flex">
       {/* Panel izquierdo */}
-      <div className="hidden lg:flex w-1/2 bg-[#1a3a5c] flex-col justify-between p-12">
+      <div className="hidden lg:flex w-1/2 bg-brand-600 flex-col justify-between p-12">
         <div />
         <div>
           <h1 className="text-white text-4xl font-semibold leading-tight">
@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
                   required
                   autoComplete="new-password"
                   placeholder="Mínimo 8 caracteres"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 transition"
                 />
               </div>
 
@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
                   required
                   autoComplete="new-password"
                   placeholder="Repite la contraseña"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 transition"
                 />
               </div>
 
@@ -128,13 +128,13 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+                className="w-full bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
               >
                 {isPending ? 'Guardando…' : 'Cambiar contraseña'}
               </button>
 
               <p className="text-center text-xs text-slate-400">
-                <Link to="/login" className="text-[#1a3a5c] hover:underline">
+                <Link to="/login" className="text-brand-600 hover:underline">
                   ← Volver al inicio de sesión
                 </Link>
               </p>

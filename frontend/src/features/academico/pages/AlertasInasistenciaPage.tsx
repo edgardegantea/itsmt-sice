@@ -101,7 +101,7 @@ export default function AlertasInasistenciaPage() {
                         <button
                           onClick={() => mutLeer.mutate(a.id)}
                           disabled={mutLeer.isPending}
-                          className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+                          className="text-xs text-brand-600 hover:underline disabled:opacity-50"
                         >
                           Marcar leída
                         </button>
@@ -125,7 +125,7 @@ export default function AlertasInasistenciaPage() {
                   {a.porcentaje_inasistencia.toFixed(1)}%
                 </span>
                 <div className="flex gap-3 mt-1">
-                  <button onClick={() => mutLeer.mutate(a.id)} disabled={mutLeer.isPending} className="text-xs text-blue-600 hover:underline disabled:opacity-50">Marcar leída</button>
+                  <button onClick={() => mutLeer.mutate(a.id)} disabled={mutLeer.isPending} className="text-xs text-brand-600 hover:underline disabled:opacity-50">Marcar leída</button>
                   <button onClick={() => setDetalle(a)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
                 </div>
               </div>
@@ -208,11 +208,11 @@ export default function AlertasInasistenciaPage() {
                   win.focus()
                   setTimeout(() => win.print(), 500)
                 }}
-                className="text-xs font-semibold text-[#1b396a] bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                className="text-xs font-semibold text-brand-600 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
               >
                 📋 Imprimir Formato F-05-04 (Tutoría)
               </button>
-              <button onClick={() => mutLeer.mutate(detalle.id)} disabled={mutLeer.isPending} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Marcar leída</button>
+              <button onClick={() => mutLeer.mutate(detalle.id)} disabled={mutLeer.isPending} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Marcar leída</button>
             </div>
           }
         />

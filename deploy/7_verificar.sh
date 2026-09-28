@@ -25,7 +25,7 @@ check() {
 echo ""
 echo "── Servicios ──────────────────────────────"
 check "Nginx activo"          "systemctl is-active nginx"
-check "PHP-FPM 8.3 activo"    "systemctl is-active php8.3-fpm"
+check "PHP-FPM 8.4 activo"    "systemctl is-active php8.4-fpm"
 check "PostgreSQL activo"     "systemctl is-active postgresql"
 check "Gotenberg activo"      "systemctl is-active sice-gotenberg"
 check "Docker activo"         "systemctl is-active docker"

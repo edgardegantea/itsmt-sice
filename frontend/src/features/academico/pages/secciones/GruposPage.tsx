@@ -248,7 +248,7 @@ export default function GruposPage() {
                   setModoLote(false)
                   setLoteFilas([{ ...FILA_BLANK }])
                 }}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 flex items-center gap-2"
               >
                 + Nuevo grupo
               </button>
@@ -262,7 +262,7 @@ export default function GruposPage() {
             <button
               onClick={() => { setHorarioLote([]); setModalHorarioLote(true) }}
               disabled={seleccionados.size === 0}
-              className="px-3 py-1.5 text-xs font-medium bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40"
+              className="px-3 py-1.5 text-xs font-medium bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-40"
             >
               Aplicar horario a {seleccionados.size} grupo(s)
             </button>
@@ -278,7 +278,7 @@ export default function GruposPage() {
             </div>
             <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
               <p className="text-xs text-slate-500">Alumnos asignados</p>
-              <p className="text-2xl font-bold text-blue-700 mt-0.5">{totalAlumnos}</p>
+              <p className="text-2xl font-bold text-brand-700 mt-0.5">{totalAlumnos}</p>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl px-4 py-3">
               <p className="text-xs text-slate-500">Grupos llenos</p>
@@ -301,7 +301,7 @@ export default function GruposPage() {
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
               placeholder="Clave o carrera…"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
             />
           </div>
           <div className="flex-1 min-w-40">
@@ -346,7 +346,7 @@ export default function GruposPage() {
                     <svg className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${isOpenC ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">{carrera.clave}</span>
+                    <span className="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">{carrera.clave}</span>
                     <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
                     <span className="ml-auto text-xs text-slate-400 shrink-0">{totalGrupos} grupo{totalGrupos !== 1 ? 's' : ''}</span>
                   </button>
@@ -376,7 +376,7 @@ export default function GruposPage() {
                                 {semEntry.grupos.map(g => (
                                   <div
                                     key={g.id}
-                                    className={`flex items-center gap-3 pl-16 pr-5 py-2.5 hover:bg-blue-50/40 transition-colors cursor-pointer ${modoSeleccion && seleccionados.has(g.id) ? 'bg-blue-50' : ''}`}
+                                    className={`flex items-center gap-3 pl-16 pr-5 py-2.5 hover:bg-brand-50/40 transition-colors cursor-pointer ${modoSeleccion && seleccionados.has(g.id) ? 'bg-brand-50' : ''}`}
                                     onClick={() => modoSeleccion ? toggleSeleccionado(g.id) : navigate(`/admin/gestion-academica/grupos/${g.id}`)}
                                   >
                                     {modoSeleccion && (
@@ -392,7 +392,7 @@ export default function GruposPage() {
                                     <div className="ml-auto flex items-center gap-4">
                                       <CapacityBar current={g.alumnos_count ?? 0} max={g.capacidad} />
                                       <div className="flex gap-2 shrink-0" onClick={e => e.stopPropagation()}>
-                                        <button onClick={() => { setModal(g); setLetraGrupo(''); setModoLote(false) }} className="text-xs text-blue-600 hover:underline">Editar</button>
+                                        <button onClick={() => { setModal(g); setLetraGrupo(''); setModoLote(false) }} className="text-xs text-brand-600 hover:underline">Editar</button>
                                         <button
                                           onClick={() => {
                                             setModal({
@@ -448,14 +448,14 @@ export default function GruposPage() {
               <button
                 type="button"
                 onClick={() => setModoLote(false)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${!modoLote ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${!modoLote ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
               >
                 Individual
               </button>
               <button
                 type="button"
                 onClick={() => setModoLote(true)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${modoLote ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${modoLote ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}
               >
                 Por lote
               </button>
@@ -551,7 +551,7 @@ export default function GruposPage() {
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={agregarFila} className="text-xs text-blue-600 hover:underline">+ Agregar fila</button>
+                <button type="button" onClick={agregarFila} className="text-xs text-brand-600 hover:underline">+ Agregar fila</button>
               </div>
               {previewLote.grupos.length > 0 && (
                 <p className="text-[11px] text-slate-400 mt-2">

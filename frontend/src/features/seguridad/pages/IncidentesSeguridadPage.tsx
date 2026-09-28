@@ -18,7 +18,7 @@ interface Incidente {
 
 const SEVERIDAD_CLS: Record<string, string> = {
   baja: 'bg-slate-100 text-slate-600',
-  media: 'bg-blue-100 text-blue-700',
+  media: 'bg-brand-100 text-brand-700',
   alta: 'bg-yellow-100 text-yellow-700',
   critica: 'bg-red-100 text-red-700',
 }
@@ -77,7 +77,7 @@ export default function IncidentesSeguridadPage() {
             {inc.estatus !== 'cerrado' && (
               <div className="flex gap-2 flex-shrink-0">
                 {inc.estatus === 'abierto' && (
-                  <button onClick={() => mutActualizar.mutate({ id: inc.id, estatus: 'en_revision' })} className="text-xs text-blue-600 hover:underline">En revisión</button>
+                  <button onClick={() => mutActualizar.mutate({ id: inc.id, estatus: 'en_revision' })} className="text-xs text-brand-600 hover:underline">En revisión</button>
                 )}
                 <button onClick={() => mutActualizar.mutate({ id: inc.id, estatus: 'cerrado' })} className="text-xs text-green-600 hover:underline">Cerrar</button>
               </div>

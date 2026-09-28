@@ -13,7 +13,7 @@ const ESTATUS_COLORS: Record<EstatusAsistencia, string> = {
   presente:    'bg-green-100 text-green-700',
   ausente:     'bg-red-100 text-red-700',
   retardo:     'bg-yellow-100 text-yellow-700',
-  justificado: 'bg-blue-100 text-blue-700',
+  justificado: 'bg-brand-100 text-brand-700',
 }
 
 const DIA_POR_INDICE: (DiaSemana | null)[] = [null, 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
@@ -104,9 +104,9 @@ function CalendarioClases({
                 !habilitada
                   ? 'text-slate-300 cursor-not-allowed'
                   : seleccionada
-                    ? 'bg-[#1a3a5c] text-white'
+                    ? 'bg-brand-600 text-white'
                     : esHoy
-                      ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                      ? 'bg-brand-50 text-brand-700 hover:bg-brand-100'
                       : 'text-slate-700 hover:bg-slate-100'
               }`}
             >
@@ -309,7 +309,7 @@ export default function PaseAsistenciaGrupo({
         />
         <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-500">
           <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Sesión registrada</span>
-          <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-blue-50 border border-blue-200" /> Hoy</span>
+          <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-brand-50 border border-brand-200" /> Hoy</span>
         </div>
 
         {/* Resumen del grupo — aprovecha el espacio bajo el calendario */}
@@ -338,13 +338,13 @@ export default function PaseAsistenciaGrupo({
           <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-100">
             <Link
               to={`/admin/gestion-academica/grupos/${grupo.id}`}
-              className="text-xs text-blue-600 hover:underline font-medium"
+              className="text-xs text-brand-600 hover:underline font-medium"
             >
               Ver detalle del grupo →
             </Link>
             <Link
               to={`/admin/gestion-academica/asistencias?periodo=${periodo.id}`}
-              className="text-xs text-blue-600 hover:underline font-medium"
+              className="text-xs text-brand-600 hover:underline font-medium"
             >
               Ver todas las sesiones registradas →
             </Link>
@@ -523,7 +523,7 @@ export default function PaseAsistenciaGrupo({
               <button
                 onClick={() => mutGuardar.mutate()}
                 disabled={mutGuardar.isPending}
-                className="px-5 py-2 text-sm font-medium text-white bg-[#1a3a5c] rounded-lg hover:bg-[#234d7a] disabled:opacity-50"
+                className="px-5 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-[#234d7a] disabled:opacity-50"
               >
                 {mutGuardar.isPending ? 'Guardando…' : 'Guardar asistencia'}
               </button>

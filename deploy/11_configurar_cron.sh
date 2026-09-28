@@ -13,7 +13,7 @@
 set -e
 
 APP_DIR="/var/www/itsmt-sice"
-CRON_LINE="* * * * * cd ${APP_DIR}/backend && php8.3 artisan schedule:run >> /dev/null 2>&1"
+CRON_LINE="* * * * * cd ${APP_DIR}/backend && php8.4 artisan schedule:run >> /dev/null 2>&1"
 CRON_MARKER="# sice-laravel-scheduler"
 
 echo "============================================="
@@ -38,4 +38,4 @@ sudo -u sice crontab -l | grep -A1 "$CRON_MARKER"
 echo ""
 echo "▶  El scheduler corre cada minuto y decide internamente qué comandos"
 echo "   le tocan a esa hora. Para confirmar que ve las tareas registradas:"
-echo "     cd ${APP_DIR}/backend && sudo -u sice php8.3 artisan schedule:list"
+echo "     cd ${APP_DIR}/backend && sudo -u sice php8.4 artisan schedule:list"

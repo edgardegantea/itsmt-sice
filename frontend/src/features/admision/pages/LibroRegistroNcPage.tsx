@@ -21,7 +21,7 @@ const ESTATUS_STYLE: Record<EstatusAlumno, string> = {
   activo:          'bg-emerald-100 text-emerald-700',
   baja_temporal:   'bg-yellow-100 text-yellow-700',
   baja_definitiva: 'bg-red-100 text-red-700',
-  egresado:        'bg-blue-100 text-blue-700',
+  egresado:        'bg-brand-100 text-brand-700',
   titulado:        'bg-purple-100 text-purple-700',
 }
 
@@ -32,7 +32,7 @@ const TIPO_INGRESO_LABEL: Record<string, string> = {
   Revalidacion: 'Revalidación',
 }
 
-const SELECT_CLS = 'border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white'
+const SELECT_CLS = 'border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 bg-white'
 
 function apellidosNombre(a: Alumno): string {
   const asp = a.inscripcion?.aspirante
@@ -101,7 +101,7 @@ export default function LibroRegistroNcPage() {
           <button
             onClick={descargar}
             disabled={generando}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#1a3a5c] px-4 py-2 text-sm font-medium text-white hover:bg-[#234d7a] disabled:opacity-60 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-[#234d7a] disabled:opacity-60 transition-colors"
           >
             {generando ? <Spinner /> : (
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -138,7 +138,7 @@ export default function LibroRegistroNcPage() {
               placeholder="Buscar por nombre o número de control…"
               value={filtros.search}
               onChange={e => setFiltros(f => ({ ...f, search: e.target.value, page: 1 }))}
-              className="flex-1 min-w-48 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+              className="flex-1 min-w-48 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
             />
             <select
               value={filtros.periodo_id}
@@ -186,8 +186,8 @@ export default function LibroRegistroNcPage() {
           <>
             {Object.entries(grupos).map(([tipo, lista]) => (
               <div key={tipo}>
-                <div className="px-4 sm:px-6 py-2 bg-[#1a3a5c]/[0.06] border-b border-[#1a3a5c]/10">
-                  <h3 className="text-xs font-semibold text-[#1a3a5c] uppercase tracking-wide">
+                <div className="px-4 sm:px-6 py-2 bg-brand-600/[0.06] border-b border-brand-600/10">
+                  <h3 className="text-xs font-semibold text-brand-600 uppercase tracking-wide">
                     {TIPO_INGRESO_LABEL[tipo] ?? tipo} · {lista.length}
                   </h3>
                 </div>
@@ -229,7 +229,7 @@ export default function LibroRegistroNcPage() {
                             </span>
                           </td>
                           <td className="px-3 sm:pr-6 py-3 text-right">
-                            <button onClick={() => setDetalle(a)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                            <button onClick={() => setDetalle(a)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                           </td>
                         </tr>
                       ))}
@@ -247,7 +247,7 @@ export default function LibroRegistroNcPage() {
                         </div>
                         <p className="font-mono text-xs font-semibold text-slate-600">{a.numero_control}</p>
                         <p className="text-xs text-slate-500">{a.carrera?.clave ?? '—'} · {a.periodo_ingreso?.nombre ?? '—'}</p>
-                        <button onClick={() => setDetalle(a)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+                        <button onClick={() => setDetalle(a)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
                       </div>
                     ))}
                   </div>

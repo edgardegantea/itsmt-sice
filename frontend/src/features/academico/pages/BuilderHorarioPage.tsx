@@ -23,7 +23,7 @@ const DIA_LABEL_FULL: Record<DiaSemana, string> = {
 // estable (ciclado por índice de primera aparición), en vez de colorear por
 // estatus de la carga.
 const MATERIA_PALETTE = [
-  'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500', 'bg-rose-500',
+  'bg-brand-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500', 'bg-rose-500',
   'bg-cyan-600', 'bg-orange-500', 'bg-teal-500', 'bg-indigo-500', 'bg-pink-500',
 ]
 
@@ -278,7 +278,7 @@ export default function BuilderHorarioPage() {
                 key={m}
                 onClick={() => cambiarModo(m)}
                 className={`px-3 py-2 capitalize transition-colors ${
-                  modo === m ? 'bg-[#1a3a5c] text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+                  modo === m ? 'bg-brand-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 {m}
@@ -365,7 +365,7 @@ export default function BuilderHorarioPage() {
         {modo === 'grupo' && (
           <button
             onClick={() => setGrupoId('')}
-            className="text-xs text-blue-600 hover:underline -mt-2 mb-2 inline-block"
+            className="text-xs text-brand-600 hover:underline -mt-2 mb-2 inline-block"
           >
             ← Volver a la lista de grupos
           </button>
@@ -490,7 +490,7 @@ export default function BuilderHorarioPage() {
                 <span className={`px-2 py-0.5 rounded-full text-xs ${
                   selectedSlot.slot.carga_estado === 'confirmada' ? 'bg-emerald-100 text-emerald-700' :
                   selectedSlot.slot.carga_estado === 'conflicto' ? 'bg-red-100 text-red-700' :
-                  'bg-blue-100 text-blue-700'
+                  'bg-brand-100 text-brand-700'
                 }`}>
                   {selectedSlot.slot.carga_estado ?? 'pendiente'}
                 </span>
@@ -505,7 +505,7 @@ export default function BuilderHorarioPage() {
                       horaFin: (selectedSlot.slot.hora_fin ?? '').slice(0, 5),
                       aulaId: selectedSlot.slot.aula_id,
                     })}
-                    className="text-xs font-medium text-blue-600 hover:underline"
+                    className="text-xs font-medium text-brand-600 hover:underline"
                   >
                     Editar
                   </button>
@@ -570,7 +570,7 @@ function GrupoRow({
   const cargasGrupo = cargas.filter(c => c.grupos?.some(gr => gr.id === g.id))
   const creditos = cargasGrupo.reduce((s, c) => s + (c.materia?.creditos ?? 0), 0)
   return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50/40 transition-colors flex-wrap">
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-brand-50/40 transition-colors flex-wrap">
       <span className="font-semibold text-slate-800 text-sm">Grupo {g.clave}</span>
       <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Semestre {g.semestre}</span>
       {g.alumnos_count !== undefined && (
@@ -579,7 +579,7 @@ function GrupoRow({
       <span className="ml-auto text-xs text-slate-400 whitespace-nowrap">
         {cargasGrupo.length} clase{cargasGrupo.length !== 1 ? 's' : ''} asignada{cargasGrupo.length !== 1 ? 's' : ''} · {creditos} crédito{creditos !== 1 ? 's' : ''}
       </span>
-      <button onClick={() => onVerHorario(g)} className="text-xs text-blue-600 hover:underline shrink-0 whitespace-nowrap">
+      <button onClick={() => onVerHorario(g)} className="text-xs text-brand-600 hover:underline shrink-0 whitespace-nowrap">
         Ver horario
       </button>
       <button onClick={() => onAgregarClase(g)} className="text-xs text-emerald-700 hover:underline shrink-0 whitespace-nowrap">
@@ -649,7 +649,7 @@ function ListaGruposBuilder({
                 <svg className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${isOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
-                <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">{carrera.clave}</span>
+                <span className="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0">{carrera.clave}</span>
                 <span className="font-semibold text-slate-800 text-sm truncate">{carrera.nombre}</span>
                 <span className="ml-auto text-xs text-slate-400 shrink-0 whitespace-nowrap">
                   {carrera.grupos.length} grupo{carrera.grupos.length !== 1 ? 's' : ''} · {clasesCarrera} clase{clasesCarrera !== 1 ? 's' : ''}

@@ -86,17 +86,15 @@ server {
     }
 
     # API Laravel Backend en la misma URL /api/
-    location /api {
-        alias ${APP_DIR}/backend/public;
-        try_files \$uri \$uri/ /index.php?\$query_string;
-
-        location ~ \.php$ {
-            include snippets/fastcgi-php.conf;
-            fastcgi_pass unix:/run/php/php8.3-fpm.sock;
-            fastcgi_param SCRIPT_FILENAME ${APP_DIR}/backend/public/index.php;
-            include fastcgi_params;
-            fastcgi_read_timeout 300;
-        }
+    # Todo /api va directo al front controller de Laravel. (La versión anterior con
+    # alias + try_files hacía un redirect interno a /index.php, que caía en
+    # "location /" y nginx respondía 405 a los POST como si fueran archivos estáticos.)
+    location ^~ /api {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME ${APP_DIR}/backend/public/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_read_timeout 300;
     }
 
     # Assets estáticos de React

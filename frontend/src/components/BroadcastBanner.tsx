@@ -8,7 +8,7 @@ interface BroadcastBannerProps {
 }
 
 const TIPO_STYLES = {
-  info: 'bg-blue-600 text-white border-blue-700',
+  info: 'bg-brand-600 text-white border-brand-700',
   warning: 'bg-amber-500 text-slate-900 font-semibold border-amber-600',
   danger: 'bg-red-600 text-white border-red-700 font-semibold',
   success: 'bg-emerald-600 text-white border-emerald-700',

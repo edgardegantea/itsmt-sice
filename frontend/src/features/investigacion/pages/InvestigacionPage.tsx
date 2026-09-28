@@ -154,7 +154,7 @@ export default function InvestigacionPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key as typeof tab)}
-            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`px-4 py-2 text-sm font-medium ${tab === t.key ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             {t.label}
           </button>
@@ -168,7 +168,7 @@ export default function InvestigacionPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => { setCaForm({ nombre: '', clave: '', lgac_principal: '', fecha_registro: '' }); setShowCaModal(true) }}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
               >
                 + Registrar cuerpo académico
               </button>
@@ -202,7 +202,7 @@ export default function InvestigacionPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-xs">{ca.lider?.name ?? '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setDetalleCa(ca)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalleCa(ca)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -218,7 +218,7 @@ export default function InvestigacionPage() {
           <div className="flex justify-end">
             <button
               onClick={() => { setProyectoForm({ titulo: '', tipo: 'interno', fecha_inicio: '', descripcion: '' }); setShowProyectoModal(true) }}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
             >
               + Registrar proyecto
             </button>
@@ -251,7 +251,7 @@ export default function InvestigacionPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setDetalleProyecto(p)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalleProyecto(p)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -267,7 +267,7 @@ export default function InvestigacionPage() {
           <div className="flex justify-end">
             <button
               onClick={() => { setProduccionForm({ tipo: 'articulo', titulo: '', medio_difusion: '', fecha_publicacion: '' }); setShowProduccionModal(true) }}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
             >
               + Registrar producción
             </button>
@@ -303,14 +303,14 @@ export default function InvestigacionPage() {
                     {isDirector && (
                       <td className="px-4 py-3 text-right">
                         {pr.estatus !== 'validada' && (
-                          <button onClick={() => mutValidarProduccion.mutate(pr.id)} className="text-xs text-blue-600 hover:underline">
+                          <button onClick={() => mutValidarProduccion.mutate(pr.id)} className="text-xs text-brand-600 hover:underline">
                             Validar
                           </button>
                         )}
                       </td>
                     )}
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setDetalleProduccion(pr)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalleProduccion(pr)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -327,9 +327,9 @@ export default function InvestigacionPage() {
             { label: 'Cuerpos académicos',    value: indicadores.total_cuerpos_academicos, color: 'text-slate-700' },
             { label: 'Consolidados',          value: indicadores.por_grado_consolidacion?.consolidado ?? 0, color: 'text-green-700' },
             { label: 'En consolidación',      value: indicadores.por_grado_consolidacion?.en_consolidacion ?? 0, color: 'text-yellow-700' },
-            { label: 'Proyectos en proceso',  value: indicadores.proyectos_en_proceso, color: 'text-blue-700' },
+            { label: 'Proyectos en proceso',  value: indicadores.proyectos_en_proceso, color: 'text-brand-700' },
             { label: 'Proyectos concluidos',  value: indicadores.proyectos_concluidos, color: 'text-green-700' },
-            { label: 'Producciones validadas',value: indicadores.producciones_validadas, color: 'text-blue-700' },
+            { label: 'Producciones validadas',value: indicadores.producciones_validadas, color: 'text-brand-700' },
           ].map(item => (
             <div key={item.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3.5">
               <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">{item.label}</p>
@@ -458,7 +458,7 @@ export default function InvestigacionPage() {
             { label: 'Estatus', value: detalleProduccion.estatus === 'validada' ? 'Validada' : 'Pendiente' },
           ]}
           footer={isDirector && detalleProduccion.estatus !== 'validada' ? (
-            <button onClick={() => { mutValidarProduccion.mutate(detalleProduccion.id); setDetalleProduccion(null) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Validar</button>
+            <button onClick={() => { mutValidarProduccion.mutate(detalleProduccion.id); setDetalleProduccion(null) }} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Validar</button>
           ) : undefined}
         />
       )}

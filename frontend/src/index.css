@@ -15,6 +15,25 @@
   --font-display: 'Noto Sans', 'Montserrat', system-ui, sans-serif;
 }
 
+
+/* Escala de color institucional, derivada del color primario de Configuración
+   (--color-primario, que ConfiguracionProvider actualiza en tiempo real). Todas las
+   pantallas usan brand-* para acciones, enlaces y resaltados, así el sistema entero
+   sigue la paleta que la institución elija. */
+@theme inline {
+  --color-brand-50:  color-mix(in oklab, var(--color-primario) 6%, white);
+  --color-brand-100: color-mix(in oklab, var(--color-primario) 12%, white);
+  --color-brand-200: color-mix(in oklab, var(--color-primario) 24%, white);
+  --color-brand-300: color-mix(in oklab, var(--color-primario) 42%, white);
+  --color-brand-400: color-mix(in oklab, var(--color-primario) 65%, white);
+  --color-brand-500: color-mix(in oklab, var(--color-primario) 85%, white);
+  --color-brand-600: var(--color-primario);
+  --color-brand-700: color-mix(in oklab, var(--color-primario) 85%, black);
+  --color-brand-800: color-mix(in oklab, var(--color-primario) 70%, black);
+  --color-brand-900: color-mix(in oklab, var(--color-primario) 55%, black);
+  --color-brand-950: color-mix(in oklab, var(--color-primario) 40%, black);
+}
+
 :root {
   --font-ui: "Noto Sans", "Montserrat", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Noto Sans", "Montserrat", ui-sans-serif, system-ui, sans-serif;
@@ -345,23 +364,41 @@ html[data-tema="oscuro"] [class*=" to-gray-50/"],
 html[data-tema="oscuro"] [class~="to-gray-100"],
 html[data-tema="oscuro"] [class^="to-gray-100/"],
 html[data-tema="oscuro"] [class*=" to-gray-100/"] { --tw-gradient-to: #1e2534 !important; }
+html[data-tema="oscuro"] [class~="from-brand-50"],
 html[data-tema="oscuro"] [class~="from-blue-50"],
+html[data-tema="oscuro"] [class^="from-brand-50/"],
 html[data-tema="oscuro"] [class^="from-blue-50/"],
+html[data-tema="oscuro"] [class*=" from-brand-50/"],
 html[data-tema="oscuro"] [class*=" from-blue-50/"],
+html[data-tema="oscuro"] [class~="from-brand-100"],
 html[data-tema="oscuro"] [class~="from-blue-100"],
+html[data-tema="oscuro"] [class^="from-brand-100/"],
 html[data-tema="oscuro"] [class^="from-blue-100/"],
+html[data-tema="oscuro"] [class*=" from-brand-100/"],
 html[data-tema="oscuro"] [class*=" from-blue-100/"] { --tw-gradient-from: #16273f !important; }
+html[data-tema="oscuro"] [class~="via-brand-50"],
 html[data-tema="oscuro"] [class~="via-blue-50"],
+html[data-tema="oscuro"] [class^="via-brand-50/"],
 html[data-tema="oscuro"] [class^="via-blue-50/"],
+html[data-tema="oscuro"] [class*=" via-brand-50/"],
 html[data-tema="oscuro"] [class*=" via-blue-50/"],
+html[data-tema="oscuro"] [class~="via-brand-100"],
 html[data-tema="oscuro"] [class~="via-blue-100"],
+html[data-tema="oscuro"] [class^="via-brand-100/"],
 html[data-tema="oscuro"] [class^="via-blue-100/"],
+html[data-tema="oscuro"] [class*=" via-brand-100/"],
 html[data-tema="oscuro"] [class*=" via-blue-100/"] { --tw-gradient-via: #16273f !important; }
+html[data-tema="oscuro"] [class~="to-brand-50"],
 html[data-tema="oscuro"] [class~="to-blue-50"],
+html[data-tema="oscuro"] [class^="to-brand-50/"],
 html[data-tema="oscuro"] [class^="to-blue-50/"],
+html[data-tema="oscuro"] [class*=" to-brand-50/"],
 html[data-tema="oscuro"] [class*=" to-blue-50/"],
+html[data-tema="oscuro"] [class~="to-brand-100"],
 html[data-tema="oscuro"] [class~="to-blue-100"],
+html[data-tema="oscuro"] [class^="to-brand-100/"],
 html[data-tema="oscuro"] [class^="to-blue-100/"],
+html[data-tema="oscuro"] [class*=" to-brand-100/"],
 html[data-tema="oscuro"] [class*=" to-blue-100/"] { --tw-gradient-to: #16273f !important; }
 html[data-tema="oscuro"] [class~="from-sky-50"],
 html[data-tema="oscuro"] [class^="from-sky-50/"],
@@ -666,20 +703,35 @@ html[data-tema="oscuro"] [class~="text-gray-600"],
 html[data-tema="oscuro"] [class^="text-gray-600/"],
 html[data-tema="oscuro"] [class*=" text-gray-600/"] { color: #d4d4d8 !important; }
 
+html[data-tema="oscuro"] [class~="bg-brand-50"],
 html[data-tema="oscuro"] [class~="bg-blue-50"],
+html[data-tema="oscuro"] [class^="bg-brand-50/"],
 html[data-tema="oscuro"] [class^="bg-blue-50/"],
+html[data-tema="oscuro"] [class*=" bg-brand-50/"],
 html[data-tema="oscuro"] [class*=" bg-blue-50/"],
+html[data-tema="oscuro"] [class~="bg-brand-100"],
 html[data-tema="oscuro"] [class~="bg-blue-100"],
+html[data-tema="oscuro"] [class^="bg-brand-100/"],
 html[data-tema="oscuro"] [class^="bg-blue-100/"],
+html[data-tema="oscuro"] [class*=" bg-brand-100/"],
 html[data-tema="oscuro"] [class*=" bg-blue-100/"] { background-color: #16273f !important; }
+html[data-tema="oscuro"] [class~="text-brand-800"],
 html[data-tema="oscuro"] [class~="text-blue-800"],
+html[data-tema="oscuro"] [class^="text-brand-800/"],
 html[data-tema="oscuro"] [class^="text-blue-800/"],
+html[data-tema="oscuro"] [class*=" text-brand-800/"],
 html[data-tema="oscuro"] [class*=" text-blue-800/"],
+html[data-tema="oscuro"] [class~="text-brand-700"],
 html[data-tema="oscuro"] [class~="text-blue-700"],
+html[data-tema="oscuro"] [class^="text-brand-700/"],
 html[data-tema="oscuro"] [class^="text-blue-700/"],
+html[data-tema="oscuro"] [class*=" text-brand-700/"],
 html[data-tema="oscuro"] [class*=" text-blue-700/"],
+html[data-tema="oscuro"] [class~="text-brand-600"],
 html[data-tema="oscuro"] [class~="text-blue-600"],
+html[data-tema="oscuro"] [class^="text-brand-600/"],
 html[data-tema="oscuro"] [class^="text-blue-600/"],
+html[data-tema="oscuro"] [class*=" text-brand-600/"],
 html[data-tema="oscuro"] [class*=" text-blue-600/"] { color: #93c5fd !important; }
 
 html[data-tema="oscuro"] [class~="bg-sky-50"],
@@ -933,11 +985,17 @@ html[data-tema="oscuro"] [class*=" hover:bg-gray-50/"]:hover,
 html[data-tema="oscuro"] [class~="hover:bg-gray-100"]:hover,
 html[data-tema="oscuro"] [class^="hover:bg-gray-100/"]:hover,
 html[data-tema="oscuro"] [class*=" hover:bg-gray-100/"]:hover { background-color: #1e2534 !important; }
+html[data-tema="oscuro"] [class~="hover:bg-brand-50"]:hover,
 html[data-tema="oscuro"] [class~="hover:bg-blue-50"]:hover,
+html[data-tema="oscuro"] [class^="hover:bg-brand-50/"]:hover,
 html[data-tema="oscuro"] [class^="hover:bg-blue-50/"]:hover,
+html[data-tema="oscuro"] [class*=" hover:bg-brand-50/"]:hover,
 html[data-tema="oscuro"] [class*=" hover:bg-blue-50/"]:hover,
+html[data-tema="oscuro"] [class~="hover:bg-brand-100"]:hover,
 html[data-tema="oscuro"] [class~="hover:bg-blue-100"]:hover,
+html[data-tema="oscuro"] [class^="hover:bg-brand-100/"]:hover,
 html[data-tema="oscuro"] [class^="hover:bg-blue-100/"]:hover,
+html[data-tema="oscuro"] [class*=" hover:bg-brand-100/"]:hover,
 html[data-tema="oscuro"] [class*=" hover:bg-blue-100/"]:hover { background-color: #16273f !important; }
 html[data-tema="oscuro"] [class~="hover:bg-sky-50"]:hover,
 html[data-tema="oscuro"] [class^="hover:bg-sky-50/"]:hover,
@@ -1138,6 +1196,7 @@ html[data-alto-contraste] textarea {
 }
 
 /* Botones primarios — mantener color pero reforzar contraste */
+html[data-alto-contraste] .bg-brand-600,
 html[data-alto-contraste] .bg-blue-600 { background-color: #1d4ed8 !important; }
 html[data-alto-contraste] .text-white  { color: #ffffff !important; }
 
@@ -1147,6 +1206,7 @@ html[data-alto-contraste] [class*="bg-red-"]    { background-color: #1c0000 !imp
 html[data-alto-contraste] [class*="bg-yellow-"] { background-color: #1c1400 !important; color: var(--ac-accent)  !important; }
 html[data-alto-contraste] [class*="bg-amber-"]  { background-color: #1c1000 !important; color: var(--ac-accent)  !important; }
 html[data-alto-contraste] [class*="bg-purple-"] { background-color: #1a0033 !important; color: #c084fc !important; }
+html[data-alto-contraste] [class*="bg-brand-1"],
 html[data-alto-contraste] [class*="bg-blue-1"]  { background-color: #0a1a40 !important; color: #93c5fd !important; }
 html[data-alto-contraste] [class*="bg-cyan-"]   { background-color: #001a1a !important; color: #67e8f9 !important; }
 
@@ -1205,6 +1265,7 @@ html[data-subrayar-enlaces] a {
 }
 
 html[data-subrayar-enlaces] button[class*="hover:underline"],
+html[data-subrayar-enlaces] button.text-brand-600,
 html[data-subrayar-enlaces] button.text-blue-600,
 html[data-subrayar-enlaces] button.text-red-500,
 html[data-subrayar-enlaces] button.text-green-700 {

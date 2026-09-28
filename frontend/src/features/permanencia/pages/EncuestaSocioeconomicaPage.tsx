@@ -21,7 +21,7 @@ import {
 
 // ── Estilos base ──────────────────────────────────────────────────────────────
 
-const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-slate-50 disabled:text-slate-400 transition'
+const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white disabled:bg-slate-50 disabled:text-slate-400 transition'
 const selectCls = inputCls
 
 // ── Catálogos ─────────────────────────────────────────────────────────────────
@@ -125,7 +125,7 @@ function Section({ icon, title, children, cols = 2 }: {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-        <span className="text-[#1b396a] flex items-center justify-center shrink-0">{icon}</span>
+        <span className="text-brand-600 flex items-center justify-center shrink-0">{icon}</span>
         <h2 className="font-semibold text-slate-800 text-sm tracking-wide">{title}</h2>
       </div>
       <div className={`p-6 ${gridCls}`}>{children}</div>
@@ -177,7 +177,7 @@ function StepIndicator({ step, progreso }: { step: 1 | 2; progreso: number }) {
             <div className="flex flex-col items-center gap-1.5">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base border-2 transition-all ${
                 step === s.n
-                  ? 'bg-[#1b396a] border-[#1b396a] text-white shadow-md shadow-blue-200'
+                  ? 'bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-200'
                   : step > s.n
                     ? 'bg-emerald-600 border-emerald-600 text-white'
                     : 'bg-white border-slate-200 text-slate-400'
@@ -185,7 +185,7 @@ function StepIndicator({ step, progreso }: { step: 1 | 2; progreso: number }) {
                 {step > s.n ? <IconCheckCircle className="w-5 h-5" /> : s.icon}
               </div>
               <span className={`text-xs font-medium text-center leading-tight ${
-                step === s.n ? 'text-[#1b396a]' : step > s.n ? 'text-emerald-700' : 'text-slate-400'
+                step === s.n ? 'text-brand-600' : step > s.n ? 'text-emerald-700' : 'text-slate-400'
               }`}>{s.label}</span>
             </div>
             {i < steps.length - 1 && (
@@ -199,7 +199,7 @@ function StepIndicator({ step, progreso }: { step: 1 | 2; progreso: number }) {
       <div>
         <div className="flex justify-between text-xs text-slate-500 mb-1.5">
           <span>Progreso de llenado</span>
-          <span className="font-semibold text-blue-600">{progreso}%</span>
+          <span className="font-semibold text-brand-600">{progreso}%</span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-2">
           <div
@@ -246,7 +246,7 @@ function FotoUpload({ disabled, existingUrl, onFile }: {
       </label>
       <div className="flex items-start gap-5">
         <div className={`w-24 h-28 rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden flex-shrink-0 ${
-          preview ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-slate-50'
+          preview ? 'border-brand-300 bg-brand-50' : 'border-slate-200 bg-slate-50'
         }`}>
           {preview
             ? <img src={preview} alt="Foto" className="w-full h-full object-cover" />
@@ -293,8 +293,8 @@ function SaveStatus({ isPending, isSuccess, isError, lastSaved }: {
   lastSaved: Date | null
 }) {
   if (isPending) return (
-    <div className="flex items-center gap-1.5 text-xs text-blue-600">
-      <span className="inline-block w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    <div className="flex items-center gap-1.5 text-xs text-brand-600">
+      <span className="inline-block w-3 h-3 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
       Guardando…
     </div>
   )
@@ -411,7 +411,7 @@ export default function EncuestaSocioeconomicaPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 text-slate-400">
-        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
         <span className="text-sm">Cargando encuesta…</span>
       </div>
     )
@@ -478,7 +478,7 @@ export default function EncuestaSocioeconomicaPage() {
       {step === 1 && (
         <>
           {/* I. Identificación (solo lectura) */}
-          <Section icon={<IconAcademicCap className="w-5 h-5 text-[#1b396a]" />} title="I. Datos de Identificación" cols={4}>
+          <Section icon={<IconAcademicCap className="w-5 h-5 text-brand-600" />} title="I. Datos de Identificación" cols={4}>
             <ReadonlyField label="Nombre completo" value={authUser?.name ?? alumno?.user?.name ?? ''} />
             <ReadonlyField label="Número de control" value={alumno?.numero_control ?? ''} />
             <ReadonlyField label="Carrera" value={alumno?.inscripcion?.carrera?.nombre ?? ''} />
@@ -491,7 +491,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* II. Datos personales */}
-          <Section icon={<IconUser className="w-5 h-5 text-[#1b396a]" />} title="II. Datos Personales del Estudiante" cols={3}>
+          <Section icon={<IconUser className="w-5 h-5 text-brand-600" />} title="II. Datos Personales del Estudiante" cols={3}>
             <Field label="CURP">
               <input className={inputCls} placeholder="18 caracteres" maxLength={18}
                 value={form.dp_curp ?? ''} disabled={enviada}
@@ -555,7 +555,7 @@ export default function EncuestaSocioeconomicaPage() {
               {!enviada && !bloqueado && 'Los cambios se guardan automáticamente'}
             </div>
             <button type="button"
-              className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-sm"
+              className="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition shadow-sm"
               onClick={() => setStep(2)}>
               Siguiente: Cuestionario →
             </button>
@@ -569,7 +569,7 @@ export default function EncuestaSocioeconomicaPage() {
       {step === 2 && (
         <>
           {/* III. Situación del alumno */}
-          <Section icon={<IconBriefcase className="w-5 h-5 text-[#1b396a]" />} title="III. Situación del Alumno" cols={3}>
+          <Section icon={<IconBriefcase className="w-5 h-5 text-brand-600" />} title="III. Situación del Alumno" cols={3}>
             <Field label="¿Con quién vive?">
               <input className={inputCls} placeholder="Ej. Padres, Solo, Familia extendida…"
                 value={form.con_quien_vive ?? ''} disabled={enviada}
@@ -597,7 +597,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* IV. Padre */}
-          <Section icon={<IconUser className="w-5 h-5 text-[#1b396a]" />} title="IV. Padre o Tutor" cols={4}>
+          <Section icon={<IconUser className="w-5 h-5 text-brand-600" />} title="IV. Padre o Tutor" cols={4}>
             <Field label="Nivel educativo">
               <select className={selectCls} value={form.padre_nivel_educativo ?? ''} disabled={enviada}
                 onChange={e => set('padre_nivel_educativo', e.target.value)}>
@@ -641,7 +641,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* V. Madre */}
-          <Section icon={<IconUser className="w-5 h-5 text-[#1b396a]" />} title="V. Madre" cols={4}>
+          <Section icon={<IconUser className="w-5 h-5 text-brand-600" />} title="V. Madre" cols={4}>
             <Field label="Nivel educativo">
               <select className={selectCls} value={form.madre_nivel_educativo ?? ''} disabled={enviada}
                 onChange={e => set('madre_nivel_educativo', e.target.value)}>
@@ -685,7 +685,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* VI. Familia */}
-          <Section icon={<IconUsers className="w-5 h-5 text-[#1b396a]" />} title="VI. Datos de la Familia" cols={4}>
+          <Section icon={<IconUsers className="w-5 h-5 text-brand-600" />} title="VI. Datos de la Familia" cols={4}>
             <Field label="Total de integrantes">
               <input className={inputCls} type="number" min={1}
                 value={form.familia_total_integrantes ?? ''} disabled={enviada}
@@ -709,7 +709,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* VII. Vivienda */}
-          <Section icon={<IconBuilding className="w-5 h-5 text-[#1b396a]" />} title="VII. Vivienda y Transporte" cols={4}>
+          <Section icon={<IconBuilding className="w-5 h-5 text-brand-600" />} title="VII. Vivienda y Transporte" cols={4}>
             <Field label="Calle">
               <input className={inputCls} value={form.vivienda_calle ?? ''} disabled={enviada}
                 onChange={e => set('vivienda_calle', e.target.value)} />
@@ -785,7 +785,7 @@ export default function EncuestaSocioeconomicaPage() {
                 ))}
                 {!enviada && (
                   <button type="button"
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition"
+                    className="text-sm text-brand-600 hover:text-brand-800 font-medium transition"
                     onClick={() => set('vehiculos', [...(form.vehiculos ?? []), { tipo: '', marca: '', anio: 0 } as Vehiculo])}>
                     + Agregar vehículo
                   </button>
@@ -795,7 +795,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* VIII. Ingresos y gastos */}
-          <Section icon={<IconBanknotes className="w-5 h-5 text-[#1b396a]" />} title="VIII. Ingresos y Egresos Familiares" cols={2}>
+          <Section icon={<IconBanknotes className="w-5 h-5 text-brand-600" />} title="VIII. Ingresos y Egresos Familiares" cols={2}>
             <Field label="Total ingresos mensuales familiares ($)">
               <input className={inputCls} type="number" min={0} step={100}
                 value={form.total_ingresos_familia ?? ''} disabled={enviada}
@@ -815,7 +815,7 @@ export default function EncuestaSocioeconomicaPage() {
                     <div className="relative">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
                       <input
-                        className="w-full border border-slate-200 rounded-lg pl-6 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-slate-50 disabled:text-slate-400"
+                        className="w-full border border-slate-200 rounded-lg pl-6 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white disabled:bg-slate-50 disabled:text-slate-400"
                         type="number" min={0} step={50}
                         value={gastos[k] ?? ''} disabled={enviada}
                         onChange={e => setGasto(k, Number(e.target.value))} />
@@ -826,14 +826,14 @@ export default function EncuestaSocioeconomicaPage() {
               <div className="flex justify-end mt-3 pt-3 border-t border-slate-100">
                 <div className="text-sm">
                   <span className="text-slate-500">Total egresos mensuales: </span>
-                  <span className="font-bold text-blue-700 text-base">${totalGastos.toLocaleString('es-MX')}</span>
+                  <span className="font-bold text-brand-700 text-base">${totalGastos.toLocaleString('es-MX')}</span>
                 </div>
               </div>
             </div>
           </Section>
 
           {/* IX. Salud */}
-          <Section icon={<IconDocument className="w-5 h-5 text-[#1b396a]" />} title="IX. Salud Familiar" cols={3}>
+          <Section icon={<IconDocument className="w-5 h-5 text-brand-600" />} title="IX. Salud Familiar" cols={3}>
             <Field label="Estado de salud familiar">
               <select className={selectCls} value={form.salud_estado ?? ''} disabled={enviada}
                 onChange={e => set('salud_estado', e.target.value)}>
@@ -859,7 +859,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* X. Información adicional */}
-          <Section icon={<IconClipboard className="w-5 h-5 text-[#1b396a]" />} title="X. Información Adicional" cols={2}>
+          <Section icon={<IconClipboard className="w-5 h-5 text-brand-600" />} title="X. Información Adicional" cols={2}>
             <Field label="Comentarios u observaciones" span="full">
               <textarea className={inputCls} rows={4}
                 placeholder="Cualquier información adicional que consideres relevante para la evaluación socioeconómica…"

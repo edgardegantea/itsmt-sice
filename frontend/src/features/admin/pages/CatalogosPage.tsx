@@ -35,7 +35,7 @@ const directorioApi = {
   borrarPuesto:(id: number) => apiClient.delete(`/admin/directorio-puestos/${id}`),
 }
 
-const INPUT = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]'
+const INPUT = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600'
 const SELECT = INPUT + ' bg-white'
 const inp = (e?: string) => `${INPUT} ${e ? 'border-red-400' : 'border-slate-300'}`
 const sel = (e?: string) => `${SELECT} ${e ? 'border-red-400' : 'border-slate-300'}`
@@ -101,7 +101,7 @@ function EstadosTab() {
     <div>
       <div className="flex justify-end mb-4">
         <button onClick={() => abrirModal('nuevo')}
-          className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors">
+          className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors">
           + Nuevo estado
         </button>
       </div>
@@ -119,13 +119,13 @@ function EstadosTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {estados.map(e => (
-              <tr key={e.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={e.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 text-slate-800 font-medium">{e.nombre}</td>
                 <td className="px-4 py-3 font-mono text-slate-600">{e.clave_curp}</td>
                 <td className="px-4 py-3 text-slate-500">{e.municipios_count ?? 0}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
-                    <button onClick={() => abrirModal(e)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
+                    <button onClick={() => abrirModal(e)} className="text-xs text-brand-600 hover:underline font-medium">Editar</button>
                     {puedeEliminar && <button onClick={() => eliminar.mutate(e.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
@@ -152,7 +152,7 @@ function EstadosTab() {
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
@@ -217,7 +217,7 @@ function MunicipiosTab() {
           {estados.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
         </select>
         <button onClick={() => abrirModal('nuevo')}
-          className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors shrink-0">
+          className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors shrink-0">
           + Nuevo municipio
         </button>
       </div>
@@ -235,13 +235,13 @@ function MunicipiosTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {municipios.map(m => (
-              <tr key={m.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={m.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-800">{m.nombre}</td>
                 <td className="px-4 py-3 text-slate-500">{m.estado?.nombre ?? '—'}</td>
                 <td className="px-4 py-3 text-slate-500">{m.escuelas_count ?? 0}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
-                    <button onClick={() => abrirModal(m)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
+                    <button onClick={() => abrirModal(m)} className="text-xs text-brand-600 hover:underline font-medium">Editar</button>
                     {puedeEliminar && <button onClick={() => eliminar.mutate(m.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
@@ -269,7 +269,7 @@ function MunicipiosTab() {
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
@@ -342,7 +342,7 @@ function EscuelasTab() {
           {estados.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
         </select>
         <button onClick={() => abrirModal('nueva')}
-          className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors shrink-0">
+          className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors shrink-0">
           + Nueva escuela
         </button>
       </div>
@@ -361,7 +361,7 @@ function EscuelasTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {escuelas.map(e => (
-              <tr key={e.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={e.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-800">
                   {e.nombre}
                   {!e.activa && <span className="ml-2 text-xs text-slate-400">(inactiva)</span>}
@@ -371,7 +371,7 @@ function EscuelasTab() {
                 <td className="px-4 py-3 text-slate-400">{e.municipio?.estado?.nombre ?? '—'}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
-                    <button onClick={() => abrirModal(e)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
+                    <button onClick={() => abrirModal(e)} className="text-xs text-brand-600 hover:underline font-medium">Editar</button>
                     {puedeEliminar && <button onClick={() => eliminar.mutate(e.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
@@ -407,12 +407,12 @@ function EscuelasTab() {
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" checked={form.activa} onChange={e => setForm(f => ({ ...f, activa: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+              <input type="checkbox" checked={form.activa} onChange={e => setForm(f => ({ ...f, activa: e.target.checked }))} className="w-4 h-4 accent-brand-600" />
               Escuela activa (visible en formularios)
             </label>
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
@@ -466,7 +466,7 @@ function TurnosTab() {
     <div>
       <div className="flex justify-end mb-4">
         <button onClick={() => abrirModal('nuevo')}
-          className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors">
+          className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors">
           + Nuevo turno
         </button>
       </div>
@@ -484,7 +484,7 @@ function TurnosTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {turnos.map(t => (
-              <tr key={t.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={t.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-800">{t.nombre}</td>
                 <td className="px-4 py-3 font-mono text-slate-600">{t.clave}</td>
                 <td className="px-4 py-3">
@@ -494,7 +494,7 @@ function TurnosTab() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
-                    <button onClick={() => abrirModal(t)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
+                    <button onClick={() => abrirModal(t)} className="text-xs text-brand-600 hover:underline font-medium">Editar</button>
                     {puedeEliminar && <button onClick={() => eliminar.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
@@ -522,12 +522,12 @@ function TurnosTab() {
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+              <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-brand-600" />
               Turno activo
             </label>
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
@@ -590,7 +590,7 @@ function AreasTab() {
     <div>
       <div className="flex justify-end mb-4">
         <button onClick={() => abrirModal('nueva')}
-          className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors">
+          className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors">
           + Nueva área
         </button>
       </div>
@@ -608,7 +608,7 @@ function AreasTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {areas.map(a => (
-              <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
+              <tr key={a.id} className="hover:bg-brand-50/60 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
                 <td className="px-4 py-3 text-slate-500 capitalize">{TIPOS_AREA.find(t => t.value === a.tipo)?.label ?? a.tipo}</td>
                 <td className="px-4 py-3 text-slate-500">{a.personal_count}</td>
@@ -620,7 +620,7 @@ function AreasTab() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => setDetalle(a)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
-                    <button onClick={() => abrirModal(a)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
+                    <button onClick={() => abrirModal(a)} className="text-xs text-brand-600 hover:underline font-medium">Editar</button>
                     {puedeEliminar && <button onClick={() => eliminar.mutate(a.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
@@ -641,7 +641,7 @@ function AreasTab() {
             { label: 'Personal asignado', value: detalle.personal_count },
             { label: 'Descripción', value: detalle.descripcion, full: true },
           ]}
-          footer={<button onClick={() => { abrirModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg">Editar</button>}
+          footer={<button onClick={() => { abrirModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg">Editar</button>}
         />
       )}
 
@@ -673,12 +673,12 @@ function AreasTab() {
               <FE msg={errors.descripcion} />
             </div>
             <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+              <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-brand-600" />
               Área activa
             </label>
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
@@ -739,7 +739,7 @@ function PuestosTab() {
     <div>
       <div className="flex justify-end mb-4">
         <button onClick={() => abrirModal('nuevo')}
-          className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors">
+          className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors">
           + Nuevo puesto
         </button>
       </div>
@@ -758,12 +758,12 @@ function PuestosTab() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {puestos.map(p => (
-              <tr key={p.id} className="hover:bg-blue-50/60 transition-colors">
+              <tr key={p.id} className="hover:bg-brand-50/60 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-800">{p.nombre}</td>
                 <td className="px-4 py-3 text-slate-500">{p.area?.nombre ?? '—'}</td>
                 <td className="px-4 py-3">
                   {p.firma_documentos
-                    ? <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700">Sí</span>
+                    ? <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-brand-100 text-brand-700">Sí</span>
                     : <span className="text-xs text-slate-400">No</span>}
                 </td>
                 <td className="px-4 py-3 text-slate-500">{p.personal_count}</td>
@@ -775,7 +775,7 @@ function PuestosTab() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => setDetalle(p)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
-                    <button onClick={() => abrirModal(p)} className="text-xs text-[#1a3a5c] hover:underline font-medium">Editar</button>
+                    <button onClick={() => abrirModal(p)} className="text-xs text-brand-600 hover:underline font-medium">Editar</button>
                     {puedeEliminar && <button onClick={() => eliminar.mutate(p.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                   </div>
                 </td>
@@ -797,7 +797,7 @@ function PuestosTab() {
             { label: 'Personal asignado', value: detalle.personal_count },
             { label: 'Descripción', value: detalle.descripcion, full: true },
           ]}
-          footer={<button onClick={() => { abrirModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg">Editar</button>}
+          footer={<button onClick={() => { abrirModal(detalle); setDetalle(null) }} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg">Editar</button>}
         />
       )}
 
@@ -831,17 +831,17 @@ function PuestosTab() {
             </div>
             <div className="flex flex-col gap-2">
               <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" checked={form.firma_documentos} onChange={e => setForm(f => ({ ...f, firma_documentos: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+                <input type="checkbox" checked={form.firma_documentos} onChange={e => setForm(f => ({ ...f, firma_documentos: e.target.checked }))} className="w-4 h-4 accent-brand-600" />
                 Firma documentos oficiales
               </label>
               <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-[#1a3a5c]" />
+                <input type="checkbox" checked={form.activo} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} className="w-4 h-4 accent-brand-600" />
                 Puesto activo
               </label>
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button type="button" onClick={() => { setModal(null); setErrors({}) }} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
+              <button type="submit" disabled={guardar.isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg">
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
@@ -869,7 +869,7 @@ export default function CatalogosPage() {
         {(Object.keys(TAB_LABELS) as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 min-w-fit px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
-              tab === t ? 'bg-white text-[#1a3a5c] shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              tab === t ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}>
             {TAB_LABELS[t]}
           </button>

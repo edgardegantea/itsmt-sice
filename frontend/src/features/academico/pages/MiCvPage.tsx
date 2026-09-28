@@ -8,7 +8,7 @@ import {
   type TituloAcademico, type ExperienciaLaboral, type CursoCapacitacion, type Publicacion,
 } from './secciones/docenteShared'
 
-const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30'
 
 function Seccion({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -93,7 +93,7 @@ export default function MiCvPage() {
             <button onClick={() => setTitulos(list => (list ?? []).filter((_, j) => j !== i))} className="text-xs text-red-600 hover:underline">Quitar</button>
           </div>
         ))}
-        <button onClick={() => setTitulos(list => [...(list ?? []), { grado: '' }])} className="text-xs font-medium text-blue-600 hover:underline">+ Agregar título</button>
+        <button onClick={() => setTitulos(list => [...(list ?? []), { grado: '' }])} className="text-xs font-medium text-brand-600 hover:underline">+ Agregar título</button>
       </Seccion>
 
       <Seccion title="Experiencia laboral">
@@ -114,7 +114,7 @@ export default function MiCvPage() {
             <button onClick={() => setExperiencia(list => (list ?? []).filter((_, j) => j !== i))} className="text-xs text-red-600 hover:underline">Quitar</button>
           </div>
         ))}
-        <button onClick={() => setExperiencia(list => [...(list ?? []), { puesto: '' }])} className="text-xs font-medium text-blue-600 hover:underline">+ Agregar experiencia</button>
+        <button onClick={() => setExperiencia(list => [...(list ?? []), { puesto: '' }])} className="text-xs font-medium text-brand-600 hover:underline">+ Agregar experiencia</button>
       </Seccion>
 
       <Seccion title="Cursos y capacitación">
@@ -131,7 +131,7 @@ export default function MiCvPage() {
             <button onClick={() => setCursos(list => (list ?? []).filter((_, j) => j !== i))} className="text-xs text-red-600 hover:underline">Quitar</button>
           </div>
         ))}
-        <button onClick={() => setCursos(list => [...(list ?? []), { nombre: '' }])} className="text-xs font-medium text-blue-600 hover:underline">+ Agregar curso</button>
+        <button onClick={() => setCursos(list => [...(list ?? []), { nombre: '' }])} className="text-xs font-medium text-brand-600 hover:underline">+ Agregar curso</button>
       </Seccion>
 
       <Seccion title="Publicaciones">
@@ -148,7 +148,7 @@ export default function MiCvPage() {
             <button onClick={() => setPublicaciones(list => (list ?? []).filter((_, j) => j !== i))} className="text-xs text-red-600 hover:underline">Quitar</button>
           </div>
         ))}
-        <button onClick={() => setPublicaciones(list => [...(list ?? []), { titulo: '' }])} className="text-xs font-medium text-blue-600 hover:underline">+ Agregar publicación</button>
+        <button onClick={() => setPublicaciones(list => [...(list ?? []), { titulo: '' }])} className="text-xs font-medium text-brand-600 hover:underline">+ Agregar publicación</button>
       </Seccion>
 
       {save.isError && <p className="text-xs text-red-600">{mutationError(save.error)}</p>}

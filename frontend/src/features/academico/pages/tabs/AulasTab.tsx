@@ -40,7 +40,7 @@ export default function AulasTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-sm font-semibold text-slate-700">Aulas, laboratorios y talleres</h2>
-        <button onClick={openNuevo} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+        <button onClick={openNuevo} className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700">
           + Nueva aula
         </button>
       </div>
@@ -57,7 +57,7 @@ export default function AulasTab() {
               <EmptyRow cols={5} />
             ) : (
               (aulas as Aula[]).map(a => (
-                <tr key={a.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                <tr key={a.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                   <td className="px-4 py-3 font-medium text-slate-800">{a.nombre}</td>
                   <td className="px-4 py-3 text-slate-600">{TIPO_LABEL[a.tipo]}</td>
                   <td className="px-4 py-3 text-slate-600">{a.capacidad}</td>
@@ -67,7 +67,7 @@ export default function AulasTab() {
                     </span>
                   </td>
                   <td className="px-4 py-3 flex gap-3">
-                    <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                    <button onClick={() => openEdit(a)} className="text-xs text-brand-600 hover:underline">Editar</button>
                     <button onClick={() => { if (confirm(`¿Eliminar ${a.nombre}?`)) mutDelete.mutate(a.id) }} className="text-xs text-red-500 hover:underline">Eliminar</button>
                   </td>
                 </tr>
@@ -99,7 +99,7 @@ export default function AulasTab() {
           </Field>
           <Field label="Activa">
             <label className="flex items-center gap-2 mt-2">
-              <input type="checkbox" checked={!!form.activa} onChange={e => set('activa', e.target.checked)} className="w-4 h-4 accent-blue-600" />
+              <input type="checkbox" checked={!!form.activa} onChange={e => set('activa', e.target.checked)} className="w-4 h-4 accent-brand-600" />
               <span className="text-sm text-slate-700">Disponible para asignar</span>
             </label>
           </Field>

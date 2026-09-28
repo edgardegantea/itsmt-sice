@@ -68,7 +68,7 @@ const ROLE_COLOR: Record<string, string> = {
   superadmin:              'bg-rose-100 text-rose-900 font-semibold',
   admin:                   'bg-red-100 text-red-800',
   director_academico:      'bg-purple-100 text-purple-800',
-  jefe_carrera:            'bg-blue-100 text-blue-800',
+  jefe_carrera:            'bg-brand-100 text-brand-800',
   docente:                 'bg-cyan-100 text-cyan-800',
   alumno:                  'bg-green-100 text-green-800',
   personal_administrativo: 'bg-amber-100 text-amber-800',
@@ -86,7 +86,7 @@ function RoleBadge({ role }: { role: string }) {
   )
 }
 
-const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500'
 
 // ── Modal crear / editar ──────────────────────────────────────────────────────
 
@@ -222,7 +222,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
             <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-40 overflow-y-auto">
               {roles.map(r => (
                 <label key={r} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
-                  <input type="checkbox" checked={rolesSel.includes(r)} onChange={() => toggleRol(r)} className="w-4 h-4 accent-blue-600" />
+                  <input type="checkbox" checked={rolesSel.includes(r)} onChange={() => toggleRol(r)} className="w-4 h-4 accent-brand-600" />
                   <span className="text-slate-700">{ROLE_LABEL[r] ?? r}</span>
                 </label>
               ))}
@@ -254,7 +254,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
                   const marcada = c.id in carrerasImparte
                   return (
                     <label key={c.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
-                      <input type="checkbox" checked={marcada} onChange={() => toggleCarreraImparte(c.id)} className="w-4 h-4 accent-blue-600" />
+                      <input type="checkbox" checked={marcada} onChange={() => toggleCarreraImparte(c.id)} className="w-4 h-4 accent-brand-600" />
                       <span className="flex-1 text-slate-700">{c.nombre} ({c.clave})</span>
                       {marcada && (
                         <input
@@ -280,7 +280,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
           <button
             disabled={isPending || rolesSel.length === 0}
             onClick={() => isEdit ? updateMut.mutate() : createMut.mutate()}
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
           >
             {isPending ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear usuario'}
           </button>
@@ -452,7 +452,7 @@ export default function UsuariosPage() {
         </div>
         <button
           onClick={() => setModalUsuario(null)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -463,13 +463,13 @@ export default function UsuariosPage() {
 
       <div className="flex flex-wrap gap-3">
         <input
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-brand-500"
           placeholder="Buscar por nombre o correo…"
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
         />
         <select
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           value={filtroRol}
           onChange={e => setFiltroRol(e.target.value)}
         >
@@ -500,7 +500,7 @@ export default function UsuariosPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {usuarios.map((u) => (
-                <tr key={u.id} onClick={() => navigate(`/admin/usuarios/${u.id}`)} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                <tr key={u.id} onClick={() => navigate(`/admin/usuarios/${u.id}`)} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600 shrink-0">
@@ -517,7 +517,7 @@ export default function UsuariosPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-600 text-sm">
                     {u.carrera
-                      ? <span title={u.carrera.nombre} className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{u.carrera.clave}</span>
+                      ? <span title={u.carrera.nombre} className="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded">{u.carrera.clave}</span>
                       : <span className="text-slate-300">—</span>}
                   </td>
                   <td className="px-4 py-3">
@@ -530,7 +530,7 @@ export default function UsuariosPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={e => { e.stopPropagation(); setModalUsuario(u) }} className="text-xs text-blue-600 hover:underline font-medium">Editar</button>
+                      <button onClick={e => { e.stopPropagation(); setModalUsuario(u) }} className="text-xs text-brand-600 hover:underline font-medium">Editar</button>
                       <button onClick={e => { e.stopPropagation(); setModalCreds(u) }} className="text-xs text-rose-600 hover:underline font-medium">Credenciales</button>
                       <button
                         onClick={e => { e.stopPropagation(); confirmarToggleActivo(u) }}

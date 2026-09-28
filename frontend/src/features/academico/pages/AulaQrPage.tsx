@@ -61,7 +61,7 @@ export default function AulaQrPage() {
           {esDocenteDeEstaClase && (
             <button
               onClick={() => navigate('/docente/asistencias')}
-              className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              className="w-full px-4 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
             >
               Pasar lista de este grupo
             </button>
@@ -74,7 +74,7 @@ export default function AulaQrPage() {
                 if (aulaId) params.set('aula_id', aulaId)
                 navigate(`/admin/gestion-academica/incidencias-clase?${params.toString()}`)
               }}
-              className="w-full px-4 py-2.5 bg-[#1a3a5c] text-white text-sm font-medium rounded-lg hover:bg-[#15304c]"
+              className="w-full px-4 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-[#15304c]"
             >
               Registrar ronda en esta aula
             </button>

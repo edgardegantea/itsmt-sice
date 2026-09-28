@@ -111,7 +111,7 @@ export default function PaseAsistenciaPanel({
                                   <div key={g.id}>
                                     <button
                                       type="button"
-                                      className="w-full flex items-center gap-2 pl-14 pr-3 py-2 hover:bg-blue-50/40 transition-colors text-left"
+                                      className="w-full flex items-center gap-2 pl-14 pr-3 py-2 hover:bg-brand-50/40 transition-colors text-left"
                                       onClick={() => toggle(setOpenGrupos, grupoKey)}
                                     >
                                       <svg className={`w-3 h-3 text-slate-400 transition-transform shrink-0 ${isOpenG ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -138,13 +138,13 @@ export default function PaseAsistenciaPanel({
                                               `/admin/gestion-academica/asistencias/pase/${carga.id}${periodo ? `?periodo=${periodo.id}` : ''}`,
                                               { state: { carga, periodo } }
                                             )}
-                                            className="w-full flex items-center gap-2 pl-20 pr-3 py-2 text-left text-xs transition-colors hover:bg-blue-50 text-slate-700"
+                                            className="w-full flex items-center gap-2 pl-20 pr-3 py-2 text-left text-xs transition-colors hover:bg-brand-50 text-slate-700"
                                           >
                                             <span className="font-medium truncate">{carga.materia?.nombre ?? 'Materia'}</span>
                                             {carga.docente && (
                                               <span className="text-slate-400">— {carga.docente.name}</span>
                                             )}
-                                            <span className="ml-auto shrink-0 font-medium text-blue-600">Pasar lista →</span>
+                                            <span className="ml-auto shrink-0 font-medium text-brand-600">Pasar lista →</span>
                                           </button>
                                         ))}
                                       </div>

@@ -56,7 +56,7 @@ export function transicionesPlaneacion(estatus: EstatusPlaneacion, roles: string
  * un vistazo en qué modo se está, sin tener que leer el encabezado de la página. */
 export type VarianteDetalle = 'sky' | 'amber'
 const CLASES_VARIANTE: Record<VarianteDetalle, { circulo: string; borde: string; header: string; badge: string }> = {
-  sky:   { circulo: 'from-[#1a3a5c] to-sky-600 shadow-[#1a3a5c]/30', borde: 'border-l-sky-200',   header: 'from-[#1a3a5c] to-sky-700',    badge: 'bg-white/15 text-white' },
+  sky:   { circulo: 'from-brand-600 to-sky-600 shadow-brand-600/30', borde: 'border-l-sky-200',   header: 'from-brand-600 to-sky-700',    badge: 'bg-white/15 text-white' },
   amber: { circulo: 'from-amber-600 to-orange-500 shadow-amber-600/30', borde: 'border-l-amber-300', header: 'from-amber-600 to-orange-600', badge: 'bg-white/20 text-white' },
 }
 
@@ -216,18 +216,18 @@ export function HiloComentarios({ planeacionId, seccion, unidad, categoria }: {
 
   if (hilo.length === 0 && !abierto) {
     return (
-      <button type="button" onClick={() => setAbierto(true)} className="mt-1 text-[11px] text-blue-600 hover:underline">
+      <button type="button" onClick={() => setAbierto(true)} className="mt-1 text-[11px] text-brand-600 hover:underline">
         + Comentario
       </button>
     )
   }
 
   return (
-    <div className={`mt-1.5 border rounded-lg p-2 space-y-1.5 ${resuelto ? 'border-slate-100 bg-slate-50' : 'border-blue-200 bg-blue-50/40'}`}>
+    <div className={`mt-1.5 border rounded-lg p-2 space-y-1.5 ${resuelto ? 'border-slate-100 bg-slate-50' : 'border-brand-200 bg-brand-50/40'}`}>
       {hilo.length > 0 && (
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-medium text-slate-500">Comentarios{resuelto ? ' (resuelto)' : ''}</span>
-          <button type="button" onClick={() => mutResolver.mutate(!resuelto)} disabled={mutResolver.isPending} className="text-[10px] text-blue-600 hover:underline shrink-0">
+          <button type="button" onClick={() => mutResolver.mutate(!resuelto)} disabled={mutResolver.isPending} className="text-[10px] text-brand-600 hover:underline shrink-0">
             {resuelto ? 'Reabrir' : 'Marcar resuelto'}
           </button>
         </div>
@@ -246,11 +246,11 @@ export function HiloComentarios({ planeacionId, seccion, unidad, categoria }: {
           <textarea
             value={mensaje} onChange={e => setMensaje(e.target.value)} rows={2} autoFocus
             placeholder="Responder…"
-            className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none"
+            className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-300 resize-none"
           />
           <div className="flex flex-col gap-1 shrink-0">
             <button type="button" onClick={() => mutAgregar.mutate()} disabled={!mensaje.trim() || mutAgregar.isPending}
-              className="text-[11px] px-2 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap">
+              className="text-[11px] px-2 py-1 rounded-md bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 whitespace-nowrap">
               Enviar
             </button>
             <button type="button" onClick={() => { setAbierto(false); setMensaje('') }} className="text-[11px] px-2 py-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 whitespace-nowrap">
@@ -259,7 +259,7 @@ export function HiloComentarios({ planeacionId, seccion, unidad, categoria }: {
           </div>
         </div>
       ) : (
-        <button type="button" onClick={() => setAbierto(true)} className="text-[11px] text-blue-600 hover:underline">Responder</button>
+        <button type="button" onClick={() => setAbierto(true)} className="text-[11px] text-brand-600 hover:underline">Responder</button>
       )}
     </div>
   )
@@ -315,7 +315,7 @@ export function ArchivosAdjuntos({ planeacionId, unidad }: { planeacionId: strin
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
           </svg>
           <button type="button" onClick={() => academicoApi.descargarArchivoPlaneacion(planeacionId, a.id, a.nombre_original)}
-            className="flex-1 min-w-0 text-left text-xs text-blue-600 hover:underline truncate">
+            className="flex-1 min-w-0 text-left text-xs text-brand-600 hover:underline truncate">
             {a.nombre_original}
           </button>
           <span className="text-[10px] text-slate-400 shrink-0">{formatoTamano(a.tamano_bytes)}</span>
@@ -327,7 +327,7 @@ export function ArchivosAdjuntos({ planeacionId, unidad }: { planeacionId: strin
           )}
         </div>
       ))}
-      <label className="inline-flex items-center gap-1.5 text-[11px] text-blue-600 hover:underline cursor-pointer">
+      <label className="inline-flex items-center gap-1.5 text-[11px] text-brand-600 hover:underline cursor-pointer">
         <input type="file" className="hidden" onChange={onSeleccionar} disabled={subiendo} />
         {subiendo ? 'Subiendo…' : '+ Adjuntar archivo'}
       </label>
@@ -738,7 +738,7 @@ export function SelectorProductoAprendizaje({
             <button
               type="button"
               onClick={() => setEditando(true)}
-              className="text-blue-600 hover:text-blue-800 hover:underline text-[10px] font-medium"
+              className="text-brand-600 hover:text-brand-800 hover:underline text-[10px] font-medium"
             >
               Cambiar
             </button>
@@ -766,7 +766,7 @@ export function SelectorProductoAprendizaje({
             <button
               type="button"
               onClick={() => setEditando(true)}
-              className="inline-flex items-center gap-1 text-[11px] text-slate-600 hover:text-blue-600 hover:underline"
+              className="inline-flex items-center gap-1 text-[11px] text-slate-600 hover:text-brand-600 hover:underline"
               title="Seleccionar del catálogo o escribir producto de aprendizaje"
             >
               📦 <span className="font-medium text-slate-700">+ Definir producto de aprendizaje</span>
@@ -832,7 +832,7 @@ export function SelectorProductoAprendizaje({
                 manejarSeleccion(e.target.value)
               }
             }}
-            className="text-[11px] border border-slate-300 rounded px-2 py-1 bg-white text-slate-700 max-w-[210px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="text-[11px] border border-slate-300 rounded px-2 py-1 bg-white text-slate-700 max-w-[210px] focus:outline-none focus:ring-1 focus:ring-brand-500"
           >
             <option value="">Seleccionar del catálogo…</option>
             {PRODUCTOS_APRENDIZAJE_CATALOGO.map(prod => (
@@ -848,7 +848,7 @@ export function SelectorProductoAprendizaje({
                 value={textoPersonalizado}
                 onChange={e => setTextoPersonalizado(e.target.value)}
                 placeholder="Nombre del producto"
-                className="text-[11px] border border-slate-300 rounded px-2 py-1 bg-white w-44 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="text-[11px] border border-slate-300 rounded px-2 py-1 bg-white w-44 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 onKeyDown={e => {
                   if (e.key === 'Enter' && textoPersonalizado.trim()) {
                     e.preventDefault()
@@ -863,7 +863,7 @@ export function SelectorProductoAprendizaje({
                     manejarSeleccion(textoPersonalizado.trim())
                   }
                 }}
-                className="px-2 py-1 bg-blue-600 text-white rounded text-[10px] font-medium hover:bg-blue-700"
+                className="px-2 py-1 bg-brand-600 text-white rounded text-[10px] font-medium hover:bg-brand-700"
               >
                 Asignar
               </button>
@@ -886,8 +886,8 @@ export function SelectorProductoAprendizaje({
                 onClick={() => manejarSeleccion(p)}
                 className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
                   productoActual === p
-                    ? 'bg-blue-600 text-white border-blue-600 font-medium'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-700'
+                    ? 'bg-brand-600 text-white border-brand-600 font-medium'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-brand-300 hover:text-brand-700'
                 }`}
               >
                 {p}
@@ -1269,7 +1269,7 @@ export function ModalInstrumentoEvaluacion({
         onClick={e => e.stopPropagation()}
       >
         {/* Encabezado modal */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-[#1a3a5c] text-white shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-brand-600 text-white shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-lg border border-white/20 shadow-inner">
               📐
@@ -1316,7 +1316,7 @@ export function ModalInstrumentoEvaluacion({
                   onClick={() => cambiarTipo(inst.id)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
                     activo
-                      ? 'bg-[#1a3a5c] text-white shadow-sm ring-2 ring-sky-400/40'
+                      ? 'bg-brand-600 text-white shadow-sm ring-2 ring-sky-400/40'
                       : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                   }`}
                 >
@@ -1383,7 +1383,7 @@ export function ModalInstrumentoEvaluacion({
                 <input
                   value={instrumento.instrucciones}
                   onChange={e => setInstrumento(prev => ({ ...prev, instrucciones: e.target.value }))}
-                  className="w-full text-xs rounded-md border border-slate-300 px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full text-xs rounded-md border border-slate-300 px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
 
@@ -1426,7 +1426,7 @@ export function ModalInstrumentoEvaluacion({
                           <th className="p-2 w-16 text-center font-semibold">%</th>
                           <th className="p-2.5 font-semibold text-emerald-800 bg-emerald-50/50">Excelente (95-100%)</th>
                           <th className="p-2.5 font-semibold text-sky-800 bg-sky-50/50">Notable (85-94%)</th>
-                          <th className="p-2.5 font-semibold text-blue-800 bg-blue-50/50">Bueno (75-84%)</th>
+                          <th className="p-2.5 font-semibold text-brand-800 bg-brand-50/50">Bueno (75-84%)</th>
                           <th className="p-2.5 font-semibold text-amber-800 bg-amber-50/50">Suficiente (70-74%)</th>
                           <th className="p-2.5 font-semibold text-red-800 bg-red-50/50">Insuficiente (&lt;70%)</th>
                           <th className="p-2 w-10 text-center font-semibold">Acción</th>
@@ -1445,7 +1445,7 @@ export function ModalInstrumentoEvaluacion({
                                     criterios: prev.criterios.map((item, i) => i === cIdx ? { ...item, nombre: val } : item),
                                   }))
                                 }}
-                                className="w-full font-semibold text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none mb-1 bg-transparent"
+                                className="w-full font-semibold text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-brand-500 focus:outline-none mb-1 bg-transparent"
                               />
                               <textarea
                                 rows={2}
@@ -1457,7 +1457,7 @@ export function ModalInstrumentoEvaluacion({
                                     criterios: prev.criterios.map((item, i) => i === cIdx ? { ...item, descripcion: val } : item),
                                   }))
                                 }}
-                                className="w-full text-[11px] text-slate-500 border border-slate-200 rounded p-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-full text-[11px] text-slate-500 border border-slate-200 rounded p-1 focus:outline-none focus:ring-1 focus:ring-brand-500"
                               />
                             </td>
                             <td className="p-2 text-center border-l border-slate-100">
@@ -1471,7 +1471,7 @@ export function ModalInstrumentoEvaluacion({
                                     criterios: prev.criterios.map((item, i) => i === cIdx ? { ...item, ponderacion: val } : item),
                                   }))
                                 }}
-                                className="w-12 text-center font-bold text-slate-700 border border-slate-200 rounded py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-12 text-center font-bold text-slate-700 border border-slate-200 rounded py-1 focus:outline-none focus:ring-1 focus:ring-brand-500"
                               />
                             </td>
                             {(['excelente', 'notable', 'bueno', 'suficiente', 'insuficiente'] as const).map(nivel => (
@@ -1489,7 +1489,7 @@ export function ModalInstrumentoEvaluacion({
                                       } : item),
                                     }))
                                   }}
-                                  className="w-full text-[11px] text-slate-600 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                  className="w-full text-[11px] text-slate-600 border border-slate-200 rounded p-1.5 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white"
                                 />
                               </td>
                             ))}
@@ -1536,7 +1536,7 @@ export function ModalInstrumentoEvaluacion({
                                     criterios: prev.criterios.map((item, i) => i === cIdx ? { ...item, nombre: val } : item),
                                   }))
                                 }}
-                                className="w-full font-semibold text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none mb-1 bg-transparent"
+                                className="w-full font-semibold text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-brand-500 focus:outline-none mb-1 bg-transparent"
                               />
                               <input
                                 value={c.descripcion}
@@ -1547,7 +1547,7 @@ export function ModalInstrumentoEvaluacion({
                                     criterios: prev.criterios.map((item, i) => i === cIdx ? { ...item, descripcion: val } : item),
                                   }))
                                 }}
-                                className="w-full text-[11px] text-slate-500 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-full text-[11px] text-slate-500 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-brand-500"
                               />
                             </td>
                             <td className="p-2 text-center border-l border-slate-100">
@@ -1561,7 +1561,7 @@ export function ModalInstrumentoEvaluacion({
                                     criterios: prev.criterios.map((item, i) => i === cIdx ? { ...item, ponderacion: val } : item),
                                   }))
                                 }}
-                                className="w-12 text-center font-bold text-slate-700 border border-slate-200 rounded py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-12 text-center font-bold text-slate-700 border border-slate-200 rounded py-1 focus:outline-none focus:ring-1 focus:ring-brand-500"
                               />
                             </td>
                             <td className="p-2.5 text-center border-l border-slate-100">
@@ -1572,7 +1572,7 @@ export function ModalInstrumentoEvaluacion({
                             <td className="p-2.5 border-l border-slate-100">
                               <input
                                 placeholder="Notas de retroalimentación…"
-                                className="w-full text-[11px] border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-full text-[11px] border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500"
                               />
                             </td>
                             <td className="p-2 text-center border-l border-slate-100">
@@ -1763,7 +1763,7 @@ export function ModalFuenteInformacion({
       case 'issn':
         return { label: 'ISSN de Revista', color: 'bg-purple-50 text-purple-700 border-purple-200', icono: '📰' }
       case 'url':
-        return { label: 'Enlace Web', color: 'bg-blue-50 text-blue-700 border-blue-200', icono: '🌐' }
+        return { label: 'Enlace Web', color: 'bg-brand-50 text-brand-700 border-brand-200', icono: '🌐' }
       case 'texto':
       default:
         return { label: 'Búsqueda / Cita Directa', color: 'bg-amber-50 text-amber-700 border-amber-200', icono: '🔍' }
@@ -1854,7 +1854,7 @@ export function ModalFuenteInformacion({
         onClick={e => e.stopPropagation()}
       >
         {/* Encabezado */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-[#1a3a5c] text-white shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-brand-600 text-white shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-lg border border-white/20 shadow-inner">
               📚
@@ -2091,7 +2091,7 @@ export function ModalFuenteInformacion({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-bold text-slate-500 text-[11px]">#{i + 1}</span>
                             {f.autor && (
-                              <span className="px-2 py-0.5 rounded-md bg-blue-100/70 text-blue-900 font-medium text-[11px] truncate max-w-[200px]">
+                              <span className="px-2 py-0.5 rounded-md bg-brand-100/70 text-brand-900 font-medium text-[11px] truncate max-w-[200px]">
                                 👤 {f.autor}
                               </span>
                             )}
@@ -2544,7 +2544,7 @@ export function ModalFuenteInformacion({
           <button
             type="button"
             onClick={handleGuardar}
-            className="px-5 py-2 bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-700 hover:to-blue-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+            className="px-5 py-2 bg-gradient-to-r from-sky-600 to-brand-700 hover:from-sky-700 hover:to-brand-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
           >
             <span>💾</span>
             <span>
@@ -2856,7 +2856,7 @@ export function PlaneacionDetalle({ p, editable, observaciones = [], onAgregarOb
   )
 }
 
-export const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-slate-50'
+export const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white disabled:bg-slate-50'
 export const inputErrCls = 'w-full border border-red-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-white disabled:bg-slate-50'
 export const selectCls = inputCls
 export const icls = (e?: string) => e ? inputErrCls : inputCls
@@ -2948,7 +2948,7 @@ export function ModalWrap({ title, onClose, children, onSave, saving, maxWidth =
         {onSave && (
           <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
             <button onClick={onClose} disabled={saving} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50 disabled:opacity-40">Cancelar</button>
-            <button onClick={onSave} disabled={saving} className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+            <button onClick={onSave} disabled={saving} className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
               {saving ? 'Guardando…' : 'Guardar'}
             </button>
           </div>

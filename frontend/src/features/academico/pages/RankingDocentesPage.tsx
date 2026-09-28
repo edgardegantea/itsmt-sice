@@ -50,7 +50,7 @@ export default function RankingDocentesPage() {
         </div>
 
         {esDocente && miPosicion && (
-          <div className="bg-white rounded-xl border-2 border-blue-200 p-4 flex items-center gap-4">
+          <div className="bg-white rounded-xl border-2 border-brand-200 p-4 flex items-center gap-4">
             <span className="text-3xl">{MEDALLA[miPosicion.posicion] ?? `#${miPosicion.posicion}`}</span>
             <div>
               <p className="text-sm text-slate-500">Tu lugar en el ranking</p>
@@ -67,7 +67,7 @@ export default function RankingDocentesPage() {
           ) : (
             <div className="divide-y divide-slate-100">
               {ranking.map(r => (
-                <div key={r.docente_id} className={`px-5 py-3.5 flex items-center gap-4 ${r.docente_id === user?.id ? 'bg-blue-50/50' : ''}`}>
+                <div key={r.docente_id} className={`px-5 py-3.5 flex items-center gap-4 ${r.docente_id === user?.id ? 'bg-brand-50/50' : ''}`}>
                   <span className="w-10 text-center text-lg font-semibold text-slate-400">
                     {MEDALLA[r.posicion] ?? `#${r.posicion}`}
                   </span>

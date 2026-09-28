@@ -6,7 +6,7 @@ const STYLES: Record<string, string> = {
   success: 'bg-emerald-50 border-emerald-300 text-emerald-800',
   error:   'bg-red-50   border-red-300   text-red-800',
   warning: 'bg-amber-50 border-amber-300 text-amber-800',
-  info:    'bg-blue-50  border-blue-300  text-blue-800',
+  info:    'bg-brand-50  border-brand-300  text-brand-800',
 }
 
 const ICON_COMPONENTS: Record<string, () => React.JSX.Element> = {
@@ -29,7 +29,7 @@ const ICON_BG: Record<string, string> = {
   success: 'bg-emerald-100 text-emerald-600',
   error:   'bg-red-100   text-red-600',
   warning: 'bg-amber-100 text-amber-600',
-  info:    'bg-blue-100  text-blue-600',
+  info:    'bg-brand-100  text-brand-600',
 }
 
 function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) {

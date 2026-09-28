@@ -24,18 +24,18 @@ const ESTATUS_ASP_COLOR: Record<string, string> = {
   pendiente: 'bg-amber-100 text-amber-700',
   aceptado:  'bg-emerald-100 text-emerald-700',
   rechazado: 'bg-red-100 text-red-700',
-  inscrito:  'bg-blue-100 text-blue-700',
+  inscrito:  'bg-brand-100 text-brand-700',
 }
 const ESTATUS_ALU_COLOR: Record<string, string> = {
   activo:          'bg-emerald-100 text-emerald-700',
   baja_temporal:   'bg-amber-100 text-amber-700',
   baja_definitiva: 'bg-red-100 text-red-700',
-  egresado:        'bg-blue-100 text-blue-700',
+  egresado:        'bg-brand-100 text-brand-700',
   titulado:        'bg-purple-100 text-purple-700',
 }
 const ESTATUS_INST_COLOR: Record<string, string> = {
   borrador:      'bg-slate-100 text-slate-600',
-  enviada:       'bg-blue-100 text-blue-700',
+  enviada:       'bg-brand-100 text-brand-700',
   observaciones: 'bg-yellow-100 text-yellow-700',
   enviada_jc:    'bg-indigo-100 text-indigo-700',
   liberada:      'bg-green-100 text-green-700',
@@ -53,7 +53,7 @@ function StatCard({ label, value, to }: { label: string; value: number | string;
   const content = (
     <div className="bg-white rounded-xl border border-slate-200 p-5 h-full hover:border-slate-300 transition-colors">
       <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-3xl font-bold text-[#1a3a5c]">{value}</p>
+      <p className="text-3xl font-bold text-brand-600">{value}</p>
     </div>
   )
   return to ? <Link to={to}>{content}</Link> : content
@@ -75,7 +75,7 @@ function Desglose({ title, data, colors }: { title: string; data: Record<string,
               </span>
               <div className="flex items-center gap-3">
                 <div className="w-32 bg-slate-100 rounded-full h-1.5">
-                  <div className="bg-[#1a3a5c] h-1.5 rounded-full" style={{ width: `${total > 0 ? (n / total) * 100 : 0}%` }} />
+                  <div className="bg-brand-600 h-1.5 rounded-full" style={{ width: `${total > 0 ? (n / total) * 100 : 0}%` }} />
                 </div>
                 <span className="text-sm font-medium text-slate-700 w-6 text-right">{n}</span>
               </div>

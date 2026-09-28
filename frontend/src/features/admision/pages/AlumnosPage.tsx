@@ -34,7 +34,7 @@ const ESTATUS_STYLE: Record<EstatusAlumno, string> = {
   activo:           'bg-emerald-100 text-emerald-700',
   baja_temporal:    'bg-yellow-100  text-yellow-700',
   baja_definitiva:  'bg-red-100     text-red-700',
-  egresado:         'bg-blue-100    text-blue-700',
+  egresado:         'bg-brand-100    text-brand-700',
   titulado:         'bg-purple-100  text-purple-700',
 }
 
@@ -82,7 +82,7 @@ function SeccionCard({ titulo, children }: { titulo: string; children: React.Rea
 
 // ── Modal edición ─────────────────────────────────────────────────────────────
 
-const INPUT_CLS = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+const INPUT_CLS = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30'
 const LABEL_CLS = 'block text-xs font-medium text-slate-600 mb-1'
 
 interface AspiranteForm {
@@ -221,7 +221,7 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
             id="cert" type="checkbox"
             checked={form.pendiente_certificado_bachillerato}
             onChange={e => setForm(f => ({ ...f, pendiente_certificado_bachillerato: e.target.checked }))}
-            className="w-4 h-4 accent-[#1a3a5c]"
+            className="w-4 h-4 accent-brand-600"
           />
           <label htmlFor="cert" className="text-sm text-slate-700">Pendiente certificado de bachillerato</label>
         </div>
@@ -262,7 +262,7 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">
             Cancelar
           </button>
-          <button type="submit" disabled={isPending} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg transition-colors">
+          <button type="submit" disabled={isPending} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg transition-colors">
             {isPending ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
@@ -324,7 +324,7 @@ function CobroModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void }
           </div>
           <p className="text-sm text-slate-700">Recibo registrado correctamente.</p>
           <div className="flex gap-2 justify-center">
-            <button onClick={() => abrirPdf(reciboId)} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors">
+            <button onClick={() => abrirPdf(reciboId)} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors">
               Ver recibo PDF
             </button>
             <button onClick={onClose} className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50">
@@ -344,45 +344,45 @@ function CobroModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void }
             <label className="block text-xs font-medium text-slate-600 mb-1">Folio Fiscal (UUID CFDI del SAT) *</label>
             <input required value={form.folio_fiscal} onChange={e => setForm(f => ({ ...f, folio_fiscal: e.target.value }))}
               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"/>
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-600/30"/>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Nombre del pagador *</label>
             <input required value={form.nombre_pagador} onChange={e => setForm(f => ({ ...f, nombre_pagador: e.target.value }))}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"/>
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"/>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">RFC del pagador</label>
             <input value={form.rfc_pagador} onChange={e => setForm(f => ({ ...f, rfc_pagador: e.target.value.toUpperCase() }))}
               placeholder="XAXX010101000" maxLength={13}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"/>
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-600/30"/>
           </div>
           <div className="sm:col-span-2">
             <label className="block text-xs font-medium text-slate-600 mb-1">Concepto *</label>
             <input required value={form.concepto} onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"/>
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"/>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Importe (MXN) *</label>
             <input required type="number" min={0.01} step={0.01} value={form.importe || ''}
               onChange={e => setForm(f => ({ ...f, importe: parseFloat(e.target.value) }))}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"/>
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"/>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">N° Certificado SAT</label>
             <input value={form.numero_certificado_sat} onChange={e => setForm(f => ({ ...f, numero_certificado_sat: e.target.value }))}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"/>
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-600/30"/>
           </div>
           <div className="sm:col-span-2">
             <label className="block text-xs font-medium text-slate-600 mb-1">Sello Digital CFDI</label>
             <textarea rows={2} value={form.sello_digital_cfdi} onChange={e => setForm(f => ({ ...f, sello_digital_cfdi: e.target.value }))}
               placeholder="Cadena del sello digital emitida por el SAT…"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"/>
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-brand-600/30"/>
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">Cancelar</button>
-          <button type="submit" disabled={cargando} className="px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] disabled:opacity-60 rounded-lg transition-colors">
+          <button type="submit" disabled={cargando} className="px-4 py-2 text-sm text-white bg-brand-600 hover:bg-[#234d7a] disabled:opacity-60 rounded-lg transition-colors">
             {cargando ? 'Registrando…' : 'Registrar cobro'}
           </button>
         </div>
@@ -437,7 +437,7 @@ function FilaAlumno({
       <tr
         onClick={onDetail}
         className={`cursor-pointer select-none transition-colors ${
-          expanded ? 'bg-[#1a3a5c]/10' : 'hover:bg-blue-50/60'
+          expanded ? 'bg-brand-600/10' : 'hover:bg-brand-50/60'
         }`}
       >
         {/* Checkbox */}
@@ -446,14 +446,14 @@ function FilaAlumno({
             type="checkbox"
             checked={selected}
             onChange={e => onSelect(alumno.id, e.target.checked)}
-            className="w-4 h-4 accent-[#1a3a5c] cursor-pointer"
+            className="w-4 h-4 accent-brand-600 cursor-pointer"
           />
         </td>
 
         {/* Chevron */}
         <td className="pl-1 pr-2 py-3.5 w-8 border-l-4 border-transparent" onClick={e => { e.stopPropagation(); onToggle() }}>
           <svg
-            className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-[#1a3a5c]' : 'text-slate-400'}`}
+            className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90 text-brand-600' : 'text-slate-400'}`}
             fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6"/>
@@ -462,12 +462,12 @@ function FilaAlumno({
 
         {/* N° Control */}
         <td className="px-3 py-3.5">
-          <span className={`font-mono text-xs font-semibold ${expanded ? 'text-[#1a3a5c]' : 'text-slate-700'}`}>{alumno.numero_control}</span>
+          <span className={`font-mono text-xs font-semibold ${expanded ? 'text-brand-600' : 'text-slate-700'}`}>{alumno.numero_control}</span>
         </td>
 
         {/* Nombre */}
         <td className="px-3 py-3.5">
-          <p className={`font-medium text-sm leading-snug ${expanded ? 'text-[#1a3a5c]' : 'text-slate-800'}`}>{apellidosNombre(alumno)}</p>
+          <p className={`font-medium text-sm leading-snug ${expanded ? 'text-brand-600' : 'text-slate-800'}`}>{apellidosNombre(alumno)}</p>
           {asp && <p className="text-xs text-slate-400 mt-0.5">{asp.email}</p>}
         </td>
 
@@ -507,7 +507,7 @@ function FilaAlumno({
       {/* ── Panel expandido ── */}
       {expanded && (
         <tr className="bg-slate-50/70">
-          <td colSpan={8} className="px-0 pb-0 border-l-4 border-[#1a3a5c]">
+          <td colSpan={8} className="px-0 pb-0 border-l-4 border-brand-600">
             <div className="mx-4 mb-4 mt-2 space-y-2.5">
 
               {/* Datos académicos */}
@@ -829,8 +829,8 @@ export default function AlumnosPage() {
 
       {/* ── Barra de acciones en lote ── */}
       {seleccionados.size > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 px-4 py-3 bg-[#1a3a5c]/5 border border-[#1a3a5c]/20 rounded-xl">
-          <span className="text-sm font-medium text-[#1a3a5c]">
+        <div className="mb-4 flex flex-wrap items-center gap-3 px-4 py-3 bg-brand-600/5 border border-brand-600/20 rounded-xl">
+          <span className="text-sm font-medium text-brand-600">
             {seleccionados.size} alumno{seleccionados.size !== 1 ? 's' : ''} seleccionado{seleccionados.size !== 1 ? 's' : ''}
           </span>
           <div className="flex flex-wrap gap-2 ml-auto items-center">
@@ -852,7 +852,7 @@ export default function AlumnosPage() {
               <select
                 value={estatusLote}
                 onChange={e => setEstatusLote(e.target.value as EstatusAlumno | '')}
-                className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+                className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-600/30"
               >
                 <option value="">Cambiar estatus a…</option>
                 {Object.entries(ESTATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -861,7 +861,7 @@ export default function AlumnosPage() {
                 <button
                   onClick={() => mutLote.mutate(estatusLote as EstatusAlumno)}
                   disabled={mutLote.isPending}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-brand-600 hover:bg-[#234d7a] rounded-lg transition-colors disabled:opacity-50"
                 >
                   {mutLote.isPending ? 'Aplicando…' : 'Aplicar'}
                 </button>
@@ -886,12 +886,12 @@ export default function AlumnosPage() {
               placeholder="Buscar por nombre o número de control…"
               value={filtros.search}
               onChange={e => setFiltros(f => ({ ...f, search: e.target.value, page: 1 }))}
-              className="flex-1 min-w-48 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+              className="flex-1 min-w-48 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30"
             />
             <select
               value={filtros.carrera_id}
               onChange={e => setFiltros(f => ({ ...f, carrera_id: e.target.value, grupo_id: '', page: 1 }))}
-              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 bg-white"
             >
               <option value="">Todas las carreras</option>
               {carreras.map(c => <option key={c.id} value={c.id}>{c.clave} — {c.nombre}</option>)}
@@ -899,7 +899,7 @@ export default function AlumnosPage() {
             <select
               value={filtros.periodo_id}
               onChange={e => setFiltros(f => ({ ...f, periodo_id: e.target.value, grupo_id: '', page: 1 }))}
-              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 bg-white"
             >
               <option value="">Todos los periodos</option>
               {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
@@ -908,7 +908,7 @@ export default function AlumnosPage() {
               <select
                 value={filtros.grupo_id}
                 onChange={e => setFiltros(f => ({ ...f, grupo_id: e.target.value, page: 1 }))}
-                className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
+                className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 bg-white"
               >
                 <option value="">Todos los grupos</option>
                 {gruposFiltro.map(g => <option key={g.id} value={g.id}>{g.clave} (sem. {g.semestre})</option>)}
@@ -917,7 +917,7 @@ export default function AlumnosPage() {
             <select
               value={filtros.estatus}
               onChange={e => setFiltros(f => ({ ...f, estatus: e.target.value, page: 1 }))}
-              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 bg-white"
             >
               <option value="">Todos los estatus</option>
               {Object.entries(ESTATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -925,7 +925,7 @@ export default function AlumnosPage() {
             <select
               value={filtros.semestre}
               onChange={e => setFiltros(f => ({ ...f, semestre: e.target.value, page: 1 }))}
-              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 bg-white"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/30 bg-white"
             >
               <option value="">Todos los semestres</option>
               {Array.from({ length: 12 }, (_, i) => i + 1).map(s => (
@@ -964,7 +964,7 @@ export default function AlumnosPage() {
                       checked={todosSeleccionados}
                       ref={el => { if (el) el.indeterminate = algunoSeleccionado && !todosSeleccionados }}
                       onChange={toggleTodos}
-                      className="w-4 h-4 accent-[#1a3a5c] cursor-pointer"
+                      className="w-4 h-4 accent-brand-600 cursor-pointer"
                     />
                   </th>
                   <th className="w-8 pl-1"/>

@@ -62,11 +62,11 @@ export default function EvaluacionDocentePage() {
           ← Regresar
         </button>
 
-        <div className="bg-[#1a3a5c] rounded-2xl px-6 py-5 text-white">
-          <p className="text-xs text-blue-200 uppercase tracking-wide font-medium mb-1">Evaluando grupo</p>
+        <div className="bg-brand-600 rounded-2xl px-6 py-5 text-white">
+          <p className="text-xs text-brand-200 uppercase tracking-wide font-medium mb-1">Evaluando grupo</p>
           <h2 className="text-xl font-bold">{grupoActivo.clave} — Semestre {grupoActivo.semestre}</h2>
-          {docentes && <p className="text-blue-200 text-sm mt-1">Docente(s): {docentes}</p>}
-          <p className="text-xs text-blue-300 mt-2">Tu evaluación es completamente anónima (Art. 7 Frac. VIII Reglamento TecNM)</p>
+          {docentes && <p className="text-brand-200 text-sm mt-1">Docente(s): {docentes}</p>}
+          <p className="text-xs text-brand-300 mt-2">Tu evaluación es completamente anónima (Art. 7 Frac. VIII Reglamento TecNM)</p>
         </div>
 
         <div className="space-y-4">
@@ -80,7 +80,7 @@ export default function EvaluacionDocentePage() {
                     onClick={() => setRespuestas(prev => ({ ...prev, [p.key]: v }))}
                     className={`flex flex-col items-center px-4 py-2 rounded-lg border text-sm transition-colors ${
                       respuestas[p.key] === v
-                        ? 'bg-[#1a3a5c] text-white border-[#1a3a5c]'
+                        ? 'bg-brand-600 text-white border-brand-600'
                         : 'bg-white text-slate-600 border-slate-300 hover:border-slate-400'
                     }`}
                   >
@@ -102,7 +102,7 @@ export default function EvaluacionDocentePage() {
         <button
           onClick={() => enviarMut.mutate({ grupo_id: grupoActivo.grupo_id, respuestas })}
           disabled={!completo || enviarMut.isPending}
-          className="w-full bg-[#1a3a5c] text-white py-3 rounded-xl font-medium text-sm disabled:opacity-50 hover:bg-[#15304e] transition-colors"
+          className="w-full bg-brand-600 text-white py-3 rounded-xl font-medium text-sm disabled:opacity-50 hover:bg-[#15304e] transition-colors"
         >
           {enviarMut.isPending ? 'Enviando…' : 'Enviar evaluación de forma anónima'}
         </button>
@@ -162,7 +162,7 @@ export default function EvaluacionDocentePage() {
               ) : (
                 <button
                   onClick={() => { setGrupoActivo(g); setRespuestas({}); setEnviado(false) }}
-                  className="text-xs bg-[#1a3a5c] text-white px-4 py-2 rounded-lg hover:bg-[#15304e] transition-colors"
+                  className="text-xs bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-[#15304e] transition-colors"
                 >
                   Evaluar
                 </button>

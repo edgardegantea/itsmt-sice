@@ -69,7 +69,7 @@ export default function AsistenciaCheckinPage() {
               onChange={e => setCodigo(e.target.value.toUpperCase())}
               placeholder="Código"
               maxLength={8}
-              className="w-full text-center tracking-widest font-mono text-lg border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-center tracking-widest font-mono text-lg border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
 
             <div className="border-t border-slate-100 pt-3">
@@ -109,14 +109,14 @@ export default function AsistenciaCheckinPage() {
             <button
               onClick={() => mutCheckin.mutate()}
               disabled={!codigo.trim() || mutCheckin.isPending}
-              className="w-full px-4 py-2.5 bg-[#1a3a5c] text-white text-sm font-medium rounded-lg hover:bg-[#234d7a] disabled:opacity-50"
+              className="w-full px-4 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-[#234d7a] disabled:opacity-50"
             >
               {mutCheckin.isPending ? 'Confirmando…' : 'Confirmar mi asistencia'}
             </button>
           </>
         )}
 
-        <Link to="/alumno/dashboard" className="block text-xs text-blue-600 hover:underline pt-2">
+        <Link to="/alumno/dashboard" className="block text-xs text-brand-600 hover:underline pt-2">
           Ir a mi panel
         </Link>
       </div>

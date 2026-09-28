@@ -103,7 +103,7 @@ export default function ConcursosOposicionPage() {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          className="bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 text-sm font-medium"
         >
           + Registrar concurso
         </button>
@@ -126,7 +126,7 @@ export default function ConcursosOposicionPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del concurso *</label>
                 <input type="text" value={form.nombre}
                   onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
-                  required className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  required className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de realización *</label>
@@ -147,7 +147,7 @@ export default function ConcursosOposicionPage() {
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">Participantes</label>
                   <button type="button" onClick={addParticipante}
-                    className="text-xs text-blue-600 hover:underline">+ Agregar participante</button>
+                    className="text-xs text-brand-600 hover:underline">+ Agregar participante</button>
                 </div>
                 {participantes.map((p, i) => (
                   <div key={i} className="border rounded-lg p-3 mb-2 bg-gray-50 space-y-2">
@@ -195,7 +195,7 @@ export default function ConcursosOposicionPage() {
 
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
-                <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Registrar concurso'}
                 </button>
               </div>

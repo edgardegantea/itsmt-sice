@@ -15,7 +15,7 @@ const ESTATUS_COLOR: Record<string, string> = {
   pendiente:   'bg-yellow-100 text-yellow-800 border-yellow-200',
   aceptado:    'bg-green-100 text-green-800 border-green-200',
   rechazado:   'bg-red-100 text-red-800 border-red-200',
-  inscrito:    'bg-blue-100 text-blue-800 border-blue-200',
+  inscrito:    'bg-brand-100 text-brand-800 border-brand-200',
   lista_espera:'bg-slate-100 text-slate-700 border-slate-200',
 }
 
@@ -62,7 +62,7 @@ export default function ConsultaAspirantePage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header institucional */}
-      <header className="bg-[#1a3a5c] text-white px-4 py-4 flex items-center gap-3">
+      <header className="bg-brand-600 text-white px-4 py-4 flex items-center gap-3">
         {logoUrl ? (
           <img src={logoUrl} alt={config.nombre_corto} className="h-9 w-9 object-contain" />
         ) : (
@@ -95,7 +95,7 @@ export default function ConsultaAspirantePage() {
                 onChange={e => setCurp(e.target.value.toUpperCase())}
                 maxLength={18}
                 placeholder="XXXX000000XXXXXX00"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition uppercase"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 transition uppercase"
                 required
               />
               <p className="text-xs text-slate-400 mt-1">{curp.length}/18 caracteres</p>
@@ -155,9 +155,9 @@ export default function ConsultaAspirantePage() {
               )}
 
               {resultado.estatus === 'inscrito' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
-                  <p className="text-sm font-semibold text-blue-800 mb-1">Ya estás inscrito</p>
-                  <p className="text-xs text-blue-700">
+                <div className="bg-brand-50 border border-brand-200 rounded-xl px-4 py-3">
+                  <p className="text-sm font-semibold text-brand-800 mb-1">Ya estás inscrito</p>
+                  <p className="text-xs text-brand-700">
                     Tu proceso de admisión está completo. Inicia sesión con tu número de control para acceder a tu portal de alumno.
                   </p>
                 </div>
@@ -190,9 +190,9 @@ export default function ConsultaAspirantePage() {
           )}
 
           <p className="text-center text-xs text-slate-400">
-            <Link to="/login" className="text-[#1a3a5c] hover:underline">Iniciar sesión</Link>
+            <Link to="/login" className="text-brand-600 hover:underline">Iniciar sesión</Link>
             {' · '}
-            <Link to="/registro" className="text-[#1a3a5c] hover:underline">Registrar solicitud</Link>
+            <Link to="/registro" className="text-brand-600 hover:underline">Registrar solicitud</Link>
           </p>
         </div>
       </main>

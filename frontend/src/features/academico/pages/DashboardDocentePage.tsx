@@ -13,7 +13,7 @@ import {
 } from '../../../components/ui/Icons'
 
 const ACCESOS_RAPIDOS = [
-  { to: '/docente/mi-horario',        label: 'Mi Horario',                desc: 'Consulta tus horas de clase asignadas', Icon: IconCalendar, color: 'bg-blue-50 text-blue-700' },
+  { to: '/docente/mi-horario',        label: 'Mi Horario',                desc: 'Consulta tus horas de clase asignadas', Icon: IconCalendar, color: 'bg-brand-50 text-brand-700' },
   { to: '/docente/disponibilidad',    label: 'Mi Disponibilidad',         desc: 'Registra tus horarios disponibles', Icon: IconClock, color: 'bg-indigo-50 text-indigo-700' },
   { to: '/docente/planeacion',        label: 'Mi Planeación',             desc: 'Instrumentación didáctica de tus materias', Icon: IconDocument, color: 'bg-emerald-50 text-emerald-700' },
   { to: '/docente/calificaciones',    label: 'Captura de Calificaciones', desc: 'Registra las calificaciones de tus grupos', Icon: IconChart, color: 'bg-purple-50 text-purple-700' },
@@ -50,7 +50,7 @@ function ModalPasaporteQr({ docenteId, onClose }: { docenteId: string; onClose: 
         <a
           href={dataUrl ?? undefined}
           download="mi-pasaporte-qr.png"
-          className="text-xs bg-[#1b396a] text-white px-4 py-2 rounded-xl hover:bg-[#152e56] transition-colors font-semibold shadow-xs flex items-center gap-1.5"
+          className="text-xs bg-brand-600 text-white px-4 py-2 rounded-xl hover:bg-brand-700 transition-colors font-semibold shadow-xs flex items-center gap-1.5"
         >
           <span>Descargar PNG</span>
         </a>
@@ -77,7 +77,7 @@ function ComparativoInstrumentacion() {
     <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between gap-6 flex-wrap shadow-xs">
       <div className="flex items-center gap-6">
         <div>
-          <div className="text-3xl font-extrabold text-[#1b396a]">{data.mi_porcentaje}%</div>
+          <div className="text-3xl font-extrabold text-brand-600">{data.mi_porcentaje}%</div>
           <div className="text-xs font-medium text-slate-500 mt-0.5">Mi cumplimiento de dosificación</div>
         </div>
         <div className="h-8 w-px bg-slate-200 hidden sm:block" />
@@ -110,8 +110,8 @@ function ComunicadosRecientesWidget() {
     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <IconMegaphone className="w-5 h-5 text-[#1b396a]" />
-          <h2 className="text-sm font-bold text-[#1b396a] uppercase tracking-wider">Comunicación Interna Reciente</h2>
+          <IconMegaphone className="w-5 h-5 text-brand-600" />
+          <h2 className="text-sm font-bold text-brand-600 uppercase tracking-wider">Comunicación Interna Reciente</h2>
           {noLeidos > 0 && (
             <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full">
               {noLeidos} sin leer
@@ -133,7 +133,7 @@ function ComunicadosRecientesWidget() {
             <div>
               <div className="flex items-center justify-between gap-1 mb-1.5">
                 <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                  c.prioridad === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                  c.prioridad === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-brand-100 text-brand-700'
                 }`}>
                   {c.categoria}
                 </span>
@@ -164,7 +164,7 @@ export default function DashboardDocentePage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Hola, {user?.name ?? 'Docente'}</h1>
-            <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-100 text-[#1b396a] rounded-full">
+            <span className="px-2.5 py-0.5 text-xs font-semibold bg-brand-100 text-brand-600 rounded-full">
               Docente TecNM
             </span>
           </div>
@@ -176,7 +176,7 @@ export default function DashboardDocentePage() {
         {user?.id && (
           <button
             onClick={() => setMostrarQr(true)}
-            className="px-4 py-2.5 bg-[#1b396a] text-white text-xs font-semibold rounded-xl hover:bg-[#152e56] transition-colors inline-flex items-center justify-center gap-2 shrink-0 shadow-xs"
+            className="px-4 py-2.5 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition-colors inline-flex items-center justify-center gap-2 shrink-0 shadow-xs"
           >
             <IconQrCode className="w-4 h-4" />
             <span>Mi pasaporte QR</span>
@@ -200,13 +200,13 @@ export default function DashboardDocentePage() {
               <Link
                 key={a.to}
                 to={a.to}
-                className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-[#1b396a] hover:shadow-md transition-all flex items-start gap-4 group"
+                className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-brand-600 hover:shadow-md transition-all flex items-start gap-4 group"
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${a.color}`}>
                   <ItemIcon className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-slate-800 group-hover:text-[#1b396a] transition-colors text-sm truncate">{a.label}</p>
+                  <p className="font-semibold text-slate-800 group-hover:text-brand-600 transition-colors text-sm truncate">{a.label}</p>
                   <p className="text-xs text-slate-500 mt-0.5 leading-relaxed line-clamp-2">{a.desc}</p>
                 </div>
               </Link>

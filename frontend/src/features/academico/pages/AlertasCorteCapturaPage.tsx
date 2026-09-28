@@ -61,7 +61,7 @@ export default function AlertasCorteCapturaPage() {
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 text-sm text-slate-600">
               <input type="checkbox" checked={soloPendientes} onChange={e => setSoloPendientes(e.target.checked)}
-                className="w-4 h-4 accent-[#1a3a5c]" />
+                className="w-4 h-4 accent-brand-600" />
               Solo pendientes
             </label>
             <ViewToggle value={vista} onChange={setVista} />
@@ -130,7 +130,7 @@ export default function AlertasCorteCapturaPage() {
                         <button
                           onClick={() => mutLeer.mutate(a.id)}
                           disabled={mutLeer.isPending}
-                          className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+                          className="text-xs text-brand-600 hover:underline disabled:opacity-50"
                         >
                           Marcar leída
                         </button>
@@ -155,7 +155,7 @@ export default function AlertasCorteCapturaPage() {
                   {a.porcentaje_capturado.toFixed(1)}%
                 </span>
                 <div className="flex gap-3 mt-1">
-                  <button onClick={() => mutLeer.mutate(a.id)} disabled={mutLeer.isPending} className="text-xs text-blue-600 hover:underline disabled:opacity-50">Marcar leída</button>
+                  <button onClick={() => mutLeer.mutate(a.id)} disabled={mutLeer.isPending} className="text-xs text-brand-600 hover:underline disabled:opacity-50">Marcar leída</button>
                   <button onClick={() => setDetalle(a)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export default function AlertasCorteCapturaPage() {
             { label: 'Leída por jefe', value: detalle.leida_jefe ? 'Sí' : 'No' },
             { label: 'Leída por director', value: detalle.leida_director ? 'Sí' : 'No' },
           ]}
-          footer={<button onClick={() => mutLeer.mutate(detalle.id)} disabled={mutLeer.isPending} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Marcar leída</button>}
+          footer={<button onClick={() => mutLeer.mutate(detalle.id)} disabled={mutLeer.isPending} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Marcar leída</button>}
         />
       )}
     </div>

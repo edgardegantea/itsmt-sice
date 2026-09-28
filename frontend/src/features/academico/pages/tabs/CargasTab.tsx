@@ -72,14 +72,14 @@ export default function CargasTab() {
           </select>
         </div>
         <button onClick={() => setModal({ horas_semana: 3 })}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 flex items-center gap-2">
           <span className="text-base leading-none">+</span> Asignar carga
         </button>
       </div>
 
       {/* Resumen de carga total si hay filtro de docente */}
       {filtroDocente && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
+        <div className="bg-brand-50 border border-brand-200 rounded-xl px-4 py-3 text-sm text-brand-800">
           Carga total del docente: <strong>{horasPorDocente[filtroDocente] ?? 0} horas/semana</strong>
         </div>
       )}
@@ -93,7 +93,7 @@ export default function CargasTab() {
             {isLoading && <EmptyRow cols={6} msg="Cargando…" />}
             {!isLoading && cargas.length === 0 && <EmptyRow cols={6} />}
             {cargas.map(c => (
-              <tr key={c.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={c.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-medium text-slate-900">{c.docente?.name ?? '—'}</td>
                 <td className="px-4 py-3 text-slate-700">{c.materia?.nombre ?? '—'}</td>
                 <td className="px-4 py-3 font-mono text-xs text-slate-600">
@@ -102,11 +102,11 @@ export default function CargasTab() {
                 <td className="px-4 py-3 text-slate-600">{c.periodo?.nombre ?? '—'}</td>
                 <td className="px-4 py-3 text-center font-semibold text-slate-800">{c.horas_semana}h</td>
                 <td className="px-4 py-3 text-right space-x-2">
-                  <button onClick={() => setModal(c)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                  <button onClick={() => setModal(c)} className="text-xs text-brand-600 hover:underline">Editar</button>
                   <button onClick={() => window.confirm('¿Eliminar carga?') && del.mutate(c.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => setDetalle(c)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                  <button onClick={() => setDetalle(c)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                 </td>
               </tr>
             ))}

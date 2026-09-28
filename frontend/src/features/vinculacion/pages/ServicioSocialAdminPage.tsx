@@ -7,7 +7,7 @@ import DetailModal from '../../../components/ui/DetailModal'
 import BulkActionBar, { SelectCheckbox, ToggleSelectionButton } from '../../../components/ui/BulkActionBar'
 
 const ESTATUS_COLOR: Record<string, string> = {
-  solicitado: 'bg-blue-100 text-blue-800',
+  solicitado: 'bg-brand-100 text-brand-800',
   aprobado:   'bg-indigo-100 text-indigo-800',
   rechazado:  'bg-red-100 text-red-800',
   en_curso:   'bg-yellow-100 text-yellow-800',
@@ -137,7 +137,7 @@ export default function ServicioSocialAdminPage() {
                 key={t.to}
                 onClick={() => mutEstatusBulk.mutate(t.to)}
                 disabled={mutEstatusBulk.isPending}
-                className="px-3 py-1.5 text-xs font-medium bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="px-3 py-1.5 text-xs font-medium bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50"
               >
                 {t.label}
               </button>
@@ -206,7 +206,7 @@ export default function ServicioSocialAdminPage() {
                   <td className="px-4 py-3 text-slate-600">{r.creditos_otorgados ?? 0}</td>
                   <td className="px-4 py-3"><AccionesTransicion r={r} /></td>
                   <td className="px-4 py-3">
-                    <button onClick={() => setDetalle(r)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(r)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -233,7 +233,7 @@ export default function ServicioSocialAdminPage() {
                 <span>{r.creditos_otorgados ?? 0} créditos</span>
               </div>
               <AccionesTransicion r={r} />
-              <button onClick={() => setDetalle(r)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+              <button onClick={() => setDetalle(r)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
             </div>
           ))}
         </div>

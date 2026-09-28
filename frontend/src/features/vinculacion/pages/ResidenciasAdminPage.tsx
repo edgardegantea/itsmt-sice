@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vinculacionApi, type ResidenciaProfesional } from '../services/vinculacion'
 
 const ESTATUS_COLOR: Record<string, string> = {
-  asignado:      'bg-blue-100 text-blue-800',
+  asignado:      'bg-brand-100 text-brand-800',
   en_curso:      'bg-yellow-100 text-yellow-800',
   acreditado:    'bg-green-100 text-green-800',
   no_acreditado: 'bg-red-100 text-red-800',
@@ -211,7 +211,7 @@ export default function ResidenciasAdminPage() {
                     />
                     <button
                       onClick={() => mutAsesor.mutate({ id: r.id, asesorId: asesorInput[r.id] })}
-                      className="px-2 py-1 rounded text-xs bg-blue-700 text-white hover:bg-blue-900"
+                      className="px-2 py-1 rounded text-xs bg-brand-700 text-white hover:bg-brand-900"
                     >
                       Asignar
                     </button>

@@ -99,7 +99,7 @@ export default function BecasAdminPage() {
 
   const estatusColors: Record<string, string> = {
     pendiente: 'bg-yellow-100 text-yellow-700',
-    validada:  'bg-blue-100 text-blue-700',
+    validada:  'bg-brand-100 text-brand-700',
     rechazada: 'bg-red-100 text-red-700',
     asignada:  'bg-green-100 text-green-700',
   }
@@ -117,7 +117,7 @@ export default function BecasAdminPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-4 py-2 text-sm font-medium capitalize ${tab === t ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              className={`px-4 py-2 text-sm font-medium capitalize ${tab === t ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
             >
               {t === 'solicitudes' ? 'Solicitudes' : 'Padrón de becarios'}
             </button>
@@ -150,7 +150,7 @@ export default function BecasAdminPage() {
               ) : solicitudes.map(s => (
                 <tr key={s.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3">
-                    <Link to={`/admin/alumnos/${s.alumno_id}`} className="font-medium text-slate-800 hover:text-blue-700 hover:underline">
+                    <Link to={`/admin/alumnos/${s.alumno_id}`} className="font-medium text-slate-800 hover:text-brand-700 hover:underline">
                       {s.alumno?.user?.name ?? '—'}
                     </Link>
                     <p className="text-xs text-slate-400">{s.alumno?.numero_control}</p>
@@ -168,7 +168,7 @@ export default function BecasAdminPage() {
                         <>
                           <button
                             onClick={() => mutValidar.mutate({ id: s.id, estatus: 'validada' })}
-                            className="text-xs text-blue-600 hover:underline"
+                            className="text-xs text-brand-600 hover:underline"
                           >Validar</button>
                           <button
                             onClick={() => mutValidar.mutate({ id: s.id, estatus: 'rechazada' })}
@@ -185,7 +185,7 @@ export default function BecasAdminPage() {
                           className="text-xs text-green-600 hover:underline"
                         >Asignar beca</button>
                       )}
-                      <button onClick={() => setDetalleSolicitud(s)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalleSolicitud(s)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </div>
                   </td>
                 </tr>
@@ -222,7 +222,7 @@ export default function BecasAdminPage() {
               ) : padron.map(b => (
                 <tr key={b.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3">
-                    <Link to={`/admin/alumnos/${b.alumno_id}`} className="font-medium text-slate-800 hover:text-blue-700 hover:underline">
+                    <Link to={`/admin/alumnos/${b.alumno_id}`} className="font-medium text-slate-800 hover:text-brand-700 hover:underline">
                       {b.alumno?.user?.name ?? '—'}
                     </Link>
                     <p className="text-xs text-slate-400">{b.alumno?.numero_control}</p>
@@ -243,7 +243,7 @@ export default function BecasAdminPage() {
                         className="text-xs text-red-500 hover:underline"
                       >Cancelar</button>
                     )}
-                    <button onClick={() => setDetalleBeca(b)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap ml-2">Ver detalle</button>
+                    <button onClick={() => setDetalleBeca(b)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap ml-2">Ver detalle</button>
                   </td>
                 </tr>
               ))}

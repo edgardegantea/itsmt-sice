@@ -99,7 +99,7 @@ export const DIA_LABEL: Record<string, string> = {
   jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
 }
 export const DIA_COLOR: Record<string, string> = {
-  lunes: 'bg-blue-50 text-blue-700 border-blue-100',
+  lunes: 'bg-brand-50 text-brand-700 border-brand-100',
   martes: 'bg-violet-50 text-violet-700 border-violet-100',
   miercoles: 'bg-emerald-50 text-emerald-700 border-emerald-100',
   jueves: 'bg-amber-50 text-amber-700 border-amber-100',
@@ -353,7 +353,7 @@ export function DisponibilidadPanel({ docenteId, periodoId }: { docenteId: strin
                 {bloquesDia.length > 0 && (
                   <span className={`text-xs font-medium ${excede ? 'text-red-600' : 'text-slate-500'}`}>{horas.toFixed(1)}h{excede ? ` ⚠ excede ${limite}h` : ''}</span>
                 )}
-                <button onClick={() => agregarBloque(dia)} className="text-xs font-medium text-blue-600 hover:underline">+ Agregar bloque</button>
+                <button onClick={() => agregarBloque(dia)} className="text-xs font-medium text-brand-600 hover:underline">+ Agregar bloque</button>
               </div>
             </div>
             <div className="divide-y divide-slate-50">
@@ -381,7 +381,7 @@ export function DisponibilidadPanel({ docenteId, periodoId }: { docenteId: strin
 
       <div className="flex justify-end pt-1">
         <button onClick={() => save.mutate()} disabled={save.isPending}
-          className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
           {save.isPending ? 'Guardando…' : 'Guardar disponibilidad'}
         </button>
       </div>
@@ -459,7 +459,7 @@ export function CvPanel({ ficha, isLoading }: { ficha: FichaDocenteCv | null | u
           <ul className="space-y-1.5">
             {ficha.publicaciones.map((p, i) => (
               <li key={i} className="text-sm text-slate-700">
-                {p.url ? <a href={p.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{p.titulo}</a> : p.titulo}
+                {p.url ? <a href={p.url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline">{p.titulo}</a> : p.titulo}
                 {p.medio && ` — ${p.medio}`}{p.anio && ` (${p.anio})`}
               </li>
             ))}

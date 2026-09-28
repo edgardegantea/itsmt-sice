@@ -118,7 +118,7 @@ export default function FichasDocentesPage() {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <ViewToggle value={vista} onChange={setVista} />
-              <button onClick={openNuevo} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+              <button onClick={openNuevo} className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700">
                 + Nueva ficha
               </button>
             </div>
@@ -150,14 +150,14 @@ export default function FichasDocentesPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {fichas.map(f => (
-                  <tr key={f.id} className="hover:bg-blue-50/60 transition-colors">
+                  <tr key={f.id} className="hover:bg-brand-50/60 transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-800">{f.docente?.name ?? '—'}</p>
                       <p className="text-xs text-slate-400">{f.docente?.email}</p>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        f.tipo_contrato === 'base' ? 'bg-blue-100 text-blue-700'
+                        f.tipo_contrato === 'base' ? 'bg-brand-100 text-brand-700'
                         : f.tipo_contrato === 'interino' ? 'bg-purple-100 text-purple-700'
                         : f.tipo_contrato === 'medio_tiempo' ? 'bg-orange-100 text-orange-700'
                         : 'bg-slate-100 text-slate-600'
@@ -186,7 +186,7 @@ export default function FichasDocentesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => openEdit(f)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                      <button onClick={() => openEdit(f)} className="text-xs text-brand-600 hover:underline">Editar</button>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button onClick={() => setDetalle(f)} className="text-xs font-medium text-slate-500 hover:underline whitespace-nowrap">Ver detalle</button>
@@ -207,14 +207,14 @@ export default function FichasDocentesPage() {
                   </span>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium self-start ${
-                  f.tipo_contrato === 'base' ? 'bg-blue-100 text-blue-700'
+                  f.tipo_contrato === 'base' ? 'bg-brand-100 text-brand-700'
                   : f.tipo_contrato === 'interino' ? 'bg-purple-100 text-purple-700'
                   : f.tipo_contrato === 'medio_tiempo' ? 'bg-orange-100 text-orange-700'
                   : 'bg-slate-100 text-slate-600'
                 }`}>{CONTRATO_LABEL[f.tipo_contrato]}</span>
                 <p className="text-xs text-slate-500">{f.categoria ?? '—'}</p>
                 <div className="flex gap-3 mt-1">
-                  <button onClick={() => openEdit(f)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                  <button onClick={() => openEdit(f)} className="text-xs text-brand-600 hover:underline">Editar</button>
                   <button onClick={() => setDetalle(f)} className="text-xs font-medium text-slate-500 hover:underline">Ver detalle</button>
                 </div>
               </div>
@@ -232,7 +232,7 @@ export default function FichasDocentesPage() {
                   <p className="text-xs font-medium text-slate-600 mb-1">{f.docente?.name}</p>
                   <div className="flex flex-wrap gap-2">
                     {(f.horas_frente_grupo_por_periodo ?? []).map((h, i) => (
-                      <span key={i} className="text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-lg">
+                      <span key={i} className="text-xs bg-brand-50 text-brand-700 border border-brand-100 px-2 py-1 rounded-lg">
                         {h.periodo_nombre ?? h.periodo_id}: <strong>{h.horas_semana}h</strong>
                       </span>
                     ))}
@@ -294,7 +294,7 @@ export default function FichasDocentesPage() {
           </Field>
           <Field label="Activo">
             <label className="flex items-center gap-2 mt-2">
-              <input type="checkbox" checked={!!form.activo} onChange={e => set('activo', e.target.checked)} className="w-4 h-4 accent-blue-600" />
+              <input type="checkbox" checked={!!form.activo} onChange={e => set('activo', e.target.checked)} className="w-4 h-4 accent-brand-600" />
               <span className="text-sm text-slate-700">Ficha activa</span>
             </label>
           </Field>
@@ -319,7 +319,7 @@ export default function FichasDocentesPage() {
                 : '—',
             },
           ]}
-          footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Editar</button>}
+          footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Editar</button>}
         />
       )}
     </div>

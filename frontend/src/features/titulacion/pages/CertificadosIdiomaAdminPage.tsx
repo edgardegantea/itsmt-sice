@@ -58,7 +58,7 @@ export default function CertificadosIdiomaAdminPage() {
                 </td>
                 <td className="px-4 py-3">
                   <span className="font-medium">{cert.idioma}</span>
-                  <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">{cert.nivel}</span>
+                  <span className="ml-2 text-xs bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded">{cert.nivel}</span>
                 </td>
                 <td className="px-4 py-3 text-slate-600">{cert.institucion_certificadora}</td>
                 <td className="px-4 py-3 text-slate-500">{cert.fecha_expedicion}</td>
@@ -80,7 +80,7 @@ export default function CertificadosIdiomaAdminPage() {
                   )}
                   {cert.url_documento && (
                     <a href={cert.url_documento} target="_blank" rel="noopener noreferrer"
-                      className="ml-2 text-xs text-blue-600 hover:underline">
+                      className="ml-2 text-xs text-brand-600 hover:underline">
                       Ver doc.
                     </a>
                   )}

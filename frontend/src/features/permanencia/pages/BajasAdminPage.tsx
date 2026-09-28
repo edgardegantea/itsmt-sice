@@ -102,7 +102,7 @@ export default function BajasAdminPage() {
               onClick={() => setFiltroEstatus(e)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                 filtroEstatus === e
-                  ? 'bg-[#1a3a5c] text-white border-[#1a3a5c]'
+                  ? 'bg-brand-600 text-white border-brand-600'
                   : 'bg-white text-slate-600 border-slate-300 hover:border-slate-400'
               }`}
             >
@@ -129,8 +129,8 @@ export default function BajasAdminPage() {
 
       {/* Confirmación aprobar */}
       {pendienteAccion && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p className="text-sm font-medium text-blue-800 mb-3">
+        <div className="bg-brand-50 border border-brand-200 rounded-xl p-4">
+          <p className="text-sm font-medium text-brand-800 mb-3">
             ¿Aprobar esta baja? El estatus del alumno cambiará automáticamente.
           </p>
           <div className="flex gap-2">
@@ -206,7 +206,7 @@ export default function BajasAdminPage() {
                     <button
                       onClick={() => { if (confirm('¿Registrar el reingreso? El alumno volverá a estatus activo.')) reingresoMut.mutate(baja.id) }}
                       disabled={reingresoMut.isPending}
-                      className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+                      className="text-xs bg-brand-50 text-brand-700 border border-brand-200 px-3 py-1.5 rounded-lg hover:bg-brand-100 transition-colors disabled:opacity-50"
                     >
                       Registrar reingreso
                     </button>

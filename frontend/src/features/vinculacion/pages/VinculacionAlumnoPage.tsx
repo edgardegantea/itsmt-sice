@@ -4,7 +4,7 @@ import { useAuthStore } from '../../../store/authStore'
 import { vinculacionApi, type ServicioSocial, type SolicitudRp, type PrerequisitosRp } from '../services/vinculacion'
 
 const ESTATUS_COLOR: Record<string, string> = {
-  solicitado:             'bg-blue-100 text-blue-800',
+  solicitado:             'bg-brand-100 text-brand-800',
   aprobado:               'bg-indigo-100 text-indigo-800',
   rechazado:              'bg-red-100 text-red-800',
   en_curso:               'bg-yellow-100 text-yellow-800',
@@ -202,7 +202,7 @@ export default function VinculacionAlumnoPage() {
               onClick={() => setTab(t.id)}
               className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
                 tab === t.id
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-brand-600 text-brand-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >

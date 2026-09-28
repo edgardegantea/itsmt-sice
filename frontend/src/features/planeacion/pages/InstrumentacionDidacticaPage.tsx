@@ -7,7 +7,7 @@ import apiClient from '../../../config/apiClient'
 
 const ESTATUS_COLOR: Record<string, string> = {
   borrador:     'bg-slate-100 text-slate-600',
-  enviada:      'bg-blue-100 text-blue-700',
+  enviada:      'bg-brand-100 text-brand-700',
   observaciones:'bg-yellow-100 text-yellow-700',
   enviada_jc:   'bg-indigo-100 text-indigo-700',
   liberada:     'bg-green-100 text-green-700',
@@ -52,7 +52,7 @@ const PASO_POR_ESTATUS: Record<string, string> = {
   vigente: 'vigente',
 }
 
-const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-slate-50'
+const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white disabled:bg-slate-50'
 const selectCls = inputCls
 
 function mutationError(e: unknown): string {
@@ -80,15 +80,15 @@ function Stepper({ estatus }: { estatus: string }) {
           <div key={p.key} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center gap-1">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                esActual ? 'bg-[#1a3a5c] text-white ring-4 ring-[#1a3a5c]/15'
-                  : alcanzado ? 'bg-[#1a3a5c] text-white' : 'bg-slate-200 text-slate-400'
+                esActual ? 'bg-brand-600 text-white ring-4 ring-brand-600/15'
+                  : alcanzado ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-400'
               }`}>
                 {alcanzado && !esActual ? '✓' : i + 1}
               </div>
-              <span className={`text-[10px] font-medium text-center leading-tight max-w-[64px] ${esActual ? 'text-[#1a3a5c]' : 'text-slate-400'}`}>{p.label}</span>
+              <span className={`text-[10px] font-medium text-center leading-tight max-w-[64px] ${esActual ? 'text-brand-600' : 'text-slate-400'}`}>{p.label}</span>
             </div>
             {i < PASOS.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-1 mb-4 ${i < idxActivo ? 'bg-[#1a3a5c]' : 'bg-slate-200'}`} />
+              <div className={`flex-1 h-0.5 mx-1 mb-4 ${i < idxActivo ? 'bg-brand-600' : 'bg-slate-200'}`} />
             )}
           </div>
         )
@@ -125,7 +125,7 @@ function Seccion({
           <button
             type="button"
             onClick={() => setAnotando(true)}
-            className="text-[11px] font-medium text-blue-600 hover:underline shrink-0"
+            className="text-[11px] font-medium text-brand-600 hover:underline shrink-0"
           >
             + Observación aquí
           </button>
@@ -147,9 +147,9 @@ function Seccion({
       {modoRevision && pendientes && pendientes.length > 0 && (
         <div className="space-y-1.5 mt-2">
           {pendientes.map(p => (
-            <div key={p.id} className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5">
-              <p className="text-sm text-blue-900 whitespace-pre-line flex-1">{p.texto}</p>
-              <button type="button" onClick={() => onQuitarObs?.(p.id)} className="text-blue-400 hover:text-blue-700 text-xs shrink-0">✕</button>
+            <div key={p.id} className="flex items-start gap-2 rounded-lg bg-brand-50 border border-brand-200 px-3 py-1.5">
+              <p className="text-sm text-brand-900 whitespace-pre-line flex-1">{p.texto}</p>
+              <button type="button" onClick={() => onQuitarObs?.(p.id)} className="text-brand-400 hover:text-brand-700 text-xs shrink-0">✕</button>
             </div>
           ))}
         </div>
@@ -170,7 +170,7 @@ function Seccion({
               type="button"
               onClick={() => { if (texto.trim()) { onAgregarObs?.(seccion, texto.trim()); setTexto(''); setAnotando(false) } }}
               disabled={!texto.trim()}
-              className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="text-xs px-3 py-1.5 rounded-lg bg-brand-600 text-white font-medium hover:bg-brand-700 disabled:opacity-50"
             >
               Agregar
             </button>
@@ -420,7 +420,7 @@ export default function InstrumentacionDidacticaPage() {
             <button
               onClick={() => selected ? actualizar.mutate(selected.id) : crear.mutate()}
               disabled={crear.isPending || actualizar.isPending || (!selected && !asignacionId)}
-              className="rounded-lg bg-[#1a3a5c] px-5 py-2 text-sm font-medium text-white hover:bg-[#234d7a] disabled:opacity-50"
+              className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-medium text-white hover:bg-[#234d7a] disabled:opacity-50"
             >
               {crear.isPending || actualizar.isPending ? 'Guardando…' : 'Guardar borrador'}
             </button>
@@ -501,7 +501,7 @@ export default function InstrumentacionDidacticaPage() {
           </div>
 
           {modoRevision && (
-            <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-xs text-blue-800">
+            <div className="rounded-lg bg-brand-50 border border-brand-200 p-3 text-xs text-brand-800">
               {enRevisionDA
                 ? 'Revisión de Desarrollo Académico: puedes anclar una observación en cualquier sección antes de aprobar o rechazar.'
                 : 'Revisión de Jefatura de Carrera: puedes anclar una observación en cualquier sección antes de liberar o devolver.'}
@@ -603,7 +603,7 @@ export default function InstrumentacionDidacticaPage() {
               <button
                 onClick={() => enviar.mutate(selected.id)}
                 disabled={enviar.isPending}
-                className="px-3.5 py-2 text-sm font-medium text-white bg-[#1a3a5c] rounded-lg hover:bg-[#234d7a] disabled:opacity-50"
+                className="px-3.5 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-[#234d7a] disabled:opacity-50"
               >
                 {enviar.isPending ? 'Enviando…' : 'Enviar a revisión'}
               </button>
@@ -661,10 +661,10 @@ export default function InstrumentacionDidacticaPage() {
                   <div className="space-y-1">
                     <p className="text-xs font-medium text-slate-500">Observaciones ancladas por sección:</p>
                     {obsCampos.map(o => (
-                      <div key={o.id} className="flex items-start gap-2 text-xs bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1.5">
-                        <span className="font-semibold text-blue-800 shrink-0">{SECCION_LABEL[o.seccion]}:</span>
-                        <span className="text-blue-900 flex-1">{o.texto}</span>
-                        <button onClick={() => quitarObsCampo(o.id)} className="text-blue-400 hover:text-blue-700">✕</button>
+                      <div key={o.id} className="flex items-start gap-2 text-xs bg-brand-50 border border-brand-200 rounded-lg px-2.5 py-1.5">
+                        <span className="font-semibold text-brand-800 shrink-0">{SECCION_LABEL[o.seccion]}:</span>
+                        <span className="text-brand-900 flex-1">{o.texto}</span>
+                        <button onClick={() => quitarObsCampo(o.id)} className="text-brand-400 hover:text-brand-700">✕</button>
                       </div>
                     ))}
                   </div>
@@ -707,7 +707,7 @@ export default function InstrumentacionDidacticaPage() {
           </div>
           <button
             onClick={abrirNueva}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#1a3a5c] rounded-lg hover:bg-[#234d7a]"
+            className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-[#234d7a]"
           >
             + Nueva
           </button>
@@ -749,7 +749,7 @@ export default function InstrumentacionDidacticaPage() {
                   <tr
                     key={inst.id}
                     onClick={() => abrirDetalle(inst)}
-                    className="hover:bg-blue-50/60 transition-colors cursor-pointer"
+                    className="hover:bg-brand-50/60 transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-2.5 font-medium text-slate-800">
                       {inst.asignacion?.materia?.nombre ?? '—'}
@@ -767,7 +767,7 @@ export default function InstrumentacionDidacticaPage() {
                       {inst.liberadaPor?.name ?? '—'}
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <span className="text-xs font-medium text-blue-600 hover:underline">Ver / gestionar →</span>
+                      <span className="text-xs font-medium text-brand-600 hover:underline">Ver / gestionar →</span>
                     </td>
                   </tr>
                 ))}

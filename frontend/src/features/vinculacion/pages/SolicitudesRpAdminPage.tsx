@@ -92,7 +92,7 @@ export default function SolicitudesRpAdminPage() {
         {s.estatus === 'pendiente_dictamen' && (
           <button
             onClick={() => abrirDictamen(s)}
-            className="px-2.5 py-1 rounded text-xs font-medium bg-blue-700 text-white hover:bg-blue-900"
+            className="px-2.5 py-1 rounded text-xs font-medium bg-brand-700 text-white hover:bg-brand-900"
           >
             Emitir dictamen
           </button>
@@ -169,7 +169,7 @@ export default function SolicitudesRpAdminPage() {
                   <td className="px-4 py-3"><Badge estatus={s.estatus} /></td>
                   <td className="px-4 py-3"><Acciones s={s} /></td>
                   <td className="px-4 py-3">
-                    <button onClick={() => setDetalle(s)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(s)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -190,7 +190,7 @@ export default function SolicitudesRpAdminPage() {
               <p className="text-sm text-slate-600 truncate">{s.datos_empresa?.nombre ?? '—'}</p>
               <p className="text-xs text-slate-500 capitalize">{s.opcion?.replace('_', ' ')}</p>
               <Acciones s={s} />
-              <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+              <button onClick={() => setDetalle(s)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
             </div>
           ))}
         </div>

@@ -20,9 +20,10 @@ class GotenbergService
      *
      * @param  string  $html      HTML completo del documento
      * @param  array   $options   Opciones de página: paperWidth, paperHeight, marginTop, etc.
+     * @param  string|null $headerHtml  Encabezado repetido en cada página (documento HTML completo)
      * @return string  Contenido binario del PDF
      */
-    public function htmlToPdf(string $html, array $options = []): string
+    public function htmlToPdf(string $html, array $options = [], ?string $headerHtml = null): string
     {
         $defaults = [
             'paperWidth'   => '8.5in',
@@ -38,9 +39,12 @@ class GotenbergService
         $params = array_merge($defaults, $options);
 
         try {
-            $response = Http::timeout(30)
-                ->attach('index.html', $html, 'index.html')
-                ->post("{$this->baseUrl}/forms/chromium/convert/html", $params);
+            $request = Http::timeout(60)->attach('index.html', $html, 'index.html');
+            // header.html: Chromium lo imprime en el margen superior de cada página.
+            if ($headerHtml !== null) {
+                $request = $request->attach('header.html', $headerHtml, 'header.html');
+            }
+            $response = $request->post("{$this->baseUrl}/forms/chromium/convert/html", $params);
         } catch (ConnectionException $e) {
             throw new RuntimeException('Gotenberg no disponible. Verifica que el contenedor esté corriendo.', 0, $e);
         }

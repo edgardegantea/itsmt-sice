@@ -39,10 +39,10 @@ export default function InscribirModal({ aspirante, onClose }: Props) {
           </p>
           <div className="bg-slate-50 rounded-xl p-4 ring-1 ring-slate-200 mb-5">
             <p className="text-xs text-slate-500 mb-1">Número de control asignado</p>
-            <p className="text-2xl font-bold tracking-widest text-[#1a3a5c]">{data.numero_control}</p>
+            <p className="text-2xl font-bold tracking-widest text-brand-600">{data.numero_control}</p>
             <p className="text-xs text-slate-400 mt-1">{data.carrera.nombre}</p>
           </div>
-          <button onClick={onClose} className="px-6 py-2 bg-[#1a3a5c] hover:bg-[#234d7a] text-white text-sm font-medium rounded-lg transition-colors">
+          <button onClick={onClose} className="px-6 py-2 bg-brand-600 hover:bg-[#234d7a] text-white text-sm font-medium rounded-lg transition-colors">
             Cerrar
           </button>
         </div>
@@ -68,7 +68,7 @@ export default function InscribirModal({ aspirante, onClose }: Props) {
           <select
             value={tipoIngreso}
             onChange={e => setTipoIngreso(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30"
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-600/30"
           >
             {TIPOS_INGRESO.map(t => (
               <option key={t.value} value={t.value}>{t.label}</option>

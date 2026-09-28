@@ -6,7 +6,7 @@ interface Props {
   onChange: (key: string, value: string) => void
 }
 
-const SELECT = 'px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/20 focus:border-[#1a3a5c] transition'
+const SELECT = 'px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600 transition'
 
 export default function FiltrosAspirantes({ carrera_id, estatus, onChange }: Props) {
   const { data: carreras = [] } = useCarreras()

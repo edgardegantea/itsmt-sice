@@ -58,7 +58,7 @@ const ROLE_COLOR: Record<string, string> = {
   superadmin:              'bg-rose-100 text-rose-900',
   admin:                   'bg-red-100 text-red-800',
   director_academico:      'bg-purple-100 text-purple-800',
-  jefe_carrera:            'bg-blue-100 text-blue-800',
+  jefe_carrera:            'bg-brand-100 text-brand-800',
   docente:                 'bg-cyan-100 text-cyan-800',
   alumno:                  'bg-green-100 text-green-800',
   personal_administrativo: 'bg-amber-100 text-amber-800',
@@ -66,7 +66,7 @@ const ROLE_COLOR: Record<string, string> = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500'
 
 function Campo({ label, value }: { label: string; value?: string | null }) {
   return (
@@ -80,7 +80,7 @@ function Campo({ label, value }: { label: string; value?: string | null }) {
 function Avatar({ name }: { name: string }) {
   const initials = name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   return (
-    <div className="w-16 h-16 rounded-full bg-[#1a3a5c] flex items-center justify-center text-white text-xl font-bold shrink-0">
+    <div className="w-16 h-16 rounded-full bg-brand-600 flex items-center justify-center text-white text-xl font-bold shrink-0">
       {initials}
     </div>
   )
@@ -172,7 +172,7 @@ function EditModal({ usuario, roles, carreras, onClose }: { usuario: Usuario; ro
             <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-40 overflow-y-auto">
               {roles.map(r => (
                 <label key={r} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
-                  <input type="checkbox" checked={rolesSel.includes(r)} onChange={() => toggleRol(r)} className="w-4 h-4 accent-blue-600" />
+                  <input type="checkbox" checked={rolesSel.includes(r)} onChange={() => toggleRol(r)} className="w-4 h-4 accent-brand-600" />
                   <span className="text-slate-700">{ROLE_LABEL[r] ?? r}</span>
                 </label>
               ))}
@@ -197,7 +197,7 @@ function EditModal({ usuario, roles, carreras, onClose }: { usuario: Usuario; ro
                   const marcada = c.id in carrerasImparte
                   return (
                     <label key={c.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
-                      <input type="checkbox" checked={marcada} onChange={() => toggleCarreraImparte(c.id)} className="w-4 h-4 accent-blue-600" />
+                      <input type="checkbox" checked={marcada} onChange={() => toggleCarreraImparte(c.id)} className="w-4 h-4 accent-brand-600" />
                       <span className="flex-1 text-slate-700">{c.nombre} ({c.clave})</span>
                       {marcada && (
                         <input
@@ -217,7 +217,7 @@ function EditModal({ usuario, roles, carreras, onClose }: { usuario: Usuario; ro
         </div>
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
           <button onClick={onClose} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cancelar</button>
-          <button disabled={isPending || rolesSel.length === 0} onClick={() => mutate()} className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          <button disabled={isPending || rolesSel.length === 0} onClick={() => mutate()} className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50">
             {isPending ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
@@ -282,7 +282,7 @@ export default function UsuarioDetailPage() {
     return (
       <div className="p-6 text-center">
         <p className="text-slate-500">No se encontró el usuario.</p>
-        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-blue-600 hover:underline">← Volver</button>
+        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-brand-600 hover:underline">← Volver</button>
       </div>
     )
   }

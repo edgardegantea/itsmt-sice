@@ -75,7 +75,7 @@ export default function ProgramasDistanciaPage() {
           <ViewToggle value={vista} onChange={setVista} />
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 text-sm font-medium"
           >
             + Configurar programa
           </button>
@@ -101,7 +101,7 @@ export default function ProgramasDistanciaPage() {
                   onChange={e => setForm(f => ({ ...f, carrera_id: e.target.value }))}
                   required
                   placeholder="UUID de la carrera"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div>
@@ -109,7 +109,7 @@ export default function ProgramasDistanciaPage() {
                 <select
                   value={form.modalidad}
                   onChange={e => setForm(f => ({ ...f, modalidad: e.target.value as 'no_escolarizada' | 'mixta' }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="mixta">Mixta</option>
                   <option value="no_escolarizada">No escolarizada</option>
@@ -164,7 +164,7 @@ export default function ProgramasDistanciaPage() {
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Configurar'}
                 </button>
               </div>
@@ -210,7 +210,7 @@ export default function ProgramasDistanciaPage() {
                     }`}>{p.activo ? 'Activo' : 'Inactivo'}</span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => setDetalle(p)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalle(p)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -231,7 +231,7 @@ export default function ProgramasDistanciaPage() {
                 {MODALIDAD_LABEL[p.modalidad]}
               </span>
               <p className="text-xs text-gray-500">{p.creditos_minimos_carga}–{p.creditos_maximos_carga} créditos · {p.semestres_maximos} sem. máx.</p>
-              <button onClick={() => setDetalle(p)} className="mt-1 text-xs font-medium text-blue-600 hover:underline self-start">Ver detalle</button>
+              <button onClick={() => setDetalle(p)} className="mt-1 text-xs font-medium text-brand-600 hover:underline self-start">Ver detalle</button>
             </div>
           ))}
         </div>

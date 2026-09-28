@@ -73,7 +73,7 @@ export default function PlanAccionTutorialPage() {
           </div>
           <button
             onClick={() => setShowForm(v => !v)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
           >
             {showForm ? 'Cancelar' : '+ Nuevo PAT'}
           </button>
@@ -89,7 +89,7 @@ export default function PlanAccionTutorialPage() {
                   type="text"
                   value={form.periodo_id}
                   onChange={e => setForm(f => ({ ...f, periodo_id: e.target.value }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="UUID del periodo académico"
                   required
                 />
@@ -100,7 +100,7 @@ export default function PlanAccionTutorialPage() {
                   value={form.objetivo_general}
                   onChange={e => setForm(f => ({ ...f, objetivo_general: e.target.value }))}
                   rows={4}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="Describe el objetivo general del plan de tutoría para este periodo..."
                   required
                 />
@@ -109,7 +109,7 @@ export default function PlanAccionTutorialPage() {
                 <button
                   type="submit"
                   disabled={crearMut.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
                 >
                   {crearMut.isPending ? 'Guardando…' : 'Crear PAT'}
                 </button>
@@ -119,7 +119,7 @@ export default function PlanAccionTutorialPage() {
         )}
 
         {/* Flujo de estatus */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+        <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 text-sm text-brand-800">
           <strong>Flujo de aprobación:</strong> Crea tu PAT en estado <strong>Borrador</strong> →
           Envíalo a revisión (estado <strong>Enviado</strong>) →
           La coordinación lo marca como <strong>Aprobado</strong>

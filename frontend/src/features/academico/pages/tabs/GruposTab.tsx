@@ -96,7 +96,7 @@ export default function GruposTab() {
           </select>
         </div>
         <button onClick={() => setModal({ turno: 'matutino', capacidad: 35, semestre: 1 })}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 flex items-center gap-2">
           <span className="text-base leading-none">+</span> Nuevo grupo
         </button>
       </div>
@@ -110,7 +110,7 @@ export default function GruposTab() {
             {isLoading && <EmptyRow cols={7} msg="Cargando…" />}
             {!isLoading && grupos.length === 0 && <EmptyRow cols={7} />}
             {grupos.map(g => (
-              <tr key={g.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+              <tr key={g.id} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                 <td className="px-4 py-3 font-mono font-semibold text-slate-900">{g.clave}</td>
                 <td className="px-4 py-3 text-slate-600">{g.carrera?.clave ?? '—'}</td>
                 <td className="px-4 py-3 text-slate-600">{g.periodo?.nombre ?? '—'}</td>
@@ -123,7 +123,7 @@ export default function GruposTab() {
                 </td>
                 <td className="px-4 py-3 text-right space-x-2">
                   <button onClick={() => { setDetalle(g); setAsignarOpen(false) }} className="text-xs text-green-700 hover:underline">Alumnos</button>
-                  <button onClick={() => setModal(g)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                  <button onClick={() => setModal(g)} className="text-xs text-brand-600 hover:underline">Editar</button>
                   <button
                     onClick={() => setModal({
                       carrera_id: g.carrera_id,
@@ -197,7 +197,7 @@ export default function GruposTab() {
                 <p className="text-sm font-medium text-slate-700">
                   {grupoDetalle?.alumnos?.length ?? 0} / {detalle.capacidad} alumnos
                 </p>
-                <button onClick={() => setAsignarOpen(true)} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <button onClick={() => setAsignarOpen(true)} className="px-3 py-1.5 text-xs bg-brand-600 text-white rounded-lg hover:bg-brand-700">
                   + Asignar alumnos
                 </button>
               </div>
@@ -224,7 +224,7 @@ export default function GruposTab() {
                   <div className="flex gap-2 justify-end">
                     <button onClick={() => { setAsignarOpen(false); setSelAlumnos([]) }} className="text-xs text-slate-500 hover:underline">Cancelar</button>
                     <button onClick={() => asignar.mutate()} disabled={selAlumnos.length === 0 || asignar.isPending}
-                      className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg disabled:opacity-50">
+                      className="px-3 py-1.5 text-xs bg-brand-600 text-white rounded-lg disabled:opacity-50">
                       {asignar.isPending ? 'Asignando…' : `Asignar ${selAlumnos.length > 0 ? `(${selAlumnos.length})` : ''}`}
                     </button>
                   </div>
@@ -238,10 +238,10 @@ export default function GruposTab() {
                 <tbody className="divide-y divide-slate-100">
                   {(grupoDetalle?.alumnos ?? []).length === 0 && <EmptyRow cols={4} msg="Sin alumnos asignados." />}
                   {(grupoDetalle?.alumnos ?? []).map(a => (
-                    <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
+                    <tr key={a.id} className="hover:bg-brand-50/60 transition-colors">
                       <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{a.numero_control}</td>
                       <td className="px-4 py-2.5 text-slate-900">
-                        <Link to={`/admin/alumnos/${a.id}`} className="hover:text-blue-700 hover:underline">
+                        <Link to={`/admin/alumnos/${a.id}`} className="hover:text-brand-700 hover:underline">
                           {a.user?.name
                             ?? (a.inscripcion?.aspirante
                               ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()

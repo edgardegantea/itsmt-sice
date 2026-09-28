@@ -147,7 +147,7 @@ export default function EstadoCuentaAdminPage() {
                       {isAdmin && (
                         <td className="px-4 py-3 text-right">
                           {!a.pagado && (
-                            <button onClick={() => setPagoModal(a)} className="text-xs text-blue-600 hover:underline">
+                            <button onClick={() => setPagoModal(a)} className="text-xs text-brand-600 hover:underline">
                               Registrar pago
                             </button>
                           )}
@@ -213,7 +213,7 @@ export default function EstadoCuentaAdminPage() {
               <button
                 onClick={() => mutPagar.mutate(pagoModal.id)}
                 disabled={mutPagar.isPending}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
               >
                 {mutPagar.isPending ? 'Guardando…' : 'Confirmar pago'}
               </button>

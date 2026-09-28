@@ -84,7 +84,7 @@ export default function TutoriasPage() {
             </div>
             <button
               onClick={() => setModal({ tutor_id: '', periodo_id: '', alumno_ids: [] })}
-              className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              className="shrink-0 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
             >
               + Asignar tutorías
             </button>
@@ -100,7 +100,7 @@ export default function TutoriasPage() {
             </div>
             <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm">
               <span className="text-slate-500">Tutores activos</span>
-              <span className="ml-2 font-semibold text-blue-700">{totalTutores}</span>
+              <span className="ml-2 font-semibold text-brand-700">{totalTutores}</span>
             </div>
           </div>
         )}
@@ -127,7 +127,7 @@ export default function TutoriasPage() {
             <button
               onClick={() => setVista('por-tutor')}
               title="Vista agrupada"
-              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'por-tutor' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'por-tutor' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h8M4 18h8" />
@@ -136,7 +136,7 @@ export default function TutoriasPage() {
             <button
               onClick={() => setVista('lista')}
               title="Vista lista"
-              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'lista' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'lista' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
@@ -145,7 +145,7 @@ export default function TutoriasPage() {
             <button
               onClick={() => setVista('cards')}
               title="Vista tarjetas"
-              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'cards' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              className={`px-3 py-2 rounded-lg text-sm border transition-colors ${vista === 'cards' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
@@ -169,7 +169,7 @@ export default function TutoriasPage() {
                   <div key={tutorId} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                     <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-semibold shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 text-sm font-semibold shrink-0">
                           {tutor?.name?.charAt(0) ?? '?'}
                         </div>
                         <span className="font-semibold text-slate-800">{tutor?.name ?? '—'}</span>
@@ -179,7 +179,7 @@ export default function TutoriasPage() {
                     <table className="w-full text-sm">
                       <tbody className="divide-y divide-slate-50">
                         {tutas.map(t => (
-                          <tr key={t.id} className="hover:bg-blue-50/40 transition-colors">
+                          <tr key={t.id} className="hover:bg-brand-50/40 transition-colors">
                             <td className="px-4 py-2.5 w-36">
                               <span className="font-mono text-xs text-slate-500">{t.alumno?.numero_control}</span>
                             </td>
@@ -214,7 +214,7 @@ export default function TutoriasPage() {
                 {isLoading && <SkeletonRows cols={6} />}
                 {!isLoading && tutorias.length === 0 && <EmptyRow cols={6} />}
                 {tutorias.map(t => (
-                  <tr key={t.id} className="hover:bg-blue-50/60 transition-colors">
+                  <tr key={t.id} className="hover:bg-brand-50/60 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-900">{t.tutor?.name ?? '—'}</td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-800">{t.alumno?.user?.name ?? '—'}</p>
@@ -226,7 +226,7 @@ export default function TutoriasPage() {
                       {puedeEliminar && <button onClick={() => window.confirm('¿Eliminar tutoría?') && del.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                      <button onClick={() => setDetalle(t)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                     </td>
                   </tr>
                 ))}
@@ -247,7 +247,7 @@ export default function TutoriasPage() {
                 <p className="text-xs text-slate-400">{t.alumno?.carrera?.nombre ?? '—'} · {t.periodo?.nombre ?? '—'}</p>
                 <div className="flex gap-3 mt-1">
                   {puedeEliminar && <button onClick={() => window.confirm('¿Eliminar tutoría?') && del.mutate(t.id)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
-                  <button onClick={() => setDetalle(t)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
+                  <button onClick={() => setDetalle(t)} className="text-xs font-medium text-brand-600 hover:underline">Ver detalle</button>
                 </div>
               </div>
             ))}
@@ -315,7 +315,7 @@ export default function TutoriasPage() {
               <button
                 onClick={() => saveMasivo.mutate()}
                 disabled={!modal.tutor_id || !modal.periodo_id || modal.alumno_ids.length === 0 || saveMasivo.isPending}
-                className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="px-5 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
               >
                 {saveMasivo.isPending ? 'Asignando…' : `Asignar${modal.alumno_ids.length > 0 ? ` (${modal.alumno_ids.length})` : ''}`}
               </button>

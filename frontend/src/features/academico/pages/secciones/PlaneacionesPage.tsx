@@ -8,7 +8,7 @@ import ViewToggle, { useViewMode } from '../../../../components/ui/ViewToggle'
 
 const ESTATUS_COLOR: Record<EstatusPlaneacion, string> = {
   borrador:     'bg-slate-100 text-slate-600',
-  enviada_da:   'bg-blue-100 text-blue-700',
+  enviada_da:   'bg-brand-100 text-brand-700',
   devuelta_da:  'bg-red-100 text-red-700',
   enviada_jc:   'bg-indigo-100 text-indigo-700',
   devuelta_jc:  'bg-red-100 text-red-700',
@@ -139,7 +139,7 @@ export default function PlaneacionesPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {planeaciones.map(p => (
-                  <tr key={p.id} onClick={() => navigate(`/admin/gestion-academica/planeaciones/${p.id}`)} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                  <tr key={p.id} onClick={() => navigate(`/admin/gestion-academica/planeaciones/${p.id}`)} className="hover:bg-brand-50/60 transition-colors cursor-pointer">
                     <td className="px-4 py-3 font-medium text-slate-800">{p.docente?.name}</td>
                     <td className="px-4 py-3 text-slate-700">{p.carga_academica?.materia?.nombre ?? '—'}</td>
                     <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.carga_academica?.grupos?.[0]?.clave ?? '—'}</td>
@@ -153,7 +153,7 @@ export default function PlaneacionesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-xs font-medium text-blue-600 whitespace-nowrap">
+                      <span className="text-xs font-medium text-brand-600 whitespace-nowrap">
                         {transicionesPlaneacion(p.estatus, roles).length > 0 ? 'Revisar' : 'Ver detalle'}
                       </span>
                     </td>
@@ -172,7 +172,7 @@ export default function PlaneacionesPage() {
                 </div>
                 <p className="text-sm text-slate-600">{p.carga_academica?.materia?.nombre ?? '—'}</p>
                 <p className="text-xs text-slate-500 font-mono">{p.carga_academica?.grupos?.[0]?.clave ?? '—'} · {p.periodo?.nombre ?? '—'}</p>
-                <span className="text-xs font-medium text-blue-600 mt-1">
+                <span className="text-xs font-medium text-brand-600 mt-1">
                   {transicionesPlaneacion(p.estatus, roles).length > 0 ? 'Revisar' : 'Ver detalle'}
                 </span>
               </Link>

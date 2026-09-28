@@ -17,20 +17,20 @@ const DIA_LABEL_CORTO: Record<string, string> = {
 }
 
 const ESTADO_CHIP: Record<EstadoCarga, { label: string; cls: string }> = {
-  pendiente:  { label: 'Pendiente de confirmación', cls: 'bg-blue-100 text-blue-700' },
+  pendiente:  { label: 'Pendiente de confirmación', cls: 'bg-brand-100 text-brand-700' },
   confirmada: { label: 'Confirmada', cls: 'bg-emerald-100 text-emerald-700' },
   conflicto:  { label: 'Con conflicto reportado', cls: 'bg-red-100 text-red-700' },
 }
 
 const ESTADO_RING: Record<EstadoCarga, string> = {
-  pendiente:  'ring-2 ring-blue-400',
+  pendiente:  'ring-2 ring-brand-400',
   confirmada: '',
   conflicto:  'ring-2 ring-red-500',
 }
 
 /** Paleta de colores por asignatura, igual criterio que el constructor de horarios. */
 const MATERIA_PALETTE = [
-  'bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-rose-600', 'bg-amber-600',
+  'bg-brand-600', 'bg-emerald-600', 'bg-purple-600', 'bg-rose-600', 'bg-amber-600',
   'bg-cyan-600', 'bg-fuchsia-600', 'bg-lime-600', 'bg-orange-600', 'bg-teal-600',
   'bg-indigo-600', 'bg-pink-600', 'bg-sky-600', 'bg-violet-600', 'bg-green-600',
 ]
@@ -190,8 +190,8 @@ export default function MiHorarioDocentePage() {
 
       {/* Banner de pendientes */}
       {pendientes.length > 0 && periodoId && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-3">
-          <p className="text-sm text-blue-800">
+        <div className="bg-brand-50 border border-brand-200 rounded-xl px-5 py-3">
+          <p className="text-sm text-brand-800">
             Tienes <strong>{pendientes.length}</strong> carga{pendientes.length !== 1 ? 's' : ''} pendiente{pendientes.length !== 1 ? 's' : ''} de confirmar.
             Revisa el horario y confírmalas o reporta cualquier conflicto.
           </p>
@@ -211,9 +211,9 @@ export default function MiHorarioDocentePage() {
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           {/* Leyenda */}
           <div className="flex flex-wrap gap-3 text-[11px] text-slate-500 px-5 py-3 border-b border-slate-100">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-600 ring-2 ring-blue-400" />Pendiente de confirmación</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-600" />Confirmada (color por asignatura)</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-600 ring-2 ring-red-500" />Con conflicto reportado</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-600 ring-2 ring-brand-400" />Pendiente de confirmación</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-600" />Confirmada (color por asignatura)</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-600 ring-2 ring-red-500" />Con conflicto reportado</span>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-[800px] w-full text-xs border-collapse">

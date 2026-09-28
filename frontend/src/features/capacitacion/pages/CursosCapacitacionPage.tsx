@@ -10,7 +10,7 @@ import {
 import DetailModal from '../../../components/ui/DetailModal'
 
 const ESTATUS_BADGE: Record<string, string> = {
-  planeado:   'bg-blue-100 text-blue-800',
+  planeado:   'bg-brand-100 text-brand-800',
   en_curso:   'bg-yellow-100 text-yellow-800',
   finalizado: 'bg-green-100 text-green-800',
   cancelado:  'bg-red-100 text-red-800',
@@ -119,7 +119,7 @@ export default function CursosCapacitacionPage() {
         {isJefe && (
           <button
             onClick={() => setTab('nuevo')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+            className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 text-sm"
           >
             + Nuevo Curso
           </button>
@@ -134,7 +134,7 @@ export default function CursosCapacitacionPage() {
             onClick={() => setTab(t as typeof tab)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               tab === t
-                ? 'border-blue-600 text-blue-600'
+                ? 'border-brand-600 text-brand-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -259,7 +259,7 @@ export default function CursosCapacitacionPage() {
               <button
                 type="submit"
                 disabled={crearMut.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50"
               >
                 {crearMut.isPending ? 'Guardando...' : 'Registrar Curso'}
               </button>
@@ -298,7 +298,7 @@ export default function CursosCapacitacionPage() {
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => { setSelected(curso); setTab('inscritos') }}
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm text-brand-600 hover:underline"
                   >
                     Ver inscritos
                   </button>
@@ -356,18 +356,18 @@ export default function CursosCapacitacionPage() {
                   <td className="px-4 py-3 text-gray-600">{ced.rfc}</td>
                   <td className="px-4 py-3">{ced.puesto}</td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{ced.estatus}</span>
+                    <span className="px-2 py-1 bg-brand-100 text-brand-800 rounded-full text-xs">{ced.estatus}</span>
                   </td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => descargarCedula(ced.id)}
-                      className="text-blue-600 hover:underline text-xs"
+                      className="text-brand-600 hover:underline text-xs"
                     >
                       PDF
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setDetalleInscrito(ced)} className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap">Ver detalle</button>
+                    <button onClick={() => setDetalleInscrito(ced)} className="text-xs font-medium text-brand-600 hover:underline whitespace-nowrap">Ver detalle</button>
                   </td>
                 </tr>
               ))}
@@ -472,7 +472,7 @@ export default function CursosCapacitacionPage() {
             { label: 'Jefe inmediato', value: detalleInscrito.jefe_inmediato },
             { label: 'Estatus', value: detalleInscrito.estatus },
           ]}
-          footer={<button onClick={() => descargarCedula(detalleInscrito.id)} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Descargar PDF</button>}
+          footer={<button onClick={() => descargarCedula(detalleInscrito.id)} className="text-xs font-medium text-white bg-brand-600 px-3 py-1.5 rounded-lg">Descargar PDF</button>}
         />
       )}
     </div>

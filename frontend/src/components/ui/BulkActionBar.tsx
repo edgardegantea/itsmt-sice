@@ -25,7 +25,7 @@ export function SelectCheckbox({ checked, onChange }: { checked: boolean; onChan
       checked={checked}
       onChange={onChange}
       onClick={e => e.stopPropagation()}
-      className="w-4 h-4 accent-blue-600 shrink-0"
+      className="w-4 h-4 accent-brand-600 shrink-0"
     />
   )
 }

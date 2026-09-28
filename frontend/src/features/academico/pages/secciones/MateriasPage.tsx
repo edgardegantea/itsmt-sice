@@ -68,7 +68,7 @@ function PdfPreviewBody({
       <div className="flex gap-1 px-6 pb-2 shrink-0">
         {([['campos', 'Campos extraídos'], ['texto', 'Texto por secciones']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)}
-            className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-colors ${tab === id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+            className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-colors ${tab === id ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
             {label}
           </button>
         ))}
@@ -82,22 +82,22 @@ function PdfPreviewBody({
                 <div>
                   <label className="text-xs font-medium text-slate-500">Nombre de la asignatura</label>
                   <input value={campos.nombre ?? ''} onChange={e => setC('nombre', e.target.value)}
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-slate-500">Clave oficial TecNM</label>
                   <input value={campos.clave_oficial_tecnm ?? ''} onChange={e => setC('clave_oficial_tecnm', e.target.value)}
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-slate-500">SATCA</label>
                   <input value={campos.satca ?? ''} onChange={e => setC('satca', e.target.value)}
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-slate-500">Créditos</label>
                   <input type="number" value={campos.creditos ?? ''} onChange={e => setC('creditos', Number(e.target.value))}
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
                 </div>
               </div>
 
@@ -122,7 +122,7 @@ function PdfPreviewBody({
                     rows={3}
                     value={(campos[key] as string) ?? ''}
                     onChange={e => setC(key, e.target.value)}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-y"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none resize-y"
                     placeholder={`Escribe la ${label.toLowerCase()}…`}
                   />
                 </div>
@@ -202,7 +202,7 @@ function PdfPreviewBody({
         </button>
         <button
           onClick={() => onApply(campos)}
-          className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+          className="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
         >
           Aplicar campos
         </button>
@@ -297,12 +297,12 @@ function MateriaDetail({
               <div className="flex flex-wrap items-center gap-1.5 mb-1">
                 <span className="text-xs font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-mono">{materia.clave}</span>
                 {materia.clave_oficial_tecnm && (
-                  <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-mono">{materia.clave_oficial_tecnm}</span>
+                  <span className="text-xs px-2 py-0.5 bg-brand-50 text-brand-600 rounded font-mono">{materia.clave_oficial_tecnm}</span>
                 )}
                 {materia.satca && (
                   <span className="text-xs px-2 py-0.5 bg-violet-50 text-violet-600 rounded font-mono">SATCA {materia.satca}</span>
                 )}
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${materia.tipo === 'obligatoria' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${materia.tipo === 'obligatoria' ? 'bg-brand-100 text-brand-700' : 'bg-amber-100 text-amber-700'}`}>
                   {materia.tipo === 'obligatoria' ? 'Obligatoria' : 'Optativa'}
                 </span>
               </div>
@@ -320,7 +320,7 @@ function MateriaDetail({
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${tab === t.id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${tab === t.id ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
               >
                 {t.label}
               </button>
@@ -336,9 +336,9 @@ function MateriaDetail({
             <div className="px-6 py-5 space-y-5">
               {/* Créditos / horas */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-blue-50 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-700">{materia.creditos}</div>
-                  <div className="text-xs text-blue-500 mt-0.5">Créditos</div>
+                <div className="bg-brand-50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-brand-700">{materia.creditos}</div>
+                  <div className="text-xs text-brand-500 mt-0.5">Créditos</div>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-4 text-center">
                   <div className="text-2xl font-bold text-slate-700">{materia.horas_teoria}</div>
@@ -358,11 +358,11 @@ function MateriaDetail({
                     <span className="font-medium text-slate-700">{totalHoras}h/sem</span>
                   </div>
                   <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
-                    <div className="h-full bg-blue-500" style={{ width: `${(materia.horas_teoria / totalHoras) * 100}%` }} />
+                    <div className="h-full bg-brand-500" style={{ width: `${(materia.horas_teoria / totalHoras) * 100}%` }} />
                     <div className="h-full bg-teal-400" style={{ width: `${(materia.horas_practica / totalHoras) * 100}%` }} />
                   </div>
                   <div className="flex gap-4 mt-2">
-                    <span className="flex items-center gap-1 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />Teoría ({materia.horas_teoria}h)</span>
+                    <span className="flex items-center gap-1 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-brand-500 inline-block" />Teoría ({materia.horas_teoria}h)</span>
                     <span className="flex items-center gap-1 text-xs text-slate-500"><span className="w-2 h-2 rounded-full bg-teal-400 inline-block" />Práctica ({materia.horas_practica}h)</span>
                   </div>
                 </div>
@@ -428,7 +428,7 @@ function MateriaDetail({
                 ) : (
                   <div
                     onClick={() => fileRef.current?.click()}
-                    className="border-2 border-dashed border-slate-200 rounded-lg p-5 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
+                    className="border-2 border-dashed border-slate-200 rounded-lg p-5 text-center cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition-colors"
                   >
                     <svg className="w-8 h-8 text-slate-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -456,7 +456,7 @@ function MateriaDetail({
                   <button
                     onClick={() => fileRef.current?.click()}
                     disabled={uploadDoc.isPending}
-                    className="mt-2 w-full text-xs text-slate-400 hover:text-blue-600 disabled:opacity-40"
+                    className="mt-2 w-full text-xs text-slate-400 hover:text-brand-600 disabled:opacity-40"
                   >
                     {uploadDoc.isPending ? 'Subiendo…' : 'Reemplazar documento'}
                   </button>
@@ -499,7 +499,7 @@ function MateriaDetail({
               {materia.competencia_especifica && (
                 <section>
                   <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Competencia específica</h3>
-                  <p className="text-sm text-slate-700 leading-relaxed bg-blue-50 rounded-xl p-4 border border-blue-100">{materia.competencia_especifica}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed bg-brand-50 rounded-xl p-4 border border-brand-100">{materia.competencia_especifica}</p>
                 </section>
               )}
               {materia.competencias_previas && (
@@ -527,7 +527,7 @@ function MateriaDetail({
                     {materia.temario.map((t, i) => (
                       <li key={i} className="bg-slate-50 rounded-xl p-4">
                         <div className="flex items-start gap-2 mb-2">
-                          <span className="text-xs font-bold text-blue-600 bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center shrink-0">{i + 1}</span>
+                          <span className="text-xs font-bold text-brand-600 bg-brand-100 rounded-full w-6 h-6 flex items-center justify-center shrink-0">{i + 1}</span>
                           <span className="text-sm font-semibold text-slate-900">{t.tema}</span>
                         </div>
                         {t.subtemas && t.subtemas.length > 0 && (
@@ -609,7 +609,7 @@ function MateriaDetail({
         <div className="flex gap-2 px-6 py-4 border-t border-slate-100 shrink-0">
           <button
             onClick={() => { handleClose(); setTimeout(() => onEditar(materia), 260) }}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex-1 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
           >
             Editar
           </button>
@@ -639,7 +639,7 @@ function TemarioEditor({ value, onChange }: { value: MateriaTemaTema[]; onChange
       {value.map((t, i) => (
         <div key={i} className="border border-slate-200 rounded-lg p-3 space-y-2">
           <div className="flex gap-2">
-            <span className="text-xs font-bold text-blue-600 mt-2 w-5 shrink-0">{i + 1}.</span>
+            <span className="text-xs font-bold text-brand-600 mt-2 w-5 shrink-0">{i + 1}.</span>
             <input
               className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-sm"
               placeholder="Nombre del tema…"
@@ -660,7 +660,7 @@ function TemarioEditor({ value, onChange }: { value: MateriaTemaTema[]; onChange
       <button
         type="button"
         onClick={addTema}
-        className="w-full py-2 border-2 border-dashed border-slate-200 rounded-lg text-xs text-slate-400 hover:border-blue-400 hover:text-blue-600 transition-colors"
+        className="w-full py-2 border-2 border-dashed border-slate-200 rounded-lg text-xs text-slate-400 hover:border-brand-400 hover:text-brand-600 transition-colors"
       >
         + Agregar tema
       </button>
@@ -696,7 +696,7 @@ function SemestreSection({ semestre, materias, onVerDetalle, onEditar, onElimina
           </thead>
           <tbody className="divide-y divide-slate-50">
             {materias.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(m => (
-              <tr key={m.id} onClick={() => onVerDetalle(m)} className="hover:bg-blue-50/50 transition-colors cursor-pointer">
+              <tr key={m.id} onClick={() => onVerDetalle(m)} className="hover:bg-brand-50/50 transition-colors cursor-pointer">
                 <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{m.clave}</td>
                 <td className="px-4 py-2.5 font-medium text-slate-900">
                   {m.nombre}
@@ -705,7 +705,7 @@ function SemestreSection({ semestre, materias, onVerDetalle, onEditar, onElimina
                 <td className="px-4 py-2.5 text-center text-slate-600">{m.creditos}</td>
                 <td className="px-4 py-2.5 text-center text-xs text-slate-400">{m.horas_teoria}/{m.horas_practica}</td>
                 <td className="px-4 py-2.5">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${m.tipo === 'obligatoria' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${m.tipo === 'obligatoria' ? 'bg-brand-50 text-brand-700' : 'bg-amber-50 text-amber-700'}`}>
                     {m.tipo === 'obligatoria' ? 'Obligatoria' : 'Optativa'}
                   </span>
                 </td>
@@ -713,7 +713,7 @@ function SemestreSection({ semestre, materias, onVerDetalle, onEditar, onElimina
                   {m.documento_url && (
                     <a href={m.documento_url} target="_blank" rel="noreferrer" className="text-xs text-red-400 hover:text-red-600" title="Ver PDF" onClick={e => e.stopPropagation()}>PDF</a>
                   )}
-                  <button onClick={() => onEditar(m)} className="text-xs text-blue-600 hover:underline">Editar</button>
+                  <button onClick={() => onEditar(m)} className="text-xs text-brand-600 hover:underline">Editar</button>
                   <button onClick={() => onEliminar(m)} className="text-xs text-red-500 hover:underline">Eliminar</button>
                 </td>
               </tr>
@@ -747,7 +747,7 @@ function CarreraSection({ carrera, materias, onVerDetalle, onEditar, onEliminar 
       <button onClick={() => setOpen(o => !o)} className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50/70 transition-colors text-left">
         <Chevron open={open} />
         <div className="flex items-center gap-2.5 flex-1">
-          <span className="text-xs font-bold px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md font-mono">{carrera.clave}</span>
+          <span className="text-xs font-bold px-2 py-0.5 bg-brand-100 text-brand-800 rounded-md font-mono">{carrera.clave}</span>
           <span className="text-sm font-semibold text-slate-900">{carrera.nombre}</span>
         </div>
         <span className="text-xs text-slate-400 shrink-0">{materias.length} materias</span>
@@ -921,7 +921,7 @@ export default function MateriasPage() {
               <h1 className="text-xl font-bold text-slate-900">Materias</h1>
               <p className="text-sm text-slate-500 mt-0.5">Catálogo de asignaturas por carrera y semestre</p>
             </div>
-            <button onClick={openNuevo} className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            <button onClick={openNuevo} className="shrink-0 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 flex items-center gap-2">
               + Nueva materia
             </button>
           </div>
@@ -932,7 +932,7 @@ export default function MateriasPage() {
           <div className="flex flex-wrap gap-3">
             {[
               ['Total', materiasVistas.length, 'text-slate-900'],
-              ['Obligatorias', materiasVistas.filter(m => m.tipo === 'obligatoria').length, 'text-blue-700'],
+              ['Obligatorias', materiasVistas.filter(m => m.tipo === 'obligatoria').length, 'text-brand-700'],
               ['Optativas', materiasVistas.filter(m => m.tipo === 'optativa').length, 'text-amber-600'],
               ['Carreras', porCarrera.length, 'text-slate-900'],
               ['Con programa', materiasVistas.filter(m => m.documento_url).length, 'text-emerald-700'],
@@ -1046,7 +1046,7 @@ export default function MateriasPage() {
             <div className="flex gap-1">
               {modalTabs.map(t => (
                 <button key={t.id} type="button" onClick={() => setModalTab(t.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${modalTab === t.id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${modalTab === t.id ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
                   {t.label}
                 </button>
               ))}
@@ -1159,7 +1159,7 @@ export default function MateriasPage() {
               ))}
               <button type="button"
                 onClick={() => set('practicas', [...(modal.practicas ?? []), { tema: `Tema ${(modal.practicas ?? []).length + 1}`, lista: [] }])}
-                className="w-full py-2 border-2 border-dashed border-slate-200 rounded-lg text-xs text-slate-400 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                className="w-full py-2 border-2 border-dashed border-slate-200 rounded-lg text-xs text-slate-400 hover:border-brand-400 hover:text-brand-600 transition-colors">
                 + Agregar tema de prácticas
               </button>
             </div>

@@ -4,7 +4,7 @@ import { planeacionApi, type AsignacionDocente } from '../services/planeacion'
 
 const ESTATUS_COLOR: Record<string, string> = {
   borrador:     'bg-slate-100 text-slate-600',
-  enviada:      'bg-blue-100 text-blue-700',
+  enviada:      'bg-brand-100 text-brand-700',
   observaciones:'bg-yellow-100 text-yellow-700',
   liberada:     'bg-green-100 text-green-700',
   vigente:      'bg-emerald-100 text-emerald-700',
@@ -70,7 +70,7 @@ export default function AsignacionesDocentesPage() {
         </div>
         <button
           onClick={() => setModal(true)}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
           + Nueva asignación
         </button>
@@ -155,7 +155,7 @@ export default function AsignacionesDocentesPage() {
                 <td className="px-3 py-2 text-sm">
                   <button
                     onClick={() => { setEditId(a.id); setEditHoras(a.horas_semana) }}
-                    className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                    className="text-brand-600 hover:text-brand-800 text-xs font-medium"
                   >
                     Editar horas
                   </button>
@@ -208,7 +208,7 @@ export default function AsignacionesDocentesPage() {
               <button
                 onClick={() => crear.mutate()}
                 disabled={crear.isPending}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
               >
                 {crear.isPending ? 'Guardando...' : 'Guardar'}
               </button>

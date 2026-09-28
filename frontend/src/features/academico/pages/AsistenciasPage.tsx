@@ -24,7 +24,7 @@ const ESTATUS_COLORS: Record<EstatusAsistencia, string> = {
   presente:    'bg-green-100 text-green-700',
   ausente:     'bg-red-100 text-red-700',
   retardo:     'bg-yellow-100 text-yellow-700',
-  justificado: 'bg-blue-100 text-blue-700',
+  justificado: 'bg-brand-100 text-brand-700',
 }
 
 interface Grupo { id: string; clave: string; semestre: number; carrera?: { nombre: string }; periodo?: { nombre: string }; alumnos_count?: number }
@@ -320,7 +320,7 @@ export default function AsistenciasPage() {
               type="button"
               onClick={() => setTab('pase')}
               className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                tab === 'pase' ? 'border-[#1a3a5c] text-[#1a3a5c]' : 'border-transparent text-slate-500 hover:text-slate-700'
+                tab === 'pase' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
               Pase de lista
@@ -330,7 +330,7 @@ export default function AsistenciasPage() {
             type="button"
             onClick={() => setTab('sesiones')}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === 'sesiones' ? 'border-[#1a3a5c] text-[#1a3a5c]' : 'border-transparent text-slate-500 hover:text-slate-700'
+              tab === 'sesiones' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
             Sesiones registradas
@@ -340,7 +340,7 @@ export default function AsistenciasPage() {
               type="button"
               onClick={() => setTab('gestion')}
               className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                tab === 'gestion' ? 'border-[#1a3a5c] text-[#1a3a5c]' : 'border-transparent text-slate-500 hover:text-slate-700'
+                tab === 'gestion' ? 'border-brand-600 text-brand-600' : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
               Herramientas de gestión
@@ -392,7 +392,7 @@ export default function AsistenciasPage() {
                     const totalReg = s.asistencias?.length ?? 0
                     const presentes = s.asistencias?.filter(a => a.estatus === 'presente').length ?? 0
                     return (
-                      <tr key={s.id} className="hover:bg-blue-50/60 transition-colors">
+                      <tr key={s.id} className="hover:bg-brand-50/60 transition-colors">
                         <td className="px-4 py-2.5 font-medium text-slate-800">{formatFechaCorta(s.fecha)}</td>
                         <td className="px-4 py-2.5">
                           <p className="font-medium text-slate-800">{s.grupo?.clave ?? '—'}</p>
@@ -417,7 +417,7 @@ export default function AsistenciasPage() {
                               Enviar resumen
                             </button>
                           )}
-                          <button onClick={() => openEdit(s)} className="text-xs text-blue-600 hover:underline">Ver detalle</button>
+                          <button onClick={() => openEdit(s)} className="text-xs text-brand-600 hover:underline">Ver detalle</button>
                         </td>
                       </tr>
                     )
@@ -441,7 +441,7 @@ export default function AsistenciasPage() {
                       <span className="text-xs text-slate-400 italic">Sin registro</span>
                     )}
                     <div className="flex gap-3 mt-1">
-                      <button onClick={() => openEdit(s)} className="text-xs font-medium text-blue-600 hover:underline">Ver detalle</button>
+                      <button onClick={() => openEdit(s)} className="text-xs font-medium text-brand-600 hover:underline">Ver detalle</button>
                       {totalReg > 0 && (
                         <button
                           onClick={() => mutEnviarResumen.mutate(s.id)}
@@ -700,7 +700,7 @@ export default function AsistenciasPage() {
                         <Link
                           to={`/admin/alumnos/${a.alumnoId}`}
                           target="_blank"
-                          className="text-sm font-medium text-slate-800 truncate hover:text-blue-700 hover:underline block"
+                          className="text-sm font-medium text-slate-800 truncate hover:text-brand-700 hover:underline block"
                         >
                           {a.name}
                         </Link>

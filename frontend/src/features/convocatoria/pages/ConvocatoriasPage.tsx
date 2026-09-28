@@ -26,7 +26,7 @@ const ESTATUS_COLORS: Record<ConvocatoriaEstatus, string> = {
   borrador: 'bg-gray-100 text-gray-700',
   activa: 'bg-green-100 text-green-700',
   cerrada: 'bg-red-100 text-red-700',
-  resultados_publicados: 'bg-blue-100 text-blue-700',
+  resultados_publicados: 'bg-brand-100 text-brand-700',
 }
 
 interface NuevoRequisito {
@@ -167,7 +167,7 @@ export default function ConvocatoriasPage() {
         {isAdmin && (
           <button
             onClick={() => { resetForm(); setShowModal(true) }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+            className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-700"
           >
             + Nueva Convocatoria
           </button>
@@ -225,7 +225,7 @@ export default function ConvocatoriasPage() {
                 {conv.estatus === 'activa' && !isAdmin && (
                   <button
                     onClick={() => setSelectedConvocatoria(conv)}
-                    className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
+                    className="text-xs bg-brand-600 text-white px-3 py-1 rounded-lg hover:bg-brand-700"
                   >
                     Postularme
                   </button>
@@ -275,7 +275,7 @@ export default function ConvocatoriasPage() {
               <button
                 onClick={() => postularMutation.mutate(selectedConvocatoria.id)}
                 disabled={postularMutation.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50"
               >
                 {postularMutation.isPending ? 'Registrando…' : 'Confirmar'}
               </button>
@@ -375,7 +375,7 @@ export default function ConvocatoriasPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">Requisitos</label>
-                  <button onClick={addRequisito} className="text-xs text-blue-600 hover:underline">+ Agregar</button>
+                  <button onClick={addRequisito} className="text-xs text-brand-600 hover:underline">+ Agregar</button>
                 </div>
                 {form.requisitos.map((req, i) => (
                   <div key={i} className="flex gap-2 mb-2 items-start">
@@ -412,7 +412,7 @@ export default function ConvocatoriasPage() {
               <button
                 onClick={() => crearMutation.mutate()}
                 disabled={crearMutation.isPending || !form.titulo || !form.descripcion || !form.fecha_apertura || !form.fecha_limite}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 disabled:opacity-50"
               >
                 {crearMutation.isPending ? 'Guardando…' : 'Crear Convocatoria'}
               </button>
