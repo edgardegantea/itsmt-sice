@@ -14,9 +14,7 @@ export const configuracionApi = {
     const fd = new FormData()
     fd.append('logo', file)
     fd.append('tipo', tipo)
-    return apiClient.post('/admin/configuracion/logo', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then(r => r.data.data)
+    return apiClient.post('/admin/configuracion/logo', fd).then(r => r.data.data)
   },
 
   eliminarLogo: (tipo: 'principal' | 'secundario' | 'fondo'): Promise<void> =>

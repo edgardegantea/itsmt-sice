@@ -15,9 +15,19 @@ interface Usuario {
   roles: { name: string }[]
   carrera_id: string | null
   carrera: Carrera | null
+  // Carreras en las que imparte clase (docente_carrera) — distinto de carrera_id,
+  // que es la carrera que administra un jefe_carrera. Un docente puede dar
+  // clases en varias; sin esto asignado no aparece al filtrar por carrera en
+  // el constructor de horarios (Academico\CargaAcademicaController::docentes).
+  carreras?: Array<Carrera & { pivot?: { horas_asignadas: number | null } }>
   created_at: string
   updated_at?: string
+  activo: boolean
 }
+
+// Roles que puede tocar el filtro "por carrera" del constructor de horarios
+// (coincide con User::role([...]) en CargaAcademicaController::docentes).
+const ROLES_MULTI_CARRERA = ['docente', 'jefe_carrera', 'director_academico']
 
 type ApiErr = { response?: { data?: { message?: string; errors?: Record<string, string | string[]> } } }
 
@@ -29,6 +39,7 @@ const usuariosApi = {
   carreras:()                                  => apiClient.get('/admin/carreras').then(r => r.data.data as Carrera[]),
   update:  (id: string, d: Record<string, unknown>) => apiClient.patch(`/admin/usuarios/${id}`, d).then(r => r.data.data as Usuario),
   destroy: (id: string)                        => apiClient.delete(`/admin/usuarios/${id}`).then(r => r.data),
+  toggleActivo: (id: string, activo: boolean)  => apiClient.patch(`/admin/usuarios/${id}/activo`, { activo }).then(r => r.data.data as Usuario),
 }
 
 // ── Catálogos ─────────────────────────────────────────────────────────────────
@@ -85,15 +96,28 @@ function EditModal({ usuario, roles, carreras, onClose }: { usuario: Usuario; ro
     name:       usuario.name,
     email:      usuario.email,
     password:   '',
-    role:       usuario.roles[0]?.name ?? 'personal_administrativo',
     carrera_id: usuario.carrera_id ?? '',
   })
+  // Un usuario puede tener más de un rol (p. ej. personal_administrativo que
+  // también da clases como docente).
+  const [rolesSel, setRolesSel] = useState<string[]>(() => usuario.roles.map(r => r.name))
+  function toggleRol(r: string) {
+    setRolesSel(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
+  }
+  // id de carrera -> horas asignadas (null si no se especificó). Solo las
+  // carreras presentes aquí quedan marcadas.
+  const [carrerasImparte, setCarrerasImparte] = useState<Record<string, number | null>>(
+    () => Object.fromEntries((usuario.carreras ?? []).map(c => [c.id, c.pivot?.horas_asignadas ?? null]))
+  )
   const [errors, setErrors] = useState<Record<string, string | string[]>>({})
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => {
-      const payload: Record<string, unknown> = { name: form.name, email: form.email, role: form.role, carrera_id: form.carrera_id || null }
+      const payload: Record<string, unknown> = { name: form.name, email: form.email, roles: rolesSel, carrera_id: form.carrera_id || null }
       if (form.password) payload.password = form.password
+      if (rolesSel.some(r => ROLES_MULTI_CARRERA.includes(r))) {
+        payload.carreras = Object.entries(carrerasImparte).map(([id, horas_asignadas]) => ({ id, horas_asignadas }))
+      }
       return usuariosApi.update(usuario.id, payload)
     },
     onSuccess: () => {
@@ -107,11 +131,21 @@ function EditModal({ usuario, roles, carreras, onClose }: { usuario: Usuario; ro
     },
   })
 
-  const needsCarrera = form.role === 'jefe_carrera'
+  const needsCarrera = rolesSel.includes('jefe_carrera')
+  const puedeImpartirVariasCarreras = rolesSel.some(r => ROLES_MULTI_CARRERA.includes(r))
+
+  function toggleCarreraImparte(id: string) {
+    setCarrerasImparte(prev => {
+      const next = { ...prev }
+      if (id in next) delete next[id]
+      else next[id] = null
+      return next
+    })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="font-semibold text-slate-900">Editar usuario</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
@@ -133,10 +167,18 @@ function EditModal({ usuario, roles, carreras, onClose }: { usuario: Usuario; ro
             {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Rol</label>
-            <select className={inputCls} value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
-              {roles.map(r => <option key={r} value={r}>{ROLE_LABEL[r] ?? r}</option>)}
-            </select>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Roles</label>
+            <p className="text-xs text-slate-400 mb-2">Un usuario puede tener más de uno — p. ej. personal administrativo que también da clases.</p>
+            <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-40 overflow-y-auto">
+              {roles.map(r => (
+                <label key={r} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
+                  <input type="checkbox" checked={rolesSel.includes(r)} onChange={() => toggleRol(r)} className="w-4 h-4 accent-blue-600" />
+                  <span className="text-slate-700">{ROLE_LABEL[r] ?? r}</span>
+                </label>
+              ))}
+            </div>
+            {errors.roles && <p className="text-red-500 text-xs mt-1">{errors.roles}</p>}
+            {rolesSel.length === 0 && <p className="text-xs text-red-500 mt-1">Selecciona al menos un rol.</p>}
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Carrera asignada {needsCarrera && <span className="text-red-500">*</span>}</label>
@@ -146,10 +188,36 @@ function EditModal({ usuario, roles, carreras, onClose }: { usuario: Usuario; ro
             </select>
             {needsCarrera && <p className="text-xs text-slate-400 mt-1">El jefe de carrera solo verá los datos de esta carrera.</p>}
           </div>
+          {puedeImpartirVariasCarreras && (
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Carreras en las que imparte clase</label>
+              <p className="text-xs text-slate-400 mb-2">Distinto de la carrera asignada arriba — esto es lo que usa el constructor de horarios para filtrar docentes por carrera.</p>
+              <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                {carreras.map(c => {
+                  const marcada = c.id in carrerasImparte
+                  return (
+                    <label key={c.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
+                      <input type="checkbox" checked={marcada} onChange={() => toggleCarreraImparte(c.id)} className="w-4 h-4 accent-blue-600" />
+                      <span className="flex-1 text-slate-700">{c.nombre} ({c.clave})</span>
+                      {marcada && (
+                        <input
+                          type="number" min={0} max={80} placeholder="hrs"
+                          value={carrerasImparte[c.id] ?? ''}
+                          onChange={e => setCarrerasImparte(prev => ({ ...prev, [c.id]: e.target.value === '' ? null : Number(e.target.value) }))}
+                          onClick={e => e.stopPropagation()}
+                          className="w-16 border border-slate-200 rounded px-1.5 py-0.5 text-xs text-right"
+                        />
+                      )}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
           <button onClick={onClose} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50">Cancelar</button>
-          <button disabled={isPending} onClick={() => mutate()} className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          <button disabled={isPending || rolesSel.length === 0} onClick={() => mutate()} className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
             {isPending ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
@@ -192,6 +260,22 @@ export default function UsuarioDetailPage() {
     deleteMut.mutate()
   }
 
+  const toggleActivoMut = useMutation({
+    mutationFn: (activo: boolean) => usuariosApi.toggleActivo(id!, activo),
+    onSuccess: (_, activo) => {
+      qc.invalidateQueries({ queryKey: ['usuario', id] })
+      qc.invalidateQueries({ queryKey: ['usuarios'] })
+      addToast(activo ? 'Usuario activado.' : 'Usuario desactivado.', 'success')
+    },
+    onError: (err: ApiErr) => addToast(err?.response?.data?.message ?? 'Error al cambiar el estado.', 'error'),
+  })
+
+  const confirmarToggleActivo = () => {
+    const activar = !usuario?.activo
+    if (!activar && !window.confirm(`¿Desactivar a "${usuario?.name}"? No podrá iniciar sesión hasta que lo reactives.`)) return
+    toggleActivoMut.mutate(activar)
+  }
+
   if (isLoading) return <div className="flex items-center justify-center h-48 text-slate-400 text-sm">Cargando…</div>
 
   if (isError || !usuario) {
@@ -203,7 +287,7 @@ export default function UsuarioDetailPage() {
     )
   }
 
-  const rol = usuario.roles[0]?.name
+  const nombresRoles = usuario.roles.map(r => r.name)
 
   return (
     <div className="p-6 space-y-6">
@@ -224,11 +308,14 @@ export default function UsuarioDetailPage() {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold text-slate-900">{usuario.name}</h1>
-              {rol && (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${ROLE_COLOR[rol] ?? 'bg-slate-100 text-slate-600'}`}>
+              {nombresRoles.map(rol => (
+                <span key={rol} className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${ROLE_COLOR[rol] ?? 'bg-slate-100 text-slate-600'}`}>
                   {ROLE_LABEL[rol] ?? rol}
                 </span>
-              )}
+              ))}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${usuario.activo ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'}`}>
+                {usuario.activo ? 'Activo' : 'Desactivado'}
+              </span>
             </div>
             <p className="text-sm text-slate-500 mt-0.5">{usuario.email}</p>
           </div>
@@ -243,6 +330,15 @@ export default function UsuarioDetailPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/>
             </svg>
             Editar
+          </button>
+          <button
+            onClick={confirmarToggleActivo}
+            disabled={toggleActivoMut.isPending}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border rounded-lg disabled:opacity-50 ${
+              usuario.activo ? 'text-amber-600 border-amber-200 hover:bg-amber-50' : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50'
+            }`}
+          >
+            {toggleActivoMut.isPending ? 'Guardando…' : usuario.activo ? 'Desactivar' : 'Activar'}
           </button>
           <button
             onClick={confirmarEliminar}
@@ -265,7 +361,7 @@ export default function UsuarioDetailPage() {
         <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
           <Campo label="Nombre completo" value={usuario.name} />
           <Campo label="Correo electrónico" value={usuario.email} />
-          <Campo label="Rol" value={rol ? (ROLE_LABEL[rol] ?? rol) : null} />
+          <Campo label="Roles" value={nombresRoles.length > 0 ? nombresRoles.map(r => ROLE_LABEL[r] ?? r).join(', ') : null} />
           <Campo label="Carrera asignada" value={usuario.carrera ? `${usuario.carrera.clave} — ${usuario.carrera.nombre}` : null} />
           <Campo label="Creado" value={new Date(usuario.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })} />
         </div>

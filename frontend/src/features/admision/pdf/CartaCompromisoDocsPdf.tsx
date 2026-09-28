@@ -55,7 +55,7 @@ export default function CartaCompromisoDocsPdf({ inscripcion, cfg }: Props) {
         <View style={S.titleBox}><Text style={S.titleTxt}>CARTA COMPROMISO DE ENTREGA DE DOCUMENTOS</Text></View>
 
         <Text style={S.para}>
-          {`En la ciudad de Martínez de la Torre, Ver., a ${today}, el alumno `}
+          {`En la ciudad de ${cfg.ciudad ?? ''}, Ver., a ${today}, el alumno `}
           <Text style={{ fontFamily: 'Helvetica-Bold' }}>{asp.nombres} {asp.apellido_paterno} {asp.apellido_materno ?? ''}</Text>
           {`, con CURP `}<Text style={{ fontFamily: 'Helvetica-Bold' }}>{asp.curp}</Text>
           {` y número de control `}<Text style={{ fontFamily: 'Helvetica-Bold' }}>{inscripcion.numero_control}</Text>
@@ -65,7 +65,7 @@ export default function CartaCompromisoDocsPdf({ inscripcion, cfg }: Props) {
 
         <Text style={S.para}>
           <Text style={{ fontFamily: 'Helvetica-Bold' }}>Que al momento de su inscripción formal no presentó el Certificado de Bachillerato original</Text>
-          {`, y que se compromete a entregarlo a Servicios Escolares del ITSMT `}
+          {`, y que se compromete a entregarlo a Servicios Escolares del ${cfg.nombre_corto} `}
           <Text style={{ fontFamily: 'Helvetica-Bold' }}>a más tardar antes del inicio del proceso de reinscripción del siguiente periodo</Text>
           {` (${periodo.nombre}, antes del ${fechaLimite}).`}
         </Text>
@@ -94,11 +94,11 @@ export default function CartaCompromisoDocsPdf({ inscripcion, cfg }: Props) {
           <View style={S.firmaCell}>
             <View style={S.firmaLine} />
             <Text style={S.firmaNom}>Recibe — Servicios Escolares</Text>
-            <Text style={S.firmaRol}>ITSMT — Firma y sello</Text>
+            <Text style={S.firmaRol}>{`${cfg.nombre_corto} — Firma y sello`}</Text>
           </View>
         </View>
 
-        <Text style={S.footer}>{`Documento generado por SICE — ITSMT · Folio: ${folio}`}</Text>
+        <Text style={S.footer}>{`Documento generado por SICE — ${cfg.nombre_corto} · Folio: ${folio}`}</Text>
       </Page>
     </Document>
   )

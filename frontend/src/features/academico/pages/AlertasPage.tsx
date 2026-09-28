@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type AlertaBajaDefinitiva } from '../services/academico'
 
@@ -65,9 +66,9 @@ export default function AlertasPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-slate-800 text-sm">
+                    <Link to={`/admin/alumnos/${alerta.alumno_id}`} className="font-semibold text-slate-800 text-sm hover:text-blue-700 hover:underline">
                       {alerta.alumno?.user?.name ?? alerta.alumno_id}
-                    </span>
+                    </Link>
                     <span className="text-xs text-slate-400 font-mono">
                       {alerta.alumno?.numero_control ?? ''}
                     </span>

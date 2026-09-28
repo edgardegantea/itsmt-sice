@@ -339,7 +339,7 @@ export default function InstrumentacionDidacticaPage() {
   if (panel === 'form') {
     return (
       <div className="min-h-full bg-slate-50 p-6">
-        <div className="max-w-3xl mx-auto space-y-5">
+        <div className="space-y-5">
           <div className="flex items-center gap-3">
             <button onClick={() => setPanel('listado')} className="text-slate-400 hover:text-slate-700 transition-colors">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -446,7 +446,7 @@ export default function InstrumentacionDidacticaPage() {
 
     return (
       <div className="min-h-full bg-slate-50 p-6">
-        <div className="max-w-3xl mx-auto space-y-5">
+        <div className="space-y-5">
           <button
             onClick={() => setPanel('listado')}
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 transition-colors"

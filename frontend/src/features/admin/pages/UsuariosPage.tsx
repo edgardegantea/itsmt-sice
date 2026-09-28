@@ -17,8 +17,17 @@ interface Usuario {
   roles: { name: string }[]
   carrera_id: string | null
   carrera: Carrera | null
+  // Carreras en las que imparte clase (docente_carrera) — distinto de carrera_id,
+  // que es la carrera que administra un jefe_carrera. Sin esto asignado, el
+  // docente no aparece al filtrar por carrera en el constructor de horarios.
+  carreras?: Array<Carrera & { pivot?: { horas_asignadas: number | null } }>
   created_at: string
+  activo: boolean
 }
+
+// Roles que puede tocar el filtro "por carrera" del constructor de horarios
+// (coincide con User::role([...]) en CargaAcademicaController::docentes).
+const ROLES_MULTI_CARRERA = ['docente', 'jefe_carrera', 'director_academico']
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -35,6 +44,8 @@ const usuariosApi = {
     apiClient.patch(`/admin/usuarios/${id}`, d).then(r => r.data.data as Usuario),
   destroy: (id: string) =>
     apiClient.delete(`/admin/usuarios/${id}`).then(r => r.data),
+  toggleActivo: (id: string, activo: boolean) =>
+    apiClient.patch(`/admin/usuarios/${id}/activo`, { activo }).then(r => r.data.data as Usuario),
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -95,19 +106,47 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
     name:       usuario?.name       ?? '',
     email:      usuario?.email      ?? '',
     password:   '',
-    role:       usuario?.roles[0]?.name ?? 'personal_administrativo',
     carrera_id: usuario?.carrera_id ?? '',
   })
+  // Un usuario puede tener más de un rol (p. ej. personal_administrativo que
+  // también da clases como docente).
+  const [rolesSel, setRolesSel] = useState<string[]>(
+    () => usuario?.roles.map(r => r.name) ?? ['personal_administrativo']
+  )
+  function toggleRol(r: string) {
+    setRolesSel(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
+  }
+  // id de carrera -> horas asignadas (null si no se especificó). Solo las
+  // carreras presentes aquí quedan marcadas.
+  const [carrerasImparte, setCarrerasImparte] = useState<Record<string, number | null>>(
+    () => Object.fromEntries((usuario?.carreras ?? []).map(c => [c.id, c.pivot?.horas_asignadas ?? null]))
+  )
   const [errors, setErrors] = useState<Record<string, string | string[]>>({})
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
-  const needsCarrera = form.role === 'jefe_carrera'
+  const needsCarrera = rolesSel.includes('jefe_carrera')
+  const puedeImpartirVariasCarreras = rolesSel.some(r => ROLES_MULTI_CARRERA.includes(r))
+
+  function toggleCarreraImparte(id: string) {
+    setCarrerasImparte(prev => {
+      const next = { ...prev }
+      if (id in next) delete next[id]
+      else next[id] = null
+      return next
+    })
+  }
+
+  const carrerasPayload = () => puedeImpartirVariasCarreras
+    ? Object.entries(carrerasImparte).map(([id, horas_asignadas]) => ({ id, horas_asignadas }))
+    : undefined
 
   const createMut = useMutation({
     mutationFn: () => usuariosApi.create({
       ...form,
+      roles: rolesSel,
       carrera_id: form.carrera_id || null,
+      ...(carrerasPayload() ? { carreras: carrerasPayload() } : {}),
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['usuarios'] })
@@ -125,10 +164,11 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
       const payload: Record<string, unknown> = {
         name:       form.name,
         email:      form.email,
-        role:       form.role,
+        roles:      rolesSel,
         carrera_id: form.carrera_id || null,
       }
       if (form.password) payload.password = form.password
+      if (carrerasPayload()) payload.carreras = carrerasPayload()
       return usuariosApi.update(usuario!.id, payload)
     },
     onSuccess: () => {
@@ -146,7 +186,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="font-semibold text-slate-900">{isEdit ? 'Editar usuario' : 'Nuevo usuario'}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
@@ -177,12 +217,18 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Rol</label>
-            <select className={inputCls} value={form.role} onChange={e => set('role', e.target.value)}>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Roles</label>
+            <p className="text-xs text-slate-400 mb-2">Un usuario puede tener más de uno — p. ej. personal administrativo que también da clases.</p>
+            <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-40 overflow-y-auto">
               {roles.map(r => (
-                <option key={r} value={r}>{ROLE_LABEL[r] ?? r}</option>
+                <label key={r} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
+                  <input type="checkbox" checked={rolesSel.includes(r)} onChange={() => toggleRol(r)} className="w-4 h-4 accent-blue-600" />
+                  <span className="text-slate-700">{ROLE_LABEL[r] ?? r}</span>
+                </label>
               ))}
-            </select>
+            </div>
+            {errors.roles && <p className="text-red-500 text-xs mt-1">{errors.roles}</p>}
+            {rolesSel.length === 0 && <p className="text-xs text-red-500 mt-1">Selecciona al menos un rol.</p>}
           </div>
 
           <div>
@@ -198,6 +244,33 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
             {errors.carrera_id && <p className="text-red-500 text-xs mt-1">{errors.carrera_id}</p>}
             {needsCarrera && <p className="text-xs text-slate-400 mt-1">El jefe de carrera solo verá los datos de esta carrera.</p>}
           </div>
+
+          {puedeImpartirVariasCarreras && (
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Carreras en las que imparte clase</label>
+              <p className="text-xs text-slate-400 mb-2">Distinto de la carrera asignada arriba — esto es lo que usa el constructor de horarios para filtrar docentes por carrera.</p>
+              <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                {carreras.map(c => {
+                  const marcada = c.id in carrerasImparte
+                  return (
+                    <label key={c.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
+                      <input type="checkbox" checked={marcada} onChange={() => toggleCarreraImparte(c.id)} className="w-4 h-4 accent-blue-600" />
+                      <span className="flex-1 text-slate-700">{c.nombre} ({c.clave})</span>
+                      {marcada && (
+                        <input
+                          type="number" min={0} max={80} placeholder="hrs"
+                          value={carrerasImparte[c.id] ?? ''}
+                          onChange={e => setCarrerasImparte(prev => ({ ...prev, [c.id]: e.target.value === '' ? null : Number(e.target.value) }))}
+                          onClick={e => e.stopPropagation()}
+                          className="w-16 border border-slate-200 rounded px-1.5 py-0.5 text-xs text-right"
+                        />
+                      )}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
@@ -205,7 +278,7 @@ function UsuarioModal({ usuario, roles, carreras, onClose }: ModalProps) {
             Cancelar
           </button>
           <button
-            disabled={isPending}
+            disabled={isPending || rolesSel.length === 0}
             onClick={() => isEdit ? updateMut.mutate() : createMut.mutate()}
             className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
           >
@@ -353,6 +426,21 @@ export default function UsuariosPage() {
     deleteMut.mutate(u.id)
   }
 
+  const toggleActivoMut = useMutation({
+    mutationFn: ({ id, activo }: { id: string; activo: boolean }) => usuariosApi.toggleActivo(id, activo),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['usuarios'] })
+      addToast(vars.activo ? 'Usuario activado.' : 'Usuario desactivado.', 'success')
+    },
+    onError: (err: ApiErr) => addToast(err?.response?.data?.message ?? 'Error al cambiar el estado.', 'error'),
+  })
+
+  const confirmarToggleActivo = (u: Usuario) => {
+    const activar = !u.activo
+    if (!activar && !window.confirm(`¿Desactivar a "${u.name}"? No podrá iniciar sesión hasta que lo reactives.`)) return
+    toggleActivoMut.mutate({ id: u.id, activo: activar })
+  }
+
   const usuarios: Usuario[] = data?.data ?? []
 
   return (
@@ -405,6 +493,7 @@ export default function UsuariosPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Correo</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Rol</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Carrera</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Creado</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -422,12 +511,19 @@ export default function UsuariosPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-600">{u.email}</td>
                   <td className="px-4 py-3">
-                    {u.roles[0] ? <RoleBadge role={u.roles[0].name} /> : <span className="text-slate-400 text-xs">Sin rol</span>}
+                    {u.roles.length > 0
+                      ? <div className="flex flex-wrap gap-1">{u.roles.map(r => <RoleBadge key={r.name} role={r.name} />)}</div>
+                      : <span className="text-slate-400 text-xs">Sin rol</span>}
                   </td>
                   <td className="px-4 py-3 text-slate-600 text-sm">
                     {u.carrera
                       ? <span title={u.carrera.nombre} className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{u.carrera.clave}</span>
                       : <span className="text-slate-300">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.activo ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'}`}>
+                      {u.activo ? 'Activo' : 'Desactivado'}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs">
                     {new Date(u.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -436,6 +532,13 @@ export default function UsuariosPage() {
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={e => { e.stopPropagation(); setModalUsuario(u) }} className="text-xs text-blue-600 hover:underline font-medium">Editar</button>
                       <button onClick={e => { e.stopPropagation(); setModalCreds(u) }} className="text-xs text-rose-600 hover:underline font-medium">Credenciales</button>
+                      <button
+                        onClick={e => { e.stopPropagation(); confirmarToggleActivo(u) }}
+                        disabled={toggleActivoMut.isPending}
+                        className={`text-xs hover:underline font-medium disabled:opacity-50 ${u.activo ? 'text-amber-600' : 'text-emerald-600'}`}
+                      >
+                        {u.activo ? 'Desactivar' : 'Activar'}
+                      </button>
                       <button onClick={e => { e.stopPropagation(); confirmarEliminar(u) }} className="text-xs text-red-500 hover:underline font-medium">Eliminar</button>
                     </div>
                   </td>

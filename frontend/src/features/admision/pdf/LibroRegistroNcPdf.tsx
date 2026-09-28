@@ -161,15 +161,15 @@ export default function LibroRegistroNcPdf({ alumnos, cfg }: Props) {
 
         {/* Nota legal */}
         <Text style={S.nota}>
-          Este documento constituye el registro oficial de números de control expedidos por el Instituto Tecnológico Superior de Martínez de la Torre. Es un documento de control interno del Departamento de Servicios Escolares. Cualquier modificación posterior deberá documentarse mediante oficio firmado por el Director(a) General y el Jefe(a) de Control Escolar. Prohibida su reproducción parcial sin autorización.
+          Este documento constituye el registro oficial de números de control expedidos por el {cfg.nombre_institucion}. Es un documento de control interno del Departamento de Servicios Escolares. Cualquier modificación posterior deberá documentarse mediante oficio firmado por el Director(a) General y el Jefe(a) de Control Escolar. Prohibida su reproducción parcial sin autorización.
         </Text>
 
         {/* Firmas */}
         <View style={S.firmasRow}>
           {[
-            { nom: 'Director(a) General',       rol: 'Instituto Tecnológico Superior de Martínez de la Torre' },
-            { nom: 'Jefe(a) de Control Escolar', rol: 'Departamento de Servicios Escolares · ITSMT' },
-            { nom: 'Subdirector(a) Académico(a)', rol: 'ITSMT' },
+            { nom: 'Director(a) General',       rol: cfg.nombre_institucion },
+            { nom: 'Jefe(a) de Control Escolar', rol: `Departamento de Servicios Escolares · ${cfg.nombre_corto}` },
+            { nom: 'Subdirector(a) Académico(a)', rol: cfg.nombre_corto },
           ].map(f => (
             <View key={f.nom} style={S.firmaCell}>
               <View style={S.firmaLine} />

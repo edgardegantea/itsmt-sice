@@ -228,8 +228,8 @@ export default function MovilidadEstudiantilPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Alumno', 'IES receptora', 'Fecha inicio', 'Semestres', 'Estatus', 'Materias', '', ''].map(h => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                {['Alumno', 'IES receptora', 'Fecha inicio', 'Semestres', 'Estatus', 'Materias', '', ''].map((h, idx) => (
+                  <th key={idx} className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>

@@ -3,9 +3,27 @@ import { usePreferenciasStore, SIDEBAR_COLORS } from '../store/preferenciasStore
 
 export default function PreferenciasAplicador() {
   const {
-    densidad, escalaTexto, colorSidebar,
+    tema, densidad, escalaTexto, colorSidebar,
     altoContraste, reducirMovimiento, textoEspaciado, focusRealzado, subrayarEnlaces,
   } = usePreferenciasStore()
+
+  // Tema (claro/oscuro/sistema) — cuando es "sistema" se sigue la preferencia del SO y se
+  // reacciona en vivo si el usuario la cambia sin recargar la página.
+  useEffect(() => {
+    const html = document.documentElement
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+
+    const aplicar = () => {
+      const efectivo = tema === 'sistema' ? (mql.matches ? 'oscuro' : 'claro') : tema
+      html.setAttribute('data-tema', efectivo)
+    }
+    aplicar()
+
+    if (tema === 'sistema') {
+      mql.addEventListener('change', aplicar)
+      return () => mql.removeEventListener('change', aplicar)
+    }
+  }, [tema])
 
   useEffect(() => {
     const html = document.documentElement

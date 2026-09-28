@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useToastStore, type Toast } from '../../store/toastStore'
+import { IconCheckCircle, IconExclamation } from './Icons'
 
 const STYLES: Record<string, string> = {
   success: 'bg-emerald-50 border-emerald-300 text-emerald-800',
@@ -8,11 +9,20 @@ const STYLES: Record<string, string> = {
   info:    'bg-blue-50  border-blue-300  text-blue-800',
 }
 
-const ICONS: Record<string, string> = {
-  success: '✓',
-  error:   '✕',
-  warning: '⚠',
-  info:    'ℹ',
+const ICON_COMPONENTS: Record<string, () => React.JSX.Element> = {
+  success: () => <IconCheckCircle className="w-4 h-4" />,
+  error:   () => (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
+  warning: () => <IconExclamation className="w-4 h-4" />,
+  info:    () => (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="9" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
+    </svg>
+  ),
 }
 
 const ICON_BG: Record<string, string> = {
@@ -33,6 +43,8 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [])
 
+  const IconComp = ICON_COMPONENTS[toast.type] ?? ICON_COMPONENTS.info
+
   return (
     <div
       className={`
@@ -43,15 +55,17 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
       `}
     >
       <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${ICON_BG[toast.type]}`}>
-        {ICONS[toast.type]}
+        <IconComp />
       </span>
       <p className="flex-1 text-sm leading-snug">{toast.message}</p>
       <button
         onClick={onRemove}
-        className="shrink-0 opacity-50 hover:opacity-100 transition-opacity text-base leading-none mt-0.5"
+        className="shrink-0 opacity-50 hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-slate-200/50 mt-0.5"
         aria-label="Cerrar"
       >
-        ×
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
   )

@@ -22,6 +22,7 @@ import { calidadisoRoutes } from '../features/calidadiso/routes'
 import { investigacionRoutes } from '../features/investigacion/routes'
 import { infraestructuraRoutes } from '../features/infraestructura/routes'
 import { seguridadRoutes } from '../features/seguridad/routes'
+import { comunicacionRoutes } from '../features/comunicacion/routes'
 
 const Loader = () => (
   <div className="flex items-center justify-center min-h-screen text-slate-400 text-sm">
@@ -55,6 +56,7 @@ export default function AppRoutes() {
         {investigacionRoutes}
         {infraestructuraRoutes}
         {seguridadRoutes}
+        {comunicacionRoutes}
 
         <Route path="/sin-acceso" element={<div style={{padding:32,color:'#dc3545'}}>Sin permisos para acceder a esta sección.</div>} />
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToastStore } from '../../../store/toastStore'
 import apiClient from '../../../config/apiClient'
@@ -149,7 +150,9 @@ export default function BecasAdminPage() {
               ) : solicitudes.map(s => (
                 <tr key={s.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-800">{s.alumno?.user?.name ?? '—'}</p>
+                    <Link to={`/admin/alumnos/${s.alumno_id}`} className="font-medium text-slate-800 hover:text-blue-700 hover:underline">
+                      {s.alumno?.user?.name ?? '—'}
+                    </Link>
                     <p className="text-xs text-slate-400">{s.alumno?.numero_control}</p>
                   </td>
                   <td className="px-4 py-3 capitalize text-slate-600">{s.tipo_beca}</td>
@@ -219,7 +222,9 @@ export default function BecasAdminPage() {
               ) : padron.map(b => (
                 <tr key={b.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-800">{b.alumno?.user?.name ?? '—'}</p>
+                    <Link to={`/admin/alumnos/${b.alumno_id}`} className="font-medium text-slate-800 hover:text-blue-700 hover:underline">
+                      {b.alumno?.user?.name ?? '—'}
+                    </Link>
                     <p className="text-xs text-slate-400">{b.alumno?.numero_control}</p>
                   </td>
                   <td className="px-4 py-3 capitalize text-slate-600">{b.tipo_beca}</td>

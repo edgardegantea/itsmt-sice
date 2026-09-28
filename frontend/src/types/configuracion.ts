@@ -31,4 +31,13 @@ export interface ConfiguracionInstitucional {
   logo_base64: string | null
   maestria_habilitada?: boolean
   recordatorios_asistencia_global_activo?: boolean
+  form_border_radius?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+  form_density?: 'compact' | 'comfortable' | 'spacious'
+  form_bg_style?: 'white' | 'slate' | 'glass' | 'tint'
+  form_focus_ring_color?: string
+  form_border_tone?: 'slate-200' | 'slate-300' | 'primary-tint' | 'dark'
+  form_label_weight?: 'normal' | 'medium' | 'semibold' | 'bold'
+  aviso_banner_mensaje?: string | null
+  aviso_banner_tipo?: 'info' | 'warning' | 'danger' | 'success'
+  aviso_banner_activo?: boolean
 }

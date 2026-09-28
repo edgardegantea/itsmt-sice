@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, mergeCargasPorAsignatura, type SesionClase, type AsistenciaRegistro, type CargaAcademica, type Grupo as GrupoCarga } from '../services/academico'
 import { Field, SkeletonRows, inputCls, selectCls, ModalWrap, mutationError, useCarreras } from './tabs/shared'
@@ -9,6 +10,7 @@ import { openPdfPreview, triggerDownload } from '../../../utils/pdfHelpers'
 import { usePeriodoActivo } from '../../../hooks/usePeriodoActivo'
 import { useAuthStore } from '../../../store/authStore'
 import PaseAsistenciaPanel from './PaseAsistenciaPanel'
+import { formatFecha, formatFechaCorta } from '../../../utils/date'
 
 // Roles con permiso de administrar el envío masivo de listas (coincide con
 // SesionClaseController::ROLES_GESTION_ENVIO en el backend) — un docente sin
@@ -26,7 +28,9 @@ const ESTATUS_COLORS: Record<EstatusAsistencia, string> = {
 }
 
 interface Grupo { id: string; clave: string; semestre: number; carrera?: { nombre: string }; periodo?: { nombre: string }; alumnos_count?: number }
-interface AlumnoGrupo { id: string; name: string; email: string }
+// `id` es el de `users` (la llave usada en asistencias); `alumnoId`, cuando se
+// conoce, es el id real de la fila `alumnos` — el que espera /admin/alumnos/:id.
+interface AlumnoGrupo { id: string; name: string; email: string; alumnoId?: string }
 
 interface SesionForm {
   grupo_id: string
@@ -226,10 +230,11 @@ export default function AsistenciasPage() {
     try {
       // El id de asistencia es el de `users` (a.user.id), no el de la fila de `alumnos`
       // (a.id) — usar este último produciría un alumno_id inexistente en `users`.
+      // Igual guardamos a.id aparte (alumnoId) para poder enlazar al expediente.
       const detalle = await academicoApi.getGrupo(grupoId)
       const lista = (detalle.alumnos ?? [])
         .filter(a => a.user?.id)
-        .map(a => ({ id: a.user!.id, name: a.user!.name, email: a.user!.email }))
+        .map(a => ({ id: a.user!.id, alumnoId: a.id, name: a.user!.name, email: a.user!.email }))
       setAlumnosGrupo(lista)
       const init: Record<string, EstatusAsistencia> = {}
       lista.forEach(a => { init[a.id] = 'presente' })
@@ -259,6 +264,18 @@ export default function AsistenciasPage() {
     }))
     setAlumnosGrupo(alumnos)
     setModal(detail)
+
+    // `asistencias[].alumno` viene de la relación con `users`, no trae el id de
+    // `alumnos` — lo completamos aparte con el roster del grupo (mismo mapeo
+    // que cargarAlumnosGrupo) solo para poder enlazar al expediente; si falla,
+    // la lista ya cargada arriba sigue siendo funcional sin el link.
+    try {
+      const grupoDetalle = await academicoApi.getGrupo(detail.grupo_id)
+      const idPorUsuario = new Map((grupoDetalle.alumnos ?? []).filter(a => a.user?.id).map(a => [a.user!.id, a.id]))
+      setAlumnosGrupo(prev => prev.map(a => ({ ...a, alumnoId: idPorUsuario.get(a.id) })))
+    } catch {
+      // sin link, sin problema — el pase de lista sigue funcionando
+    }
   }
 
   const handleSave = () => {
@@ -376,7 +393,7 @@ export default function AsistenciasPage() {
                     const presentes = s.asistencias?.filter(a => a.estatus === 'presente').length ?? 0
                     return (
                       <tr key={s.id} className="hover:bg-blue-50/60 transition-colors">
-                        <td className="px-4 py-2.5 font-medium text-slate-800">{s.fecha}</td>
+                        <td className="px-4 py-2.5 font-medium text-slate-800">{formatFechaCorta(s.fecha)}</td>
                         <td className="px-4 py-2.5">
                           <p className="font-medium text-slate-800">{s.grupo?.clave ?? '—'}</p>
                           <p className="text-xs text-slate-400">{s.grupo?.carrera?.nombre}</p>
@@ -415,7 +432,7 @@ export default function AsistenciasPage() {
                 const presentes = s.asistencias?.filter(a => a.estatus === 'presente').length ?? 0
                 return (
                   <div key={s.id} className="border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
-                    <p className="font-medium text-slate-800">{s.fecha}</p>
+                    <p className="font-medium text-slate-800">{formatFecha(s.fecha)}</p>
                     <p className="text-sm text-slate-600">{s.grupo?.clave ?? '—'} <span className="text-xs text-slate-400">({s.grupo?.carrera?.nombre})</span></p>
                     <p className="text-xs text-slate-500">{s.hora_inicio} – {s.hora_fin} · {s.tema ?? 'sin tema'}</p>
                     {totalReg > 0 ? (
@@ -628,7 +645,7 @@ export default function AsistenciasPage() {
 
       {modal && (
         <ModalWrap
-          title={modal === 'nueva' ? 'Nueva sesión de clase' : `Asistencia: ${(modal as SesionClase).fecha}`}
+          title={modal === 'nueva' ? 'Nueva sesión de clase' : `Asistencia: ${formatFecha((modal as SesionClase).fecha)}`}
           onClose={() => setModal(null)}
           onSave={handleSave}
           saving={mutCrear.isPending || mutActualizar.isPending}
@@ -679,7 +696,17 @@ export default function AsistenciasPage() {
                 {alumnosGrupo.map(a => (
                   <div key={a.id} className="flex items-center justify-between gap-3 bg-slate-50 rounded-lg px-3 py-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-800 truncate">{a.name}</p>
+                      {a.alumnoId ? (
+                        <Link
+                          to={`/admin/alumnos/${a.alumnoId}`}
+                          target="_blank"
+                          className="text-sm font-medium text-slate-800 truncate hover:text-blue-700 hover:underline block"
+                        >
+                          {a.name}
+                        </Link>
+                      ) : (
+                        <p className="text-sm font-medium text-slate-800 truncate">{a.name}</p>
+                      )}
                       <p className="text-xs text-slate-400 truncate">{a.email}</p>
                     </div>
                     <div className="flex gap-1 shrink-0">

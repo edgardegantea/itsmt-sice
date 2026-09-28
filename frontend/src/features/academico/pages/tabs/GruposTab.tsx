@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type Grupo } from '../../services/academico'
 import { useToastStore } from '../../../../store/toastStore'
@@ -237,14 +238,16 @@ export default function GruposTab() {
                 <tbody className="divide-y divide-slate-100">
                   {(grupoDetalle?.alumnos ?? []).length === 0 && <EmptyRow cols={4} msg="Sin alumnos asignados." />}
                   {(grupoDetalle?.alumnos ?? []).map(a => (
-                    <tr key={a.id} className="hover:bg-blue-50/60 transition-colors cursor-pointer">
+                    <tr key={a.id} className="hover:bg-blue-50/60 transition-colors">
                       <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{a.numero_control}</td>
-                      <td className="px-4 py-2.5 text-slate-900">{
-                        a.user?.name
-                          ?? (a.inscripcion?.aspirante
-                            ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()
-                            : '—')
-                      }</td>
+                      <td className="px-4 py-2.5 text-slate-900">
+                        <Link to={`/admin/alumnos/${a.id}`} className="hover:text-blue-700 hover:underline">
+                          {a.user?.name
+                            ?? (a.inscripcion?.aspirante
+                              ? `${a.inscripcion.aspirante.nombres} ${a.inscripcion.aspirante.apellido_paterno} ${a.inscripcion.aspirante.apellido_materno ?? ''}`.trim()
+                              : '—')}
+                        </Link>
+                      </td>
                       <td className="px-4 py-2.5 text-center text-slate-600">{a.semestre_actual}°</td>
                       <td className="px-4 py-2.5 text-right">
                         <button onClick={() => window.confirm('¿Retirar alumno del grupo?') && quitar.mutate({ grupoId: detalle.id, alumnoId: a.id })}

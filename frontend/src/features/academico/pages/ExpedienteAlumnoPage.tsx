@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { academicoApi } from '../services/academico'
 
@@ -11,6 +11,7 @@ const ESTATUS_LABEL: Record<string, { label: string; cls: string }> = {
 
 export default function ExpedienteAlumnoPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['expediente-alumno', id],
@@ -176,7 +177,7 @@ export default function ExpedienteAlumnoPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {bajas.map((b: { id: string; tipo_baja: string; estatus: string; created_at: string }) => (
-                  <tr key={b.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={b.id} onClick={() => navigate(`/admin/bajas/${b.id}`)} className="hover:bg-slate-50 transition-colors cursor-pointer">
                     <td className="px-4 py-3 text-slate-700 capitalize">{b.tipo_baja.replace(/_/g, ' ')}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${b.estatus === 'aprobada' ? 'bg-green-100 text-green-700' : b.estatus === 'rechazada' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>

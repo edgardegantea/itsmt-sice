@@ -128,6 +128,50 @@ export default function DashboardJefeCarreraPage() {
         <StatCard label="Instrumentaciones" value={Object.values(data.instrumentaciones_por_estatus).reduce((s, n) => s + n, 0)} to="/admin/planeacion/instrumentaciones" />
       </div>
 
+      {/* Panel Normativo Oficio Circular DET/ITSMT/DA/0041/2026 */}
+      <div className="bg-slate-900 text-white rounded-xl p-5 shadow-sm border border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
+          <div>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-800">
+              Normativa Institucional TecNM
+            </span>
+            <h3 className="text-base font-bold mt-1 text-white">
+              Cumplimiento Académico — Oficio Circular DET/ITSMT/DA/0041/2026
+            </h3>
+          </div>
+          <Link
+            to="/comunicados/oficio-circular"
+            className="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-lg transition-colors inline-flex items-center gap-1 shrink-0"
+          >
+            📜 Ver Oficio & Acuses
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <Link
+            to="/admin/gestion-academica/seguimiento-instrumentacion"
+            className="p-3 bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors block"
+          >
+            <div className="font-bold text-amber-300">Formatos SGI G4 (F-03-01 a F-03-07)</div>
+            <div className="text-slate-400 text-[11px] mt-1">Supervisar avance programático y autorizaciones de exámenes.</div>
+          </Link>
+          <Link
+            to="/gestion-academica/alertas-corte-captura"
+            className="p-3 bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors block"
+          >
+            <div className="font-bold text-emerald-300">Fechas de los 3 Cortes de Captura</div>
+            <div className="text-slate-400 text-[11px] mt-1">Corte 1 (21-25 sep), Corte 2 (26 oct-4 nov), Corte 3 (7-11 dic).</div>
+          </Link>
+          <Link
+            to="/academico/alertas"
+            className="p-3 bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors block"
+          >
+            <div className="font-bold text-red-300">Canalizaciones F-05-04 a Tutorías</div>
+            <div className="text-slate-400 text-[11px] mt-1">Revisar estudiantes con inasistencia &ge; 50% o riesgo de reprobación.</div>
+          </Link>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Desglose title="Aspirantes por estatus (periodo actual)" data={data.aspirantes.por_estatus} colors={ESTATUS_ASP_COLOR} />
         <Desglose title="Alumnos por estatus (total histórico)" data={data.alumnos.por_estatus} colors={ESTATUS_ALU_COLOR} />

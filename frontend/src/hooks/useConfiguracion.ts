@@ -32,6 +32,12 @@ const FALLBACK: ConfiguracionInstitucional = {
   login_subtitulo: null,
   login_imagen_fondo: null,
   login_opacidad_fondo: 0.70,
+  form_border_radius: 'lg',
+  form_density: 'comfortable',
+  form_bg_style: 'white',
+  form_focus_ring_color: '#1b396a',
+  form_border_tone: 'slate-200',
+  form_label_weight: 'medium',
 }
 
 export function useConfiguracion() {

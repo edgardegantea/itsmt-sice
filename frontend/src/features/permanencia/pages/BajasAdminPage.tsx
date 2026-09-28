@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { permanenciaApi, type Baja, type EstatusBaja } from '../services/permanencia'
 import { useAuthStore } from '../../../store/authStore'
@@ -162,7 +163,7 @@ export default function BajasAdminPage() {
           {lista.map((baja) => (
             <div key={baja.id} className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
+                <Link to={`/admin/bajas/${baja.id}`} className="flex-1 min-w-0 -m-1 p-1 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-slate-800 text-sm">
                       {baja.alumno?.user?.name ?? baja.alumno_id}
@@ -198,7 +199,7 @@ export default function BajasAdminPage() {
                           : <span className="text-slate-400">Reingreso no permitido para esta baja</span>}
                     </p>
                   )}
-                </div>
+                </Link>
 
                 {baja.tipo_baja === 'temporal' && baja.estatus === 'aprobada' && baja.reingreso_posible && !baja.reingreso_registrado && (
                   <div className="shrink-0">

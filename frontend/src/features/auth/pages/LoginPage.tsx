@@ -27,12 +27,15 @@ export default function LoginPage() {
   const loginSubtitulo = config.login_subtitulo || config.nombre_institucion
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      {/* Pleca institucional superior */}
+      <div className="pleca-tecnm absolute top-0 left-0 right-0 h-1.5 z-30" />
+
       {/* Panel izquierdo — institucional */}
       <div
         className="hidden lg:flex w-1/2 flex-col justify-between p-12 relative bg-cover bg-center"
         style={{
-          backgroundColor: 'var(--color-primario)',
+          backgroundColor: 'var(--color-primario, #1b396a)',
           ...(fondoUrl ? { backgroundImage: `url(${fondoUrl})` } : {}),
         }}
       >
@@ -40,95 +43,104 @@ export default function LoginPage() {
         {fondoUrl && (
           <div
             className="absolute inset-0"
-            style={{ backgroundColor: 'var(--color-primario)', opacity: opacidad }}
+            style={{ backgroundColor: 'var(--color-primario, #1b396a)', opacity: opacidad }}
           />
         )}
         <div className="relative z-10 flex flex-col justify-between h-full">
-        <div className="flex items-center gap-3">
-          {logoUrl ? (
+          <div className="flex items-center gap-3">
+            {logoUrl ? (
               <img src={logoUrl} alt={config.nombre_corto} className="h-12 w-12 object-contain" />
             ) : (
-              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center text-sm font-bold text-white border border-[#b38e5d]/40 shadow-sm" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}>
                 {(config.nombre_corto ?? 'IT').slice(0, 2)}
               </div>
             )}
-          <div>
-            <p className="text-white text-base font-semibold tracking-wide">{config.nombre_corto}</p>
-            {config.dependencia && (
-              <p className="text-slate-400 text-xs mt-0.5">{config.dependencia}</p>
+            <div>
+              <p className="text-white text-base font-semibold tracking-wide font-['Montserrat']">{config.nombre_corto}</p>
+              <p className="text-[#d4c19c] text-xs font-medium mt-0.5">{config.dependencia || 'Tecnológico Nacional de México'}</p>
+            </div>
+          </div>
+
+          <div className="py-8">
+            <div className="inline-block w-12 h-1 bg-[#b38e5d] rounded-full mb-6" />
+            <h1 className="text-white text-4xl font-bold leading-tight font-['Montserrat']">
+              {loginTitulo}
+            </h1>
+            {loginSubtitulo && (
+              <p className="text-slate-200 text-sm mt-4 leading-relaxed font-light">
+                {loginSubtitulo}
+              </p>
+            )}
+            <p className="text-[#d4c19c] text-xs mt-4 font-semibold italic tracking-wide">
+              «Excelencia en Educación Tecnológica®»
+            </p>
+            {config.subsistema && (
+              <p className="text-slate-300/80 text-[11px] mt-2 font-medium">{config.subsistema}</p>
             )}
           </div>
-        </div>
 
-        <div>
-          <h1 className="text-white text-4xl font-semibold leading-tight">
-            {loginTitulo}
-          </h1>
-          {loginSubtitulo && (
-            <p className="text-slate-300 text-sm mt-4 leading-relaxed">
-              {loginSubtitulo}
+          <div className="flex items-center justify-between border-t border-white/10 pt-4 text-xs text-slate-300/80">
+            <p>
+              {config.nombre_corto} © {new Date().getFullYear()}
+              {config.clave_tecnm && <span className="ml-2">· Clave: {config.clave_tecnm}</span>}
             </p>
-          )}
-          {config.subsistema && (
-            <p className="text-slate-400 text-xs mt-2">{config.subsistema}</p>
-          )}
-        </div>
-
-        <p className="text-slate-300/70 text-xs">
-          {config.nombre_corto} © {new Date().getFullYear()}
-          {config.clave_tecnm && <span className="ml-2">· {config.clave_tecnm}</span>}
-        </p>
+            <span className="text-[#b38e5d] font-semibold tracking-wider">TECNM</span>
+          </div>
         </div>
       </div>
 
       {/* Panel derecho — formulario */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-slate-50">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-[#f8fafc]">
         <div className="w-full max-w-sm">
           {/* Logo móvil */}
           <div className="mb-8 flex flex-col items-center gap-3 lg:hidden">
             {logoUrl ? (
               <img src={logoUrl} alt={config.nombre_corto} className="h-14 w-14 object-contain" />
             ) : (
-              <div className="h-14 w-14 rounded-xl flex items-center justify-center text-base font-bold" style={{ backgroundColor: 'var(--color-primario)', color: 'white' }}>
+              <div className="h-14 w-14 rounded-xl flex items-center justify-center text-base font-bold shadow-md border border-[#b38e5d]/30" style={{ backgroundColor: 'var(--color-primario, #1b396a)', color: 'white' }}>
                 {(config.nombre_corto ?? 'IT').slice(0, 2)}
               </div>
             )}
-            <p className="text-slate-700 text-sm font-semibold">{config.nombre_corto} — Control Escolar</p>
+            <div className="text-center">
+              <p className="text-slate-800 text-base font-bold font-['Montserrat']">{config.nombre_corto} — Control Escolar</p>
+              <p className="text-xs text-[#b38e5d] font-medium mt-0.5">Tecnológico Nacional de México</p>
+            </div>
           </div>
 
           <div className="mb-8 hidden lg:block">
-            <h2 className="text-2xl font-semibold text-slate-800">Iniciar sesión</h2>
+            <h2 className="text-2xl font-bold text-slate-800 font-['Montserrat']">Iniciar sesión</h2>
             <p className="text-sm text-slate-500 mt-1">
               Personal: correo institucional · Alumnos: número de control
             </p>
           </div>
 
           <div className="mb-8 lg:hidden">
-            <h2 className="text-xl font-semibold text-slate-800">Iniciar sesión</h2>
+            <h2 className="text-xl font-bold text-slate-800 font-['Montserrat']">Iniciar sesión</h2>
             <p className="text-sm text-slate-500 mt-1">Correo institucional o número de control</p>
           </div>
 
           {!challengeToken ? (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Correo institucional o número de control
+                  Correo o Número de control
                 </label>
                 <input
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoFocus
                   autoComplete="username"
-                  placeholder="usuario@itsmt.edu.mx o 26006 0001"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition"
+                  placeholder="ejemplo@itsmt.edu.mx o 200C0001"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition bg-white"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-sm font-medium text-slate-700">Contraseña</label>
-                  <Link to="/forgot-password" className="text-xs text-[#1a3a5c] hover:underline">
+                  <Link to="/forgot-password" className="text-xs text-[#1b396a] hover:text-[#8b1d41] hover:underline font-medium">
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
@@ -139,7 +151,7 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition bg-white"
                 />
               </div>
 
@@ -153,10 +165,10 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={login.isPending}
-                className="w-full disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
-              style={{ backgroundColor: 'var(--color-primario)' }}
+                className="w-full disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md cursor-pointer"
+                style={{ backgroundColor: 'var(--color-primario, #1b396a)' }}
               >
-                {login.isPending ? 'Verificando…' : 'Ingresar'}
+                {login.isPending ? 'Verificando…' : 'Ingresar al sistema'}
               </button>
             </form>
           ) : (
@@ -174,7 +186,7 @@ export default function LoginPage() {
                   autoFocus
                   autoComplete="one-time-code"
                   placeholder="000000"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c] transition tracking-widest text-center"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b396a]/20 focus:border-[#1b396a] transition tracking-widest text-center bg-white"
                 />
               </div>
 
@@ -188,8 +200,8 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={verificar2fa.isPending}
-                className="w-full disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
-                style={{ backgroundColor: 'var(--color-primario)' }}
+                className="w-full disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-lg transition-all duration-150 shadow-sm"
+                style={{ backgroundColor: 'var(--color-primario, #1b396a)' }}
               >
                 {verificar2fa.isPending ? 'Verificando…' : 'Verificar'}
               </button>
@@ -200,15 +212,15 @@ export default function LoginPage() {
             </form>
           )}
 
-          <div className="mt-8 text-center text-xs text-slate-400 space-y-1.5">
+          <div className="mt-8 text-center text-xs text-slate-400 space-y-2 border-t border-slate-200 pt-5">
             <p>
               ¿Eres aspirante?{' '}
-              <a href="/registro" className="text-[#1a3a5c] font-medium hover:underline">
+              <a href="/registro" className="text-[#1b396a] font-semibold hover:text-[#8b1d41] hover:underline">
                 Registra tu solicitud
               </a>
             </p>
             <p>
-              <a href="/aspirante/consulta" className="text-[#1a3a5c] hover:underline">
+              <a href="/aspirante/consulta" className="text-slate-600 hover:text-[#1b396a] hover:underline">
                 Consulta el estatus de tu admisión
               </a>
             </p>

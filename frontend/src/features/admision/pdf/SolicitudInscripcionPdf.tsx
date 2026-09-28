@@ -205,7 +205,7 @@ export default function SolicitudInscripcionPdf({ inscripcion, cfg }: Props) {
           </View>
         </View>
 
-        <Text style={S.footer}>{`Documento generado por SICE — ITSMT · Folio: ${folio}`}</Text>
+        <Text style={S.footer}>{`Documento generado por SICE — ${cfg.nombre_corto} · Folio: ${folio}`}</Text>
       </Page>
     </Document>
   )

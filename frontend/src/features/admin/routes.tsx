@@ -11,6 +11,7 @@ const PeriodosPage = lazy(() => import('./pages/PeriodosPage'))
 const PermisosPage = lazy(() => import('./pages/PermisosPage'))
 const UsuarioDetailPage = lazy(() => import('./pages/UsuarioDetailPage'))
 const UsuariosPage = lazy(() => import('./pages/UsuariosPage'))
+const ApiKeysPage = lazy(() => import('./pages/ApiKeysPage'))
 
 export const adminRoutes = (
   <>
@@ -24,5 +25,6 @@ export const adminRoutes = (
         <Route path="/admin/usuarios/:id"              element={<AdminLayout><UsuarioDetailPage /></AdminLayout>} />
         <Route path="/admin/directorio"               element={<AdminLayout><DirectorioPage /></AdminLayout>} />
         <Route path="/admin/permisos"                  element={<AdminLayout><PermisosPage /></AdminLayout>} />
+        <Route path="/admin/api-keys"                  element={<AdminLayout><ApiKeysPage /></AdminLayout>} />
   </>
 )

@@ -36,9 +36,12 @@ export function openPdfPreview(blob: Blob, filename?: string): void {
 }
 
 export function fmtFecha(iso: string): string {
+  if (!iso) return ''
   const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
                  'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-  const d = new Date(iso + 'T12:00:00')
+  const cleanIso = String(iso).slice(0, 10)
+  const d = new Date(cleanIso + 'T12:00:00')
+  if (isNaN(d.getTime())) return iso
   return `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`
 }
 

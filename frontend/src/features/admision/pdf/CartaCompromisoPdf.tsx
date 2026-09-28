@@ -68,7 +68,7 @@ export default function CartaCompromisoPdf({ inscripcion, cfg }: Props) {
         <View style={S.titleBox}><Text style={S.titleTxt}>CARTA COMPROMISO DEL ESTUDIANTE</Text></View>
 
         <Text style={S.intro}>
-          {`En la ciudad de Martínez de la Torre, Ver., a ${today}, el alumno `}
+          {`En la ciudad de ${cfg.ciudad ?? ''}, Ver., a ${today}, el alumno `}
           <Text style={{ fontFamily: 'Helvetica-Bold' }}>{nomAlumno}</Text>
           {`, con número de control `}
           <Text style={{ fontFamily: 'Helvetica-Bold' }}>{inscripcion.numero_control}</Text>
@@ -96,11 +96,11 @@ export default function CartaCompromisoPdf({ inscripcion, cfg }: Props) {
           <View style={S.firmaCell}>
             <View style={S.firmaLine} />
             <Text style={S.firmaNom}>Firma del Director</Text>
-            <Text style={S.firmaRol}>Instituto Tecnológico Superior de Martínez de la Torre</Text>
+            <Text style={S.firmaRol}>{cfg.nombre_institucion}</Text>
           </View>
         </View>
 
-        <Text style={S.footer}>{`Documento generado por SICE — ITSMT · Folio: ${folio}`}</Text>
+        <Text style={S.footer}>{`Documento generado por SICE — ${cfg.nombre_corto} · Folio: ${folio}`}</Text>
       </Page>
     </Document>
   )

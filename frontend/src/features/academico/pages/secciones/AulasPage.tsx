@@ -1,17 +1,134 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { academicoApi, type Aula } from '../../services/academico'
+import QRCode from 'qrcode'
+import { academicoApi, type Aula, type OcupacionAula } from '../../services/academico'
 import { Field, SortableTh, SkeletonRows, EmptyRow, inputCls, selectCls, ModalWrap, useSorted } from '../tabs/shared'
 import { useConfirm } from '../../../../components/ConfirmDialog'
+import { useToastStore } from '../../../../store/toastStore'
 import { usePuedeEliminar } from '../../../../hooks/usePermisos'
+import { usePeriodoActivo } from '../../../../hooks/usePeriodoActivo'
 import ViewToggle, { useViewMode } from '../../../../components/ui/ViewToggle'
 import DetailModal from '../../../../components/ui/DetailModal'
+import Modal from '../../../../components/ui/Modal'
 import BulkActionBar, { SelectCheckbox, ToggleSelectionButton } from '../../../../components/ui/BulkActionBar'
+
+/** QR fijo para pegar en la puerta del aula — al escanearlo, quien lo abra (docente
+ * o prefectura) cae en /qr/aula/:id, que resuelve solo qué clase toca ahí ahora. */
+function ModalQrAula({ aula, onClose }: { aula: Aula; onClose: () => void }) {
+  const [dataUrl, setDataUrl] = useState<string | null>(null)
+  const url = `${window.location.origin}/qr/aula/${aula.id}`
+
+  useEffect(() => {
+    QRCode.toDataURL(url, { width: 320, margin: 1 }).then(setDataUrl)
+  }, [url])
+
+  return (
+    <Modal title={`Código QR — ${aula.nombre}`} onClose={onClose}>
+      <div className="flex flex-col items-center gap-4 py-2">
+        {dataUrl ? (
+          <img src={dataUrl} alt={`QR del aula ${aula.nombre}`} className="rounded-lg border border-slate-200" />
+        ) : (
+          <div className="w-80 h-80 flex items-center justify-center text-slate-400 text-sm">Generando…</div>
+        )}
+        <p className="text-xs text-slate-400 text-center max-w-xs">
+          Pega este código en la puerta del aula. Al escanearlo, el docente en turno o
+          prefectura ven de inmediato qué clase toca ahí y pueden pasar lista o
+          registrar una ronda sin buscar el grupo a mano.
+        </p>
+        <div className="flex gap-2">
+          <a
+            href={dataUrl ?? undefined}
+            download={`qr-aula-${aula.nombre}.png`}
+            className="text-xs bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50"
+          >
+            ⬇ Descargar
+          </a>
+          <button
+            onClick={() => window.print()}
+            className="text-xs bg-[#1a3a5c] text-white px-3 py-1.5 rounded-lg hover:bg-[#15304c]"
+          >
+            🖨 Imprimir
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+/** Al desactivar un aula con clases asignadas, ofrece de inmediato a qué otra aula
+ * libre del mismo tipo mover cada una — reasignar solo requiere un clic. */
+function ModalReubicacion({ aula, periodoId, onClose }: { aula: Aula; periodoId: string; onClose: () => void }) {
+  const qc = useQueryClient()
+  const { toast: addToast } = useToastStore()
+
+  const { data: sugerencias = [], isLoading } = useQuery({
+    queryKey: ['sugerencias-reubicacion', aula.id, periodoId],
+    queryFn: () => academicoApi.getSugerenciasReubicacion(aula.id, { periodo_id: periodoId }),
+  })
+
+  const mutReasignar = useMutation({
+    mutationFn: (vars: { cargaId: string; aulaId: string }) => academicoApi.updateCarga(vars.cargaId, { aula_id: vars.aulaId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sugerencias-reubicacion', aula.id, periodoId] })
+      qc.invalidateQueries({ queryKey: ['aulas-ocupacion'] })
+      addToast('Clase reubicada.', 'success')
+    },
+    onError: () => addToast('No se pudo reubicar la clase.', 'error'),
+  })
+
+  return (
+    <Modal title={`Reubicar clases de ${aula.nombre}`} onClose={onClose} size="lg">
+      <p className="text-sm text-slate-500 mb-4">
+        Este espacio se acaba de desactivar. Estas son sus clases asignadas este periodo — elige a dónde moverlas.
+      </p>
+      {isLoading ? (
+        <p className="text-sm text-slate-400 py-6 text-center">Buscando aulas disponibles…</p>
+      ) : sugerencias.length === 0 ? (
+        <p className="text-sm text-slate-400 py-6 text-center">Este espacio no tenía clases asignadas este periodo.</p>
+      ) : (
+        <div className="space-y-3">
+          {sugerencias.map(s => (
+            <div key={s.carga_academica_id} className="border border-slate-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-slate-800">{s.materia} <span className="text-slate-400 font-normal">· Grupo {s.grupo}</span></p>
+              <p className="text-xs text-slate-500">{s.docente} {s.horarios.length > 0 && `· ${s.horarios.join(', ')}`}</p>
+              {s.aulas_candidatas.length === 0 ? (
+                <p className="text-xs text-red-500 mt-2">No hay aulas libres del mismo tipo en esos horarios.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {s.aulas_candidatas.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => mutReasignar.mutate({ cargaId: s.carga_academica_id, aulaId: c.id })}
+                      disabled={mutReasignar.isPending}
+                      className="text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 hover:border-blue-300 disabled:opacity-50"
+                    >
+                      Mover a <strong>{c.nombre}</strong> ({c.capacidad} lugares)
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
+  )
+}
 
 type AulaForm = { nombre: string; capacidad: number; tipo: Aula['tipo']; activa: boolean }
 type TipoFiltro = 'todas' | 'salon' | 'laboratorio' | 'taller'
-type ActiveTab = 'catalogo' | 'disponibilidad'
+type ActiveTab = 'catalogo' | 'disponibilidad' | 'ocupacion' | 'fantasma'
+
+const DIA_LABEL: Record<string, string> = {
+  lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado',
+}
+
+function colorOcupacion(pct: number) {
+  if (pct >= 80) return { text: 'text-red-600', bg: 'bg-red-500', chip: 'bg-red-100 text-red-700' }
+  if (pct >= 50) return { text: 'text-amber-600', bg: 'bg-amber-500', chip: 'bg-amber-100 text-amber-700' }
+  return { text: 'text-emerald-600', bg: 'bg-emerald-500', chip: 'bg-emerald-100 text-emerald-700' }
+}
 
 type DisponibilidadForm = {
   dia_semana: string
@@ -39,6 +156,7 @@ export default function AulasPage() {
   const puedeEliminar = usePuedeEliminar()
   const [vista, setVista] = useViewMode('aulas')
   const [detalle, setDetalle] = useState<Aula | null>(null)
+  const [aulaQr, setAulaQr] = useState<Aula | null>(null)
   const [modoSeleccion, setModoSeleccion] = useState(false)
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
   const toggleSel = (id: string) => setSeleccionados(prev => {
@@ -52,6 +170,10 @@ export default function AulasPage() {
   const setDisp = (k: keyof DisponibilidadForm, v: string) => setDispForm(f => ({ ...f, [k]: v }))
   const [buscarDisp, setBuscarDisp] = useState(false)
 
+  // Ocupación state
+  const { data: periodoActivo } = usePeriodoActivo()
+  const [aulaOcupacionDetalle, setAulaOcupacionDetalle] = useState<OcupacionAula | null>(null)
+
   const { data: aulas = [], isLoading } = useQuery({
     queryKey: ['aulas'],
     queryFn: () => academicoApi.getAulas(),
@@ -63,10 +185,33 @@ export default function AulasPage() {
     enabled: buscarDisp,
   })
 
+  const { data: ocupacion = [], isLoading: cargandoOcupacion } = useQuery({
+    queryKey: ['aulas-ocupacion', periodoActivo?.id],
+    queryFn: () => academicoApi.getOcupacionAulas({ periodo_id: periodoActivo?.id }),
+    enabled: tab === 'ocupacion' && !!periodoActivo?.id,
+  })
+
+  const { data: aulasFantasma = [], isLoading: cargandoFantasma } = useQuery({
+    queryKey: ['aulas-fantasma', periodoActivo?.id],
+    queryFn: () => academicoApi.getAulasFantasma({ periodo_id: periodoActivo!.id }),
+    enabled: tab === 'fantasma' && !!periodoActivo?.id,
+  })
+
+  const [aulaReubicar, setAulaReubicar] = useState<Aula | null>(null)
+
   const mutSave = useMutation({
     mutationFn: (d: Partial<Aula>) =>
       modal === 'nuevo' ? academicoApi.createAula(d) : academicoApi.updateAula((modal as Aula).id, d),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['aulas'] }); setModal(null) },
+    onSuccess: (aulaGuardada) => {
+      qc.invalidateQueries({ queryKey: ['aulas'] })
+      // Se desactivó un aula que ya tenía clases asignadas — ofrece de inmediato a
+      // dónde moverlas, en vez de dejar que alguien lo descubra después a mano.
+      const eraActiva = modal !== 'nuevo' && (modal as Aula).activa
+      if (eraActiva && !aulaGuardada.activa && periodoActivo?.id) {
+        setAulaReubicar(aulaGuardada)
+      }
+      setModal(null)
+    },
   })
 
   const mutDelete = useMutation({
@@ -137,6 +282,8 @@ export default function AulasPage() {
           {([
             { key: 'catalogo', label: 'Catálogo' },
             { key: 'disponibilidad', label: 'Consultar disponibilidad' },
+            { key: 'ocupacion', label: 'Ocupación' },
+            { key: 'fantasma', label: 'Aulas Fantasma' },
           ] as { key: ActiveTab; label: string }[]).map(t => (
             <button
               key={t.key}
@@ -225,6 +372,7 @@ export default function AulasPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 flex gap-3 justify-end">
+                          <button onClick={() => setAulaQr(a)} className="text-xs text-slate-500 hover:underline">QR</button>
                           <button onClick={() => setDetalle(a)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
                           <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
                           {puedeEliminar && <button
@@ -264,6 +412,7 @@ export default function AulasPage() {
                     </span>
                     <p className="text-sm text-slate-500">{a.capacidad} lugares</p>
                     <div className="flex gap-3 mt-1">
+                      <button onClick={() => setAulaQr(a)} className="text-xs text-slate-500 hover:underline">QR</button>
                       <button onClick={() => setDetalle(a)} className="text-xs text-slate-500 hover:underline">Ver detalle</button>
                       <button onClick={() => openEdit(a)} className="text-xs text-blue-600 hover:underline">Editar</button>
                       {puedeEliminar && <button
@@ -364,6 +513,107 @@ export default function AulasPage() {
             )}
           </div>
         )}
+
+        {/* ── Ocupación tab ── */}
+        {tab === 'ocupacion' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between flex-wrap gap-2">
+              <p className="text-sm text-slate-600">
+                Horas ocupadas por semana contra una ventana operativa institucional de{' '}
+                <span className="font-medium">78 h/semana</span> (lunes a sábado, 07:00–20:00) — periodo{' '}
+                <span className="font-medium">{periodoActivo?.nombre ?? '—'}</span>.
+              </p>
+            </div>
+
+            {!periodoActivo ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
+                No hay un periodo activo para calcular la ocupación.
+              </div>
+            ) : cargandoOcupacion ? (
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <table className="w-full text-sm"><tbody><SkeletonRows cols={4} /></tbody></table>
+              </div>
+            ) : ocupacion.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
+                No hay aulas registradas.
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="divide-y divide-slate-100">
+                  {ocupacion.map(o => {
+                    const c = colorOcupacion(o.pct_ocupacion)
+                    return (
+                      <button
+                        key={o.aula_id}
+                        onClick={() => setAulaOcupacionDetalle(o)}
+                        className="w-full text-left px-5 py-3.5 flex items-center gap-4 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="w-40 shrink-0">
+                          <p className="text-sm font-medium text-slate-800">{o.nombre}</p>
+                          <p className="text-xs text-slate-400">{TIPO_LABEL[o.tipo]} · {o.capacidad} lugares</p>
+                        </div>
+                        <div className="flex-1">
+                          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className={`h-full ${c.bg} rounded-full`} style={{ width: `${Math.min(100, o.pct_ocupacion)}%` }} />
+                          </div>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium w-16 text-center ${c.chip}`}>
+                          {o.pct_ocupacion}%
+                        </span>
+                        <span className="text-xs text-slate-400 w-32 text-right">
+                          {o.horas_ocupadas}h · {o.total_bloques} bloque{o.total_bloques === 1 ? '' : 's'}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'fantasma' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-slate-200 p-4">
+              <p className="text-sm text-slate-600">
+                Grupos que el horario dice que deberían estar en un aula, pero prefectura ha reportado <strong>2 o más veces</strong> que el aula está vacía o el grupo no coincide — señal de un horario que no refleja la realidad, no un hallazgo aislado.
+              </p>
+            </div>
+
+            {!periodoActivo ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
+                No hay un periodo activo.
+              </div>
+            ) : cargandoFantasma ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">Buscando…</div>
+            ) : aulasFantasma.length === 0 ? (
+              <div className="bg-white rounded-xl border border-emerald-200 bg-emerald-50 p-8 text-center text-emerald-700 text-sm">
+                ✅ Sin discrepancias detectadas — el horario coincide con lo que prefectura reporta en campo.
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-red-200 overflow-hidden">
+                <div className="divide-y divide-red-100">
+                  {aulasFantasma.map((f, i) => (
+                    <div key={i} className="px-5 py-3.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-800">
+                          👻 {f.aula ?? 'Aula sin asignar'} · Grupo {f.grupo} <span className="text-slate-400 font-normal">({f.carrera})</span>
+                        </p>
+                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                          {f.total_discrepancias} discrepancias
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {f.materia} · Docente esperado: {f.docente_esperado ?? '—'} · Última vez: {f.ultima_fecha}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">Reportado como: {f.estatus_reportados.join(', ')}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {confirmDialog}
@@ -408,6 +658,52 @@ export default function AulasPage() {
           ]}
           footer={<button onClick={() => { setDetalle(null); openEdit(detalle) }} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg">Editar</button>}
         />
+      )}
+
+      {aulaOcupacionDetalle && (
+        <Modal title={`Ocupación — ${aulaOcupacionDetalle.nombre}`} onClose={() => setAulaOcupacionDetalle(null)} size="lg">
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
+            <div className={`text-sm font-semibold px-2.5 py-1 rounded-full ${colorOcupacion(aulaOcupacionDetalle.pct_ocupacion).chip}`}>
+              {aulaOcupacionDetalle.pct_ocupacion}% ocupado
+            </div>
+            <p className="text-xs text-slate-500">
+              {aulaOcupacionDetalle.horas_ocupadas}h de {aulaOcupacionDetalle.horas_disponibles}h/semana disponibles ·{' '}
+              {aulaOcupacionDetalle.total_bloques} bloque{aulaOcupacionDetalle.total_bloques === 1 ? '' : 's'} asignado{aulaOcupacionDetalle.total_bloques === 1 ? '' : 's'}
+            </p>
+          </div>
+
+          {aulaOcupacionDetalle.bloques.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-6">Sin horarios asignados este periodo — aula completamente libre.</p>
+          ) : (
+            <div className="space-y-4">
+              {(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const).map(dia => {
+                const bloquesDia = aulaOcupacionDetalle.bloques
+                  .filter(b => b.dia_semana === dia)
+                  .sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio))
+                if (bloquesDia.length === 0) return null
+                return (
+                  <div key={dia}>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{DIA_LABEL[dia]}</p>
+                    <div className="space-y-1">
+                      {bloquesDia.map((b, i) => (
+                        <div key={i} className="flex items-center gap-3 text-sm bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+                          <span className="font-mono text-xs text-slate-500 w-28 shrink-0">{b.hora_inicio}–{b.hora_fin}</span>
+                          <span className="font-medium text-slate-800">{b.materia ?? 'Materia'}</span>
+                          {b.grupo && <span className="text-xs text-slate-400">Grupo {b.grupo}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </Modal>
+      )}
+
+      {aulaQr && <ModalQrAula aula={aulaQr} onClose={() => setAulaQr(null)} />}
+      {aulaReubicar && periodoActivo?.id && (
+        <ModalReubicacion aula={aulaReubicar} periodoId={periodoActivo.id} onClose={() => setAulaReubicar(null)} />
       )}
     </div>
   )

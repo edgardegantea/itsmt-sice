@@ -142,14 +142,22 @@ export interface Baja {
   reingreso_registrado: boolean
   fecha_reingreso: string | null
   numero_semestres_cursados: number | null
+  revisada_en?: string | null
+  created_at?: string
   alumno?: {
     id: string
     numero_control: string
     semestre_actual: number
-    user?: { name: string }
+    user?: { name: string; email?: string }
     carrera?: { nombre: string; clave: string }
   }
   periodo?: { nombre: string }
+  // Cuando el backend carga la relación (Baja::load('registradaPor')), Laravel
+  // serializa la clave en snake_case del NOMBRE DEL MÉTODO — que coincide con el
+  // nombre de la columna cruda y la sobreescribe con el objeto completo.
+  registrada_por?: { name: string } | null
+  revisada_por?: { name: string } | null
+  reingreso_por?: { name: string } | null
 }
 
 export interface Adeudo {
@@ -237,6 +245,12 @@ export const permanenciaApi = {
   getBajas: (params?: Record<string, string>): Promise<any> =>
     apiClient.get('/bajas', { params }).then(r => r.data.data),
 
+  getBajaDetalle: (id: string): Promise<{ baja: Baja; otras_bajas_del_alumno: Baja[] }> =>
+    apiClient.get(`/bajas/${id}`).then(r => r.data.data),
+
+  getContadorBajasPendientes: (): Promise<{ total: number }> =>
+    apiClient.get('/bajas/contador-pendientes').then(r => r.data.data),
+
   actualizarEstatusBaja: (id: string, estatus: EstatusBaja, motivo_rechazo?: string): Promise<Baja> =>
     apiClient.patch(`/bajas/${id}/estatus`, { estatus, motivo_rechazo }).then(r => r.data.data),
 
@@ -297,6 +311,35 @@ export const permanenciaApi = {
     numero_semestres_cursados?: number
   }): Promise<Baja> =>
     apiClient.post('/bajas/solicitar', data).then(r => r.data.data),
+
+  // Convierte una alerta de riesgo académico / deserción temprana en un trámite
+  // de baja (queda pendiente de aprobación) — cierra el ciclo detección→acción.
+  iniciarBajaDesdeRiesgo: (data: {
+    alumno_id: string
+    periodo_id: string
+    tipo_alerta: 'riesgo_academico' | 'desercion_temprana'
+    tipo_baja?: TipoBaja
+    contexto_alerta?: string
+    motivo_texto?: string
+  }): Promise<Baja> =>
+    apiClient.post('/bajas/iniciar-desde-riesgo', data).then(r => r.data.data),
+
+  // Reporte agregado de altas/bajas por carrera (nuevo ingreso, reingreso, bajas por tipo).
+  getReporteAltasBajas: (periodoId: string): Promise<{
+    periodo: { id: string; nombre: string }
+    carreras: Array<{
+      carrera_id: string
+      carrera: string
+      altas: { nuevo_ingreso: number; reingreso: number; total: number }
+      bajas: { temporal: number; definitiva: number; parcial: number; total: number }
+      saldo_neto: number
+    }>
+    totales: { altas: number; bajas: number; saldo_neto: number }
+  }> =>
+    apiClient.get('/reportes/altas-bajas', { params: { periodo_id: periodoId } }).then(r => r.data.data),
+
+  getReporteAltasBajasPdfUrl: (periodoId: string): Promise<Blob> =>
+    apiClient.get('/reportes/altas-bajas/pdf', { params: { periodo_id: periodoId }, responseType: 'blob' }).then(r => r.data),
 
   // Encuesta Socioeconómica
   getMiEncuesta: (periodoId?: string): Promise<{ encuesta: EncuestaSocioeconomica | null; periodo: { id: string; nombre: string } | null; alumno: MiEncuestaAlumno | null }> =>

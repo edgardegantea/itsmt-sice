@@ -393,11 +393,13 @@ function CobroModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void }
 
 // ── Fila expandible ───────────────────────────────────────────────────────────
 
-const DOCS_INSCRIPCION: { tipo: TipoInscripcionPdf; label: string; icon: string }[] = [
-  { tipo: 'solicitud',             label: 'Solicitud inscripción', icon: '📋' },
-  { tipo: 'carta-compromiso',      label: 'Carta compromiso',      icon: '✍️' },
-  { tipo: 'carta-compromiso-docs', label: 'Carta docs',            icon: '📄' },
-  { tipo: 'contrato',              label: 'Contrato',              icon: '📝' },
+import { IconClipboard, IconDocument, IconUser } from '../../../components/ui/Icons'
+
+const DOCS_INSCRIPCION: { tipo: TipoInscripcionPdf; label: string; icon: React.ReactNode }[] = [
+  { tipo: 'solicitud',             label: 'Solicitud inscripción', icon: <IconClipboard className="w-3.5 h-3.5" /> },
+  { tipo: 'carta-compromiso',      label: 'Carta compromiso',      icon: <IconDocument className="w-3.5 h-3.5" /> },
+  { tipo: 'carta-compromiso-docs', label: 'Carta docs',            icon: <IconDocument className="w-3.5 h-3.5" /> },
+  { tipo: 'contrato',              label: 'Contrato',              icon: <IconDocument className="w-3.5 h-3.5" /> },
 ]
 
 function FilaAlumno({
@@ -574,7 +576,7 @@ function FilaAlumno({
                     disabled={generandoCredencial === alumno.id}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-wait"
                   >
-                    {generandoCredencial === alumno.id ? <Spinner className="w-3 h-3" /> : <span className="text-sm leading-none">🪪</span>}
+                    {generandoCredencial === alumno.id ? <Spinner className="w-3 h-3" /> : <IconUser className="w-3.5 h-3.5" />}
                     Credencial
                   </button>
 
@@ -584,9 +586,9 @@ function FilaAlumno({
                       onClick={(e) => { e.stopPropagation(); onInscripcionPdf(tipo) }}
                       disabled={generandoInscPdf === tipo}
                       title={label}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-wait"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-wait"
                     >
-                      {generandoInscPdf === tipo ? <Spinner className="w-3 h-3" /> : <span className="text-sm leading-none">{icon}</span>}
+                      {generandoInscPdf === tipo ? <Spinner className="w-3 h-3" /> : icon}
                       <span className="hidden sm:inline">{label}</span>
                     </button>
                   ))}

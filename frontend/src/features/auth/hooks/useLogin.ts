@@ -3,21 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { authApi, type LoginPayload } from '../services/auth'
 import { useAuthStore } from '../../../store/authStore'
-
-function destinoSegunRol(roles: string[]): string {
-  if (roles.includes('superadmin'))              return '/admin'
-  if (roles.includes('admin'))                   return '/admin'
-  if (roles.includes('director_academico'))      return '/admin'
-  if (roles.includes('personal_administrativo')) return '/admin/aspirantes'
-  if (roles.includes('jefe_carrera'))            return '/jefe-carrera/dashboard'
-  if (roles.includes('desarrollo_academico'))    return '/desarrollo-academico/instrumentaciones'
-  if (roles.includes('docente'))                 return '/docente'
-  if (roles.includes('alumno'))                  return '/alumno/dashboard'
-  // Cualquier otro rol de personal (jefaturas, control escolar, etc.) sin una ruta
-  // dedicada cae aquí — nunca a '/login', que dejaría al usuario ya autenticado
-  // varado en la pantalla de login sin ningún mensaje de error visible.
-  return '/admin'
-}
+import { destinoSegunRol } from '../../../utils/roles'
 
 export function useLogin() {
   const navigate = useNavigate()

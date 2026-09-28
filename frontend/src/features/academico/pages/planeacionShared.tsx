@@ -20,17 +20,64 @@ export const ESTATUS_LABEL: Record<EstatusPlaneacion, string> = {
 
 export const SIN_INICIAR = 'Sin iniciar'
 
-export const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
-export const selectCls = inputCls
-export const smallInputCls = 'w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
+/** Ícono por estatus (agrupado por semántica: borrador / enviada-en revisión / devuelta /
+ * liberada) — se usa junto a ESTATUS_COLOR/ESTATUS_LABEL en cualquier pantalla que muestre
+ * el badge de estatus, para que se reconozca de un vistazo sin tener que leer el texto. */
+function IconoEstatus({ estatus, className = 'w-3 h-3' }: { estatus: EstatusPlaneacion; className?: string }) {
+  if (estatus === 'liberada') {
+    return (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    )
+  }
+  if (estatus === 'devuelta_da' || estatus === 'devuelta_jc') {
+    return (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008M10.29 3.86 1.82 18a1.5 1.5 0 0 0 1.3 2.25h17.76a1.5 1.5 0 0 0 1.3-2.25L13.71 3.86a1.5 1.5 0 0 0-2.42 0Z" />
+      </svg>
+    )
+  }
+  if (estatus === 'enviada_da' || estatus === 'enviada_jc') {
+    return (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+        <circle cx="12" cy="12" r="9" strokeWidth={2} />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+    </svg>
+  )
+}
 
-export type Paso = 'generales' | 'especificas' | 'dosificacion' | 'calendarizacion'
+/** Badge de estatus reutilizable (listado, confirmación, revisión) — mismo componente en
+ * las tres pantallas para que el color+ícono+texto sea consistente en todo el módulo. */
+export function EstatusBadge({ estatus, className = '' }: { estatus: EstatusPlaneacion; className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${ESTATUS_COLOR[estatus]} ${className}`}>
+      <IconoEstatus estatus={estatus} />
+      {ESTATUS_LABEL[estatus]}
+    </span>
+  )
+}
+
+export const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/40 transition-colors'
+export const selectCls = inputCls
+export const smallInputCls = 'w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30 focus:border-[#1a3a5c]/40 transition-colors'
+
+// "dosificacion" dejó de ser un paso propio — su tabla vive ahora como una vista más
+// dentro de "Calendario de horas" (junto a Gantt y Resumen semanal), ya que se calcula
+// exactamente de los mismos datos y tenerla aparte solo duplicaba la pantalla.
+export type Paso = 'generales' | 'especificas' | 'calendario_horas' | 'calendarizacion_evaluacion'
 
 export const PASOS: { id: Paso; numero: number; label: string }[] = [
-  { id: 'generales',       numero: 1, label: 'Caracterización, intención y competencia' },
-  { id: 'especificas',     numero: 2, label: 'Competencias específicas' },
-  { id: 'dosificacion',    numero: 3, label: 'Dosificación' },
-  { id: 'calendarizacion', numero: 4, label: 'Calendarización' },
+  { id: 'generales',                 numero: 1, label: 'Caracterización, intención y competencia' },
+  { id: 'especificas',               numero: 2, label: 'Competencias específicas' },
+  { id: 'calendario_horas',          numero: 3, label: 'Calendario de horas' },
+  { id: 'calendarizacion_evaluacion', numero: 4, label: 'Calendarización de evaluación' },
 ]
 
 /** Categorías del "análisis por competencias específicas" (una por cada carpeta de la
@@ -54,18 +101,35 @@ export function pasoCompletoPlaneacion(paso: Paso, p?: PlaneacionDocente): boole
   switch (paso) {
     case 'generales':       return !!p.caracterizacion?.trim() && !!p.intencion_didactica?.trim() && !!p.competencia_asignatura?.trim()
     case 'especificas':     return (p.competencias?.length ?? 0) > 0
-    case 'dosificacion':    return !!p.competencias?.some(c => c.dosificacion?.length > 0)
-    case 'calendarizacion': return !!p.calendarizacion?.some(s => s.tipo_evaluacion !== '')
+    case 'calendario_horas': return true
+    case 'calendarizacion_evaluacion': return true
   }
 }
 
 export function PasoBadge({ completo }: { completo: boolean }) {
   return (
     <span className={`inline-flex w-5 h-5 rounded-full items-center justify-center text-[10px] font-medium ${
-      completo ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-500'
+      completo ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
     }`}>
       {completo ? '✓' : ''}
     </span>
+  )
+}
+
+/** % de pasos completos de una planeación (o 0 si aún no existe) — usado para la barra de
+ * progreso del listado de "Mis asignaturas", más fácil de escanear que 5 badges sueltos. */
+export function progresoPlaneacion(p?: PlaneacionDocente): number {
+  if (!p) return 0
+  const completos = PASOS.filter(paso => pasoCompletoPlaneacion(paso.id, p)).length
+  return Math.round((completos / PASOS.length) * 100)
+}
+
+export function BarraProgreso({ porcentaje, tono = 'azul' }: { porcentaje: number; tono?: 'azul' | 'verde' }) {
+  const color = tono === 'verde' ? 'bg-emerald-500' : 'bg-[#1a3a5c]'
+  return (
+    <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+      <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${porcentaje}%` }} />
+    </div>
   )
 }
 

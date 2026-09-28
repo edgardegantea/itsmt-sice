@@ -1,3 +1,4 @@
+import { useConfiguracion } from '@/hooks/useConfiguracion'
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { academicoApi, type AlertaInasistencia } from '../services/academico'
@@ -9,6 +10,7 @@ const PCT_COLOR = (pct: number) =>
   pct >= 50 ? 'text-red-700 bg-red-100' : pct >= 25 ? 'text-orange-700 bg-orange-100' : 'text-yellow-700 bg-yellow-100'
 
 export default function AlertasInasistenciaPage() {
+  const { config } = useConfiguracion()
   const qc = useQueryClient()
   const toastSuccess = useToastStore(s => s.success)
   const toastError   = useToastStore(s => s.error)
@@ -147,7 +149,72 @@ export default function AlertasInasistenciaPage() {
             { label: 'Leída por director', value: detalle.leida_director ? 'Sí' : 'No' },
             { label: 'Fecha', value: new Date(detalle.created_at).toLocaleDateString('es-MX') },
           ]}
-          footer={<button onClick={() => mutLeer.mutate(detalle.id)} disabled={mutLeer.isPending} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Marcar leída</button>}
+          footer={
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const win = window.open('', '_blank')
+                  if (!win) return
+                  win.document.write(`
+                    <html>
+                      <head>
+                        <title>Formato F-05-04 Reporte de Problemática para Tutoría - ${config.nombre_corto}</title>
+                        <style>
+                          body { font-family: sans-serif; padding: 35px; color: #1e293b; font-size: 12px; }
+                          .header { text-align: center; border-bottom: 2px solid #1b396a; padding-bottom: 12px; margin-bottom: 20px; }
+                          .title { font-size: 15px; font-weight: bold; color: #1b396a; text-transform: uppercase; }
+                          .sub { font-size: 11px; color: #64748b; margin-top: 3px; }
+                          .box { border: 1px solid #cbd5e1; border-radius: 6px; padding: 15px; margin-between: 15px; background: #f8fafc; }
+                          .row { display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding: 6px 0; }
+                          .label { font-weight: bold; color: #475569; }
+                          .val { font-weight: 600; color: #0f172a; }
+                          .alert-badge { bg-color: #fef2f2; background: #fef2f2; border: 1px solid #fca5a5; padding: 10px; border-radius: 6px; color: #991b1b; font-weight: bold; margin: 15px 0; text-align: center; }
+                          .sigs { margin-top: 60px; display: flex; justify-content: space-around; text-align: center; }
+                          .sig { border-top: 1px solid #64748b; width: 40%; padding-top: 5px; }
+                        </style>
+                      </head>
+                      <body>
+                        <div class="header">
+                          <div class="title">TECNOLÓGICO NACIONAL DE MÉXICO · ${config.nombre_corto}</div>
+                          <div class="sub">FORMATO F-05-04: REPORTE DE LA PROBLEMÁTICA PARA TUTORÍA Y DESARROLLO ACADÉMICO</div>
+                          <div class="sub">Conforme al Oficio Circular DET/ITSMT/DA/0041/2026</div>
+                        </div>
+
+                        <div class="alert-badge">
+                          ⚠️ ALERTA DE CANALIZACIÓN POR INASISTENCIA REITERADA (&ge; 50%) / REZAGO ACADÉMICO
+                        </div>
+
+                        <div class="box">
+                          <div class="row"><span class="label">Estudiante:</span><span class="val">${detalle.alumno?.name ?? '—'}</span></div>
+                          <div class="row"><span class="label">Correo / Matrícula:</span><span class="val">${detalle.alumno?.email ?? '—'}</span></div>
+                          <div class="row"><span class="label">Grupo / Clave:</span><span class="val">${detalle.grupo?.clave ?? '—'}</span></div>
+                          <div class="row"><span class="label">Programa Educativo:</span><span class="val">${detalle.grupo?.carrera?.nombre ?? '—'}</span></div>
+                          <div class="row"><span class="label">Porcentaje de Inasistencia Acumulado:</span><span class="val">${detalle.porcentaje_inasistencia.toFixed(1)}%</span></div>
+                          <div class="row"><span class="label">Fecha de Emisión del Reporte:</span><span class="val">${new Date().toLocaleDateString('es-MX', { dateStyle: 'full' })}</span></div>
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                          <strong>Motivo de la Canalización:</strong> Inasistencia reiterada observada durante el periodo, riesgo de no acreditación por ausentismo y necesidad de atención tutorial inmediata.
+                        </div>
+
+                        <div class="sigs">
+                          <div class="sig">Docente del Grupo<br/>Firma y Sello</div>
+                          <div class="sig">Coordinación de Tutorías / Desarrollo Académico<br/>Recepción de Canalización</div>
+                        </div>
+                      </body>
+                    </html>
+                  `)
+                  win.document.close()
+                  win.focus()
+                  setTimeout(() => win.print(), 500)
+                }}
+                className="text-xs font-semibold text-[#1b396a] bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+              >
+                📋 Imprimir Formato F-05-04 (Tutoría)
+              </button>
+              <button onClick={() => mutLeer.mutate(detalle.id)} disabled={mutLeer.isPending} className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg disabled:opacity-50">Marcar leída</button>
+            </div>
+          }
         />
       )}
     </div>

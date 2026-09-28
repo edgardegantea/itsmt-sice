@@ -10,10 +10,15 @@ const AlertasInasistenciaPage = lazy(() => import('./pages/AlertasInasistenciaPa
 const AlertasPage = lazy(() => import('./pages/AlertasPage'))
 const AsistenciasPage = lazy(() => import('./pages/AsistenciasPage'))
 const AulasPage = lazy(() => import('./pages/secciones/AulasPage'))
+const IncidenciasClasePage = lazy(() => import('./pages/secciones/IncidenciasClasePage'))
+const DocenteIncidenciasClasePage = lazy(() => import('./pages/DocenteIncidenciasClasePage'))
+const AlertasRiesgoAcademicoPage = lazy(() => import('./pages/secciones/AlertasRiesgoAcademicoPage'))
 const BolsaTrabajoPage = lazy(() => import('./pages/BolsaTrabajoPage'))
 const BuilderHorarioPage = lazy(() => import('./pages/BuilderHorarioPage'))
 const BuscarDisponibilidadPage = lazy(() => import('./pages/secciones/BuscarDisponibilidadPage'))
 const CalificacionesPage = lazy(() => import('./pages/secciones/CalificacionesPage'))
+const CapturaCalificacionesPage = lazy(() => import('./pages/secciones/CapturaCalificacionesPage'))
+const EstadisticasCalificacionesPage = lazy(() => import('./pages/secciones/EstadisticasCalificacionesPage'))
 const CargaAcademicaAdminPage = lazy(() => import('./pages/CargaAcademicaAdminPage'))
 const CargaAcademicaPersonalPage = lazy(() => import('./pages/CargaAcademicaPersonalPage'))
 const CargaBuilderPage = lazy(() => import('./pages/secciones/CargaBuilderPage'))
@@ -24,6 +29,14 @@ const ConveniosMovilidadPage = lazy(() => import('./pages/ConveniosMovilidadPage
 const CursosVeranoPage = lazy(() => import('./pages/CursosVeranoPage'))
 const DashboardAsistenciaPage = lazy(() => import('./pages/DashboardAsistenciaPage'))
 const DashboardDocentePage = lazy(() => import('./pages/DashboardDocentePage'))
+const AulaQrPage = lazy(() => import('./pages/AulaQrPage'))
+const PasaporteDocentePage = lazy(() => import('./pages/PasaporteDocentePage'))
+const TorreControlPage = lazy(() => import('./pages/secciones/TorreControlPage'))
+const RankingDocentesPage = lazy(() => import('./pages/RankingDocentesPage'))
+const SaludSemestralPage = lazy(() => import('./pages/secciones/SaludSemestralPage'))
+const ModosExamenPage = lazy(() => import('./pages/secciones/ModosExamenPage'))
+const AlertaDesercionTempranaPage = lazy(() => import('./pages/secciones/AlertaDesercionTempranaPage'))
+const TicketsMantenimientoPage = lazy(() => import('./pages/secciones/TicketsMantenimientoPage'))
 const DashboardJefeCarreraPage = lazy(() => import('./pages/DashboardJefeCarreraPage'))
 const DashboardTutoriaPage = lazy(() => import('./pages/DashboardTutoriaPage'))
 const DiagnosticoHorarioPage = lazy(() => import('./pages/secciones/DiagnosticoHorarioPage'))
@@ -54,6 +67,7 @@ const PlaneacionDocentePage = lazy(() => import('./pages/PlaneacionDocentePage')
 const PlaneacionEditorPage = lazy(() => import('./pages/PlaneacionEditorPage'))
 const PlaneacionRevisionPage = lazy(() => import('./pages/PlaneacionRevisionPage'))
 const PlaneacionesPage = lazy(() => import('./pages/secciones/PlaneacionesPage'))
+const SeguimientoInstrumentacionPage = lazy(() => import('./pages/SeguimientoInstrumentacionPage'))
 const ProgramasDistanciaPage = lazy(() => import('./pages/ProgramasDistanciaPage'))
 const ReportesDirectivosPage = lazy(() => import('./pages/ReportesDirectivosPage'))
 const SeguimientoDistanciaPage = lazy(() => import('./pages/SeguimientoDistanciaPage'))
@@ -78,6 +92,19 @@ export const academicoRoutes = (
         <Route path="/admin/gestion-academica/grupos"       element={<AdminLayout><GruposPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/grupos/:id"   element={<AdminLayout><GrupoDetailPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/aulas"              element={<AdminLayout><AulasPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/incidencias-clase"  element={<AdminLayout><IncidenciasClasePage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/riesgo-academico"   element={<AdminLayout><AlertasRiesgoAcademicoPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/torre-control"      element={<AdminLayout><TorreControlPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/ranking-docentes"   element={<AdminLayout><RankingDocentesPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/salud-semestral"    element={<AdminLayout><SaludSemestralPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/modos-examen"       element={<AdminLayout><ModosExamenPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/desercion-temprana" element={<AdminLayout><AlertaDesercionTempranaPage /></AdminLayout>} />
+        <Route path="/admin/gestion-academica/mantenimiento-aulas" element={<AdminLayout><TicketsMantenimientoPage /></AdminLayout>} />
+        <Route path="/docente/ranking" element={
+          <ProtectedRoute requiredRole="docente">
+            <Layout><RankingDocentesPage /></Layout>
+          </ProtectedRoute>
+        } />
         <Route path="/admin/gestion-academica/fichas-docentes"         element={<AdminLayout><FichasDocentesPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/asistencias" element={
           <ProtectedRoute requiredRole={['jefe_carrera', ...ADMIN_ROLES]}>
@@ -100,13 +127,28 @@ export const academicoRoutes = (
           </ProtectedRoute>
         } />
         <Route path="/admin/gestion-academica/calificaciones" element={
-          <ProtectedRoute requiredRole={['jefe_carrera', ...ADMIN_ROLES]}>
+          <ProtectedRoute requiredRole={['jefe_carrera', 'control_escolar', ...ADMIN_ROLES]}>
             <Layout><CalificacionesPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/gestion-academica/calificaciones/captura" element={
+          <ProtectedRoute requiredRole={['jefe_carrera', 'control_escolar', ...ADMIN_ROLES]}>
+            <Layout><CapturaCalificacionesPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/gestion-academica/calificaciones/estadisticas" element={
+          <ProtectedRoute requiredRole={['jefe_carrera', ...ADMIN_ROLES]}>
+            <Layout><EstadisticasCalificacionesPage /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/docente/calificaciones" element={
           <ProtectedRoute requiredRole={['docente']}>
             <Layout><CalificacionesPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/docente/calificaciones/captura" element={
+          <ProtectedRoute requiredRole={['docente']}>
+            <Layout><CapturaCalificacionesPage /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/admin/alertas-inasistencia"                       element={<AdminLayout><AlertasInasistenciaPage /></AdminLayout>} />
@@ -168,6 +210,11 @@ export const academicoRoutes = (
             <Layout><PlaneacionRevisionPage /></Layout>
           </ProtectedRoute>
         } />
+        <Route path="/admin/gestion-academica/seguimiento-instrumentacion" element={
+          <ProtectedRoute requiredRole={['jefe_carrera', 'desarrollo_academico', ...ADMIN_ROLES]}>
+            <Layout><SeguimientoInstrumentacionPage /></Layout>
+          </ProtectedRoute>
+        } />
         <Route path="/admin/gestion-academica/tutorias"     element={<AdminLayout><TutoriasPage /></AdminLayout>} />
         <Route path="/admin/gestion-academica/funciones"    element={<AdminLayout><FuncionesPage /></AdminLayout>} />
         {/* Legacy tab view — kept for reference */}
@@ -205,11 +252,30 @@ export const academicoRoutes = (
             <Layout><DisponibilidadDocentePage /></Layout>
           </ProtectedRoute>
         } />
+        <Route path="/docente/incidencias-clase" element={
+          <ProtectedRoute requiredRole="docente">
+            <Layout><DocenteIncidenciasClasePage /></Layout>
+          </ProtectedRoute>
+        } />
         {/* Sprint 28 — Portal del Egresado (bolsa de trabajo e indicadores) */}
         <Route path="/bolsa-trabajo" element={<AdminLayout><BolsaTrabajoPage /></AdminLayout>} />
         <Route path="/docente" element={
           <ProtectedRoute requiredRole="docente">
             <Layout><DashboardDocentePage /></Layout>
+          </ProtectedRoute>
+        } />
+        {/* QR fijo por aula — cualquier miembro del personal autenticado puede escanearlo;
+            la propia página decide qué acción mostrar según el rol de quien entró. */}
+        <Route path="/qr/aula/:aulaId" element={
+          <ProtectedRoute requiredRole={['docente', 'jefe_carrera', ...ADMIN_ROLES]}>
+            <AulaQrPage />
+          </ProtectedRoute>
+        } />
+        {/* Pasaporte QR personal del docente — el propio docente y el personal de
+            supervisión pueden verlo; el backend valida que sea el dueño o un rol de consulta. */}
+        <Route path="/qr/docente/:docenteId" element={
+          <ProtectedRoute requiredRole={['docente', 'jefe_carrera', ...ADMIN_ROLES]}>
+            <PasaporteDocentePage />
           </ProtectedRoute>
         } />
   </>

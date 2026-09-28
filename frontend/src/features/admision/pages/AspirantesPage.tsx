@@ -12,6 +12,7 @@ import EditarAspiranteModal from '../components/EditarAspiranteModal'
 import Badge from '../../../components/ui/Badge'
 import { useToastStore } from '../../../store/toastStore'
 import type { Aspirante } from '../services/admision'
+import { IconClipboard, IconDocument } from '../../../components/ui/Icons'
 
 function Spinner({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
@@ -36,11 +37,11 @@ function FilaAspirante({
   onDoc: (tipo: TipoInscripcionPdf) => void
   generandoPdf: TipoInscripcionPdf | null
 }) {
-  const docs: { tipo: TipoInscripcionPdf; label: string; icon: string }[] = [
-    { tipo: 'solicitud',             label: 'Solicitud de inscripción', icon: '📋' },
-    { tipo: 'carta-compromiso',      label: 'Carta compromiso',         icon: '✍️' },
-    { tipo: 'carta-compromiso-docs', label: 'Carta compromiso docs',    icon: '📄' },
-    { tipo: 'contrato',              label: 'Contrato estudiante',      icon: '📝' },
+  const docs: { tipo: TipoInscripcionPdf; label: string; icon: React.ReactNode }[] = [
+    { tipo: 'solicitud',             label: 'Solicitud de inscripción', icon: <IconClipboard className="w-3.5 h-3.5" /> },
+    { tipo: 'carta-compromiso',      label: 'Carta compromiso',         icon: <IconDocument className="w-3.5 h-3.5" /> },
+    { tipo: 'carta-compromiso-docs', label: 'Carta compromiso docs',    icon: <IconDocument className="w-3.5 h-3.5" /> },
+    { tipo: 'contrato',              label: 'Contrato estudiante',      icon: <IconDocument className="w-3.5 h-3.5" /> },
   ]
 
   const nombreCompleto = [asp.apellido_paterno, asp.apellido_materno, ',', asp.nombres]
@@ -151,7 +152,7 @@ function FilaAspirante({
                       <button key={tipo} onClick={(e) => { e.stopPropagation(); onDoc(tipo) }}
                         disabled={generandoPdf === tipo} title={label}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-white hover:border-slate-300 transition-colors disabled:opacity-40 disabled:cursor-wait">
-                        {generandoPdf === tipo ? <Spinner className="w-3 h-3" /> : <span className="text-sm leading-none">{icon}</span>}
+                        {generandoPdf === tipo ? <Spinner className="w-3 h-3" /> : icon}
                         <span className="hidden sm:inline">{label.split(' ').slice(0, 2).join(' ')}</span>
                       </button>
                     ))}

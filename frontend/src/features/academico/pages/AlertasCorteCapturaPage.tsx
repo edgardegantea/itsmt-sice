@@ -9,7 +9,13 @@ import DetailModal from '../../../components/ui/DetailModal'
 const PCT_COLOR = (pct: number) =>
   pct >= 100 ? 'text-green-700 bg-green-100' : pct >= 50 ? 'text-orange-700 bg-orange-100' : 'text-red-700 bg-red-100'
 
-const fmtFecha = (s: string) => new Date(s).toLocaleDateString('es-MX')
+const fmtFecha = (s: string) => {
+  if (!s) return '—'
+  const iso = String(s).slice(0, 10)
+  const [y, m, d] = iso.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
 export default function AlertasCorteCapturaPage() {
   const qc = useQueryClient()

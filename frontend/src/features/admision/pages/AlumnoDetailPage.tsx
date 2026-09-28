@@ -8,6 +8,7 @@ import {
   type EstatusAlumno,
   type ActualizarAlumnoPayload,
 } from '../services/admision'
+import { permanenciaApi } from '../../permanencia/services/permanencia'
 import Modal from '../../../components/ui/Modal'
 import { useCarrerasAdmin } from '../hooks/useCarreras'
 import { useCredencialPdf } from '../hooks/useCredencialPdf'
@@ -186,9 +187,23 @@ function EditModal({ alumno, onClose }: { alumno: Alumno; onClose: () => void })
             </div>
             <div>
               <label className={LABEL_CLS}>Estatus</label>
-              <select value={form.estatus} onChange={e => setForm(f => ({ ...f, estatus: e.target.value as EstatusAlumno }))} className={`${icls(errors.estatus)} bg-white`}>
-                {Object.entries(ESTATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
+              {(['baja_temporal', 'baja_definitiva'] as EstatusAlumno[]).includes(alumno.estatus) ? (
+                <>
+                  <select disabled value={form.estatus} className={`${icls()} bg-slate-50 text-slate-400`}>
+                    <option value={alumno.estatus}>{ESTATUS_LABEL[alumno.estatus]}</option>
+                  </select>
+                  <p className="text-[11px] text-slate-400 mt-1">Gestiona el reingreso desde Gestión de Bajas.</p>
+                </>
+              ) : (
+                <>
+                  <select value={form.estatus} onChange={e => setForm(f => ({ ...f, estatus: e.target.value as EstatusAlumno }))} className={`${icls(errors.estatus)} bg-white`}>
+                    {Object.entries(ESTATUS_LABEL)
+                      .filter(([v]) => !['baja_temporal', 'baja_definitiva'].includes(v))
+                      .map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                  <p className="text-[11px] text-slate-400 mt-1">Las bajas se registran desde Gestión de Bajas, no aquí.</p>
+                </>
+              )}
               <FE f="estatus" />
             </div>
           </div>
@@ -331,6 +346,12 @@ export default function AlumnoDetailPage() {
 
   const { descargar: descargarCredencial, generando: generandoCredencial } = useCredencialPdf()
   const { descargar: descargarInscPdf, generando: generandoInscPdf }       = useInscripcionPdf()
+
+  const { data: bajas = [] } = useQuery({
+    queryKey: ['alumno-bajas', id],
+    queryFn: () => permanenciaApi.getBajasAlumno(id!),
+    enabled: !!id,
+  })
 
   if (isLoading) return <div className="flex items-center justify-center h-48 text-slate-400 text-sm">Cargando…</div>
 
@@ -488,6 +509,36 @@ export default function AlumnoDetailPage() {
           ))}
         </div>
       </div>
+
+      {/* Bajas */}
+      {bajas.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Bajas ({bajas.length})</h2>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {bajas.map(b => (
+              <button
+                key={b.id}
+                onClick={() => navigate(`/admin/bajas/${b.id}`)}
+                className="w-full text-left px-5 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors"
+              >
+                <div>
+                  <span className="text-sm text-slate-800 font-medium capitalize">{b.tipo_baja.replace(/_/g, ' ')}</span>
+                  <span className="text-xs text-slate-400 ml-2">
+                    {b.periodo?.nombre} · {new Date(b.fecha_solicitud).toLocaleDateString('es-MX')}
+                  </span>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  b.estatus === 'aprobada' ? 'bg-green-100 text-green-700' : b.estatus === 'rechazada' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {b.estatus}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Expediente académico */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">

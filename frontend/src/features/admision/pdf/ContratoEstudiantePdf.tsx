@@ -38,7 +38,7 @@ const OBL_INST = [
 ]
 
 const OBL_ALUMNO = [
-  'Cubrir las cuotas y derechos escolares en las fechas establecidas por el ITSMT.',
+  'Cubrir las cuotas y derechos escolares en las fechas establecidas por el Instituto.',
   'Cursar y acreditar las materias del semestre de acuerdo con el plan de estudios.',
   'Hacer buen uso de las instalaciones y equipo de la institución.',
   'Cumplir el Reglamento Interno de Estudiantes del TecNM vigente.',
@@ -68,7 +68,7 @@ export default function ContratoEstudiantePdf({ inscripcion, cfg }: Props) {
 
         <Text style={S.intro}>
           {`Contrato bilateral celebrado entre el `}
-          <Text style={{ fontFamily: 'Helvetica-Bold' }}>Instituto Tecnológico Superior de Martínez de la Torre (ITSMT)</Text>
+          <Text style={{ fontFamily: 'Helvetica-Bold' }}>{`${cfg.nombre_institucion} (${cfg.nombre_corto})`}</Text>
           {` y el alumno `}
           <Text style={{ fontFamily: 'Helvetica-Bold' }}>{asp.nombres} {asp.apellido_paterno} {asp.apellido_materno ?? ''}</Text>
           {`, con número de control `}
@@ -80,7 +80,7 @@ export default function ContratoEstudiantePdf({ inscripcion, cfg }: Props) {
 
         <Text style={S.secHdr}>PRIMERA — OBJETO DEL CONTRATO</Text>
         <Text style={S.para}>
-          {`El ITSMT se compromete a prestar servicios educativos de nivel superior en la carrera de `}
+          {`El ${cfg.nombre_corto} se compromete a prestar servicios educativos de nivel superior en la carrera de `}
           <Text style={{ fontFamily: 'Helvetica-Bold' }}>{carrera.nombre}</Text>
           {`, conforme al plan de estudios aprobado por la Secretaría de Educación Pública y el Tecnológico Nacional de México.`}
         </Text>
@@ -108,11 +108,11 @@ export default function ContratoEstudiantePdf({ inscripcion, cfg }: Props) {
           <View style={S.firmaCell}>
             <View style={S.firmaLine} />
             <Text style={S.firmaNom}>Por la Institución</Text>
-            <Text style={S.firmaRol}>Subdirección Académica — ITSMT</Text>
+            <Text style={S.firmaRol}>{`Subdirección Académica — ${cfg.nombre_corto}`}</Text>
           </View>
         </View>
 
-        <Text style={S.footer}>{`Documento generado por SICE — ITSMT · Folio: ${folio}`}</Text>
+        <Text style={S.footer}>{`Documento generado por SICE — ${cfg.nombre_corto} · Folio: ${folio}`}</Text>
       </Page>
     </Document>
   )

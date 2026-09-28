@@ -3,6 +3,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { permanenciaApi, type EncuestaSocioeconomica, type GastosMensuales, type Vehiculo } from '../services/permanencia'
 import { useConfiguracion } from '../../../hooks/useConfiguracion'
 import { useAuthStore } from '../../../store/authStore'
+import {
+  IconUser,
+  IconClipboard,
+  IconCheckCircle,
+  IconLockClosed,
+  IconAcademicCap,
+  IconBriefcase,
+  IconUsers,
+  IconBuilding,
+  IconBanknotes,
+  IconDocument,
+  IconCamera,
+  IconRefresh,
+  IconFolder,
+} from '../../../components/ui/Icons'
 
 // ── Estilos base ──────────────────────────────────────────────────────────────
 
@@ -96,7 +111,7 @@ function calcProgreso(form: Partial<EncuestaSocioeconomica>): number {
 // ── Componentes UI ────────────────────────────────────────────────────────────
 
 function Section({ icon, title, children, cols = 2 }: {
-  icon: string
+  icon: React.ReactNode
   title: string
   children: React.ReactNode
   cols?: 2 | 3 | 4
@@ -110,7 +125,7 @@ function Section({ icon, title, children, cols = 2 }: {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-        <span className="text-xl">{icon}</span>
+        <span className="text-[#1b396a] flex items-center justify-center shrink-0">{icon}</span>
         <h2 className="font-semibold text-slate-800 text-sm tracking-wide">{title}</h2>
       </div>
       <div className={`p-6 ${gridCls}`}>{children}</div>
@@ -151,8 +166,8 @@ function ReadonlyField({ label, value }: { label: string; value: string }) {
 
 function StepIndicator({ step, progreso }: { step: 1 | 2; progreso: number }) {
   const steps = [
-    { n: 1, label: 'Datos personales', icon: '👤' },
-    { n: 2, label: 'Cuestionario',     icon: '📋' },
+    { n: 1, label: 'Datos personales', icon: <IconUser className="w-5 h-5" /> },
+    { n: 2, label: 'Cuestionario',     icon: <IconClipboard className="w-5 h-5" /> },
   ]
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
@@ -162,19 +177,19 @@ function StepIndicator({ step, progreso }: { step: 1 | 2; progreso: number }) {
             <div className="flex flex-col items-center gap-1.5">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base border-2 transition-all ${
                 step === s.n
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200'
+                  ? 'bg-[#1b396a] border-[#1b396a] text-white shadow-md shadow-blue-200'
                   : step > s.n
-                    ? 'bg-green-500 border-green-500 text-white'
+                    ? 'bg-emerald-600 border-emerald-600 text-white'
                     : 'bg-white border-slate-200 text-slate-400'
               }`}>
-                {step > s.n ? '✓' : s.icon}
+                {step > s.n ? <IconCheckCircle className="w-5 h-5" /> : s.icon}
               </div>
               <span className={`text-xs font-medium text-center leading-tight ${
-                step === s.n ? 'text-blue-700' : step > s.n ? 'text-green-700' : 'text-slate-400'
+                step === s.n ? 'text-[#1b396a]' : step > s.n ? 'text-emerald-700' : 'text-slate-400'
               }`}>{s.label}</span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-3 mb-5 rounded transition-colors ${step > s.n ? 'bg-green-400' : 'bg-slate-200'}`} />
+              <div className={`flex-1 h-0.5 mx-3 mb-5 rounded transition-colors ${step > s.n ? 'bg-emerald-400' : 'bg-slate-200'}`} />
             )}
           </div>
         ))}
@@ -235,15 +250,15 @@ function FotoUpload({ disabled, existingUrl, onFile }: {
         }`}>
           {preview
             ? <img src={preview} alt="Foto" className="w-full h-full object-cover" />
-            : <div className="text-center p-2"><div className="text-3xl text-slate-200 mb-1">📷</div><span className="text-xs text-slate-400">Sin foto</span></div>
+            : <div className="text-center p-2"><IconCamera className="w-8 h-8 text-slate-300 mx-auto mb-1" /><span className="text-xs text-slate-400">Sin foto</span></div>
           }
         </div>
         <div className="flex-1 space-y-2">
           {!disabled && (
             <div className="flex items-center gap-2 flex-wrap">
               <button type="button" onClick={() => ref.current?.click()}
-                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">
-                {preview ? '🔄 Cambiar fotografía' : '📁 Seleccionar fotografía'}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition flex items-center gap-2">
+                {preview ? <><IconRefresh className="w-4 h-4" /> Cambiar fotografía</> : <><IconFolder className="w-4 h-4" /> Seleccionar fotografía</>}
               </button>
               {preview && (
                 <button type="button"
@@ -430,18 +445,18 @@ export default function EncuestaSocioeconomicaPage() {
 
       {/* Avisos */}
       {enviada && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800 flex items-start gap-2">
-          <span className="text-lg">✅</span>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800 flex items-start gap-3">
+          <IconCheckCircle className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold">Encuesta enviada correctamente</p>
-            <p className="text-green-700 mt-0.5">Tu información ha sido registrada. Podrás actualizarla al inicio del siguiente semestre.</p>
+            <p className="text-emerald-700 mt-0.5">Tu información ha sido registrada. Podrás actualizarla al inicio del siguiente semestre.</p>
           </div>
         </div>
       )}
 
       {!enviada && bloqueado && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 flex items-start gap-2">
-          <span className="text-lg">🔒</span>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 flex items-start gap-3">
+          <IconLockClosed className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold">Período de actualización cerrado</p>
             <p className="text-amber-700 mt-0.5">
@@ -463,7 +478,7 @@ export default function EncuestaSocioeconomicaPage() {
       {step === 1 && (
         <>
           {/* I. Identificación (solo lectura) */}
-          <Section icon="🎓" title="I. Datos de Identificación" cols={4}>
+          <Section icon={<IconAcademicCap className="w-5 h-5 text-[#1b396a]" />} title="I. Datos de Identificación" cols={4}>
             <ReadonlyField label="Nombre completo" value={authUser?.name ?? alumno?.user?.name ?? ''} />
             <ReadonlyField label="Número de control" value={alumno?.numero_control ?? ''} />
             <ReadonlyField label="Carrera" value={alumno?.inscripcion?.carrera?.nombre ?? ''} />
@@ -476,7 +491,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* II. Datos personales */}
-          <Section icon="📝" title="II. Datos Personales del Estudiante" cols={3}>
+          <Section icon={<IconUser className="w-5 h-5 text-[#1b396a]" />} title="II. Datos Personales del Estudiante" cols={3}>
             <Field label="CURP">
               <input className={inputCls} placeholder="18 caracteres" maxLength={18}
                 value={form.dp_curp ?? ''} disabled={enviada}
@@ -554,7 +569,7 @@ export default function EncuestaSocioeconomicaPage() {
       {step === 2 && (
         <>
           {/* III. Situación del alumno */}
-          <Section icon="🎒" title="III. Situación del Alumno" cols={3}>
+          <Section icon={<IconBriefcase className="w-5 h-5 text-[#1b396a]" />} title="III. Situación del Alumno" cols={3}>
             <Field label="¿Con quién vive?">
               <input className={inputCls} placeholder="Ej. Padres, Solo, Familia extendida…"
                 value={form.con_quien_vive ?? ''} disabled={enviada}
@@ -582,7 +597,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* IV. Padre */}
-          <Section icon="👨" title="IV. Padre o Tutor" cols={4}>
+          <Section icon={<IconUser className="w-5 h-5 text-[#1b396a]" />} title="IV. Padre o Tutor" cols={4}>
             <Field label="Nivel educativo">
               <select className={selectCls} value={form.padre_nivel_educativo ?? ''} disabled={enviada}
                 onChange={e => set('padre_nivel_educativo', e.target.value)}>
@@ -626,7 +641,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* V. Madre */}
-          <Section icon="👩" title="V. Madre" cols={4}>
+          <Section icon={<IconUser className="w-5 h-5 text-[#1b396a]" />} title="V. Madre" cols={4}>
             <Field label="Nivel educativo">
               <select className={selectCls} value={form.madre_nivel_educativo ?? ''} disabled={enviada}
                 onChange={e => set('madre_nivel_educativo', e.target.value)}>
@@ -670,7 +685,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* VI. Familia */}
-          <Section icon="👨‍👩‍👧‍👦" title="VI. Datos de la Familia" cols={4}>
+          <Section icon={<IconUsers className="w-5 h-5 text-[#1b396a]" />} title="VI. Datos de la Familia" cols={4}>
             <Field label="Total de integrantes">
               <input className={inputCls} type="number" min={1}
                 value={form.familia_total_integrantes ?? ''} disabled={enviada}
@@ -694,7 +709,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* VII. Vivienda */}
-          <Section icon="🏠" title="VII. Vivienda y Transporte" cols={4}>
+          <Section icon={<IconBuilding className="w-5 h-5 text-[#1b396a]" />} title="VII. Vivienda y Transporte" cols={4}>
             <Field label="Calle">
               <input className={inputCls} value={form.vivienda_calle ?? ''} disabled={enviada}
                 onChange={e => set('vivienda_calle', e.target.value)} />
@@ -780,7 +795,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* VIII. Ingresos y gastos */}
-          <Section icon="💰" title="VIII. Ingresos y Egresos Familiares" cols={2}>
+          <Section icon={<IconBanknotes className="w-5 h-5 text-[#1b396a]" />} title="VIII. Ingresos y Egresos Familiares" cols={2}>
             <Field label="Total ingresos mensuales familiares ($)">
               <input className={inputCls} type="number" min={0} step={100}
                 value={form.total_ingresos_familia ?? ''} disabled={enviada}
@@ -818,7 +833,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* IX. Salud */}
-          <Section icon="🏥" title="IX. Salud Familiar" cols={3}>
+          <Section icon={<IconDocument className="w-5 h-5 text-[#1b396a]" />} title="IX. Salud Familiar" cols={3}>
             <Field label="Estado de salud familiar">
               <select className={selectCls} value={form.salud_estado ?? ''} disabled={enviada}
                 onChange={e => set('salud_estado', e.target.value)}>
@@ -844,7 +859,7 @@ export default function EncuestaSocioeconomicaPage() {
           </Section>
 
           {/* X. Información adicional */}
-          <Section icon="💬" title="X. Información Adicional" cols={2}>
+          <Section icon={<IconClipboard className="w-5 h-5 text-[#1b396a]" />} title="X. Información Adicional" cols={2}>
             <Field label="Comentarios u observaciones" span="full">
               <textarea className={inputCls} rows={4}
                 placeholder="Cualquier información adicional que consideres relevante para la evaluación socioeconómica…"

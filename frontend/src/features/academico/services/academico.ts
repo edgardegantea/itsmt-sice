@@ -1,4 +1,5 @@
 import apiClient from '../../../config/apiClient'
+import { errorDeBlob } from '../../../utils/apiErrors'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -152,6 +153,203 @@ export interface Aula {
   activa: boolean
 }
 
+export interface BloqueOcupacion {
+  dia_semana: 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado'
+  hora_inicio: string
+  hora_fin: string
+  materia?: string
+  grupo?: string
+  horas: number
+}
+
+export type NivelRiesgo = 'alto' | 'medio' | 'bajo'
+
+export interface AlumnoRiesgo {
+  alumno_id: string
+  numero_control: string
+  nombre?: string
+  carrera?: string
+  carrera_id?: string
+  semestre_actual: number
+  grupos: string[]
+  pct_reprobacion: number
+  pct_inasistencia: number
+  total_incidencias_grupo: number
+  alerta_baja_definitiva: boolean
+  score: number
+  nivel_riesgo: NivelRiesgo
+}
+
+export type EstatusIncidenciaClase =
+  | 'sin_novedad' | 'docente_ausente' | 'aula_vacia' | 'grupo_incorrecto'
+  | 'aula_incorrecta' | 'alumnos_incompletos' | 'problema_infraestructura' | 'otro'
+
+export interface AlumnoDesercionTemprana {
+  alumno_id: string
+  numero_control: string
+  nombre?: string
+  carrera?: string
+  carrera_id?: string
+  semestre_actual: number
+  grupos: string[]
+  pct_inasistencia_temprana: number
+  nunca_asistio: boolean
+  total_sesiones_evaluadas: number
+  total_incidencias_grupo: number
+  score: number
+  nivel_riesgo: NivelRiesgo
+}
+
+export type EstatusTicketMantenimiento = 'abierto' | 'en_progreso' | 'resuelto'
+
+export interface TicketMantenimiento {
+  id: string
+  incidencia_clase_id?: string | null
+  aula_id: string
+  reportado_por_id: string
+  atendido_por_id?: string | null
+  descripcion: string
+  estatus: EstatusTicketMantenimiento
+  notas_resolucion?: string | null
+  resuelto_en?: string | null
+  created_at: string
+  aula?: Aula
+  reportado_por?: { id: string; name: string }
+  atendido_por?: { id: string; name: string } | null
+}
+
+export interface IncidenciaClase {
+  id: string
+  periodo_id: string
+  grupo_id: string
+  carga_academica_id?: string | null
+  docente_id?: string | null
+  aula_id?: string | null
+  registrado_por_id: string
+  fecha: string
+  hora_revision: string
+  dia_semana?: string | null
+  estatus: EstatusIncidenciaClase
+  docente_presente?: boolean | null
+  coincide_horario: boolean
+  alumnos_presentes?: number | null
+  observaciones?: string | null
+  created_at: string
+  periodo?: { id: string; nombre: string }
+  grupo?: { id: string; clave: string; semestre: number; carrera?: { id: string; nombre: string } }
+  carga_academica?: CargaAcademica
+  docente?: { id: string; name: string; email: string }
+  aula?: Aula
+  registrado_por?: { id: string; name: string }
+}
+
+export interface TorreControlAula {
+  id: string
+  nombre: string
+  tipo: 'salon' | 'laboratorio' | 'taller'
+  ocupada: boolean
+  materia?: string
+  docente?: string
+  grupo?: string
+  incidencias_hoy: number
+  ultima_incidencia_estatus?: EstatusIncidenciaClase
+}
+
+export interface TorreControl {
+  dia_semana: string
+  hora: string
+  aulas: TorreControlAula[]
+  aulas_ocupadas: number
+  aulas_total: number
+  incidencias_hoy: { total: number; con_novedad: number }
+  asistencia_hoy: { esperadas: number; registradas: number; pct: number | null }
+  incidencias_recientes: IncidenciaClase[]
+}
+
+export interface InsigniaDocente { icono: string; label: string }
+
+export interface RankingDocente {
+  docente_id: string
+  nombre?: string
+  score: number
+  pct_captura: number | null
+  pct_asistencia: number | null
+  pct_sin_novedad: number
+  total_incidencias: number
+  insignias: InsigniaDocente[]
+  posicion: number
+}
+
+export interface AulaFantasma {
+  aula: string
+  grupo: string
+  carrera: string
+  materia?: string
+  docente_esperado?: string
+  total_discrepancias: number
+  ultima_fecha: string
+  estatus_reportados: string[]
+}
+
+export interface SugerenciaReubicacion {
+  carga_academica_id: string
+  materia?: string
+  docente?: string
+  grupo: string
+  horarios: string[]
+  aulas_candidatas: { id: string; nombre: string; capacidad: number }[]
+}
+
+export interface SaludCarrera {
+  carrera_id: string
+  carrera: string
+  score: number | null
+  pct_aprobacion: number | null
+  pct_sin_novedad: number | null
+  pct_cumplimiento_docente: number | null
+  historico: { semana: string; score: number }[]
+  tendencia: number | null
+}
+
+export interface ModoExamen {
+  id: string
+  periodo_id: string
+  fecha: string
+  activado_por_id: string
+  activado_por?: { name: string }
+  created_at: string
+}
+
+export interface PasaporteDocente {
+  docente: { id: string; name: string; email: string }
+  periodo: { id: string; nombre: string }
+  materias: { materia?: string; grupo?: string }[]
+  asistencia: { esperadas: number; registradas: number; pct: number | null }
+  captura: { pct: number | null; total_cargas_evaluadas: number }
+  incidencias: { total: number; con_novedad: number }
+}
+
+export interface HorarioActualAula {
+  aula: Aula
+  dia_semana: string
+  hora: string
+  carga: CargaAcademica | null
+  grupo: Grupo | null
+}
+
+export interface OcupacionAula {
+  aula_id: string
+  nombre: string
+  tipo: 'salon' | 'laboratorio' | 'taller'
+  capacidad: number
+  activa: boolean
+  horas_ocupadas: number
+  horas_disponibles: number
+  pct_ocupacion: number
+  total_bloques: number
+  bloques: BloqueOcupacion[]
+}
+
 export interface Horario {
   id: string
   carga_academica_id: string
@@ -162,6 +360,44 @@ export interface Horario {
 }
 
 export type EstatusPlaneacion = 'borrador' | 'enviada_da' | 'devuelta_da' | 'enviada_jc' | 'devuelta_jc' | 'liberada'
+
+// ── Indicadores / estadísticas de calificaciones ──────────────────────────────
+export interface IndicadorPromedioCarrera {
+  carrera_id: string
+  carrera: string
+  periodo_id: string
+  periodo: string
+  promedio_general: number | null
+  total_calificaciones: number
+}
+export interface IndicadorReprobacionCarrera {
+  carrera_id: string
+  carrera: string
+  periodo_id: string
+  periodo: string
+  total_calificaciones: number
+  total_reprobados: number
+  pct_reprobacion: number
+}
+export interface IndicadorReprobacionGrupo {
+  grupo_id: string
+  grupo: string
+  semestre: number
+  carrera_id: string
+  carrera: string
+  total_calificaciones: number
+  total_reprobados: number
+  pct_reprobacion: number
+}
+export interface IndicadorDesercion {
+  carrera_id: string
+  carrera: string
+  periodo_id: string
+  periodo: string
+  total_inscritos: number
+  total_desertores: number
+  porcentaje_desercion: number
+}
 
 /** TecNM-AC-PO-003 §4.8/4.9 — indicador de alcance de una competencia específica. */
 export interface IndicadorAlcance {
@@ -203,9 +439,12 @@ export interface FuenteInformacion {
 /** Práctica asociada a una competencia/unidad específica. */
 export interface PracticaUnidad {
   nombre: string
-  requisitos: string
-  semana: string
+  requisitos: string[]
+  semana: number | null
   lugar: string
+  /** Competencia específica de la práctica — se precarga con la de la unidad al crearla,
+   * pero el docente puede editarla si esta práctica en particular apunta a otra cosa. */
+  competencia_especifica: string
 }
 
 /** TecNM-AC-PO-003 §4.11 — evidencia de aprendizaje y evaluación formativa de una competencia
@@ -238,14 +477,16 @@ export interface FilaActividad {
   horas_practicas: number | null
 }
 
-/** Subtema del temario de la unidad, asociado a una fila de actividades (por número). */
+/** Subtema del temario de la unidad, asociado a una o más filas de actividades (por número). */
 export interface SubtemaActividad {
   texto: string
   fila: number | null
+  filas?: number[]
 }
 
 export interface CompetenciaEspecifica {
   numero: number
+  numero_unidad?: number
   nombre_unidad: string
   /** Porcentaje que aporta esta unidad/competencia específica a la calificación final de la
    * asignatura (suma de todas las unidades debe ser 100%). */
@@ -290,6 +531,119 @@ export interface ObservacionCampo {
   texto: string
 }
 
+export interface ComentarioPlaneacion {
+  id: string
+  seccion: SeccionObservacion
+  unidad: number | null
+  categoria: string | null
+  mensaje: string
+  resuelto: boolean
+  autor: string | null
+  autor_id: string | null
+  created_at: string
+}
+
+export interface ArchivoPlaneacion {
+  id: string
+  unidad: number | null
+  nombre_original: string
+  mime_type: string | null
+  tamano_bytes: number
+  subido_por: string | null
+  subido_por_id: string | null
+  created_at: string
+}
+
+export interface ResultadoBusquedaPlaneacion {
+  planeacion_id: string
+  carga_academica_id: string
+  materia: string | null
+  periodo: string | null
+  periodo_id: string | null
+  coincidencias: { campo: string; unidad: number | null; texto: string }[]
+  total_coincidencias: number
+}
+
+export interface ComparativaGrupos {
+  materia: string | null
+  semana_actual: number | null
+  total_semanas: number
+  grupos: {
+    carga_academica_id: string
+    grupos: string
+    estatus: EstatusPlaneacion | null
+    porcentaje_dosificado: number
+    ultima_semana_contenido: number | null
+    semanas_atras_del_lider: number | null
+  }[]
+}
+
+export interface SeguimientoFila {
+  planeacion_id: string
+  docente: string | null
+  materia: string | null
+  periodo: string | null
+  unidad: number
+  nombre_unidad: string
+  semana_actual: number
+  ultima_semana_contenido: number | null
+  atraso_dosificacion_semanas: number
+  semana_evaluacion: number | null
+  evaluacion_vencida: boolean
+  tipo: 'EF' | 'ES'
+  recordatorio_enviado: boolean
+  desfase_declarado: boolean
+  tiene_calificaciones_capturadas: boolean
+}
+
+export interface SeguimientoResumenDocente {
+  docente_id: string
+  docente: string | null
+  total_unidades: number
+  unidades_con_atraso: number
+  porcentaje_cumplimiento: number
+}
+
+export interface SeguimientoCargaTrabajo {
+  docente: string | null
+  semana_evaluacion: number
+  materias: string[]
+  cantidad: number
+}
+
+export interface AcreditacionCarrera {
+  carrera: string
+  total: number
+  liberadas: number
+  porcentaje_liberadas: number
+}
+
+export interface CalificacionHistorialEntry {
+  id: string
+  calificacion_id: string
+  alumno_id: string
+  grupo_id: string
+  carga_academica_id: string
+  editado_por: string
+  parciales_anteriores: { parcial: number; calificacion: number }[] | null
+  parciales_nuevos: { parcial: number; calificacion: number }[] | null
+  calificacion_final_anterior: number | null
+  calificacion_final_nueva: number | null
+  promedio_anterior: number | null
+  promedio_nuevo: number | null
+  created_at: string
+  alumno?: { id: string; user?: { name: string } | null; numero_control?: string }
+  editor?: { id: string; name: string }
+}
+
+export interface SeguimientoPlaneaciones {
+  total_atrasos: number
+  total_evaluaciones_vencidas: number
+  filas: SeguimientoFila[]
+  resumen_docentes: SeguimientoResumenDocente[]
+  carga_trabajo: SeguimientoCargaTrabajo[]
+}
+
 export interface PlaneacionDocente {
   id: string
   carga_academica_id: string
@@ -307,12 +661,21 @@ export interface PlaneacionDocente {
   apoyos_didacticos: string | null
   calendarizacion: SemanaCalendarizacion[] | null
   fecha_entrega: string | null
+  entregada_en?: string | null
   observaciones_revision: string | null
   observaciones_campos: ObservacionCampo[] | null
   revisado_en: string | null
   docente?: { id: string; name: string }
   periodo?: { id: string; nombre: string }
   carga_academica?: CargaAcademica
+}
+
+export interface VersionPlaneacion {
+  id: string
+  motivo: 'autoguardado' | 'envio' | 'antes_de_restaurar' | 'restaurada'
+  creado_por: string | null
+  created_at: string
+  campos_cambiados: string[]
 }
 
 export interface Tutoria {
@@ -477,6 +840,40 @@ export const academicoApi = {
     apiClient.delete(`/aulas/${id}`),
   getAulasDisponibles: (params: { dia_semana: string; hora_inicio: string; hora_fin: string; periodo_id?: string; tipo?: string }) =>
     apiClient.get('/aulas/disponibles', { params }).then(r => r.data.data as Aula[]),
+  getOcupacionAulas: (params?: { periodo_id?: string }) =>
+    apiClient.get('/aulas/ocupacion', { params }).then(r => r.data.data as OcupacionAula[]),
+  getHorarioActualAula: (aulaId: string, params: { periodo_id: string }): Promise<HorarioActualAula> =>
+    apiClient.get(`/aulas/${aulaId}/horario-actual`, { params }).then(r => r.data.data),
+
+  // ── Torre de control (estado en vivo del campus) ────────────────────────────────
+  getTorreControl: (params: { periodo_id: string }): Promise<TorreControl> =>
+    apiClient.get('/torre-control', { params }).then(r => r.data.data),
+
+  // ── Pasaporte QR de cumplimiento del docente ────────────────────────────────────
+  getPasaporteDocente: (docenteId: string, params: { periodo_id: string }): Promise<PasaporteDocente> =>
+    apiClient.get(`/docentes/${docenteId}/pasaporte`, { params }).then(r => r.data.data),
+
+  // ── Gamificación ─────────────────────────────────────────────────────────────
+  getRankingDocentes: (params: { periodo_id: string }): Promise<RankingDocente[]> =>
+    apiClient.get('/gamificacion/ranking-docentes', { params }).then(r => r.data.data),
+
+  // ── Aula fantasma y sugerencias de reubicación ──────────────────────────────────
+  getAulasFantasma: (params: { periodo_id: string }): Promise<AulaFantasma[]> =>
+    apiClient.get('/aulas/fantasma', { params }).then(r => r.data.data),
+  getSugerenciasReubicacion: (aulaId: string, params: { periodo_id: string }): Promise<SugerenciaReubicacion[]> =>
+    apiClient.get(`/aulas/${aulaId}/sugerencias-reubicacion`, { params }).then(r => r.data.data),
+
+  // ── Índice de salud del semestre ────────────────────────────────────────────────
+  getSaludSemestral: (params: { periodo_id: string }): Promise<SaludCarrera[]> =>
+    apiClient.get('/salud-semestral', { params }).then(r => r.data.data),
+
+  // ── Modo día de examen ───────────────────────────────────────────────────────────
+  getModosExamen: (params?: { periodo_id?: string }): Promise<ModoExamen[]> =>
+    apiClient.get('/modos-examen', { params }).then(r => r.data.data),
+  activarModoExamen: (data: { periodo_id: string; fecha: string }): Promise<ModoExamen> =>
+    apiClient.post('/modos-examen', data).then(r => r.data.data),
+  desactivarModoExamen: (id: string) =>
+    apiClient.delete(`/modos-examen/${id}`).then(r => r.data),
 
   // Expediente académico
   getExpedienteAlumno: (alumnoId: string) =>
@@ -505,8 +902,10 @@ export const academicoApi = {
     apiClient.post(`/sesiones-clase/${sesionId}/enviar-resumen`).then(r => r.data),
   generarCheckinSesion: (sesionId: string) =>
     apiClient.post(`/sesiones-clase/${sesionId}/generar-checkin`).then(r => r.data.data as SesionClase),
-  checkinSesion: (sesionId: string, codigo: string) =>
-    apiClient.post(`/sesiones-clase/${sesionId}/checkin`, { codigo }).then(r => r.data as { message?: string }),
+  checkinSesion: (sesionId: string, codigo: string, fotoEvidencia?: string, geo?: { lat: number; lng: number }) =>
+    apiClient.post(`/sesiones-clase/${sesionId}/checkin`, {
+      codigo, foto_evidencia: fotoEvidencia, geo_lat: geo?.lat, geo_lng: geo?.lng,
+    }).then(r => r.data as { message?: string }),
   enviarListaAsistenciaBlanco: (cargaAcademicaId: string) =>
     apiClient.post(`/cargas-academicas/${cargaAcademicaId}/asistencia/enviar-lista-blanco`).then(r => r.data),
   enviarReporteAsistenciaGrupo: (cargaAcademicaId: string) =>
@@ -577,6 +976,26 @@ export const academicoApi = {
     apiClient.get('/planeaciones-docentes', { params }).then(r => r.data.data),
   getMisPlaneaciones: (params?: Record<string, string>) =>
     apiClient.get('/planeaciones-docentes/mias', { params }).then(r => r.data.data as PlaneacionDocente[]),
+  getSeguimientoPlaneaciones: (params?: { periodo_id?: string }) =>
+    apiClient.get('/planeaciones-docentes/seguimiento', { params }).then(r => r.data.data as SeguimientoPlaneaciones),
+  descargarSeguimientoPdf: (params?: { periodo_id?: string }) =>
+    apiClient.get('/planeaciones-docentes/seguimiento/pdf', { params, responseType: 'blob' }).then(r => {
+      const blob = new Blob([r.data], { type: 'application/pdf' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = 'seguimiento_instrumentacion.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+    }),
+  getAcreditacionPorCarrera: (params?: { periodo_id?: string }) =>
+    apiClient.get('/planeaciones-docentes/acreditacion-por-carrera', { params }).then(r => r.data.data as AcreditacionCarrera[]),
+  getMiComparativoInstrumentacion: (params?: { periodo_id?: string }) =>
+    apiClient.get('/planeaciones-docentes/mi-comparativo', { params }).then(r => r.data.data as {
+      mi_porcentaje: number | null
+      promedio_academia: number | null
+      total_docentes_academia: number
+    }),
   getPlaneacion: (id: string) =>
     apiClient.get(`/planeaciones-docentes/${id}`).then(r => r.data.data as PlaneacionDocente),
   savePlaneacion: (d: Partial<PlaneacionDocente>, archivo?: File | null) => {
@@ -590,7 +1009,7 @@ export const academicoApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then(r => r.data.data as PlaneacionDocente)
   },
-  descargarArchivoPlaneacion: (id: string, nombreSugerido: string) =>
+  descargarArchivoLegacyPlaneacion: (id: string, nombreSugerido: string) =>
     apiClient.get(`/planeaciones-docentes/${id}/archivo`, { responseType: 'blob' }).then(r => {
       const blob = new Blob([r.data])
       const url  = URL.createObjectURL(blob)
@@ -600,19 +1019,160 @@ export const academicoApi = {
       a.click()
       URL.revokeObjectURL(url)
     }),
+  clonarPlaneacion: (id: string, destino: { carga_academica_id: string; periodo_id: string }) =>
+    apiClient.post(`/planeaciones-docentes/${id}/clonar`, destino).then(r => r.data.data as PlaneacionDocente),
+  descargarPdfCalendarioPlaneacion: (id: string, nombreSugerido: string) =>
+    apiClient.get(`/planeaciones-docentes/${id}/pdf-calendario`, { responseType: 'blob' }).then(r => {
+      const blob = new Blob([r.data], { type: 'application/pdf' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = nombreSugerido
+      a.click()
+      URL.revokeObjectURL(url)
+    }),
+  descargarPdfInstrumentacionPlaneacion: (id: string, nombreSugerido: string, params?: { fecha_elaboracion?: string; docente_nombre?: string; jefe_nombre?: string }) =>
+    apiClient.get(`/planeaciones-docentes/${id}/pdf-instrumentacion`, { responseType: 'blob', params }).then(r => {
+      const blob = new Blob([r.data], { type: 'application/pdf' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = nombreSugerido
+      a.click()
+      URL.revokeObjectURL(url)
+    }),
+  descargarDocxInstrumentacionPlaneacion: (id: string, nombreSugerido: string) =>
+    apiClient.get(`/planeaciones-docentes/${id}/docx-instrumentacion`, { responseType: 'blob' }).then(r => {
+      const blob = new Blob([r.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = nombreSugerido
+      a.click()
+      URL.revokeObjectURL(url)
+    }),
   enviarPlaneacion: (id: string) =>
     apiClient.post(`/planeaciones-docentes/${id}/enviar`, {}).then(r => r.data.data as PlaneacionDocente),
+  versionesPlaneacion: (id: string) =>
+    apiClient.get(`/planeaciones-docentes/${id}/versiones`).then(r => r.data.data as VersionPlaneacion[]),
+  restaurarVersionPlaneacion: (id: string, versionId: string) =>
+    apiClient.post(`/planeaciones-docentes/${id}/versiones/${versionId}/restaurar`, {}).then(r => r.data.data as PlaneacionDocente),
+  comentariosPlaneacion: (id: string) =>
+    apiClient.get(`/planeaciones-docentes/${id}/comentarios`).then(r => r.data.data as ComentarioPlaneacion[]),
+  agregarComentarioPlaneacion: (id: string, d: { seccion: SeccionObservacion; unidad?: number | null; categoria?: string | null; mensaje: string }) =>
+    apiClient.post(`/planeaciones-docentes/${id}/comentarios`, d).then(r => r.data.data as ComentarioPlaneacion),
+  resolverComentariosPlaneacion: (id: string, d: { seccion: SeccionObservacion; unidad?: number | null; categoria?: string | null; resuelto: boolean }) =>
+    apiClient.patch(`/planeaciones-docentes/${id}/comentarios/resolver`, d).then(r => r.data),
+  compararGruposPlaneacion: (cargaAcademicaId: string) =>
+    apiClient.get(`/planeaciones-docentes/comparar-grupos`, { params: { carga_academica_id: cargaAcademicaId } }).then(r => r.data.data as ComparativaGrupos),
+  buscarPlaneaciones: (q: string) =>
+    apiClient.get(`/planeaciones-docentes/buscar`, { params: { q } }).then(r => r.data.data as ResultadoBusquedaPlaneacion[]),
+  mejorarTextoIa: (texto: string, tipo: 'indicador' | 'actividad' | 'actividad_aprendizaje' | 'evidencia' | 'general' | 'sugerir_ensenanza' | 'sugerir_evidencia' | 'sugerir_instrumento' | 'generar_instrumento', contexto?: string) =>
+    apiClient.post(`/ia/mejorar-texto`, { texto, tipo, contexto }).then(r => r.data.data as { sugerencia: string; fuente?: 'ollama' | 'fallback' }),
+  archivosPlaneacion: (id: string) =>
+    apiClient.get(`/planeaciones-docentes/${id}/archivos`).then(r => r.data.data as ArchivoPlaneacion[]),
+  subirArchivoPlaneacion: (id: string, archivo: File, unidad?: number | null) => {
+    const fd = new FormData()
+    fd.append('archivo', archivo)
+    if (unidad != null) fd.append('unidad', String(unidad))
+    return apiClient.post(`/planeaciones-docentes/${id}/archivos`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data.data as ArchivoPlaneacion)
+  },
+  eliminarArchivoPlaneacion: (id: string, archivoId: string) =>
+    apiClient.delete(`/planeaciones-docentes/${id}/archivos/${archivoId}`).then(r => r.data),
+  descargarArchivoPlaneacion: (id: string, archivoId: string, nombreSugerido: string) =>
+    apiClient.get(`/planeaciones-docentes/${id}/archivos/${archivoId}/descargar`, { responseType: 'blob' }).then(r => {
+      const blob = new Blob([r.data])
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = nombreSugerido
+      a.click()
+      URL.revokeObjectURL(url)
+    }),
   cambiarEstatusPlaneacion: (id: string, estatus: string, observaciones?: string, observacionesCampos?: ObservacionCampo[]) =>
     apiClient.patch(`/planeaciones-docentes/${id}/estatus`, {
       estatus,
       observaciones_revision: observaciones,
       observaciones_campos: observacionesCampos?.length ? observacionesCampos : undefined,
     }).then(r => r.data.data as PlaneacionDocente),
+  // Avance real de dosificación al corte — solo Desarrollo Académico/admin/superadmin
+  // (el docente ya no puede editar semana_realizado desde su editor).
+  actualizarDosificacionPlaneacion: (id: string, avances: { unidad: number; index: number; semana_realizado: number | null }[]) =>
+    apiClient.patch(`/planeaciones-docentes/${id}/dosificacion`, { avances }).then(r => r.data.data as PlaneacionDocente),
 
   // ── Sprint 4 — Calificaciones ─────────────────────────────────────────────
 
   getCalificacionesGrupo: (grupoId: string): Promise<Calificacion[]> =>
     apiClient.get(`/grupos/${grupoId}/calificaciones`).then(r => r.data.data),
+
+  getHistorialCalificaciones: (
+    grupoId: string,
+    filtros?: { carga_academica_id?: string | null; editado_por?: string; desde?: string; hasta?: string }
+  ): Promise<CalificacionHistorialEntry[]> =>
+    apiClient.get(`/grupos/${grupoId}/calificaciones/historial`, {
+      params: filtros ? { ...filtros, carga_academica_id: filtros.carga_academica_id ?? undefined } : undefined,
+    }).then(r => r.data.data),
+
+  exportarCalificacionesCsv: (grupoId: string, cargaAcademicaId: string, nombreSugerido: string) =>
+    apiClient.get(`/grupos/${grupoId}/calificaciones/exportar`, {
+      params: { carga_academica_id: cargaAcademicaId },
+      responseType: 'blob',
+    }).then(r => {
+      const blob = new Blob([r.data], { type: 'text/csv;charset=utf-8' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = nombreSugerido
+      a.click()
+      URL.revokeObjectURL(url)
+    }),
+
+  descargarActaCalificaciones: (grupoId: string, cargaAcademicaId: string, nombreSugerido: string) =>
+    apiClient.get(`/grupos/${grupoId}/calificaciones/acta-pdf`, {
+      params: { carga_academica_id: cargaAcademicaId },
+      responseType: 'blob',
+    }).then(r => {
+      const blob = new Blob([r.data], { type: 'application/pdf' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = nombreSugerido
+      a.click()
+      URL.revokeObjectURL(url)
+    }).catch(async e => { throw await errorDeBlob(e) }),
+
+  descargarActaCalificacionesExcel: (grupoId: string, cargaAcademicaId: string, nombreSugerido: string) =>
+    apiClient.get(`/grupos/${grupoId}/calificaciones/acta-excel`, {
+      params: { carga_academica_id: cargaAcademicaId },
+      responseType: 'blob',
+    }).then(r => {
+      const blob = new Blob([r.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url
+      a.download = nombreSugerido
+      a.click()
+      URL.revokeObjectURL(url)
+    }).catch(async e => { throw await errorDeBlob(e) }),
+
+  obtenerEstadoActaCalificaciones: (grupoId: string, cargaAcademicaId: string): Promise<EstadoActaCaptura> =>
+    apiClient.get(`/grupos/${grupoId}/calificaciones/acta-estado`, {
+      params: { carga_academica_id: cargaAcademicaId },
+    }).then(r => r.data.data),
+
+  firmarActaCalificacionesCaptura: (grupoId: string, cargaAcademicaId: string): Promise<ActaCalificacionesCaptura> =>
+    apiClient.patch(`/grupos/${grupoId}/calificaciones/acta-pdf/firmar`, { carga_academica_id: cargaAcademicaId }).then(r => r.data.data),
+
+  importarCalificacionesCsv: (grupoId: string, cargaAcademicaId: string, archivo: File): Promise<{ actualizados: number; errores: string[] }> => {
+    const fd = new FormData()
+    fd.append('carga_academica_id', cargaAcademicaId)
+    fd.append('archivo', archivo)
+    return apiClient.post(`/grupos/${grupoId}/calificaciones/importar`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data.data)
+  },
 
   registrarCalificacion: (data: {
     alumno_id: string
@@ -689,6 +1249,39 @@ export const academicoApi = {
 
   marcarLeidaAlertaCorteCaptura: (id: string): Promise<AlertaCorteCaptura> =>
     apiClient.patch(`/alertas-corte-captura/${id}/marcar-leida`, {}).then(r => r.data.data),
+
+  // ── Bitácora de prefectura (incidencias de clase) ──────────────────────────────
+  getIncidenciasClase: (params?: {
+    periodo_id?: string; carrera_id?: string; semestre?: string | number; grupo_id?: string
+    docente_id?: string; estatus?: string; fecha_desde?: string; fecha_hasta?: string
+  }): Promise<IncidenciaClase[]> =>
+    apiClient.get('/incidencias-clase', { params }).then(r => r.data.data),
+
+  crearIncidenciaClase: (data: {
+    periodo_id: string; grupo_id: string; carga_academica_id?: string | null; docente_id?: string | null
+    aula_id?: string | null; fecha: string; hora_revision: string; dia_semana?: string
+    estatus: EstatusIncidenciaClase; docente_presente?: boolean; coincide_horario?: boolean
+    alumnos_presentes?: number; observaciones?: string
+  }): Promise<IncidenciaClase> =>
+    apiClient.post('/incidencias-clase', data).then(r => r.data.data),
+
+  getHorarioEsperadoClase: (params: { grupo_id: string; periodo_id: string; dia_semana: string; hora: string }): Promise<CargaAcademica | null> =>
+    apiClient.get('/incidencias-clase/horario-esperado', { params }).then(r => r.data.data),
+
+  // ── Alerta temprana de riesgo académico ─────────────────────────────────────────
+  getAlertasRiesgoAcademico: (params: { periodo_id: string; carrera_id?: string; grupo_id?: string; nivel?: NivelRiesgo }): Promise<AlumnoRiesgo[]> =>
+    apiClient.get('/alertas-riesgo-academico', { params }).then(r => r.data.data),
+
+  // ── Alerta de deserción temprana (patrón de asistencia de arranque) ────────────
+  getAlertasDesercionTemprana: (params: { periodo_id: string; carrera_id?: string; grupo_id?: string; semanas?: number; nivel?: NivelRiesgo }): Promise<AlumnoDesercionTemprana[]> =>
+    apiClient.get('/alertas-desercion-temprana', { params }).then(r => r.data.data),
+
+  // ── Bitácora de mantenimiento de aulas ──────────────────────────────────────────
+  getTicketsMantenimiento: (params?: { estatus?: EstatusTicketMantenimiento; aula_id?: string }): Promise<TicketMantenimiento[]> =>
+    apiClient.get('/tickets-mantenimiento', { params }).then(r => r.data.data),
+
+  actualizarTicketMantenimiento: (id: string, data: { estatus: EstatusTicketMantenimiento; notas_resolucion?: string }): Promise<TicketMantenimiento> =>
+    apiClient.patch(`/tickets-mantenimiento/${id}`, data).then(r => r.data.data),
 
   // ── Builder de Horarios ──────────────────────────────────────────────────────
   getDisponibilidadDocente: (params: { docente_id: string; periodo_id: string }): Promise<{ bloques: DisponibilidadBloque[]; dias_no_laborables: DiaNoLaborable[] }> =>
@@ -788,6 +1381,19 @@ export const academicoApi = {
 
   descargarDirectorio: (tipo: 'alumnos' | 'docentes' | 'egresados'): Promise<Blob> =>
     apiClient.get(`/reportes/directorio/${tipo}/pdf`, { responseType: 'blob' }).then(r => r.data),
+
+  descargarReporteAcreditacion: (params: { periodo_id: string; generacion?: number }): Promise<Blob> =>
+    apiClient.get('/reportes/acreditacion/pdf', { params, responseType: 'blob' }).then(r => r.data),
+
+  // Estadísticas de calificaciones — KPIs de rendimiento académico y deserción
+  getIndicadorPromedio: (params?: { carrera_id?: string; periodo_id?: string }): Promise<IndicadorPromedioCarrera[]> =>
+    apiClient.get('/indicadores/promedio', { params }).then(r => r.data.data),
+
+  getIndicadorReprobacion: (params?: { carrera_id?: string; periodo_id?: string }): Promise<{ por_carrera: IndicadorReprobacionCarrera[]; por_grupo: IndicadorReprobacionGrupo[] }> =>
+    apiClient.get('/indicadores/reprobacion', { params }).then(r => r.data.data),
+
+  getIndicadorDesercion: (params?: { carrera_id?: string; periodo_id?: string }): Promise<IndicadorDesercion[]> =>
+    apiClient.get('/indicadores/desercion', { params }).then(r => r.data.data),
 
   // Sprint 13 — Dashboard Asistencia Institucional
   getDashboardAsistencia: (params?: { periodo_id?: string }): Promise<DashboardAsistencia> =>
@@ -1104,11 +1710,20 @@ export interface Calificacion {
   alumno?: { id: string; numero_control: string; user?: { name: string } }
 }
 
+export interface ResumenAsistenciaAlumno {
+  total: number
+  presentes: number
+  ausentes: number
+  retardos: number
+  justificados: number
+}
+
 export interface SituacionAcademica {
   calificaciones: (Calificacion & {
     grupo?: { clave: string; cargas?: { materia?: { nombre: string } }[]; periodo?: { nombre: string } }
   })[]
   alertas_baja_definitiva: AlertaBajaDefinitiva[]
+  resumen_asistencia: ResumenAsistenciaAlumno | null
 }
 
 export interface CorteCaptura {
@@ -1167,6 +1782,28 @@ export interface ActaCalificaciones {
   firmada: boolean
   fecha_firma: string | null
   integrada_libro_actas: boolean
+}
+
+/** Acta "de captura" (comprobante ligero generado desde la pantalla de Captura de
+ * Calificaciones) — distinta de ActaCalificaciones (el acta oficial de Cierre de Curso). */
+export interface ActaCalificacionesCaptura {
+  id: string
+  grupo_id: string
+  carga_academica_id: string
+  folio: string
+  generado_por: string
+  generado_en: string
+  generado_por_nombre: string | null
+  firmado_por: string | null
+  firmado_en: string | null
+  firmado_por_nombre: string | null
+}
+
+export interface EstadoActaCaptura {
+  acta: ActaCalificacionesCaptura | null
+  puede_firmar: boolean
+  planeacion_liberada: boolean
+  borrador: boolean
 }
 
 export interface AlertaBajaDefinitiva {

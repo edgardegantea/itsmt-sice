@@ -29,8 +29,15 @@ const API = {
   eliminar:          (id: string) => apiClient.delete(`/admin/periodos/${id}`).then(r => r.data),
 }
 
-const fmtFecha = (s: string | null) => s ? new Date(s + 'T12:00:00').toLocaleDateString('es-MX') : '—'
-const toDateInput = (s: string | null | undefined): string => s ? s.slice(0, 10) : ''
+const fmtFecha = (s: string | null | undefined): string => {
+  if (!s) return '—'
+  const iso = String(s).slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '—'
+  const [y, m, d] = iso.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+const toDateInput = (s: string | null | undefined): string => s ? String(s).slice(0, 10) : ''
 
 const cls = 'w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c]/30'
 const clsErr = (e?: string) => `${cls} ${e ? 'border-red-400' : 'border-slate-300'}`
@@ -142,6 +149,7 @@ function CortesCapturaEditor({ periodoId }: { periodoId: string }) {
   const { data: cortes = [], isLoading } = useQuery({
     queryKey: ['cortes-captura', periodoId],
     queryFn: () => academicoApi.getCortesCaptura(periodoId),
+    enabled: Boolean(periodoId),
   })
 
   const porNumero = (n: 1 | 2 | 3): Partial<CorteCaptura> =>
@@ -255,11 +263,14 @@ export default function PeriodosPage() {
   const closeModal = () => { setModal(null); setFormErrors({}) }
 
   const guardar = useMutation({
-    mutationFn: (d: Partial<Periodo>) =>
-      modal === 'nuevo' ? API.create(d) : API.update((modal as Periodo).id, d),
+    mutationFn: (d: Partial<Periodo>) => {
+      const esNuevo = modal === 'nuevo' || (typeof modal === 'object' && modal !== null && !modal.id)
+      return esNuevo ? API.create(d) : API.update((modal as Periodo).id, d)
+    },
     onSuccess: () => {
+      const esNuevo = modal === 'nuevo' || (typeof modal === 'object' && modal !== null && !modal.id)
       qc.invalidateQueries({ queryKey: ['admin-periodos'] })
-      success(modal === 'nuevo' ? 'Periodo creado correctamente.' : 'Periodo actualizado correctamente.')
+      success(esNuevo ? 'Periodo creado correctamente.' : 'Periodo actualizado correctamente.')
       closeModal()
     },
     onError: (err: ApiError) => {
@@ -311,12 +322,33 @@ export default function PeriodosPage() {
             {!esSuperadmin && ' Solo el superadministrador puede cambiar cuál es el periodo activo global.'}
           </p>
         </div>
-        <button
-          onClick={() => { setModal('nuevo'); setFormErrors({}) }}
-          className="shrink-0 px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors"
-        >
-          + Nuevo periodo
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => {
+              setModal({
+                id: '',
+                nombre: 'Periodo Agosto–Diciembre 2026 (DET/ITSMT/DA/0041/2026)',
+                tipo: 'ordinario',
+                fecha_inicio: '2026-08-24',
+                fecha_fin: '2026-12-18',
+                activo: true,
+                horarios_liberados: true,
+                fecha_limite_baja_parcial: '2026-10-23',
+                fecha_limite_baja_temporal: '2026-11-20',
+              })
+              setFormErrors({})
+            }}
+            className="shrink-0 px-3.5 py-2 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition-colors flex items-center gap-1.5"
+          >
+            📌 Cargar Calendario Oficial DET/ITSMT/DA/0041/2026
+          </button>
+          <button
+            onClick={() => { setModal('nuevo'); setFormErrors({}) }}
+            className="shrink-0 px-4 py-2 text-sm text-white bg-[#1a3a5c] hover:bg-[#234d7a] rounded-lg transition-colors"
+          >
+            + Nuevo periodo
+          </button>
+        </div>
       </div>
 
       {isLoading && <p className="text-slate-400 text-sm">Cargando…</p>}
@@ -413,7 +445,7 @@ export default function PeriodosPage() {
             errors={formErrors}
             esSuperadmin={esSuperadmin}
           />
-          {modal !== 'nuevo' && <CortesCapturaEditor periodoId={(modal as Periodo).id} />}
+          {modal !== 'nuevo' && Boolean((modal as Periodo).id) && <CortesCapturaEditor periodoId={(modal as Periodo).id} />}
         </Modal>
       )}
     </div>

@@ -13,9 +13,15 @@ export default function ProtectedRoute({ children, requiredRole }: Props) {
     return <Navigate to="/login" replace />
   }
 
-  if (requiredRole) {
+  // El superadmin es el rol de más alto nivel: pasa cualquier candado de ruta sin
+  // importar qué roles pida esa ruta en particular, igual que en el backend (ver el
+  // override de hasRole/hasAnyRole en App\Models\User).
+  const userRoles = Array.isArray(user?.roles) ? user.roles : []
+  const esSuperadmin = userRoles.includes('superadmin')
+
+  if (requiredRole && !esSuperadmin) {
     const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
-    if (!allowed.some(r => user?.roles.includes(r))) {
+    if (!allowed.some(r => userRoles.includes(r))) {
       return <Navigate to="/sin-acceso" replace />
     }
   }
