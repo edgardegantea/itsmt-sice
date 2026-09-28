@@ -28,8 +28,24 @@ echo "============================================="
 chmod 755 /var/www /var/www/maewalliscorp.org /var/www/maewalliscorp.org/sice 2>/dev/null || true
 chmod -R 755 "$APP_DIR"
 chown -R www-data:www-data "$APP_DIR/frontend/dist"
-chmod -R 775 "$APP_DIR/backend/storage"
-chmod -R 775 "$APP_DIR/backend/bootstrap/cache"
+chmod -R 775 "$APP_DIR/backend/storage" 2>/dev/null || true
+chmod -R 775 "$APP_DIR/backend/bootstrap/cache" 2>/dev/null || true
+
+# 2. Configurar Backend (si existe .env)
+SICE_USER=$(stat -c '%U' "$APP_DIR" 2>/dev/null || echo "www-data")
+if [ -f "$APP_DIR/backend/.env" ]; then
+  echo "→ Configurando Backend Laravel..."
+  cd "$APP_DIR/backend"
+  sudo -u "$SICE_USER" composer install --no-dev --optimize-autoloader --no-interaction || composer install --no-dev --optimize-autoloader --no-interaction || true
+  sudo -u "$SICE_USER" php artisan storage:link || php artisan storage:link || true
+  sudo -u "$SICE_USER" php artisan migrate --force || php artisan migrate --force || true
+  sudo -u "$SICE_USER" php artisan config:clear || true
+  sudo -u "$SICE_USER" php artisan route:clear || true
+  sudo -u "$SICE_USER" php artisan config:cache || true
+  sudo -u "$SICE_USER" php artisan route:cache || true
+  sudo -u "$SICE_USER" php artisan view:cache || true
+  cd "$APP_DIR"
+fi
 
 # 2. Configurar Nginx Unificado (Frontend + /api + /storage en sice.maewalliscorp.org)
 cat > /etc/nginx/sites-available/sice-frontend << NGINX
