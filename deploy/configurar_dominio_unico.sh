@@ -28,8 +28,11 @@ echo "============================================="
 mkdir -p "$APP_DIR/frontend/dist"
 mkdir -p "$APP_DIR/backend/storage" "$APP_DIR/backend/bootstrap/cache"
 chmod 755 /var/www /var/www/maewalliscorp.org /var/www/maewalliscorp.org/sice 2>/dev/null || true
-chmod -R 755 "$APP_DIR"
-chown -R www-data:www-data "$APP_DIR/frontend/dist" 2>/dev/null || true
+# frontend/dist viene de git (se compila en local). Debe seguir siendo del dueño del
+# repositorio para que el siguiente `git pull` pueda reemplazarlo; nginx solo necesita
+# leerlo. `a+rX` da lectura a todos y ejecución solo a directorios, sin marcar los
+# archivos como ejecutables (eso aparecía en git como cambios en todo el proyecto).
+chmod -R a+rX "$APP_DIR"
 chmod -R 775 "$APP_DIR/backend/storage" 2>/dev/null || true
 chmod -R 775 "$APP_DIR/backend/bootstrap/cache" 2>/dev/null || true
 
@@ -41,7 +44,7 @@ if [ ! -f "$APP_DIR/frontend/dist/index.html" ]; then
     npm install --silent 2>/dev/null || npm install || true
     npm run build || true
     cd "$APP_DIR"
-    chown -R www-data:www-data "$APP_DIR/frontend/dist" 2>/dev/null || true
+    chmod -R a+rX "$APP_DIR/frontend/dist"
   fi
 fi
 

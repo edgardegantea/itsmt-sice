@@ -61,8 +61,12 @@ sudo -u "$SICE_USER" php artisan event:cache || php artisan event:cache || true
 chmod 755 "$APP_DIR"
 chmod 755 "$APP_DIR/frontend"
 chown -R sice:www-data "$APP_DIR/backend"
-chown -R www-data:www-data "$APP_DIR/frontend/dist"
-chmod -R 755 "$APP_DIR/frontend/dist"
+# frontend/dist viene de git (se compila en local). Debe seguir siendo del dueño del
+# repositorio para que el siguiente `git pull` pueda reemplazarlo; nginx solo necesita
+# leerlo. `a+rX` da lectura a todos y ejecución solo a directorios, sin marcar los
+# archivos como ejecutables (eso aparecía en git como cambios en todo el proyecto).
+chown -R "$SICE_USER" "$APP_DIR/frontend/dist"
+chmod -R a+rX "$APP_DIR/frontend/dist"
 chmod -R 775 "$APP_DIR/backend/storage"
 chmod -R 775 "$APP_DIR/backend/bootstrap/cache"
 
