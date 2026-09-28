@@ -8,3 +8,25 @@ services:
       - gotenberg
       - --chromium-disable-javascript=false
       - --chromium-allow-list=file:///.*
+
+  # LLM autoalojado para la asistencia de redacción en el editor de Instrumentación
+  # Didáctica ("Mejorar con IA" en indicadores de alcance y actividades). Todo corre local,
+  # sin mandar contenido de las planeaciones a un proveedor externo.
+  #
+  # Primer arranque: docker compose up -d ollama && docker compose exec ollama ollama pull llama3.2:3b
+  # (el modelo se descarga una sola vez y queda en el volumen `ollama_data`).
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ollama_data:

@@ -51,6 +51,10 @@ check "Cert backend válido"   "openssl s_client -connect siceback.maewalliscorp
 check "Cert frontend válido"  "openssl s_client -connect sice.maewalliscorp.org:443 -brief </dev/null 2>&1 | grep -q 'SSL handshake'"
 
 echo ""
+echo "── Scheduler ───────────────────────────────"
+check "Cron del scheduler instalado" "sudo -u sice crontab -l 2>/dev/null | grep -q 'artisan schedule:run'"
+
+echo ""
 echo "── Migraciones ────────────────────────────"
 cd /var/www/sice-backend
 PENDING=$(sudo -u sice php artisan migrate:status 2>/dev/null | grep "Pending" | wc -l)

@@ -38,9 +38,50 @@ jobs:
 
       # phpunit.xml fuerza sqlite en memoria para tests (ver <php><env name="DB_CONNECTION">),
       # igual que en desarrollo local — no requiere levantar un servicio de base de datos aparte.
-      # NOTA: esto no cubre bugs específicos de dialecto SQL que solo aparecen en Postgres
-      # (ej. columnas ambiguas tras un join) — ver backend/app/Domains/README.md y el
-      # historial de bugs de este tipo. Correr `php artisan test` manualmente contra
-      # Postgres antes de un release es la mitigación actual.
-      - name: Run tests
+      # Rápido, pero no cubre bugs específicos de dialecto SQL que solo aparecen en Postgres
+      # (columnas ambiguas tras un join, funciones de un motor que el otro no tiene, etc.)
+      # — ese caso lo cubre el job test-postgres de abajo, contra Postgres real.
+      - name: Run tests (sqlite)
         run: php artisan test
+
+  test-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sice_ci_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, gd, pgsql, pdo_pgsql
+          coverage: none
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      # Corre exactamente la misma suite contra Postgres real (ver phpunit.pgsql.xml) —
+      # es la mitigación de los bugs de dialecto SQL (ambigüedad de columnas, funciones
+      # específicas de un motor) que SQLite no puede reproducir, sin depender de que
+      # alguien se acuerde de correrlo a mano antes de un release.
+      - name: Run tests (postgres)
+        run: php artisan test --configuration=phpunit.pgsql.xml
