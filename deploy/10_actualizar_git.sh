@@ -48,9 +48,11 @@ sudo -u sice php artisan view:cache
 sudo -u sice php artisan event:cache
 
 # ── 5. Permisos (por si git pull tocó archivos) ────────────────────────────
-chown -R sice:www-data "$APP_DIR/backend/storage"
-chown -R sice:www-data "$APP_DIR/backend/bootstrap/cache"
+chmod 755 "$APP_DIR"
+chmod 755 "$APP_DIR/frontend"
+chown -R sice:www-data "$APP_DIR/backend"
 chown -R www-data:www-data "$APP_DIR/frontend/dist"
+chmod -R 755 "$APP_DIR/frontend/dist"
 chmod -R 775 "$APP_DIR/backend/storage"
 chmod -R 775 "$APP_DIR/backend/bootstrap/cache"
 
